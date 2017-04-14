@@ -1,0 +1,6 @@
+ <!DOCTYPE RCC><RCC version="1.0">
+ <qresource>
+ <file alias="LicosIcon.png">images/LicosIcon.png</file>
+ <file alias="LicosPDFIcon.png">images/LicosPDFIcon.png</file>
+ </qresource>
+ </RCC>

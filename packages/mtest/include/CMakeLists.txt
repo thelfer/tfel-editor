@@ -1,0 +1,5 @@
+install_header(QEmacs MTestStudyOptions.hxx)
+install_header(QEmacs MTestMajorMode.hxx)
+install_header(QEmacs MTestSyntaxHighlighter.hxx)
+install_header(QEmacs PipeTestMajorMode.hxx)
+install_header(QEmacs PipeTestSyntaxHighlighter.hxx)

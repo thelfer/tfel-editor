@@ -1,0 +1,6 @@
+ <!DOCTYPE RCC><RCC version="1.0">
+ <qresource>
+ <file alias="QEmacsSuccessIcon.png">images/QEmacsSuccessIcon.png</file>
+ <file alias="QEmacsFailureIcon.png">images/QEmacsFailureIcon.png</file>
+ </qresource>
+ </RCC>

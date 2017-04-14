@@ -1,0 +1,10 @@
+add_subdirectory(castem)
+add_subdirectory(gnuplot)
+add_subdirectory(latex)
+add_subdirectory(licos)
+add_subdirectory(make)
+add_subdirectory(mfront)
+add_subdirectory(mtest)
+add_subdirectory(python)
+
+# add_subdirectory(tplot)

@@ -1,0 +1,180 @@
+/*! 
+ * \file  QEmacsBuildInformation.cxx
+ * \brief
+ * \author Helfer Thomas
+ * \brief 28 sept. 2012
+ */
+
+#include"QEmacs/QEmacsBuildInformation.hxx"
+
+namespace qemacs{
+  
+  const char *
+  QEmacsBuildInformation::getInstallationDirectory()
+  {
+    return "@prefix@";
+  }
+
+  const char *
+  QEmacsBuildInformation::getDataDirectory()
+  {
+    return "@prefix@/share/qemacs/packages";
+  }
+  
+  const char *
+  QEmacsBuildInformation::getVersionName(void)
+  {
+    return PACKAGE_NAME;
+  }
+
+  const char *
+  QEmacsBuildInformation::getVersionNumber(void)
+  {
+    return VERSION;
+  }
+
+  const char *
+  QEmacsBuildInformation::getVersionIdentifier(void)
+  {
+    return VERSION;
+  }
+
+  const char *
+  QEmacsBuildInformation::getBugReportAdress(void)
+  {
+    return PACKAGE_BUGREPORT;
+  }
+
+  const char *
+  QEmacsBuildInformation::getCompilerName(void)
+  {
+    return "@CXX@";
+  }
+
+  const char *
+  QEmacsBuildInformation::getBuildCpu(void)
+  {
+    return "@build_cpu@";
+  }
+
+  const char *
+  QEmacsBuildInformation::getBuildOs(void)
+  {
+    return "@build_os@";
+  }
+
+  const char *
+  QEmacsBuildInformation::getHostCpu(void)
+  {
+    return "@host_cpu@";
+  }
+
+  const char *
+  QEmacsBuildInformation::getHostOs(void)
+  {
+    return "@host_os@";
+  }
+
+  const char *
+  QEmacsBuildInformation::getTargetCpu(void)
+  {
+    return "@target_cpu@";
+  }
+
+  const char *
+  QEmacsBuildInformation::getTargetOs(void)
+  {
+    return "@target_os@";
+  }
+
+  const char *
+  QEmacsBuildInformation::getSVNRevision(void)
+  {
+    return "";
+  }
+
+  QString
+  QEmacsBuildInformation::getHeader(const QString& s)
+  {
+    QString target_cpu  = getTargetCpu();
+    QString build_cpu   = getBuildCpu();
+    QString host_cpu    = getHostCpu();
+    QString target_os   = getTargetOs();
+    QString build_os    = getBuildOs();
+    QString host_os     = getHostOs();
+    QString svn_revision = getSVNRevision();
+
+    QString header;
+
+    header  = s;
+    header += getVersionName();
+    header += "\n";
+    header += s;
+    header += "Version : ";
+    header +=  getVersionNumber();
+    header += "\n";
+    header += "subversion revision : ";
+    header += svn_revision;
+    header += "\n";
+    if((target_cpu != build_cpu)|| (target_cpu != host_cpu) ||
+       (target_os  != build_os) || (target_os  != host_os)){
+      header += s;
+      header += "Compiled with ";
+      header +=  getCompilerName();
+      header +=  " : ";
+      header += "\n";
+      header += s;
+      header += "- target cpu  : ";
+      header += target_cpu;
+      header += "\n";
+      header += s;
+      header += "\n";
+      header += s;
+      header += "- target os   : " ;
+      header += target_os ;
+      header += "\n";
+      header += s;
+      header += "\n";
+      header += s;
+      header += "- build cpu   : ";
+      header += build_cpu  ;
+      header += "\n";
+      header += s;
+      header += "\n";
+      header += s;
+      header += "- build os    : ";
+      header +=  build_os;
+      header += "\n";
+      header += s;
+      header += "\n";
+      header += s;
+      header += "- host cpu    : ";
+      header += host_cpu;
+      header += "\n";
+      header += s;
+      header += "\n";
+      header += s;
+      header += "- host os     : ";
+      header += host_os;
+      header += "\n";
+    } else {
+      header += s;
+      header += "Compiled with ";
+      header += getCompilerName();
+      header += " on ";
+      header += target_cpu;
+      header += " - ";
+      header += target_os;
+      header += "\n";
+    }
+    header += s;
+    header += "Please submit bug at " ;
+    header +=  getBugReportAdress() ;
+    header +=  "\n";
+
+    return header;
+
+  }
+
+} // end of namespace qemacs
+
