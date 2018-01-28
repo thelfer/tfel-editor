@@ -8,6 +8,13 @@ include(cmake/modules/autotools.cmake)
 include(cmake/modules/compiler.cmake)
 #find the tfel package
 include(cmake/modules/tfel.cmake)
+
+option(enable-tfel-plot "enable tfel-plot" OFF)
+if(enable-tfel-plot)
+  #find the tfel-plot package
+  include(cmake/modules/tfel-plot.cmake)
+endif(enable-tfel-plot)
+
 # qt support
 include(cmake/modules/qt.cmake)
 

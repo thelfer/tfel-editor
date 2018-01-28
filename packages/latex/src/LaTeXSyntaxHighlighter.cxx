@@ -55,10 +55,9 @@ namespace qemacs
   }
 
   QVector<LaTeXSyntaxHighlighter::HighlightingRule>
-  LaTeXSyntaxHighlighter::buildHighlightingRules(void)
+  LaTeXSyntaxHighlighter::buildHighlightingRules()
   {
-    typedef QVector<HighlightingRule> Rules;
-    Rules rules;
+    QVector<HighlightingRule> rules;
     QTextCharFormat keyFormat;
     QTextCharFormat envFormat;
     // QTextCharFormat boldFormat;
@@ -90,10 +89,9 @@ namespace qemacs
   } // end of LaTeXSyntaxHighlighter::buildHighlightingRules
   
   const QVector<LaTeXSyntaxHighlighter::HighlightingRule>&
-  LaTeXSyntaxHighlighter::getHighlightingRules(void)
+  LaTeXSyntaxHighlighter::getHighlightingRules()
   {
-    typedef QVector<HighlightingRule> Rules;
-    static Rules rules(LaTeXSyntaxHighlighter::buildHighlightingRules());
+    static auto rules = LaTeXSyntaxHighlighter::buildHighlightingRules();
     return rules;
   }
 
@@ -105,11 +103,9 @@ namespace qemacs
     this->commentFormat.setForeground(Qt::red);
   }
 
-  void
-  LaTeXSyntaxHighlighter::highlightBlock(const QString &text)
+  void LaTeXSyntaxHighlighter::highlightBlock(const QString &text)
   {
-    typedef QVector<HighlightingRule> Rules;
-    const Rules& rules = LaTeXSyntaxHighlighter::getHighlightingRules();
+    const auto& rules = LaTeXSyntaxHighlighter::getHighlightingRules();
     // remove comments
     int c = LaTeXSyntaxHighlighter::startOfComment(text);
     QString l;
@@ -122,13 +118,10 @@ namespace qemacs
     int pos = 0;
     while(pos!=l.size()){
       int cpos = -1;
-      Rules::const_iterator mp;
-      Rules::const_iterator p;
-      mp = rules.end();
-      for(p=rules.begin();p!=rules.end();++p){
-	const HighlightingRule &rule = *p;
-	QRegExp e(rule.pattern);
-	int rp = e.indexIn(l,pos);
+      auto mp = rules.end();
+      for(auto p=rules.begin();p!=rules.end();++p){
+	QRegExp e(p->pattern);
+	const auto rp = e.indexIn(l,pos);
 	if(rp!=-1){
 	  if((cpos==-1)||(rp<=cpos)){
 	    mp   = p;
@@ -141,7 +134,7 @@ namespace qemacs
 	  this->highLightMispellWords(l.mid(pos,cpos-pos),pos);
 	}
 	// treating the LaTeX command
-	const HighlightingRule &rule = *mp;
+	const auto &rule = *mp;
 	QRegExp e(rule.pattern);
 	e.indexIn(l,pos);
 	int length = e.matchedLength();
@@ -172,12 +165,12 @@ namespace qemacs
   {
     using namespace std;
     QTextCharFormat f;
-    SpellChecker& spellChecker = this->mode.getSpellChecker();
+    auto& spellChecker = this->mode.getSpellChecker();
     f.setUnderlineStyle (QTextCharFormat::SpellCheckUnderline);
     int pos = 0;
     while(pos!=l.size()){
       if(l[pos].isLetter()){
-	int npos = pos;
+	const auto npos = pos;
 	++pos;
 	while((pos!=l.size())&&(l[pos].isLetter())){
 	  ++pos;

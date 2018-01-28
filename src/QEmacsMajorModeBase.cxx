@@ -24,7 +24,7 @@ namespace qemacs
   {
     // number of spaces at the beginning of the string
     int p;
-    int found = false;
+    auto found = false;
     for(p=0;(p!=s.size())&&(!found);){
       if(s[p].isSpace()){
 	++p;
@@ -45,17 +45,16 @@ namespace qemacs
       textEdit(t)
   {} // end of QEmacsMajorModeBase::QEmacsMajorModeBase
 
-  QEmacsMajorModeBase::~QEmacsMajorModeBase()
-  {} // end of QEmacsMajorModeBase::~QEmacsMajorModeBase
+  QEmacsMajorModeBase::~QEmacsMajorModeBase() = default;
 
   QCompleter*
-  QEmacsMajorModeBase::getCompleter(void)
+  QEmacsMajorModeBase::getCompleter()
   {
     return nullptr;
   } // end of QEmacsMajorModeBase::getCompleter
 
   QString
-  QEmacsMajorModeBase::getCompletionPrefix(void){
+  QEmacsMajorModeBase::getCompletionPrefix(){
     return this->textEdit.getCurrentWord();
   }
   
@@ -71,7 +70,7 @@ namespace qemacs
   } // end of QEmacsMajorModeBase::getSpecificMenu
 
   QIcon
-  QEmacsMajorModeBase::getIcon(void) const
+  QEmacsMajorModeBase::getIcon() const
   {
     return QIcon();
   } // end of QEmacsMajorModeBase::getIcon
@@ -117,7 +116,7 @@ namespace qemacs
   } // end of QEmacsMajorModeBase::handleShortCut
 
   int
-  QEmacsMajorModeBase::getMinimalCompletionLength(void)
+  QEmacsMajorModeBase::getMinimalCompletionLength()
   {
     return 3;
   }
@@ -283,7 +282,7 @@ namespace qemacs
   } // end of QEmacsMajorModeBase::getSelectedLines
 
   void
-  QEmacsMajorModeBase::comment(void)
+  QEmacsMajorModeBase::comment()
   {
     QString cs = this->getCommentSyntax();
     if(cs.isEmpty()){
@@ -369,7 +368,7 @@ namespace qemacs
   } // end of QEmacsMajorModeBase::comment
 
   QString
-  QEmacsMajorModeBase::getCommentSyntax(void)
+  QEmacsMajorModeBase::getCommentSyntax()
   {
     return "";
   } // end of QEmacsMajorModeBase::getCommentSyntax
@@ -400,7 +399,7 @@ namespace qemacs
     }
     QFileInfoList list = dir.entryInfoList();
     for (int i = 0; i < list.size(); ++i) {
-      QFileInfo fi = list.at(i);
+      const auto& fi = list.at(i);
       if((fi.isFile())&&(fi.fileName()==f)){
 	r.append(d+QDir::separator()+f);
       } else if(fi.isDir()){

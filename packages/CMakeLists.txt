@@ -7,4 +7,6 @@ add_subdirectory(mfront)
 add_subdirectory(mtest)
 add_subdirectory(python)
 
-# add_subdirectory(tplot)
+if(enable-tfel-plot)
+  add_subdirectory(tplot)
+endif(enable-tfel-plot)

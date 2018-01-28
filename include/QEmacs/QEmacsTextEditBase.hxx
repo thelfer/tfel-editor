@@ -5,22 +5,15 @@
  * \brief 19 août 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSTEXTEDITBASE_H_
-#define _LIB_QEMACS_QEMACSTEXTEDITBASE_H_ 
+#ifndef LIB_QEMACS_QEMACSTEXTEDITBASE_HXX
+#define LIB_QEMACS_QEMACSTEXTEDITBASE_HXX 
 
 #include<QtCore/QMap>
 #include<QtCore/QString>
 #include<QtCore/QStringList>
-#ifdef QEMACS_QT4
-#include<QtGui/QWidget>
-#include<QtGui/QTextEdit>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
+#include<QtGui/QTextCursor>
 #include<QtWidgets/QWidget>
 #include<QtWidgets/QTextEdit>
-#endif /* QEMACS_QT5 */
-#include<QtGui/QTextCursor>
-
 #include"QEmacs/QEmacsLineEdit.hxx"
 #include"QEmacs/QEmacsTextEditKeyPressEventFilter.hxx"
 
@@ -45,32 +38,32 @@ namespace qemacs
 
     void fileNameChanged(const QString&);
 
-    void majorModeChanged(void);
+    void majorModeChanged();
 
-    void cursorPositionChanged(void);
+    void cursorPositionChanged();
 
   public slots:
 
     virtual void
-    clear(void) = 0;
+    clear() = 0;
 
     virtual void
-    undo(void) = 0;
+    undo() = 0;
 
     virtual void
-    redo(void) = 0;
+    redo() = 0;
 
     virtual void
-    cut(void) = 0;
+    cut() = 0;
 
     virtual void
-    copy(void) = 0;
+    copy() = 0;
 
     virtual void
-    paste(void) = 0;
+    paste() = 0;
 
     virtual void
-    selectAll(void) = 0;
+    selectAll() = 0;
 
     virtual void
     setHtml(const QString&) = 0;
@@ -121,7 +114,7 @@ namespace qemacs
     writeFile(const QString&);
 
     virtual void
-    save(void);
+    save();
 
     virtual void
     gotoLine(int);
@@ -142,7 +135,7 @@ namespace qemacs
     {
 
       virtual bool
-      isBlocking(void) const override;
+      isBlocking() const override;
 
       virtual void
       treatUserInput() override;
@@ -176,7 +169,7 @@ namespace qemacs
     QEmacsTextEditBase(QEmacsWidget&,
 		       QEmacsBuffer&);
     
-    virtual ~QEmacsTextEditBase();
+    ~QEmacsTextEditBase() override;
 
     /*!
      * \param[in] e : event
@@ -194,7 +187,7 @@ namespace qemacs
      * \return true if the buffer is a main frame
      */
     virtual bool
-    isMainFrame(void) const;
+    isMainFrame() const;
 
     virtual void
     setSpellCheckLanguage(const QString&);
@@ -203,19 +196,19 @@ namespace qemacs
      * \return true if the buffer is not a main frame
      */
     virtual bool
-    isSlave(void) const;
+    isSlave() const;
 
     virtual void
     setFocus();
 
     virtual QString
-    getFileName(void) const;
+    getFileName() const;
 
     virtual QString
-    getCompleteFileName(void) const;
+    getCompleteFileName() const;
 
     virtual SaveInput *
-    getSaveInput(void);
+    getSaveInput();
 
     /*!
      * \return the word under cursor
@@ -224,19 +217,19 @@ namespace qemacs
     getCurrentWord() const;
 
     virtual bool
-    isModified(void) const;
+    isModified() const;
 
     virtual bool
-    hasMajorMode(void) const;
+    hasMajorMode() const;
 
     virtual const QEmacsMajorMode&
-    getMajorMode(void) const;
+    getMajorMode() const;
 
     virtual QVector<QMenu*>
     getSpecificMenus();
 
     virtual QIcon
-    getIcon(void) const;
+    getIcon() const;
 
     virtual bool
     setKeyPressEventFilter(QEmacsTextEditKeyPressEventFilter * const);
@@ -245,21 +238,21 @@ namespace qemacs
     removeKeyPressEventFilter();
 
     virtual QTextDocument*
-    document(void) const = 0;
+    document() const = 0;
     
     virtual void
     moveCursor(QTextCursor::MoveOperation,
 	       QTextCursor::MoveMode = QTextCursor::MoveAnchor) = 0;
 
     virtual bool
-    isReadOnly(void) = 0;
+    isReadOnly() = 0;
     
     virtual bool
     find(const QString&,
 	 QTextDocument::FindFlags = nullptr) = 0;
 
     virtual QTextCursor
-    textCursor(void) const = 0;
+    textCursor() const = 0;
     
     virtual QTextCursor
     cursorForPosition(const QPoint &pos) const = 0;
@@ -268,7 +261,7 @@ namespace qemacs
     cursorRect(const QTextCursor &cursor) const = 0;
 
     virtual QRect
-    cursorRect(void) const = 0;
+    cursorRect() const = 0;
 
     virtual void
     setExtraSelections(const QList<QTextEdit::ExtraSelection> &) = 0;
@@ -277,18 +270,18 @@ namespace qemacs
     extraSelections() const = 0;
 
     virtual bool
-    isUndoRedoEnabled(void) const = 0;
+    isUndoRedoEnabled() const = 0;
 
   protected slots:
     
     virtual void
-    highlightCurrentLine(void);
+    highlightCurrentLine();
 
     virtual void
-    keyPressEventFilterDestroyed(void);
+    keyPressEventFilterDestroyed();
 
     virtual void
-    emitCursorPositionChanged(void);
+    emitCursorPositionChanged();
 
   protected:
 
@@ -302,12 +295,12 @@ namespace qemacs
       GotoLine(QEmacsTextEditBase&,
 	       QEmacsWidget&);
       
-      ~GotoLine();
+      ~GotoLine() override;
       
     protected:
       
       virtual void
-      treatUserInput(void) override;
+      treatUserInput() override;
 
       QEmacsTextEditBase& textEdit;
 	
@@ -345,7 +338,7 @@ namespace qemacs
     addToKillRing(const QString&);
 
     virtual void
-    setMajorMode(void);
+    setMajorMode();
 
     virtual void
     setMajorMode(QEmacsMajorMode *const);
@@ -415,5 +408,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_QEMACSTEXTEDITBASE_H */
+#endif /* LIB_QEMACS_QEMACSTEXTEDITBASE_HXX */
 

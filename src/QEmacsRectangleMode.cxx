@@ -39,8 +39,7 @@ namespace qemacs
       }
     } // end of InsertRectangle
 
-    virtual void
-    treatUserInput() override
+    void treatUserInput() override
     {
       QString     t  = this->input->text();
       QTextCursor tc = this->textEdit.textCursor();
@@ -127,10 +126,9 @@ namespace qemacs
 	textEdit(t)
     {} // end of RectangleModeLineEdit
 
-    virtual void
-    keyPressEvent(QKeyEvent *ev) override
+    void keyPressEvent(QKeyEvent *ev) override
     {
-      QEmacsLineEdit *qle = qobject_cast<QEmacsLineEdit *>(this->parent());
+      auto *qle = qobject_cast<QEmacsLineEdit *>(this->parent());
       if((ev->modifiers() == Qt::ControlModifier)&&(ev->key()==Qt::Key_G)){
 	if(qle!=nullptr){
 	  qle->cancel();
@@ -169,13 +167,13 @@ namespace qemacs
   } // end of QEmacsRectangleMode::QEmacsRectangleMode
 
   bool
-  QEmacsRectangleMode::isBlocking(void) const
+  QEmacsRectangleMode::isBlocking() const
   {
     return true;
   } // end of QEmacsRectangleMode::isBlocking
 
   void
-  QEmacsRectangleMode::treatUserInput(void)
+  QEmacsRectangleMode::treatUserInput()
   {
     const QString m = this->input->text();
     QEmacsTextEditBase& t = this->textEdit;
@@ -192,7 +190,7 @@ namespace qemacs
   } // end of QEmacsRectangleMode::treatUserInput
 
   void
-  QEmacsRectangleMode::pasteRectangle(void)
+  QEmacsRectangleMode::pasteRectangle()
   {
     if(QEmacsRectangleMode::killedRectangle.isEmpty()){
       this->qemacs.displayInformativeMessage(QObject::tr("no rectangle killed"));
@@ -242,7 +240,7 @@ namespace qemacs
   }
 
   void
-  QEmacsRectangleMode::killRectangle(void)
+  QEmacsRectangleMode::killRectangle()
   {
     QTextCursor tc = this->textEdit.textCursor();
     if(tc.hasSelection()){

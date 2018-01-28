@@ -1,45 +1,16 @@
-option(enable-qt4 "build aster interface for mechanical behaviours" OFF)
-option(enable-qt5 "build aster interface for mechanical behaviours" OFF)
-
-if((NOT enable-qt4) AND (NOT enable-qt5))
-  message(FATAL_ERROR "no qt version selected")
-endif((NOT enable-qt4) AND (NOT enable-qt5))
-
-if((enable-qt4) AND (enable-qt5))
-  message(FATAL_ERROR "one and only one version "
-    "of qt must be selected")
-endif((enable-qt4) AND (enable-qt5))
-
-if(enable-qt4)
-  add_definitions("-DQEMACS_QT4")
-  find_package(Qt4 4.6 COMPONENTS
-    QtCore QtGui 
-    QtXml QtSvg
-    QtNetwork QtWebKit
-    REQUIRED)
-endif(enable-qt4)
-
-if(enable-qt5)
-  add_definitions("-DQEMACS_QT5")
-  find_package(Qt5 5.3 COMPONENTS
-    Core Widgets 
-    Xml Svg
-    Network
-    PrintSupport
-    WebKit
-    WebKitWidgets
-    REQUIRED)
-endif(enable-qt5)
+find_package(Qt5 5.3 COMPONENTS
+  Core Widgets 
+  Xml Svg
+  Network
+  PrintSupport
+  WebKit
+  WebKitWidgets
+  REQUIRED)
 
 macro(moc_source header_directory file)
   set(header_file "${header_directory}/${file}.hxx")
   set(moc_output  "moc_${file}.cxx")
-  if(enable-qt4)
-    QT4_GENERATE_MOC(${header_file} ${moc_output})
-  endif(enable-qt4)    
-  if(enable-qt5)
-    QT5_GENERATE_MOC(${header_file} ${moc_output})
-  endif(enable-qt5)    
+  QT5_GENERATE_MOC(${header_file} ${moc_output})
 endmacro(moc_source)
 
 macro(moc_sources flist header_directory)
@@ -63,12 +34,7 @@ macro(qt_sources flist header_directory)
 endmacro(qt_sources)
 
 macro(qt_add_resources)
-  if(enable-qt4)
-    qt4_add_resources(${ARGN})
-  endif(enable-qt4)    
-  if(enable-qt5)
-    qt5_add_resources(${ARGN})
-  endif(enable-qt5)    
+  qt5_add_resources(${ARGN})
 endmacro(qt_add_resources)
 
 add_definitions("-DQT_DEPRECATED_WARNINGS")

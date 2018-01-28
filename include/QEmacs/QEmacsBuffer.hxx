@@ -5,30 +5,19 @@
  * \brief 27 juin 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSBUFFER_H_
-#define _LIB_QEMACS_QEMACSBUFFER_H_ 
+#ifndef LIB_QEMACS_QEMACSBUFFER_HXX
+#define LIB_QEMACS_QEMACSBUFFER_HXX 
 
 #include<QtCore/QMap>
 #include<QtCore/QVector>
 #include<QtCore/QString>
 #include<QtCore/QStringList>
-
-#ifdef QEMACS_QT4
-#include<QtGui/QMenu>
-#include<QtGui/QLabel>
-#include<QtGui/QWidget>
-#include<QtGui/QTabWidget>
-#include<QtGui/QHBoxLayout>
-#include<QtGui/QAbstractScrollArea>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QMenu>
 #include<QtWidgets/QLabel>
 #include<QtWidgets/QWidget>
 #include<QtWidgets/QTabWidget>
 #include<QtWidgets/QHBoxLayout>
 #include<QtWidgets/QAbstractScrollArea>
-#endif /* QEMACS_QT5 */
 
 namespace qemacs
 {
@@ -58,10 +47,10 @@ namespace qemacs
 		 QEmacsWidget&);
 
     virtual int
-    getId(void) const;
+    getId() const;
     
     virtual QString
-    getBufferName(void) const;
+    getBufferName() const;
 
     virtual QString
     getBufferNameSuffix() const;
@@ -104,21 +93,21 @@ namespace qemacs
     hideSlave(QWidget *const);
 
     virtual bool
-    hasSlaves(void) const;
+    hasSlaves() const;
 
     virtual bool
-    areSlavesVisible(void) const;
+    areSlavesVisible() const;
 
     virtual bool
-    isOkToClose(void) const;
+    isOkToClose() const;
 			     
   public slots:
 
     virtual void
-    showSlaves(void);
+    showSlaves();
 
     virtual void
-    hideSlaves(void);
+    hideSlaves();
 
     virtual void
     focusCurrentSlave();
@@ -127,7 +116,7 @@ namespace qemacs
     focusMainFrame();
 
     virtual void
-    closeCurrentSlave(void);
+    closeCurrentSlave();
     
   signals:
 
@@ -148,16 +137,16 @@ namespace qemacs
     focusInEvent(QFocusEvent *) override;
 
     virtual void
-    updatePosition(void);
+    updatePosition();
 
     virtual void
-    updateDate(void);
+    updateDate();
 
     virtual void
-    updateBufferInformations(void);
+    updateBufferInformations();
 
     virtual void
-    updateBufferName(void);
+    updateBufferName();
 
     virtual void
     closeSlave(int);
@@ -207,5 +196,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_QEMACSBUFFER_H */
+#endif /* LIB_QEMACS_QEMACSBUFFER_HXX */
 

@@ -5,16 +5,10 @@
  * \brief 01 août 2012
  */
 
-#ifndef _LIB_LICOSOUTPUTFRAME_H_
-#define _LIB_LICOSOUTPUTFRAME_H_ 
+#ifndef LIB_LICOSOUTPUTFRAME_HXX
+#define LIB_LICOSOUTPUTFRAME_HXX 
 
-#ifdef QEMACS_QT4
-#include<QtGui/QProgressBar>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QProgressBar>
-#endif /* QEMACS_QT5 */
-
 #include"QEmacs/LicosStudyOptions.hxx"
 
 namespace qemacs
@@ -45,7 +39,7 @@ namespace qemacs
 
   protected:
 
-    void closeEvent(QCloseEvent *);
+    void closeEvent(QCloseEvent *) override;
 
   signals:
       
@@ -69,5 +63,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_LICOSOUTPUTFRAME_H */
+#endif /* LIB_LICOSOUTPUTFRAME_H */
 

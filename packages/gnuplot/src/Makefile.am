@@ -1,6 +1,6 @@
 AM_CPPFLAGS = -I$(top_srcdir)/packages/gnuplot/include \
 	      -I$(top_srcdir)/include                         \
-	      @QT4_CFLAGS@                                    \
+	      @QT_CXXFLAGS@                                    \
 	      `@TFELCONFIG@ --includes --cppflags`
 
 packagesdir = @prefix@/share/qemacs/packages

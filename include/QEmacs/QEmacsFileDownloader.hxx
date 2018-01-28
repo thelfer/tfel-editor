@@ -1,12 +1,18 @@
-#ifndef _LIB_QEMACS_QEMACSFILEDOWNLOADER_H
-#define _LIB_QEMACS_QEMACSFILEDOWNLOADER_H
+/*! 
+ * \file  CMajorModeBase.hxx
+ * \brief
+ * \author Helfer Thomas
+ * \brief 05 sept. 2012
+ */
+
+#ifndef LIB_QEMACS_QEMACSFILEDOWNLOADER_HXX
+#define LIB_QEMACS_QEMACSFILEDOWNLOADER_HXX
 
 #include<QtCore/QObject>
 #include<QtCore/QByteArray>
 #include<QtNetwork/QNetworkAccessManager>
 #include<QtNetwork/QNetworkRequest>
 #include<QtNetwork/QNetworkReply>
-
 #include<QEmacs/Config.hxx>
 
 namespace qemacs
@@ -45,4 +51,4 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_QEMACSFILEDOWNLOADER_*/
+#endif /* LIB_QEMACS_QEMACSFILEDOWNLOADER_*/

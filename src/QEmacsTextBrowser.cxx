@@ -10,18 +10,9 @@
 #include<QtCore/QFile>
 #include<QtCore/QFileInfo>
 #include<QtCore/QTextStream>
-
-#ifdef QEMACS_QT4
-#include<QtGui/QHBoxLayout>
-#include<QtGui/QMessageBox>
-#include<QtGui/QApplication>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QHBoxLayout>
 #include<QtWidgets/QMessageBox>
 #include<QtWidgets/QApplication>
-#endif /* QEMACS_QT5 */
-
 #include"QEmacs/Utilities.hxx"
 #include"QEmacs/QEmacsTextBrowser.hxx"
 
@@ -40,7 +31,7 @@ namespace qemacs
       e(new QTextBrowser(this))
   {
     this->initialize(this->e);
-    QHBoxLayout *hl  = new QHBoxLayout;
+    auto *hl  = new QHBoxLayout;
     setQAbstractScrollAreaInLayout(hl,this->e);
     this->e->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     this->setLayout(hl);
@@ -53,7 +44,7 @@ namespace qemacs
       e(new QTextBrowser(this))
   {
     this->initialize(this->e);
-    QHBoxLayout *hl  = new QHBoxLayout;
+    auto *hl = new QHBoxLayout;
     setQAbstractScrollAreaInLayout(hl,this->e);
     this->e->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     this->setLayout(hl);
@@ -217,7 +208,7 @@ namespace qemacs
   }
   
   QTextCursor
-  QEmacsTextBrowser::textCursor(void) const
+  QEmacsTextBrowser::textCursor() const
   {
     return this->e->textCursor();
   }
@@ -259,7 +250,6 @@ namespace qemacs
     this->e->setTextInteractionFlags(f);
   }
 
-  QEmacsTextBrowser::~QEmacsTextBrowser()
-  {} // end of QEmacsTextBrowser::~QEmacsTextBrowser()
+  QEmacsTextBrowser::~QEmacsTextBrowser() = default;
 
 } // end of namespace qemacs

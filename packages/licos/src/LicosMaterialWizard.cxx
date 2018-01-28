@@ -6,13 +6,7 @@
  */
 
 #include<QtCore/QDebug>
-#ifdef QEMACS_QT4
-#include<QtGui/QPushButton>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QPushButton>
-#endif /* QEMACS_QT5 */
-
 #include"QEmacs/QEmacsTextEditBase.hxx"
 #include"QEmacs/LicosThermalBehaviourWizard.hxx"
 #include"QEmacs/LicosMaterialWizard.hxx"
@@ -24,36 +18,35 @@ namespace qemacs
     : public QWizardPage
   {
 
-    MaterialPage(LicosMaterialWizard& w)
+    explicit MaterialPage(LicosMaterialWizard& w)
       : tbb(new QPushButton(QObject::tr("Add"))),
 	mbb(new QPushButton(QObject::tr("Add"))),
 	wizard(w)
     {
       this->setTitle("Create a new material");
-      QLabel *label = new QLabel("This wizard will help you "
+      auto *label = new QLabel("This wizard will help you "
 				 "to define the behaviours and the properties "
 				 "of a set of materials.");
       label->setWordWrap(true);
-      QLabel *   classNameLabel    = new QLabel(QObject::tr("&Materials:"));
+      auto * classNameLabel = new QLabel(QObject::tr("&Materials:"));
       classNameLabel->setToolTip(QObject::tr("The user shall provide a list of materials.\n"
 					     "A comma shall seperate each material.\n"
 					     "A regular expression can be used to select "
 					     "many materials at once\n"
 					     "Exemple : FUEL.+,CLADDING"));
-      QLineEdit* classNameLineEdit = new QLineEdit;
+      auto *classNameLineEdit = new QLineEdit;
       classNameLabel->setBuddy(classNameLineEdit);
 
-      QLabel *   parentNameLabel    = new QLabel(QObject::tr("Material description:"));
+      auto *parentNameLabel   = new QLabel(QObject::tr("Material description:"));
       parentNameLabel->setToolTip(QObject::tr("The user shall provide a list of material description.\n"
 					      "The material will inherit from the properties and the "
 					      "behaviours from thoses material descriptions.\n"
 					      "A comma shall seperate each material description.\n"
 					      "Exemple : UO2"));
-      QLineEdit* parentNameLineEdit = new QLineEdit;
+      auto* parentNameLineEdit = new QLineEdit;
       parentNameLabel->setBuddy(parentNameLineEdit);
-
-      QVBoxLayout *l    = new QVBoxLayout;
-      QGridLayout *grid = new QGridLayout;
+      auto *l    = new QVBoxLayout;
+      auto *grid = new QGridLayout;
       l->addWidget(label);
       grid->addWidget(classNameLabel,0,0);
       grid->addWidget(classNameLineEdit,0,1);
@@ -61,12 +54,12 @@ namespace qemacs
       grid->addWidget(parentNameLabel,1,0);
       grid->addWidget(parentNameLineEdit,1,1);
       // thermal behaviour
-      QLabel * tbl = new QLabel(QObject::tr("Thermal behaviour:"));
+      auto* tbl = new QLabel(QObject::tr("Thermal behaviour:"));
       grid->addWidget(tbl,2,0);
       grid->addWidget(this->tbb,2,1);
       tbl->setBuddy(this->tbb);
       // mechanical behaviour
-      QLabel * mbl = new QLabel(QObject::tr("Mechanical behaviour:"));
+      auto* mbl = new QLabel(QObject::tr("Mechanical behaviour:"));
       grid->addWidget(mbl,3,0);
       grid->addWidget(this->mbb,3,1);
       mbl->setBuddy(this->mbb);
@@ -109,30 +102,26 @@ namespace qemacs
     this->addPage(this->mpage);
   } // end of LicosMaterialWizard::LicosMaterialWizard
 
-  bool LicosMaterialWizard::validateCurrentPage () 
+  bool LicosMaterialWizard::validateCurrentPage() 
   {
-    QString m  =  this->field("MaterialName").toString();
-    QStringList lm = m.split(',');
-    if(lm.size()==0){
-      return false;
-    }
-    return true;
+    const auto m = this->field("MaterialName").toString();
+    return !m.split(',').empty();
   }
 
   void LicosMaterialWizard::writeMaterial()
   {
-    QString m  =  this->field("MaterialName").toString();
-    QString md =  this->field("MaterialDescription").toString();
-    QStringList lm = m.split(',');
-    if(lm.size()==0){
+    const auto m  =  this->field("MaterialName").toString();
+    const auto md =  this->field("MaterialDescription").toString();
+    const auto lm = m.split(',');
+    if(lm.empty()){
       return;
     }
-    QTextCursor tc = this->textEdit.textCursor();
+    auto tc = this->textEdit.textCursor();
     int i;
     tc.insertText("Material");
     if(!md.isEmpty()){
-      QStringList lmd = md.split(',');
-      if(lmd.size()!=0){
+      const auto lmd = md.split(',');
+      if(!lmd.empty()){
 	tc.insertText("<");
 	for(i=0;i!=lmd.size();){
 	  tc.insertText(lmd[i]);

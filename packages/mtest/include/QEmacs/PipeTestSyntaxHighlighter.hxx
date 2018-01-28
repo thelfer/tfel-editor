@@ -5,8 +5,8 @@
  * \brief 30 juin 2012
  */
 
-#ifndef _LIB_QEMACS_PIPETESTSYNTAXHIGHLIGHTER_H_
-#define _LIB_QEMACS_PIPETESTSYNTAXHIGHLIGHTER_H_ 
+#ifndef LIB_QEMACS_PIPETESTSYNTAXHIGHLIGHTER_HXX
+#define LIB_QEMACS_PIPETESTSYNTAXHIGHLIGHTER_HXX 
 
 #include<QtCore/QStringList>
 
@@ -25,7 +25,7 @@ namespace qemacs
   public:
     //! \return the list of keys
     static QStringList&
-    getPipeTestKeys(void);
+    getPipeTestKeys();
     /*!
      * \param[in] t : text document to be highlighted
      */
@@ -34,12 +34,12 @@ namespace qemacs
     virtual ~PipeTestSyntaxHighlighter();
   protected:
     //! \return the list of keys
-    virtual QStringList getKeyWordsList(void) const;
+    virtual QStringList getKeyWordsList() const;
     // format used for syntax highlighting
     QTextCharFormat mtestKeyFormat;
   }; // end of struct PipeTestSyntaxHighlighter
   
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_PIPETESTSYNTAXHIGHLIGHTER_H */
+#endif /* LIB_QEMACS_PIPETESTSYNTAXHIGHLIGHTER_H */
 

@@ -5,8 +5,8 @@
  * \brief 06 août 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSTEXTEDITREPLACEFILTER_H_
-#define _LIB_QEMACS_QEMACSTEXTEDITREPLACEFILTER_H_ 
+#ifndef LIB_QEMACS_QEMACSTEXTEDITREPLACEFILTER_HXX
+#define LIB_QEMACS_QEMACSTEXTEDITREPLACEFILTER_HXX 
 
 #include"QEmacs/QEmacsTextEditKeyPressEventFilter.hxx"
 
@@ -17,7 +17,7 @@ namespace qemacs
 
   class QEmacsTextEdit;
 
-  class QEmacsTextEditQueryReplace;
+  struct QEmacsTextEditQueryReplace;
 
 
   /*!
@@ -32,17 +32,15 @@ namespace qemacs
 				const QString&,
 				const QString&);
     
-    virtual bool
-    isOk(void) const override;
+    bool isOk() const override;
 
-    virtual bool
-    filterKeyPressEvent(QKeyEvent * const) override;
+    bool filterKeyPressEvent(QKeyEvent * const) override;
 
-    ~QEmacsTextEditReplaceFilter();
+    ~QEmacsTextEditReplaceFilter() override;
 
   protected:
 
-    bool findNext(void);
+    bool findNext();
 
     QEmacsWidget&   qemacs;
     
@@ -68,5 +66,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_QEMACSTEXTEDITREPLACEFILTER_H */
+#endif /* LIB_QEMACS_QEMACSTEXTEDITREPLACEFILTER_HXX */
 

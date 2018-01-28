@@ -5,8 +5,8 @@
  * \date   20 janv. 2016
  */
 
-#ifndef _LIB_QEMACS_PIPETESTMAJORMODE_HXX_
-#define _LIB_QEMACS_PIPETESTMAJORMODE_HXX_
+#ifndef LIB_QEMACS_PIPETESTMAJORMODE_HXX_
+#define LIB_QEMACS_PIPETESTMAJORMODE_HXX_
 
 #include"QEmacs/MTestMajorMode.hxx"
 
@@ -28,29 +28,23 @@ namespace qemacs
 		      QEmacsBuffer&,
 		      QEmacsTextEditBase&);
 
-    virtual QString
-    getName(void) const override;
+    QString getName() const override;
 
-    virtual QString
-    getDescription(void) const override;
+    QString getDescription() const override;
     
-    virtual void
-    setSyntaxHighlighter(QTextDocument *const) override;
-    virtual QCompleter*
-    getCompleter(void) override;
+    void setSyntaxHighlighter(QTextDocument *const) override;
+    QCompleter* getCompleter() override;
     //! destructor
-    virtual ~PipeTestMajorMode();
+    ~PipeTestMajorMode() override;
   protected:
     //! return the list of MTest keywords
-    virtual QStringList
-    getKeyWordsList() const override;
+    QStringList getKeyWordsList() const override;
     //! return the scheme name
-    virtual QString
-    getScheme(void) const override;
+    QString getScheme() const override;
     // completer
     QCompleter* c;
   }; // end of struct MTestMajorMode
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_PIPETESTMAJORMODE_HXX_ */
+#endif /* LIB_QEMACS_PIPETESTMAJORMODE_HXX_ */

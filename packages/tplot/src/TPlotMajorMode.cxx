@@ -54,12 +54,12 @@ namespace qemacs
       : QEmacsMajorModeBase(w,b,t,&t)
     {}
 
-    QString getName(void) const
+    QString getName() const
     {
       return "tplot";
     } // end of LicosMajorMode
 
-    QString getDescription(void) const
+    QString getDescription() const
     {
       return "major mode dedicated to tplot";
     } // end of getDescription
@@ -79,7 +79,7 @@ namespace qemacs
       return false;
     }
 
-    void format(void)
+    void format()
     {}
 
     void comment()

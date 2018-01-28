@@ -5,8 +5,8 @@
  * \brief 03 juil. 2012
  */
 
-#ifndef _LIB_QEMACS_MFRONTMAJORMODE_H_
-#define _LIB_QEMACS_MFRONTMAJORMODE_H_ 
+#ifndef LIB_QEMACS_MFRONTMAJORMODE_HXX
+#define LIB_QEMACS_MFRONTMAJORMODE_HXX 
 
 #include<QtCore/QTimer>
 #include"QEmacs/CxxMajorMode.hxx"
@@ -31,41 +31,34 @@ namespace qemacs
 		    QEmacsBuffer&,
 		    QEmacsTextEditBase&);
 
-    virtual QString
-    getName(void) const override;
+    QString getName() const override;
 
-    virtual QString
-    getDescription(void) const override;
+    QString getDescription() const override;
     
-    virtual void
-    setSyntaxHighlighter(QTextDocument *const) override;
+    void setSyntaxHighlighter(QTextDocument *const) override;
 
-    virtual void
-    completeContextMenu(QMenu *const,
-			const QTextCursor&) override;
+    void completeContextMenu(QMenu *const,
+			     const QTextCursor&) override;
     
-    virtual QCompleter*
-    getCompleter(void) override;
+    QCompleter* getCompleter() override;
 
-    QString
-    getCompletionPrefix(void) override;
-
-    virtual QIcon
-    getIcon(void) const override;
+    QString getCompletionPrefix() override;
+    
+    QIcon getIcon() const override;
     //! destructor    
-    virtual ~MFrontMajorMode();
+    ~MFrontMajorMode() override;
 
   protected slots:
     //! method called periodically to refresh the syntax highlighter
     //! and the completer
     virtual void
-    updateSyntaxHighlighterAndCompleter(void);
+    updateSyntaxHighlighterAndCompleter();
     //! method called when the Help menu is called
     virtual void
     actionTriggered(QAction *);
   protected:
     //! \return the name of the DSL
-    virtual QString getDSLName(void) const;
+    virtual QString getDSLName() const;
     //! return the list of MTest keywords
     virtual QStringList
     getKeyWordsList() const;
@@ -82,5 +75,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_MFRONTMAJORMODE_H */
+#endif /* LIB_QEMACS_MFRONTMAJORMODE_H */
 

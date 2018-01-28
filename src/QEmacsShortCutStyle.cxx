@@ -48,7 +48,7 @@ namespace qemacs
   }
 
   QEmacsShortCutStyle::ShortCutStyle
-  QEmacsShortCutStyle::getStyle(void)
+  QEmacsShortCutStyle::getStyle()
   {
     return this->style;
   } // end of QEmacsShortCutStyle::getStyle

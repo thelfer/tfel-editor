@@ -16,24 +16,12 @@
 #include<QtCore/QSettings>
 #include<QtCore/QTextCodec>
 #include<QtCore/QTextStream>
-
-#ifdef QEMACS_QT4
-#include<QtGui/QHBoxLayout>
-#include<QtGui/QMessageBox>
-#include<QtGui/QApplication>
-#include<QtGui/QStringListModel>
-#include<QtGui/QListView>
-#include<QtGui/QDialogButtonBox>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtCore/QStringListModel>
 #include<QtWidgets/QHBoxLayout>
 #include<QtWidgets/QMessageBox>
 #include<QtWidgets/QApplication>
 #include<QtWidgets/QListView>
 #include<QtWidgets/QDialogButtonBox>
-#endif /* QEMACS_QT5 */
-
 #include"QEmacs/utf8/utf8.h"
 #include"QEmacs/Utilities.hxx"
 #include"QEmacs/QEmacsPlainTextEdit.hxx"
@@ -57,10 +45,10 @@ namespace qemacs
 	model(new QStringListModel(this)),
 	view(new QListView(this))
     {
-      QVBoxLayout *mlayout = new QVBoxLayout;
-      QLabel *l = new QLabel(QObject::tr("Select encoding for file '%1'")
-			     .arg(QFileInfo(file).fileName()));
-      QList<QByteArray> codecs_ = QTextCodec::availableCodecs();
+      auto *mlayout = new QVBoxLayout;
+      auto *l = new QLabel(QObject::tr("Select encoding for file '%1'")
+			   .arg(QFileInfo(file).fileName()));
+      auto codecs_ = QTextCodec::availableCodecs();
       QStringList codecs;
       for(int i=0;i!=codecs_.size();++i){
 	codecs.append(codecs_[i]);
@@ -70,7 +58,7 @@ namespace qemacs
       QSettings s;
       view->setModel(model);
       if(s.contains("previously selected codec")){
-	QString c = s.value("previously selected codec").toString();
+	auto c = s.value("previously selected codec").toString();
 	view->setCurrentIndex(model->index(codecs.indexOf(c)));
       }
       QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok
@@ -84,7 +72,7 @@ namespace qemacs
     } // end of CodecSelectionDialog
 
     QString
-    selectedCodec(void) const
+    selectedCodec() const
     {
       QModelIndex index = this->view->currentIndex();
       if(!index.isValid()){
@@ -117,27 +105,25 @@ namespace qemacs
 
 #ifdef Q_OS_UNIX
 
-  static QString
-  getLoginName(void)
+  static QString getLoginName()
   {
     struct passwd *pw;
     uid_t uid;
     uid = geteuid ();
     pw = getpwuid (uid);
-    if (pw){
+    if (pw!=nullptr){
       return QString(pw->pw_name);
     }
     return QString();
   }
 
-  static QString
-  getUserName(void)
+  static QString getUserName()
   {
     struct passwd *pw;
     uid_t uid;
     uid = geteuid ();
     pw = getpwuid (uid);
-    if (pw){
+    if (pw!=nullptr){
       return QString(pw->pw_gecos);
     }
     return QString();
@@ -151,8 +137,8 @@ namespace qemacs
       e(new QPlainTextEdit(this))
   {
     this->initialize(this->e);
-#warning ""
-    QHBoxLayout *hl  = new QHBoxLayout;
+#pragma message ("warning")
+    auto *hl  = new QHBoxLayout;
     setQAbstractScrollAreaInLayout(hl,this->e);
     this->e->setTabStopWidth(40);
     this->e->setWordWrapMode(QTextOption::WrapAnywhere);
@@ -167,7 +153,7 @@ namespace qemacs
       e(new QPlainTextEdit(this))
   {
     this->initialize(this->e);
-    QHBoxLayout *hl  = new QHBoxLayout;
+    auto *hl = new QHBoxLayout;
     setQAbstractScrollAreaInLayout(hl,this->e);
     this->e->setTabStopWidth(40);
     this->e->setWordWrapMode(QTextOption::WrapAnywhere);
@@ -361,7 +347,7 @@ namespace qemacs
   }
   
   QTextCursor
-  QEmacsPlainTextEdit::textCursor(void) const
+  QEmacsPlainTextEdit::textCursor() const
   {
     return this->e->textCursor();
   }
@@ -481,13 +467,13 @@ namespace qemacs
 
   QEmacsPlainTextEdit::~QEmacsPlainTextEdit()
   {
-    const QString&f = this->getCompleteFileName();
+    const auto&f = this->getCompleteFileName();
     QSettings s;
     QMap<QString, QVariant> pl;
     if(s.contains("positions in files")){
       pl = s.value("positions in files").value<QMap<QString, QVariant> >();
     }
-    const QTextCursor& c = this->textCursor();
+    const auto& c = this->textCursor();
     pl[f] = c.blockNumber()+1;
     s.setValue("positions in files",pl);
   } // end of QEmacsPlainTextEdit::~QEmacsPlainTextEdit()

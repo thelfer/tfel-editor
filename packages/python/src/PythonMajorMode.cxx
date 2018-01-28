@@ -25,7 +25,7 @@ namespace qemacs
   struct PythonSyntaxHighlighter
     : public CSyntaxHighlighterBase
   {
-    PythonSyntaxHighlighter(QTextDocument *p)
+    explicit PythonSyntaxHighlighter(QTextDocument *p)
       : CSyntaxHighlighterBase(p)
     {
       QStringList keys;
@@ -53,7 +53,7 @@ namespace qemacs
   /*!
    * A major mode to display the results of the grepOutput unix command
    */
-  struct PythonMajorMode
+  struct PythonMajorMode final
     : public QEmacsMajorModeBase
   {
     
@@ -63,44 +63,38 @@ namespace qemacs
       : QEmacsMajorModeBase(w,b,t,&t)
     {}
 
-    QString
-    getName(void) const
+    QString getName() const override
     {
       return "python";
     } // end of LicosMajorMode
 
-    QString
-    getDescription(void) const
+    QString getDescription() const override
     {
       return "major mode dedicated to the python programming language";
     } // end of getDescription
 
-    void
-    setSyntaxHighlighter(QTextDocument* d)
+    void setSyntaxHighlighter(QTextDocument* d) override
     {
       new PythonSyntaxHighlighter(d);
     } // end of setSyntaxHighlighter
 
-    bool
-    mousePressEvent(QMouseEvent *)
+    bool mousePressEvent(QMouseEvent *) override
     {
       return false;
     }
 
-    bool
-    keyPressEvent(QKeyEvent *)
+    bool keyPressEvent(QKeyEvent *) override
     {
       return false;
     }
 
-    void format(void)
+    void format() override
     {}
 
-    void comment()
+    void comment() override
     {}
 
-    ~PythonMajorMode()
-    {}
+    ~PythonMajorMode() override = default;
 
   }; // end of PythonMajorMode
   

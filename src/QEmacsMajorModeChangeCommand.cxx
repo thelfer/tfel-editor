@@ -24,9 +24,9 @@ namespace qemacs
   {} // end of QEmacsMajorModeChangeCommand::QEmacsMajorModeChangeCommand
   
   void
-  QEmacsMajorModeChangeCommand::execute(void)
+  QEmacsMajorModeChangeCommand::execute()
   {
-    QEmacsWidget *p = qobject_cast<QEmacsWidget *>(this->parent());
+    auto *p = qobject_cast<QEmacsWidget *>(this->parent());
     if(p!=nullptr){
       QEmacsBuffer& b = p->getCurrentBuffer();
       QEmacsPlainTextEdit& t = b.getMainFrame();
@@ -34,9 +34,7 @@ namespace qemacs
     }
   } // end of QEmacsMajorModeChangeCommand::execute
     
-  QEmacsMajorModeChangeCommand::~QEmacsMajorModeChangeCommand()
-  {} // end of ~QEmacsMajorModeChangeCommand
-
+  QEmacsMajorModeChangeCommand::~QEmacsMajorModeChangeCommand() = default;
    
   QEmacsMajorModeChangeCommandProxy::QEmacsMajorModeChangeCommandProxy(const QString& c,
 								       const QString& m)
@@ -45,7 +43,7 @@ namespace qemacs
   {} // end of QEmacsMajorModeChangeCommandProxy::QEmacsMajorModeChangeCommandProxy
   
   QString
-  QEmacsMajorModeChangeCommandProxy::getName(void) const
+  QEmacsMajorModeChangeCommandProxy::getName() const
   {
     return this->name;
   }
@@ -56,8 +54,7 @@ namespace qemacs
     return new QEmacsMajorModeChangeCommand(t,this->mode);
   }
 
-  QEmacsMajorModeChangeCommandProxy::~QEmacsMajorModeChangeCommandProxy()
-  {} // end of QEmacsMajorModeChangeCommandProxy::~QEmacsMajorModeChangeCommandProxy
+  QEmacsMajorModeChangeCommandProxy::~QEmacsMajorModeChangeCommandProxy() = default;
 
 } // end of namespace qemacs
 

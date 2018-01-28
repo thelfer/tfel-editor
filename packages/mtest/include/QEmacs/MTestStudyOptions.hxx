@@ -5,15 +5,10 @@
  * \brief 04 juin 2012
  */
 
-#ifndef _LIB_QEMACS_MTESTSTUDYOPTIONS_H_
-#define _LIB_QEMACS_MTESTSTUDYOPTIONS_H_ 
+#ifndef LIB_QEMACS_MTESTSTUDYOPTIONS_HXX
+#define LIB_QEMACS_MTESTSTUDYOPTIONS_HXX 
 
-#ifdef QEMACS_QT4
-#include<QtGui/QDialog>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QDialog>
-#endif /* QEMACS_QT5 */
 
 namespace qemacs
 {
@@ -76,5 +71,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_MTESTSTUDYOPTIONS_H */
+#endif /* LIB_QEMACS_MTESTSTUDYOPTIONS_H */
 

@@ -3411,34 +3411,34 @@ int AffixMgr::get_utf8() const
   return utf8;
 }
 
-int AffixMgr::get_maxngramsugs(void) const
+int AffixMgr::get_maxngramsugs() const
 {
   return maxngramsugs;
 }
 
-int AffixMgr::get_maxcpdsugs(void) const
+int AffixMgr::get_maxcpdsugs() const
 {
   return maxcpdsugs;
 }
 
-int AffixMgr::get_maxdiff(void) const
+int AffixMgr::get_maxdiff() const
 {
   return maxdiff;
 }
 
-int AffixMgr::get_onlymaxdiff(void) const
+int AffixMgr::get_onlymaxdiff() const
 {
   return onlymaxdiff;
 }
 
 // return nosplitsugs
-int AffixMgr::get_nosplitsugs(void) const
+int AffixMgr::get_nosplitsugs() const
 {
   return nosplitsugs;
 }
 
 // return sugswithdots
-int AffixMgr::get_sugswithdots(void) const
+int AffixMgr::get_sugswithdots() const
 {
   return sugswithdots;
 }

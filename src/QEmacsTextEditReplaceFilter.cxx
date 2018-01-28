@@ -52,13 +52,13 @@ namespace qemacs
   }
 
   bool
-  QEmacsTextEditReplaceFilter::isOk(void) const
+  QEmacsTextEditReplaceFilter::isOk() const
   {
     return this->bOK;
   } // end of QEmacsTextEditReplaceFilter::isOk
     
   bool
-  QEmacsTextEditReplaceFilter::findNext(void)
+  QEmacsTextEditReplaceFilter::findNext()
   {
     QTextCursor tc = this->textEdit.textCursor();
     QTextCursor nc = this->textEdit.document()->find(s1,tc);

@@ -34,7 +34,7 @@ namespace qemacs
   struct GlobalCouplingItemBlock
     : public StandardLicosBlock
   {
-    GlobalCouplingItemBlock(const QString&);
+    explicit GlobalCouplingItemBlock(const QString&);
   };
 
   GlobalCouplingItemBlock::GlobalCouplingItemBlock(const QString& n_)
@@ -58,7 +58,7 @@ namespace qemacs
   struct GaseousMaterialDescriptionBlock
     : public StandardLicosBlock
   {
-    GaseousMaterialDescriptionBlock(const QString& = "GaseousMaterialDescription");
+    explicit GaseousMaterialDescriptionBlock(const QString& = "GaseousMaterialDescription");
   };
 
   struct GaseousMaterialBlock
@@ -133,13 +133,11 @@ namespace qemacs
   struct ThermalLoadingBlock
     : public StandardLicosBlock
   {
-    ThermalLoadingBlock(const QString& = "ThermalLoading");
+    explicit ThermalLoadingBlock(const QString& = "ThermalLoading");
 
-    virtual bool
-    isSubKey(const QString&) const;
+    bool isSubKey(const QString&) const override;
 
-    virtual bool
-    isSubBlock(const QString&) const;
+    bool isSubBlock(const QString&) const override;
 
   }; // end of struct ThermalLoadingBlock
 
@@ -173,13 +171,11 @@ namespace qemacs
   struct MechanicalLoadingBlock
     : public StandardLicosBlock
   {
-    MechanicalLoadingBlock(const QString& = "MechanicalLoading");
+    explicit MechanicalLoadingBlock(const QString& = "MechanicalLoading");
 
-    virtual bool
-    isSubKey(const QString&) const;
+    bool isSubKey(const QString&) const override;
 
-    virtual bool
-    isSubBlock(const QString&) const;
+    bool isSubBlock(const QString&) const override;
 
   }; // end of struct MechanicalLoadingBlock
 
@@ -214,11 +210,9 @@ namespace qemacs
   {
     MechanicalPostComputationBlock();
 
-    virtual bool
-    isSubKey(const QString&) const;
+    bool isSubKey(const QString&) const override;
 
-    virtual bool
-    isSubBlock(const QString&) const;
+    bool isSubBlock(const QString&) const override;
 
   }; // end of struct MechanicalPostComputationBlock
 
@@ -243,11 +237,9 @@ namespace qemacs
   {
     MechanicalPostProcessingBlock();
 
-    virtual bool
-    isSubKey(const QString&) const;
+    bool isSubKey(const QString&) const override;
 
-    virtual bool
-    isSubBlock(const QString&) const;
+    bool isSubBlock(const QString&) const override;
 
   }; // end of struct MechanicalPostProcessingBlock
 
@@ -315,18 +307,18 @@ namespace qemacs
     LicosProcessBlock();
 
     static const QStringList&
-    getKeys(void);
+    getKeys();
 
     static const QMap<QString,QSharedPointer<LicosBlock> >&
-    getBlocks(void);
+    getBlocks();
 
   protected:
 
     static QStringList
-    buildKeys(void);
+    buildKeys();
 
     static const QMap<QString,QSharedPointer<LicosBlock> >
-    buildBlocks(void);
+    buildBlocks();
 
   };
 
@@ -336,18 +328,18 @@ namespace qemacs
     LicosSpecificSectionBlock();
 
     static const QStringList&
-    getKeys(void);
+    getKeys();
 
     static const QMap<QString,QSharedPointer<LicosBlock> >&
-    getBlocks(void);
+    getBlocks();
 
   protected:
 
     static QStringList
-    buildKeys(void);
+    buildKeys();
 
     static const QMap<QString,QSharedPointer<LicosBlock> >
-    buildBlocks(void);
+    buildBlocks();
 
   };
 
@@ -356,11 +348,9 @@ namespace qemacs
   {
     CouplingBlock();
 
-    virtual bool
-    isSubBlock(const QString&) const;
+    bool isSubBlock(const QString&) const override;
 
-    virtual QSharedPointer<LicosBlock>
-    getSubBlock(const QString&) const;
+    QSharedPointer<LicosBlock> getSubBlock(const QString&) const override;
 
   };
 
@@ -369,20 +359,16 @@ namespace qemacs
   {
     Block();
 
-    virtual QString blockEnd(void) const;
+    QString blockEnd() const override;
 
-    virtual void
-    treatParameters(const QStringList&);
+    void treatParameters(const QStringList&) override;
   
-    virtual void
-    treatArguments(const CxxTokenizer::const_iterator,
-		   const CxxTokenizer::const_iterator);
+    void treatArguments(const CxxTokenizer::const_iterator,
+			const CxxTokenizer::const_iterator) override;
 
-    virtual bool
-    isSubBlock(const QString&) const;
-
-    virtual QSharedPointer<LicosBlock>
-    getSubBlock(const QString&) const;
+    bool isSubBlock(const QString&) const override;
+    
+    QSharedPointer<LicosBlock> getSubBlock(const QString&) const override;
 
   private:
   
@@ -412,7 +398,7 @@ namespace qemacs
   } // end of Block::treatArguments
 
   QString
-  Block::blockEnd(void) const
+  Block::blockEnd() const
   {
     return this->end;
   }
@@ -451,36 +437,32 @@ namespace qemacs
   struct LoadingBlock
     : public LicosBlock
   {
-    virtual QString name(void) const;
+    QString name() const override;
 
-    virtual QString blockEnd(void) const;
+    QString blockEnd() const override;
 
-    virtual void
-    treatParameters(const QStringList&);
+    void treatParameters(const QStringList&) override;
   
-    virtual void
-    treatArguments(const CxxTokenizer::const_iterator,
-		   const CxxTokenizer::const_iterator);
+    void treatArguments(const CxxTokenizer::const_iterator,
+			const CxxTokenizer::const_iterator) override;
 
-    virtual bool isSubKey(const QString&) const;
+    bool isSubKey(const QString&) const override;
 
-    virtual bool isSubBlock(const QString&) const;
+    bool isSubBlock(const QString&) const override;
 
-    virtual QSharedPointer<LicosBlock>
-    getSubBlock(const QString&) const;
-
-    virtual ~LoadingBlock();
+    QSharedPointer<LicosBlock> getSubBlock(const QString&) const override;
+    
+    ~LoadingBlock() override;
 
   };
 
-  QString 
-  LoadingBlock::name(void) const
+  QString LoadingBlock::name() const
   {
     return "Loading";
   }
 
   QString 
-  LoadingBlock::blockEnd(void) const
+  LoadingBlock::blockEnd() const
   {
     return "EndOfLoading";
   }
@@ -512,42 +494,38 @@ namespace qemacs
     return QSharedPointer<LicosBlock>();
   }
 
-  LoadingBlock::~LoadingBlock()
-  {} // end of LoadingBlock::~LoadingBlock()
+  LoadingBlock::~LoadingBlock() = default;
 
   struct GlobalLoadingEvolutionBlock
     : public LicosBlock
   {
-    virtual QString name(void) const;
+    QString name() const override;
 
-    virtual QString blockEnd(void) const;
+    QString blockEnd() const override;
 
-    virtual void
-    treatParameters(const QStringList&);
+    void treatParameters(const QStringList&) override;
   
-    virtual void
-    treatArguments(const CxxTokenizer::const_iterator,
-		   const CxxTokenizer::const_iterator);
+    void treatArguments(const CxxTokenizer::const_iterator,
+			const CxxTokenizer::const_iterator) override;
 
-    virtual bool isSubKey(const QString&) const;
+    bool isSubKey(const QString&) const override;
 
-    virtual bool isSubBlock(const QString&) const;
+    bool isSubBlock(const QString&) const override;
 
-    virtual QSharedPointer<LicosBlock>
-    getSubBlock(const QString&) const;
+    QSharedPointer<LicosBlock> getSubBlock(const QString&) const override;
 
-    virtual ~GlobalLoadingEvolutionBlock();
+    ~GlobalLoadingEvolutionBlock() override;
 
   };
 
   QString 
-  GlobalLoadingEvolutionBlock::name(void) const
+  GlobalLoadingEvolutionBlock::name() const
   {
     return "GlobalLoadingEvolution";
   }
 
   QString 
-  GlobalLoadingEvolutionBlock::blockEnd(void) const
+  GlobalLoadingEvolutionBlock::blockEnd() const
   {
     return "EndOfGlobalLoadingEvolution";
   }
@@ -579,43 +557,38 @@ namespace qemacs
     return QSharedPointer<LicosBlock>();
   }
 
-  GlobalLoadingEvolutionBlock::~GlobalLoadingEvolutionBlock()
-  {} // end of GlobalLoadingEvolutionBlock::~GlobalLoadingEvolutionBlock()
-
+  GlobalLoadingEvolutionBlock::~GlobalLoadingEvolutionBlock() = default;
 
   struct LoadingEvolutionBlock
     : public LicosBlock
   {
-    virtual QString name(void) const;
+    QString name() const override;
 
-    virtual QString blockEnd(void) const;
+    QString blockEnd() const override;
 
-    virtual void
-    treatParameters(const QStringList&);
+    void treatParameters(const QStringList&) override;
   
-    virtual void
-    treatArguments(const CxxTokenizer::const_iterator,
-		   const CxxTokenizer::const_iterator);
+    void treatArguments(const CxxTokenizer::const_iterator,
+			const CxxTokenizer::const_iterator) override;
 
-    virtual bool isSubKey(const QString&) const;
+    bool isSubKey(const QString&) const override;
 
-    virtual bool isSubBlock(const QString&) const;
+    bool isSubBlock(const QString&) const override;
 
-    virtual QSharedPointer<LicosBlock>
-    getSubBlock(const QString&) const;
+    QSharedPointer<LicosBlock> getSubBlock(const QString&) const override;
 
-    virtual ~LoadingEvolutionBlock();
+    ~LoadingEvolutionBlock() override;
 
   };
 
   QString 
-  LoadingEvolutionBlock::name(void) const
+  LoadingEvolutionBlock::name() const
   {
     return "LoadingEvolution";
   }
 
   QString 
-  LoadingEvolutionBlock::blockEnd(void) const
+  LoadingEvolutionBlock::blockEnd() const
   {
     return "EndOfLoadingEvolution";
   }
@@ -647,14 +620,13 @@ namespace qemacs
     return QSharedPointer<LicosBlock>();
   }
 
-  LoadingEvolutionBlock::~LoadingEvolutionBlock()
-  {} // end of LoadingEvolutionBlock::~LoadingEvolutionBlock()
+  LoadingEvolutionBlock::~LoadingEvolutionBlock() = default;
 
   const QMap<QString,QSharedPointer<LicosBlock> >
-  LicosSpecificSectionBlock::buildBlocks(void)
+  LicosSpecificSectionBlock::buildBlocks()
   {
-    typedef QSharedPointer<LicosBlock> BPtr;
-    typedef CouplingItemBlock LCIB;
+    using BPtr = QSharedPointer<LicosBlock>;
+    using LCIB = CouplingItemBlock;
     QMap<QString,BPtr> b;
     b["Block"]                       = BPtr(new Block);
     b["Coupling"]                    = BPtr(new CouplingBlock);
@@ -705,7 +677,7 @@ namespace qemacs
   } // end of LicosSpecificSectionBlock::buildBlocks
 
   const QMap<QString,QSharedPointer<LicosBlock> >&
-  LicosSpecificSectionBlock::getBlocks(void)
+  LicosSpecificSectionBlock::getBlocks()
   {
     typedef QSharedPointer<LicosBlock> BPtr;
     static QMap<QString,BPtr> b(buildBlocks());
@@ -752,11 +724,9 @@ namespace qemacs
   {
     GlobalCouplingBlock();
 
-    virtual bool
-    isSubBlock(const QString&) const;
+    bool isSubBlock(const QString&) const override;
 
-    virtual QSharedPointer<LicosBlock>
-    getSubBlock(const QString&) const;
+    QSharedPointer<LicosBlock> getSubBlock(const QString&) const override;
 
   };
 
@@ -878,30 +848,25 @@ namespace qemacs
   }
 
   const QMap<QString,QSharedPointer<LicosBlock> >
-  LicosProcessBlock::buildBlocks(void)
+  LicosProcessBlock::buildBlocks()
   {
-    typedef QSharedPointer<LicosBlock> BPtr;
-    QMap<QString,BPtr> b;
-    return b;
+    return {};
   } // end of LicosProcessBlock::buildBlocks
 
   const QMap<QString,QSharedPointer<LicosBlock> >&
-  LicosProcessBlock::getBlocks(void)
+  LicosProcessBlock::getBlocks()
   {
-    typedef QSharedPointer<LicosBlock> BPtr;
-    static QMap<QString,BPtr> b(buildBlocks());
+    static auto b = buildBlocks();
     return b;
   }
 
-  const QStringList&
-  LicosProcessBlock::getKeys()
+  const QStringList& LicosProcessBlock::getKeys()
   {
-    static QStringList l(LicosProcessBlock::buildKeys());
+    static auto l = LicosProcessBlock::buildKeys();
     return l;
   }
 
-  QStringList
-  LicosProcessBlock::buildKeys()
+  QStringList LicosProcessBlock::buildKeys()
   {
     QStringList k;
     k << "Mesh"
@@ -921,7 +886,7 @@ namespace qemacs
   LicosMainBlock::LicosMainBlock()
     : StandardLicosBlock("main")
   {
-    typedef GlobalCouplingItemBlock LGCIB;
+    using LGCIB = GlobalCouplingItemBlock;
     this->addKeys(QStringList()
 		  << "CastemNames"
 		  << "Date"

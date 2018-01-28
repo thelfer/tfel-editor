@@ -5,8 +5,8 @@
  * \brief 01 oct. 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSSHORTCUTSTYLE_H_
-#define _LIB_QEMACS_QEMACSSHORTCUTSTYLE_H_ 
+#ifndef LIB_QEMACS_QEMACSSHORTCUTSTYLE_HXX
+#define LIB_QEMACS_QEMACSSHORTCUTSTYLE_HXX 
 
 #include<QtCore/QObject>
 #include"QEmacs/Config.hxx"
@@ -32,7 +32,7 @@ namespace qemacs
     };
 
     static QEmacsShortCutStyle&
-    getQEmacsShortCutStyle(void);
+    getQEmacsShortCutStyle();
 
     ShortCutStyle
     getStyle();
@@ -55,5 +55,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_QEMACSSHORTCUTSTYLE_H */
+#endif /* LIB_QEMACS_QEMACSSHORTCUTSTYLE_HXX */
 

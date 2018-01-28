@@ -15,8 +15,7 @@
 namespace qemacs
 {
 
-  LicosData::~LicosData()
-  {} // end of LicosData::~LicosData
+  LicosData::~LicosData() = default;
   
   LicosSyntaxHighlighter::LicosSyntaxHighlighter(QTextDocument *p)
     : CSyntaxHighlighterBase(p)
@@ -137,7 +136,7 @@ namespace qemacs
        ((p+4)->flag==Token::String)&& 
        ((p+5)->flag==Token::String)&& 
        ((p+6)->flag==Token::String)){
-      LicosData *d = new LicosData;
+      auto *d = new LicosData;
       d->library  = (p+5)->value.mid(1,(p+5)->value.size()-2);
       d->function = (p+6)->value.mid(1,(p+6)->value.size()-2);
       d->pos      = (p+6)->pos+1;
@@ -154,7 +153,7 @@ namespace qemacs
        ((p+4)->flag==Token::String)&& 
        ((p+5)->flag==Token::String)&& 
        ((p+6)->flag==Token::String)){
-      LicosData *d = new LicosData;
+      auto *d = new LicosData;
       d->library  = (p+5)->value.mid(1,(p+5)->value.size()-2);
       d->function = (p+6)->value.mid(1,(p+6)->value.size()-2);
       d->pos      = (p+6)->pos+1;
@@ -168,7 +167,7 @@ namespace qemacs
        ((p+1)->flag==Token::String)&& 
        ((p+2)->flag==Token::String)&& 
        ((p+3)->flag==Token::String)){
-      LicosData *d = new LicosData;
+      auto *d = new LicosData;
       d->library  = (p+2)->value.mid(1,(p+2)->value.size()-2);
       d->function = (p+3)->value.mid(1,(p+3)->value.size()-2);
       d->pos      = (p+3)->pos+1;
@@ -184,21 +183,21 @@ namespace qemacs
   } // end of LicosSyntaxHighlighter::highlightBlock
 
   const QStringList&
-  LicosSyntaxHighlighter::getKeys(void)
+  LicosSyntaxHighlighter::getKeys()
   {
     static QStringList keys(LicosSyntaxHighlighter::buildKeysList());
     return keys;
   } // end of LicosSyntaxHighlighter::getKeys
 
   const QStringList&
-  LicosSyntaxHighlighter::getBlocks(void)
+  LicosSyntaxHighlighter::getBlocks()
   {
     static QStringList blocks(LicosSyntaxHighlighter::buildBlocksList());
     return blocks;
   } // end of LicosSyntaxHighlighter::getBlocks
 
   QStringList
-  LicosSyntaxHighlighter::buildKeysList(void)
+  LicosSyntaxHighlighter::buildKeysList()
   {
     QStringList keys;
     keys << "Mesh"
@@ -293,7 +292,7 @@ namespace qemacs
   }
 
   QStringList
-  LicosSyntaxHighlighter::buildBlocksList(void)
+  LicosSyntaxHighlighter::buildBlocksList()
   {
     QStringList keys;
     keys << "Process"

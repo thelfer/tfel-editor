@@ -5,8 +5,8 @@
  * \brief 17 sept. 2012
  */
 
-#ifndef _LIB_QEMACS_TOKEN_H_
-#define _LIB_QEMACS_TOKEN_H_ 
+#ifndef LIB_QEMACS_TOKEN_HXX
+#define LIB_QEMACS_TOKEN_HXX 
 
 #include<QtCore/QString>
 
@@ -69,5 +69,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_TOKEN_H */
+#endif /* LIB_QEMACS_TOKEN_HXX */
 

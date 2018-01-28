@@ -7,13 +7,10 @@
 
 #include<QtCore/QDir>
 #include<QtCore/QDebug>
-
 #include<QtGui/QSyntaxHighlighter>
-
 #include"QEmacs/QEmacsWidget.hxx"
 #include"QEmacs/QEmacsBuffer.hxx"
 #include"QEmacs/QEmacsTextEditBase.hxx"
-
 #include"QEmacs/QEmacsMajorMode.hxx"
 #include"QEmacs/QEmacsMajorModeBase.hxx"
 #include"QEmacs/ProcessInteractionFrame.hxx"
@@ -26,7 +23,7 @@ namespace qemacs
   /*!
    * A major mode to handle the gnuplot utility
    */
-  struct GnuplotMajorMode
+  struct GnuplotMajorMode final
     : public QEmacsMajorModeBase
   {
     
@@ -38,7 +35,7 @@ namespace qemacs
     {
       QFileInfo fn(t.getCompleteFileName());
       QDir d(fn.dir());
-      QProcess& p = go->getProcess();
+      auto& p = go->getProcess();
       if(d.exists()){
 	p.setWorkingDirectory(d.absolutePath());
       } else {
@@ -48,70 +45,54 @@ namespace qemacs
       b.addSlave("* gnuplot *",go);
     }
 
-    QString
-    getName(void) const override
+    QString getName() const override
     {
       return "gnuplot";
     } // end of LicosMajorMode
 
-    virtual QString
-    getDescription(void) const override
+    QString getDescription() const override
     {
       return "major mode dedicated to gnuplot";
     } // end of getDescription
 
-    virtual void
-    setSyntaxHighlighter(QTextDocument* d) override
+    void setSyntaxHighlighter(QTextDocument* d) override
     {
       new GnuplotSyntaxHighlighter(d);
     } // end of setSyntaxHighlighter
 
-    virtual bool
-    mousePressEvent(QMouseEvent *) override
+    bool mousePressEvent(QMouseEvent *) override
     {
       return false;
     }
 
-    virtual bool
-    keyPressEvent(QKeyEvent *) override
+    bool keyPressEvent(QKeyEvent *) override
     {
       return false;
     }
 
-    virtual void
-    format(void) override
+    void format() override
     {}
 
-    virtual void
-    comment() override
+    void comment() override
     {}
 
-    virtual bool
-    handleShortCut(const int k1,
-		   const Qt::KeyboardModifiers m,
-		   const int k2) override
+    bool handleShortCut(const int k1,
+			const Qt::KeyboardModifiers m,
+			const int k2) override
     {
       if((k1==Qt::Key_C)&&(k2==Qt::Key_L)&&
 	 (m==Qt::ControlModifier)){
-	QTextCursor c = this->textEdit.textCursor();
+	auto c = this->textEdit.textCursor();
 	c.select(QTextCursor::LineUnderCursor);
-	QString l   = c.selectedText();
-	QProcess& p = this->go->getProcess();
-#ifdef QEMACS_QT4
-	p.write((l+"\n").toAscii());
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
+	const auto l   = c.selectedText();
+	auto& p = this->go->getProcess();
 	p.write((l+"\n").toLatin1());
-#endif /* QEMACS_QT5 */
 	return true;
       }
       return false;
     } // end of QEmacsMajorModeBase::handleShortCut
 
-    ~GnuplotMajorMode()
-    {}
-
-  protected:
+    ~GnuplotMajorMode() override = default;
 
     ProcessInteractionFrame *go;
 

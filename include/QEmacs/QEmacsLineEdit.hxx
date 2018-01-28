@@ -5,24 +5,14 @@
  * \brief 05 juil. 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSLINEEDIT_H_
-#define _LIB_QEMACS_QEMACSLINEEDIT_H_ 
+#ifndef LIB_QEMACS_QEMACSLINEEDIT_HXX
+#define LIB_QEMACS_QEMACSLINEEDIT_HXX 
 
 #include<QtCore/QPointer>
-
-#ifdef QEMACS_QT4
-#include<QtGui/QLabel>
-#include<QtGui/QLineEdit>
-#include<QtGui/QHBoxLayout>
-#include<QtGui/QVBoxLayout>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QLabel>
 #include<QtWidgets/QLineEdit>
 #include<QtWidgets/QHBoxLayout>
 #include<QtWidgets/QVBoxLayout>
-#endif /* QEMACS_QT5 */
-
 #include"QEmacs/Config.hxx"
 
 namespace qemacs
@@ -59,8 +49,7 @@ namespace qemacs
     virtual void
     setInputHistory(const QStringList&);
 
-    virtual void
-    keyPressEvent(QKeyEvent *) override;
+    void keyPressEvent(QKeyEvent *) override;
 
     virtual void
     setLabel(const QString&);
@@ -68,12 +57,12 @@ namespace qemacs
     virtual bool
     isBlocking() const;
     
-    virtual ~QEmacsLineEdit();
+    ~QEmacsLineEdit() override;
 
   public slots:
 
     virtual void
-    userEditingFinished(void);
+    userEditingFinished();
     
     /*!
      * cancel editing
@@ -86,7 +75,7 @@ namespace qemacs
 		    const QStringList&);
 
     virtual void
-    hideCompletions(void);
+    hideCompletions();
     
   signals:
 
@@ -104,7 +93,7 @@ namespace qemacs
      * processing is finished
      */
     virtual void
-    treatUserInput(void) = 0;
+    treatUserInput() = 0;
 
     virtual void
     inputTextChanged(const QString &);
@@ -121,17 +110,13 @@ namespace qemacs
       CustomLineEdit(QEmacsWidget&,
 		     QEmacsLineEdit&);
 
-      virtual bool
-      event(QEvent *) override;
-
-      virtual void
-      setInputHistory(const QStringList&);
+      bool event(QEvent *) override;
       
-      virtual QStringList
-      getInputHistory() const;
+      void setInputHistory(const QStringList&);
+      
+      QStringList getInputHistory() const;
 
-      virtual void
-      keyPressEvent(QKeyEvent *) override;
+      void keyPressEvent(QKeyEvent *) override;
 
       /*!
        * \param[in] b : if true, call the QLineEdit::setCompleter
@@ -141,9 +126,9 @@ namespace qemacs
 		   const bool);
       
       virtual QCompleter*
-      completer(void) const;
+      completer() const;
 
-      virtual ~CustomLineEdit();
+      ~CustomLineEdit() override;
 
     protected:
 
@@ -161,7 +146,7 @@ namespace qemacs
 		     const int);
 
       virtual void
-      complete(void);
+      complete();
 
       /*!
        * \return a completion for the given input. An empty string is
@@ -252,12 +237,11 @@ namespace qemacs
 			  const QString&,
 			  QEmacsWidget&);
 
-    virtual ~QEmacsProcessLineEdit();
+    ~QEmacsProcessLineEdit() override;
 
   protected:
 
-    virtual void
-    treatUserInput(void) override;
+    void treatUserInput() override;
 
     virtual void
     run(const QString&,
@@ -289,16 +273,15 @@ namespace qemacs
 			       const QString&,
 			       QEmacsWidget&);
 
-    virtual ~QEmacsShellProcessLineEdit();
+    ~QEmacsShellProcessLineEdit() override;
 
   protected:
 
-    virtual void
-    treatUserInput(void) override;
+    void treatUserInput() override;
 
   }; // end of QEmacsShellProcessLineEdit
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_QEMACSLINEEDIT_H */
+#endif /* LIB_QEMACS_QEMACSLINEEDIT_HXX */
 

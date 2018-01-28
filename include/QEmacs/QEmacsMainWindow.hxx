@@ -5,16 +5,11 @@
  * \brief 27 juin 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSMAINWINDOW_H_
-#define _LIB_QEMACS_QEMACSMAINWINDOW_H_ 
+#ifndef LIB_QEMACS_QEMACSMAINWINDOW_HXX
+#define LIB_QEMACS_QEMACSMAINWINDOW_HXX 
 
 #include<QtCore/QStringList>
-#ifdef QEMACS_QT4
-#include<QtGui/QMainWindow>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QMainWindow>
-#endif /* QEMACS_QT5 */
 #include"QEmacs/Config.hxx"
 
 namespace qemacs
@@ -45,25 +40,25 @@ namespace qemacs
     about();
 
     virtual void
-    undo(void);
+    undo();
 
     virtual void
-    redo(void);
+    redo();
 
     virtual void
-    cut(void);
+    cut();
 
     virtual void
-    copy(void);
+    copy();
 
     virtual void
-    paste(void);
+    paste();
 
     virtual void
-    selectAll(void);
+    selectAll();
 
     virtual void
-    print(void);
+    print();
     
     virtual void
     updateBuffersMenu();
@@ -84,10 +79,10 @@ namespace qemacs
     selectFont();
 
     virtual void
-    useEmacsShortCuts(void);
+    useEmacsShortCuts();
 
     virtual void
-    useQtShortCuts(void);
+    useQtShortCuts();
 
     virtual void
     openRecentFileActionTriggered(QAction *);
@@ -140,5 +135,5 @@ namespace qemacs
   
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_QEMACSMAINWINDOW_H */
+#endif /* LIB_QEMACS_QEMACSMAINWINDOW_HXX */
 

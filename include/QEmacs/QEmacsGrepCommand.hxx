@@ -5,8 +5,8 @@
  * \brief 03 août 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSGREPCOMMAND_H_
-#define _LIB_QEMACS_QEMACSGREPCOMMAND_H_ 
+#ifndef LIB_QEMACS_QEMACSGREPCOMMAND_HXX
+#define LIB_QEMACS_QEMACSGREPCOMMAND_HXX 
 
 #include"QEmacs/QEmacsCommand.hxx"
 
@@ -22,14 +22,13 @@ namespace qemacs
     
     QEmacsGrepCommand(QEmacsWidget&);
     
-    virtual void
-    execute(void) override;
+    void execute() override;
     
-    ~QEmacsGrepCommand();
+    ~QEmacsGrepCommand() override;
 
   }; // end of QEmacsGrepCommand
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_QEMACSGREPCOMMAND_H */
+#endif /* LIB_QEMACS_QEMACSGREPCOMMAND_HXX */
 

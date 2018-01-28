@@ -1,6 +1,3 @@
-if(enable-qt4)
-  include(${QT_USE_FILE})
-endif(enable-qt4)
 add_definitions(${QT_DEFINITIONS})
 include_directories("${PROJECT_SOURCE_DIR}/packages/mfront/include")
 include_directories("${PROJECT_SOURCE_DIR}/include")
@@ -21,17 +18,9 @@ qemacs_package(MFrontQEmacsMode
   ${MFrontQEmacsResources_RCC}
   ${MFrontQEmacsMode_SOURCES})
 
-if(enable-qt4)
-  target_link_libraries(MFrontQEmacsMode
-    TFELQEmacs
-    TFELMFront)
-endif(enable-qt4)
-
-if(enable-qt5)
-  target_link_libraries(MFrontQEmacsMode
-    TFELQEmacs
-    TFELMFront
-    Qt5::Core
-    Qt5::Widgets
-    )
-endif(enable-qt5)
+target_link_libraries(MFrontQEmacsMode
+  TFELQEmacs
+  TFELMFront
+  Qt5::Core
+  Qt5::Widgets
+  )

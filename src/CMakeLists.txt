@@ -1,7 +1,3 @@
-if(enable-qt4)
-  include(${QT_USE_FILE})
-  add_definitions(${QT_DEFINITIONS})
-endif(enable-qt4)
 include_directories("${PROJECT_SOURCE_DIR}/include")
 include_directories("${TFEL_INCLUDE_PATH}")
 link_directories("${PROJECT_BINARY_DIR}/src")
@@ -58,23 +54,15 @@ qemacs_library(TFELQEmacs
   ${QEmacsResources_RCC}
   ${TFELQEmacs_SOURCES})
 
-if(enable-qt4)
-  target_link_libraries(TFELQEmacs
-    TFELSystem
-    TFELException
-    ${QT_LIBRARIES})
-endif(enable-qt4)
-if(enable-qt5)
-  target_link_libraries(TFELQEmacs
-    TFELSystem
-    TFELException
-    Qt5::Core
-    Qt5::Widgets
-    Qt5::Network
-    Qt5::WebKit
-    Qt5::WebKitWidgets
-    Qt5::PrintSupport)
-endif(enable-qt5)
+target_link_libraries(TFELQEmacs
+  TFELSystem
+  TFELException
+  Qt5::Core
+  Qt5::Widgets
+  Qt5::Network
+  Qt5::WebKit
+  Qt5::WebKitWidgets
+  Qt5::PrintSupport)
 
 qt_sources(qemacs_SOURCES
   "${PROJECT_SOURCE_DIR}/include/QEmacs"
@@ -84,16 +72,7 @@ qemacs_executable(qemacs
   qemacs.cxx
   ${qemacs_SOURCES})
 
-if(enable-qt4)
-  target_link_libraries(qemacs
-    TFELQEmacs
-    TFELSystem
-    TFELException
-    ${QT_LIBRARIES})
-endif(enable-qt4)
-if(enable-qt5)
-  target_link_libraries(qemacs
-    TFELQEmacs
-    TFELSystem
-    TFELException)
-endif(enable-qt5)
+target_link_libraries(qemacs
+  TFELQEmacs
+  TFELSystem
+  TFELException)

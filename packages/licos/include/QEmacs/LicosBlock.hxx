@@ -5,8 +5,8 @@
  * \brief 17 sept. 2012
  */
 
-#ifndef _LIB_QEMACS_LICOSBLOCK_H_
-#define _LIB_QEMACS_LICOSBLOCK_H_ 
+#ifndef LIB_QEMACS_LICOSBLOCK_HXX
+#define LIB_QEMACS_LICOSBLOCK_HXX 
 
 #include<QtCore/QString>
 #include<QtCore/QStringList>
@@ -26,12 +26,12 @@ namespace qemacs
     /*!
      * return the name of the block
      */
-    virtual QString name(void) const = 0;
+    virtual QString name() const = 0;
 
     /*!
      * return the end of the block
      */
-    virtual QString blockEnd(void) const = 0;
+    virtual QString blockEnd() const = 0;
 
     /*!
      * \param[in] params : parameters of the block
@@ -76,9 +76,9 @@ namespace qemacs
    * This list contains Bool, Int, Double, Array, Block
    */
   const QStringList&
-  getParameterKeys(void);
+  getParameterKeys();
   
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_LICOSBLOCK_H */
+#endif /* LIB_QEMACS_LICOSBLOCK_H */
 

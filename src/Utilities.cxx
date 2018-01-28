@@ -6,17 +6,6 @@
  */
 
 #include<QtCore/QDebug>
-
-#ifdef QEMACS_QT4
-#include<QtGui/QLabel>
-#include<QtGui/QWidget>
-#include<QtGui/QScrollBar>
-#include<QtGui/QHBoxLayout>
-#include<QtGui/QAbstractScrollArea>
-#include<QtWebKit/QWebView>
-#include<QtWebKit/QWebFrame>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QLabel>
 #include<QtWidgets/QWidget>
 #include<QtWidgets/QScrollBar>
@@ -24,9 +13,6 @@
 #include<QtWidgets/QAbstractScrollArea>
 #include<QtWebKitWidgets/QWebView>
 #include<QtWebKitWidgets/QWebFrame>
-#endif /* QEMACS_QT5 */
-
-
 #include"QEmacs/Utilities.hxx"
 
 namespace qemacs
@@ -94,15 +80,15 @@ namespace qemacs
 
   QString commonPart(const QStringList& l)
   {
-    if(l.size()==0){
+    if(l.empty()){
       return QString();
     }
     if(l.size()==1){
       return l[0];
     }
-    QString r = commonPart(l[0],l[1]);
+    auto r = commonPart(l[0],l[1]);
     for(int i=2;i!=l.size();++i){
-      const QString& s = l[i];
+      const auto& s = l[i];
       if(!s.startsWith(r)){
 	r = commonPart(r,s);
       }
@@ -113,7 +99,7 @@ namespace qemacs
     return r;
   }
 
-  QString fileNameRegExp(void)
+  QString fileNameRegExp()
   {
     return "[\\w-0-9_\\./]+";
   } // end of fileNameRegExp

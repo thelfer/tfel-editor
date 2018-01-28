@@ -5,8 +5,8 @@
  * \brief 30 juin 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSCOMMANDFACTORY_H_
-#define _LIB_QEMACS_QEMACSCOMMANDFACTORY_H_ 
+#ifndef LIB_QEMACS_QEMACSCOMMANDFACTORY_HXX
+#define LIB_QEMACS_QEMACSCOMMANDFACTORY_HXX 
 
 #include<memory>
 #include<QtCore/QMap>
@@ -23,7 +23,7 @@ namespace qemacs
   struct QEMACS_VISIBILITY_EXPORT QEmacsCommandProxy
   {
     virtual QString
-    getName(void) const = 0;
+    getName() const = 0;
     virtual QEmacsCommand*
     getQEmacsCommand(QEmacsWidget&) const = 0;
     /*!
@@ -48,17 +48,16 @@ namespace qemacs
     /*!
      * \param[in] n : return the major mode name
      */
-    virtual QString
-    getName(void) const override;
+    QString getName() const override;
     /*!
      * \return a new instance of the major mode
      */
-    virtual QEmacsCommand *
+    QEmacsCommand *
     getQEmacsCommand(QEmacsWidget&) const override;
     /*!
      * destructor
      */
-    ~StandardQEmacsCommandProxy();
+    ~StandardQEmacsCommandProxy() override;
   private:
     //! command name
     const QString name;
@@ -93,7 +92,7 @@ namespace qemacs
     addQEmacsCommand(const QEmacsCommandProxyPtr);
     
     QList<QString>
-    getAvailableQEmacsCommandsNames(void) const;
+    getAvailableQEmacsCommandsNames() const;
 
     bool
     hasQEmacsCommand(const QString&) const;
@@ -112,4 +111,4 @@ namespace qemacs
 
 #include"QEmacs/QEmacsCommandFactory.ixx"
 
-#endif /* _LIB_QEMACS_QEMACSCOMMANDFACTORY_H */
+#endif /* LIB_QEMACS_QEMACSCOMMANDFACTORY_HXX */

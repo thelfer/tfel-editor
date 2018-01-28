@@ -5,8 +5,8 @@
  * \brief 01 août 2012
  */
 
-#ifndef _LIB_QEMACS_PROCESSINTERACTIONFRAME_H_
-#define _LIB_QEMACS_PROCESSINTERACTIONFRAME_H_ 
+#ifndef LIB_QEMACS_PROCESSINTERACTIONFRAME_HXX
+#define LIB_QEMACS_PROCESSINTERACTIONFRAME_HXX 
 
 #include<QtCore/QProcess>
 
@@ -39,5 +39,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_PROCESSINTERACTIONFRAME_H */
+#endif /* LIB_QEMACS_PROCESSINTERACTIONFRAME_HXX */
 

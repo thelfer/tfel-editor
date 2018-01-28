@@ -1,6 +1,6 @@
 AM_CPPFLAGS = -I$(top_srcdir)/packages/mtest/include  \
 	      -I$(top_srcdir)/include                 \
-	      @QT4_CFLAGS@                            \
+	      @QT_CXXFLAGS@                            \
 	      `@TFELCONFIG@ --includes --cppflags`
 
 packagesdir = @prefix@/share/qemacs/packages
@@ -10,7 +10,9 @@ libMTestQEmacsMode_la_SOURCES = MTestStudyOptions.cxx         \
 				MTestMajorMode.cxx            \
 				MTestSyntaxHighlighter.cxx    \
 				PipeTestMajorMode.cxx         \
-				PipeTestSyntaxHighlighter.cxx
+				PipeTestSyntaxHighlighter.cxx \
+				ImportBehaviour.cxx
+
 libMTestQEmacsMode_la_LIBADD   = -L@TFELHOME@/lib      \
 			         -lTFELMTest
 
@@ -21,7 +23,7 @@ nodist_libMTestQEmacsMode_la_SOURCES = moc_MTestMajorMode.cxx            \
 				       moc_PipeTestSyntaxHighlighter.cxx
 
 moc_%.cxx : @top_srcdir@/packages/mtest/include/QEmacs/%.hxx
-	@MOC@ $< -o $@	
+	@QT_MOC@ $< -o $@	
 
 clean-local:
 	$(RM) $(nodist_libMTestQEmacsMode_la_SOURCES)

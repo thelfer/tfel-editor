@@ -18,8 +18,7 @@
 namespace qemacs
 {
 
-  QEmacsCommandProxy::~QEmacsCommandProxy()
-  {} // end of QEmacsCommandProxy::~QEmacsCommandProxy()
+  QEmacsCommandProxy::~QEmacsCommandProxy() = default;
       
   void
   QEmacsCommandFactory::loadLibrary(const QString& lib)
@@ -62,10 +61,10 @@ namespace qemacs
   } // end of QEmacsCommandFactory::getQEmacsCommand
 
   QList<QString>
-  QEmacsCommandFactory::getAvailableQEmacsCommandsNames(void) const
+  QEmacsCommandFactory::getAvailableQEmacsCommandsNames() const
   {
     return this->proxies.keys();
-  } // end of QEmacsCommandFactory::getAvailableQEmacsCommandsNames(void) const
+  } // end of QEmacsCommandFactory::getAvailableQEmacsCommandsNames() const
 
   QEmacsCommandFactory&
   QEmacsCommandFactory::getQEmacsCommandFactory()
@@ -74,11 +73,9 @@ namespace qemacs
     return m;
   } // end of QEmacsCommandFactory::~QEmacsCommandFactory()
 
-  QEmacsCommandFactory::QEmacsCommandFactory()
-  {} // end of QEmacsCommandFactory::QEmacsCommandFactory()
+  QEmacsCommandFactory::QEmacsCommandFactory() = default;
 
-  QEmacsCommandFactory::~QEmacsCommandFactory()
-  {} // end of QEmacsCommandFactory::~QEmacsCommandFactory
+  QEmacsCommandFactory::~QEmacsCommandFactory() = default;
 
 } // end of namespace qemacs
 

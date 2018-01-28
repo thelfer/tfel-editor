@@ -23,7 +23,7 @@ namespace qemacs
   {} // end of CompiledLanguageMajorModeBase::CompiledLanguageMajorModeBase
 
   QString
-  CompiledLanguageMajorModeBase::getDefaultCompilationCommand(void) const
+  CompiledLanguageMajorModeBase::getDefaultCompilationCommand() const
   {
     return "make";
   } // end of CompiledLanguageMajorModeBase::getDefaultCompilationCommand
@@ -46,7 +46,6 @@ namespace qemacs
     this->qemacs.setUserInput(l);
   } // end of CompiledLanguageMajorModeBase::runCompilation
   
-  CompiledLanguageMajorModeBase::~CompiledLanguageMajorModeBase()
-  {} // end of CompiledLanguageMajorModeBase::~CompiledLanguageMajorModeBase
+  CompiledLanguageMajorModeBase::~CompiledLanguageMajorModeBase() = default;
   
 } // end of namespace qemacs

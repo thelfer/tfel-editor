@@ -1,6 +1,6 @@
 AM_CPPFLAGS = -I$(top_srcdir)/packages/mfront/include \
 	      -I$(top_srcdir)/include                 \
-	      @QT4_CFLAGS@                            \
+	      @QT_CXXFLAGS@                            \
 	      `@TFELCONFIG@ --includes --cppflags`
 
 packagesdir = @prefix@/share/qemacs/packages
@@ -18,10 +18,10 @@ nodist_libMFrontQEmacsMode_la_SOURCES = moc_MFrontMajorMode.cxx         \
 MFRONTMODERESOURCES=images/MFrontIcon.png
 
 MFrontModeResources.cxx : MFrontModeResources.qrc $(MFRONTMODERESOURCES)
-	@RCC@ -name MFrontModeResources @srcdir@/MFrontModeResources.qrc -o MFrontModeResources.cxx
+	@QT_RCC@ -name MFrontModeResources @srcdir@/MFrontModeResources.qrc -o MFrontModeResources.cxx
 
 moc_%.cxx : @top_srcdir@/packages/mfront/include/QEmacs/%.hxx
-	@MOC@ $< -o $@	
+	@QT_MOC@ $< -o $@	
 
 clean-local:
 	$(RM) $(nodist_libMFrontQEmacsMode_la_SOURCES)

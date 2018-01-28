@@ -5,8 +5,8 @@
  * \brief 30 juin 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSMAJORMODEFACTORY_IXX_
-#define _LIB_QEMACS_QEMACSMAJORMODEFACTORY_IXX_ 
+#ifndef LIB_QEMACS_QEMACSMAJORMODEFACTORY_IXX_
+#define LIB_QEMACS_QEMACSMAJORMODEFACTORY_IXX_ 
 
 #include<QtCore/QMap>
 
@@ -33,10 +33,10 @@ namespace qemacs
 
     template<typename T>
     QString
-    StandardQEmacsMajorModeProxy<T>::getName(void) const
+    StandardQEmacsMajorModeProxy<T>::getName() const
     {
       return this->name;
-    } // end of StandardQEmacsMajorModeProxy<T>::getName(void) const
+    } // end of StandardQEmacsMajorModeProxy<T>::getName() const
 
     template<typename T>
     QEmacsMajorMode *
@@ -53,4 +53,4 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_QEMACSMAJORMODEFACTORY_IXX_ */
+#endif /* LIB_QEMACS_QEMACSMAJORMODEFACTORY_IXX_ */

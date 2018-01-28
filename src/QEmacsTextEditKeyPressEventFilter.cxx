@@ -17,7 +17,6 @@ namespace qemacs
     : QObject(&t)
   {} // end of QEmacsTextEditKeyPressEventFilter::QEmacsTextEditKeyPressEventFilter
 
-  QEmacsTextEditKeyPressEventFilter::~QEmacsTextEditKeyPressEventFilter()
-  {} // end of QEmacsTextEditKeyPressEventFilter::~QEmacsTextEditKeyPressEventFilter
+  QEmacsTextEditKeyPressEventFilter::~QEmacsTextEditKeyPressEventFilter() = default;
 
 } // end of namespace qemacs

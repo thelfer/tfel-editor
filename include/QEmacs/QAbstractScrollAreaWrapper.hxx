@@ -5,16 +5,10 @@
  * \brief 07 déc. 2012
  */
 
-#ifndef _LIB_QABSTRACTSCROLLAREAWRAPPER_H_
-#define _LIB_QABSTRACTSCROLLAREAWRAPPER_H_ 
+#ifndef LIB_QABSTRACTSCROLLAREAWRAPPER_HXX
+#define LIB_QABSTRACTSCROLLAREAWRAPPER_HXX 
 
-#ifdef QEMACS_QT4
-#include<QtGui/QAbstractScrollArea>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QAbstractScrollArea>
-#endif /* QEMACS_QT5 */
-
 
 namespace qemacs
 {
@@ -43,5 +37,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QABSTRACTSCROLLAREAWRAPPER_H */
+#endif /* LIB_QABSTRACTSCROLLAREAWRAPPER_HXX */
 

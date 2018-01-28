@@ -15,7 +15,6 @@ namespace qemacs
     : QObject(&t)
   {} // end of QEmacsCommand::QEmacsCommand
 
-  QEmacsCommand::~QEmacsCommand()
-  {}
+  QEmacsCommand::~QEmacsCommand() = default;
 
 } // end of namespace qemacs

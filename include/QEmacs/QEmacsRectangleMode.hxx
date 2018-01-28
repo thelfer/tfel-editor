@@ -5,8 +5,8 @@
  * \brief 30 sept. 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSRECTANGLEMODE_H_
-#define _LIB_QEMACS_QEMACSRECTANGLEMODE_H_ 
+#ifndef LIB_QEMACS_QEMACSRECTANGLEMODE_HXX
+#define LIB_QEMACS_QEMACSRECTANGLEMODE_HXX 
 
 #include<QEmacs/QEmacsLineEdit.hxx>
 
@@ -26,13 +26,13 @@ namespace qemacs
 			QEmacsWidget&);
 
     virtual bool
-    isBlocking(void) const override;
+    isBlocking() const override;
 
     /*!
      * processing is finished
      */
     virtual void
-    treatUserInput(void) override;
+    treatUserInput() override;
 
   protected:
 
@@ -40,9 +40,9 @@ namespace qemacs
 
     struct RectangleModeLineEdit;
 
-    void killRectangle(void);
+    void killRectangle();
 
-    void pasteRectangle(void);
+    void pasteRectangle();
 
     QEmacsWidget& qemacs;
 
@@ -52,5 +52,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_QEMACSRECTANGLEMODE_H */
+#endif /* LIB_QEMACS_QEMACSRECTANGLEMODE_HXX */
 

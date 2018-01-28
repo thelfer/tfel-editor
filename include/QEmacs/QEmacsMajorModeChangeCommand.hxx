@@ -5,8 +5,8 @@
  * \brief 03 août 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSMAJORMODECHANGECOMMAND_H_
-#define _LIB_QEMACS_QEMACSMAJORMODECHANGECOMMAND_H_ 
+#ifndef LIB_QEMACS_QEMACSMAJORMODECHANGECOMMAND_HXX
+#define LIB_QEMACS_QEMACSMAJORMODECHANGECOMMAND_HXX 
 
 #include"QEmacs/QEmacsCommand.hxx"
 
@@ -24,10 +24,9 @@ namespace qemacs
     QEmacsMajorModeChangeCommand(QEmacsWidget&,
 				 const QString&);
     
-    virtual void
-    execute(void) override;
+    void execute() override;
     
-    ~QEmacsMajorModeChangeCommand();
+    ~QEmacsMajorModeChangeCommand() override;
 
   protected:
 
@@ -45,14 +44,12 @@ namespace qemacs
      */
     QEmacsMajorModeChangeCommandProxy(const QString&,
 				      const QString&);
-    virtual QString
-    getName(void) const override;
-    virtual QEmacsCommand*
-    getQEmacsCommand(QEmacsWidget&) const override;
+    QString getName() const override;
+    QEmacsCommand* getQEmacsCommand(QEmacsWidget&) const override;
     /*!
      * destructor
      */
-    virtual ~QEmacsMajorModeChangeCommandProxy();
+    ~QEmacsMajorModeChangeCommandProxy() override;
   protected:
     const QString name;
     const QString mode;
@@ -61,5 +58,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_QEMACSMAJORMODECHANGECOMMAND_H */
+#endif /* LIB_QEMACS_QEMACSMAJORMODECHANGECOMMAND_HXX */
 

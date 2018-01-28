@@ -5,8 +5,8 @@
  * \brief 17 sept. 2012
  */
 
-#ifndef _LIB_QEMACS_CXXTOKENIZER_H_
-#define _LIB_QEMACS_CXXTOKENIZER_H_ 
+#ifndef LIB_QEMACS_CXXTOKENIZER_HXX
+#define LIB_QEMACS_CXXTOKENIZER_HXX 
 
 #include<QtCore/QString>
 #include<QtCore/QList>
@@ -21,7 +21,7 @@ namespace qemacs
    * \return the number of c++ keywords
    */
   QEMACS_VISIBILITY_EXPORT unsigned short
-  getNumberOfCxxKeywords(void);
+  getNumberOfCxxKeywords();
   
   /*!
    * \return true if the specified QString is a of c++ keyword
@@ -93,19 +93,19 @@ namespace qemacs
      * \brief remove all comment tokens
      */ 
     virtual void
-    stripComments(void);
+    stripComments();
 
     /*!
      * \brief clear the object
      */ 
     virtual void
-    clear(void);
+    clear();
 
     /*!
      * \brief clear the object
      */ 
     virtual void
-    reset(void);
+    reset();
 
     /*!
      * \brief set if char tokens shall be treated as string tokens
@@ -135,7 +135,7 @@ namespace qemacs
      * processing
      */
     virtual bool
-    isCCommentOpened(void) const;
+    isCCommentOpened() const;
 
     /*!
      * \brief an helper method throwing an exception if the given
@@ -194,19 +194,19 @@ namespace qemacs
      * \return a reference to the last object of the list
      */ 
     const Token&
-    back(void) const;
+    back() const;
 
     /*!
      * \return an iterator to the first token
      */ 
     const_iterator
-    begin(void) const;
+    begin() const;
 
     /*!
      * \return an iterator past the last token
      */ 
     const_iterator
-    end(void) const;
+    end() const;
 
     /*!
      * \return the number of token
@@ -249,5 +249,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_CXXTOKENIZER_H */
+#endif /* LIB_QEMACS_CXXTOKENIZER_HXX */
 

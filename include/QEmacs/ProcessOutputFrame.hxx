@@ -5,8 +5,8 @@
  * \brief 01 août 2012
  */
 
-#ifndef _LIB_QEMACS_PROCESSOUTPUTFRAME_H_
-#define _LIB_QEMACS_PROCESSOUTPUTFRAME_H_ 
+#ifndef LIB_QEMACS_PROCESSOUTPUTFRAME_HXX
+#define LIB_QEMACS_PROCESSOUTPUTFRAME_HXX 
 
 #include<QtCore/QProcess>
 
@@ -37,16 +37,14 @@ namespace qemacs
      * This method is reimplemented so that this frame can't be
      * writtable     
      */
-    virtual void 
-    setReadOnly(bool) override;
+    void setReadOnly(bool) override;
     /*!
      * \return the underlying process
      */
-    QProcess&
-    getProcess();
+    QProcess& getProcess();
 
     //! destructor
-    ~ProcessOutputFrame();
+    ~ProcessOutputFrame() override;
 
   protected slots:
 
@@ -65,5 +63,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_PROCESSOUTPUTFRAME_H */
+#endif /* LIB_QEMACS_PROCESSOUTPUTFRAME_HXX */
 

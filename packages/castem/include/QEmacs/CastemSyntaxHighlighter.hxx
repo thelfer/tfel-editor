@@ -5,8 +5,8 @@
  * \brief 05 août 2012
  */
 
-#ifndef _LIB_CASTEMSYNTAXHIGHLIGHTER_H_
-#define _LIB_CASTEMSYNTAXHIGHLIGHTER_H_ 
+#ifndef LIB_CASTEMSYNTAXHIGHLIGHTER_HXX
+#define LIB_CASTEMSYNTAXHIGHLIGHTER_HXX 
 
 #include<QtGui/QSyntaxHighlighter>
 
@@ -49,5 +49,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_CASTEMSYNTAXHIGHLIGHTER_H */
+#endif /* LIB_CASTEMSYNTAXHIGHLIGHTER_H */
 

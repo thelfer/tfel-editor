@@ -5,8 +5,8 @@
  * \brief 30 juin 2012
  */
 
-#ifndef _LIB_QEMACS_LATEXSYNTAXHIGHLIGHTER_H_
-#define _LIB_QEMACS_LATEXSYNTAXHIGHLIGHTER_H_ 
+#ifndef LIB_QEMACS_LATEXSYNTAXHIGHLIGHTER_HXX
+#define LIB_QEMACS_LATEXSYNTAXHIGHLIGHTER_HXX 
 
 #include<QtGui/QSyntaxHighlighter>
 
@@ -43,7 +43,7 @@ namespace qemacs
 
     //! list of highlighting rules
     const static QVector<HighlightingRule>&
-    getHighlightingRules(void);
+    getHighlightingRules();
 
     /*!
      * \param[in] m : latex mode
@@ -64,7 +64,7 @@ namespace qemacs
 
     //! build the highlighting rules
     static QVector<HighlightingRule>
-    buildHighlightingRules(void);
+    buildHighlightingRules();
 
     LaTeXMajorMode& mode;
 
@@ -74,5 +74,5 @@ namespace qemacs
   
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_LATEXSYNTAXHIGHLIGHTER_H */
+#endif /* LIB_QEMACS_LATEXSYNTAXHIGHLIGHTER_H */
 

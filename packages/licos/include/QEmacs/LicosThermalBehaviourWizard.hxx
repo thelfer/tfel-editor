@@ -5,15 +5,10 @@
  * \brief 27 sept. 2012
  */
 
-#ifndef _LIB_QEMACS_LICOSTHERMALBEHAVIOURWIZARD_H_
-#define _LIB_QEMACS_LICOSTHERMALBEHAVIOURWIZARD_H_ 
+#ifndef LIB_QEMACS_LICOSTHERMALBEHAVIOURWIZARD_HXX
+#define LIB_QEMACS_LICOSTHERMALBEHAVIOURWIZARD_HXX 
 
-#ifdef QEMACS_QT4
-#include<QtGui/QWizard>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QWizard>
-#endif /* QEMACS_QT5 */
 
 namespace qemacs{
 
@@ -32,8 +27,7 @@ namespace qemacs{
      */
     LicosThermalBehaviourWizard(QEmacsTextEditBase&);
 
-    bool
-    validateCurrentPage () ;
+    bool validateCurrentPage() override;
 
   protected:
     
@@ -44,5 +38,5 @@ namespace qemacs{
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_LICOSTHERMALBEHAVIOURWIZARD_H */
+#endif /* LIB_QEMACS_LICOSTHERMALBEHAVIOURWIZARD_H */
 

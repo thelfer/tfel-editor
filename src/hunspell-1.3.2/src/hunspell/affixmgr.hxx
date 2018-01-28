@@ -207,12 +207,12 @@ public:
   int                 get_maxdiff() const;
   int                 get_onlymaxdiff() const;
   int                 get_nosplitsugs() const;
-  int                 get_sugswithdots(void) const;
-  FLAG                get_keepcase(void) const;
-  FLAG                get_forceucase(void) const;
-  FLAG                get_warn(void) const;
-  int                 get_forbidwarn(void) const;
-  int                 get_checksharps(void) const;
+  int                 get_sugswithdots() const;
+  FLAG                get_keepcase() const;
+  FLAG                get_forceucase() const;
+  FLAG                get_warn() const;
+  int                 get_forbidwarn() const;
+  int                 get_checksharps() const;
   char *              encode_flag(unsigned short aflag) const;
   int                 get_fullstrip() const;
 

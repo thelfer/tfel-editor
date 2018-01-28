@@ -7,18 +7,6 @@
 
 #include<QtCore/QDebug>
 #include<QtCore/QSettings>
-
-#ifdef QEMACS_QT4
-#include<QtGui/QAction>
-#include<QtGui/QMenuBar>
-#include<QtGui/QFileDialog>
-#include<QtGui/QMessageBox>
-#include<QtGui/QFontDialog>
-#include<QtGui/QApplication>
-#include<QtGui/QPrinter>
-#include<QtGui/QPrintDialog>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QAction>
 #include<QtWidgets/QMenuBar>
 #include<QtWidgets/QFileDialog>
@@ -27,9 +15,7 @@
 #include<QtWidgets/QApplication>
 #include<QtPrintSupport/QPrinter>
 #include<QtPrintSupport/QPrintDialog>
-#endif /* QEMACS_QT5 */
 #include<QtGui/QCloseEvent>
-
 #include"QEmacs/QEmacsHunspellDictionariesManager.hxx"
 #include"QEmacs/QEmacsShortCutStyle.hxx"
 #include"QEmacs/QEmacsWidget.hxx"
@@ -44,10 +30,10 @@ namespace qemacs
 				     QWidget *const p)
     : QMainWindow(p)
   {
-    QEmacsShortCutStyle& s = QEmacsShortCutStyle::getQEmacsShortCutStyle();
+    auto& s = QEmacsShortCutStyle::getQEmacsShortCutStyle();
     // this->setAttribute(Qt::WA_TranslucentBackground);
     // this->setStyleSheet("background: rgba(255,255,255,100%)");
-    QEmacsWidget *e = new QEmacsWidget(this);
+    auto* e = new QEmacsWidget(this);
     this->setCentralWidget(e);
     this->createActions();
     this->createMainMenu();
@@ -75,8 +61,7 @@ namespace qemacs
     }
   }
 
-  void
-  QEmacsMainWindow::addToRecentFiles(const QString& f)
+  void QEmacsMainWindow::addToRecentFiles(const QString& f)
   {
     QSettings s;
     QStringList rf = s.value("recent files").toStringList();
@@ -103,10 +88,9 @@ namespace qemacs
     s.setValue("recent files",rf);
   }
 
-  void
-  QEmacsMainWindow::closeEvent(QCloseEvent *ev)
+  void QEmacsMainWindow::closeEvent(QCloseEvent *ev)
   {
-    QEmacsWidget *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
+    auto* e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if(e!=nullptr){
       QObject::disconnect(e,SIGNAL(closed()),
 			  this,SLOT(close()));
@@ -120,11 +104,10 @@ namespace qemacs
     }
   } // end of QEmacsMainWindow::close()
 
-  void
-  QEmacsMainWindow::openFile()
+  void QEmacsMainWindow::openFile()
   {
-    QEmacsWidget *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
-    const QString& f = QFileDialog::getOpenFileName(this,
+    auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
+    const auto& f = QFileDialog::getOpenFileName(this,
     						    tr("Open File"));
     if(f.isEmpty()){
       return;
@@ -132,8 +115,7 @@ namespace qemacs
     e->openFile(f);
   } // end of QEmacsMainWindow::openFile
 
-  void
-  QEmacsMainWindow::selectFont(void)
+  void QEmacsMainWindow::selectFont()
   {
     QEmacsWidget *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if(e!=nullptr){
@@ -148,8 +130,7 @@ namespace qemacs
     }
   } // end of QEmacsMainWindow::selectFont
 
-  void
-  QEmacsMainWindow::createActions()
+  void QEmacsMainWindow::createActions()
   {
     QEmacsWidget *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     this->na = new QAction(tr("N&ew"), this);
@@ -333,7 +314,7 @@ namespace qemacs
   }
   
   void
-  QEmacsMainWindow::useEmacsShortCuts(void)
+  QEmacsMainWindow::useEmacsShortCuts()
   {
     QEmacsShortCutStyle& s = QEmacsShortCutStyle::getQEmacsShortCutStyle();
     s.setStyle(QEmacsShortCutStyle::EMACS);
@@ -341,7 +322,7 @@ namespace qemacs
   } // end of QEmacsMainWindow::useEmacsShortCuts
 
   void
-  QEmacsMainWindow::useQtShortCuts(void)
+  QEmacsMainWindow::useQtShortCuts()
   {
     QEmacsShortCutStyle& s = QEmacsShortCutStyle::getQEmacsShortCutStyle();
     s.setStyle(QEmacsShortCutStyle::QT);

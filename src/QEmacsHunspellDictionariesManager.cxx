@@ -18,14 +18,14 @@ namespace qemacs
 {
 
   QEmacsHunspellDictionariesManager&
-  QEmacsHunspellDictionariesManager::getQEmacsHunspellDictionariesManager(void)
+  QEmacsHunspellDictionariesManager::getQEmacsHunspellDictionariesManager()
   {
     static QEmacsHunspellDictionariesManager d;
     return d;
   } // end of QEmacsHunspellDictionariesManager::getQEmacsHunspellDictionariesManager
 
   QString
-  QEmacsHunspellDictionariesManager::getDefaultSpellCheckLanguage(void) const
+  QEmacsHunspellDictionariesManager::getDefaultSpellCheckLanguage() const
   {
     QSettings s;
     if(s.contains("hunspell default dictionary")){
@@ -48,7 +48,7 @@ namespace qemacs
   } // end of QEmacsHunspellDictionariesManager::getDictionaryPath
 
   QStringList
-  QEmacsHunspellDictionariesManager::getAvailableDictionnaries(void) const
+  QEmacsHunspellDictionariesManager::getAvailableDictionnaries() const
   {
     return this->dictionaries.keys();
   } // end of QEmacsHunspellDictionariesManager::getAvailableDictionnaries

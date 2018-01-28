@@ -3,7 +3,7 @@ SUBDIRS = hunspell-1.3.2
 endif
 
 AM_CPPFLAGS = -I$(top_srcdir)/include              \
-	      @QT4_CFLAGS@                         \
+	      @QT_CXXFLAGS@                        \
 	      `@TFELCONFIG@ --includes --cppflags`
 if QEMACS_EXTERNAL_HUNSPELL
 AM_CPPFLAGS += -I$(hunspell_CFLAGS)
@@ -83,8 +83,8 @@ nodist_libTFELQEmacs_la_SOURCES = moc_QEmacsWidget.cxx                      \
 				  moc_ProcessInteractionFrame.cxx
 
 libTFELQEmacs_la_CPPFLAGS = $(AM_CPPFLAGS) -DTFELQEmacs_EXPORTS
-libTFELQEmacs_la_LIBADD   = @QT4_LIBS@            \
-			    -L@TFELHOME@/lib      \
+libTFELQEmacs_la_LIBADD   = @QT_LIBS@            \
+			    -L@TFELHOME@/lib     \
 			    -lTFELSystem
 if QEMACS_EXTERNAL_HUNSPELL
 libTFELQEmacs_la_LIBADD += $(hunspell_LIBS)
@@ -104,16 +104,16 @@ qemacs_LDADD   = -lTFELQEmacs        \
 		 -L@TFELHOME@/lib    \
 		 -lTFELSystem        \
 		 -lTFELException     \
-		 @QT4_LIBS@
+		 @QT_LIBS@
 
 QEMACSRESOURCES=images/QEmacsFailureIcon.png \
 		images/QEmacsSuccessIcon.png
 
 moc_%.cxx : @top_srcdir@/include/QEmacs/%.hxx
-	@MOC@ $< -o $@	
+	@QT_MOC@ $< -o $@	
 
 QEmacsResources.cxx : QEmacsResources.qrc
-	@RCC@ -name QEmacsResources @srcdir@/QEmacsResources.qrc -o QEmacsResources.cxx
+	@QT_RCC@ -name QEmacsResources @srcdir@/QEmacsResources.qrc -o QEmacsResources.cxx
 
 EXTRA_DIST = QEmacsResources.qrc \
 	     $(QEMACSRESOURCES)  \

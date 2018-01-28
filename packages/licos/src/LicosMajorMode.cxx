@@ -14,16 +14,9 @@
 #include<QtCore/QUrl>
 #include<QtCore/QFileInfo>
 
-#ifdef QEMACS_QT4
-#include<QtGui/QMenu>
-#include<QtGui/QWizard>
-#include<QtGui/QMessageBox>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QMenu>
 #include<QtWidgets/QWizard>
 #include<QtWidgets/QMessageBox>
-#endif /* QEMACS_QT5 */
 #include<QtGui/QDesktopServices>
 
 #include"TFEL/System/ExternalLibraryManager.hxx"
@@ -58,21 +51,19 @@ namespace qemacs
 	qemacs(p),
 	textEdit(t)
     {
-      QStringList n = LicosSyntaxHighlighter::getBlocks();
-      QCompleter * c = new QCompleter(n,&p);
+      const auto n = LicosSyntaxHighlighter::getBlocks();
+      auto * c = new QCompleter(n,&p);
       c->setWidget(this->input);
       c->setCompletionMode(QCompleter::InlineCompletion);
       this->setInputHistorySettingAddress("licos/insertblock/history");
       this->input->setCompleter(c,false);
     }
 
-    ~LicosInsertBlock()
-    {}
+    ~LicosInsertBlock() override = default;
 
   protected:
 
-    virtual void
-    treatUserInput(void)
+    void treatUserInput() override
     {
       const QString& b = this->input->text();
       if(!b.isEmpty()){
@@ -104,7 +95,7 @@ namespace qemacs
   }; // end of struct QEmacsTextEdit::LicosInsertBlock
 
   QStringList
-  LicosMajorMode::buildLicosExtensionsSuffix(void)
+  LicosMajorMode::buildLicosExtensionsSuffix()
   {
     QStringList e;
     e << "ple" << "txt" << "data"
@@ -113,7 +104,7 @@ namespace qemacs
   } // end of LicosMajorMode::buildLicosExtensionsSuffix
   
   const QStringList&
-  LicosMajorMode::getLicosExtensionsSuffix(void)
+  LicosMajorMode::getLicosExtensionsSuffix()
   {
     static QStringList e(LicosMajorMode::buildLicosExtensionsSuffix());
     return e;
@@ -298,13 +289,13 @@ namespace qemacs
   } // end of LicosMajorMode::LicosMajorMode
 
   QString
-  LicosMajorMode::getName(void) const
+  LicosMajorMode::getName() const
   {
     return "Licos";
   } // end of LicosMajorMode::getName
 
   QString
-  LicosMajorMode::getDescription(void) const
+  LicosMajorMode::getDescription() const
   {
     return "major mode dedicated to the licos input file";
   } // end of LicosMajorMode::LicosMajorMode
@@ -321,7 +312,7 @@ namespace qemacs
   } // end of LicosMajorMode::~LicosMajorMode()
 
   QCompleter*
-  LicosMajorMode::getCompleter(void)
+  LicosMajorMode::getCompleter()
   {
     return this->c;
   } // end of LicosMajorMode::getCompleter
@@ -506,7 +497,7 @@ namespace qemacs
   }
 
   void
-  LicosMajorMode::runLicos(void)
+  LicosMajorMode::runLicos()
   {
     if(this->textEdit.isModified()){
       QEmacsTextEditBase::SaveInput *input = this->textEdit.getSaveInput();
@@ -519,11 +510,11 @@ namespace qemacs
   }
 
   void
-  LicosMajorMode::dryrunLicos(void)
+  LicosMajorMode::dryrunLicos()
   {} // end of LicosMajorMode::dryrunLicos
 
   void
-  LicosMajorMode::showMaterialWizard(void)
+  LicosMajorMode::showMaterialWizard()
   {
     LicosMaterialWizard w(this->textEdit);
     if(w.exec()==QDialog::Accepted){
@@ -532,7 +523,7 @@ namespace qemacs
   } // end of LicosMajorMode::showMaterialWizard
 
   void
-  LicosMajorMode::showThermalBehaviourWizard(void)
+  LicosMajorMode::showThermalBehaviourWizard()
   {
     QWizard w;
     w.setWindowTitle(QObject::tr("Thermal behaviour wizard"));
@@ -541,7 +532,7 @@ namespace qemacs
   } // end of LicosMajorMode::showThermalBehaviourWizard
 
   void
-  LicosMajorMode::showMechanicalBehaviourWizard(void)
+  LicosMajorMode::showMechanicalBehaviourWizard()
   {
     QWizard w;
     w.setWindowTitle(QObject::tr("Mechanical behaviour wizard"));
@@ -550,7 +541,7 @@ namespace qemacs
   } // end of LicosMajorMode::showMechanicalBehaviourWizard
 
   void
-  LicosMajorMode::startLicos(void)
+  LicosMajorMode::startLicos()
   {
     QString n = this->textEdit.getCompleteFileName();
     if(n.isEmpty()){
@@ -562,9 +553,9 @@ namespace qemacs
     if(od.exec() == QDialog::Rejected) {
       return;
     }
-    const QString& af = QFileInfo(n).absoluteFilePath ();
-    LicosOutputFrame *s = new LicosOutputFrame(this->qemacs,this->buffer,
-					       af,o);
+    const auto& af = QFileInfo(n).absoluteFilePath ();
+    auto *s = new LicosOutputFrame(this->qemacs,this->buffer,
+				   af,o);
     QObject::connect(s,SIGNAL(finished(bool,QString)),
 		     this,SLOT(studyFinished(bool,QString)));
     this->buffer.addSlave(QObject::tr("Licos Output"),s);
@@ -820,31 +811,30 @@ namespace qemacs
       this->qemacs.displayInformativeMessage(QObject::tr("library %1 not found").arg(l));      
       return;
     }
-    QEmacsBuffer&   b = this->qemacs.getCurrentBuffer();
-    ProcessOutputFrame *po = new ProcessOutputFrame(this->qemacs,b);
-    QProcess& p = po->getProcess();
+    auto& b  = this->qemacs.getCurrentBuffer();
+    auto *po = new ProcessOutputFrame(this->qemacs,b);
+    auto& p  = po->getProcess();
     QStringList args;
     args << lib;
     p.start("mfm",args);
     b.addSlave("*mfm results for "+l+"*",po);
   } // end of LicosMajorMode::analyseUsingMFM
 
-  void
-  LicosMajorMode::search(const QString& s,
-			 const QString& w,
-			 const QString& ext)
+  void LicosMajorMode::search(const QString& s,
+			      const QString& w,
+			      const QString& ext)
   {
     if(w.isEmpty()){
       return;
     }
-    const char * shell = ::getenv("SHELL");
+    const auto shell = ::getenv("SHELL");
     if(shell==nullptr){
       this->qemacs.displayInformativeMessage(QObject::tr("no shell defined"));
     }
-    QEmacsBuffer&   b = this->qemacs.getCurrentBuffer();
-    ProcessOutputFrame *po = new ProcessOutputFrame(this->qemacs,b);
+    auto& b  = this->qemacs.getCurrentBuffer();
+    auto* po = new ProcessOutputFrame(this->qemacs,b);
     po->setMajorMode("grep output");
-    QProcess& p = po->getProcess();
+    auto& p = po->getProcess();
     p.setWorkingDirectory(w);
     QStringList args;
     args << "-c" << "grep -nH -e " + s + " $(find . -name \"*."+ext+"\")";
@@ -852,32 +842,30 @@ namespace qemacs
     b.addSlave("*search for "+s+"*",po);
   } // end of LicosMajorMode::search
 
-  void
-  LicosMajorMode::createAnalyseUsingMFMAction(const QString& l)
+  void LicosMajorMode::createAnalyseUsingMFMAction(const QString& l)
   {
     delete this->mfma;
     this->mfma = new QAction(QObject::tr("Analyse using mfm"),this);
     this->mfma->setData(l);
   } // end of LicosMajorMode::createAnalyseUsingMFMAction
 
-  void
-  LicosMajorMode::completeContextMenu(QMenu *const m,
-				      const QTextCursor& tc)
+  void LicosMajorMode::completeContextMenu(QMenu *const m,
+					   const QTextCursor& tc)
   {
     using namespace std;
     using namespace tfel::system;
-    typedef ExternalLibraryManager ELM;
-    bool bConnect = false; // connect
+    using ELM =  ExternalLibraryManager;
+    auto bConnect = false; // connect
     QEmacsMajorModeBase::completeContextMenu(m,tc);
     // looking for a word
     QTextCursor mtc(tc);
     mtc.select(QTextCursor::WordUnderCursor);
-    const QString w = mtc.selectedText();
+    const auto w = mtc.selectedText();
     if(!w.isEmpty()){
-      const QList<QAction *>& cactions = m->actions();
-      const QString& lpath = this->getLicosPath();
-      const QString& mpath = this->getMFrontMaterialsPath();
-      const QString& spath = this->getLicosStudiesPath();
+      const auto& cactions = m->actions();
+      const auto& lpath = this->getLicosPath();
+      const auto& mpath = this->getMFrontMaterialsPath();
+      const auto& spath = this->getLicosStudiesPath();
       if(!lpath.isEmpty()){
 	this->createSearchActions();
 	this->lsil->setData(w);
@@ -895,8 +883,8 @@ namespace qemacs
 	  bConnect = true;
 	} else {
 	  // search menu for licos files
-	  QMenu * lsm = m->addMenu(QObject::tr("Search in Licos  Input Files"));
-	  QMenu * msm = m->addMenu(QObject::tr("Search in MFront Input Files"));
+	  auto* lsm = m->addMenu(QObject::tr("Search in Licos  Input Files"));
+	  auto* msm = m->addMenu(QObject::tr("Search in MFront Input Files"));
 	  lsm->addAction(this->lsil);
 	  msm->addAction(this->msil);
 	  if(!mpath.isEmpty()){
@@ -916,8 +904,8 @@ namespace qemacs
 	  lsm->addAction(this->lsia);
 	  msm->addAction(this->msia);
 	  if(cactions.isEmpty()){
-	    m->insertMenu(0,lsm);
-	    m->insertMenu(0,msm);
+	    m->insertMenu(nullptr,lsm);
+	    m->insertMenu(nullptr,msm);
 	  } else {
 	    m->insertMenu(*(cactions.begin()),lsm);
 	    m->insertMenu(*(cactions.begin()),msm);
@@ -981,13 +969,13 @@ namespace qemacs
       bConnect = true;
     }
     // special treatment for functions
-    LicosData *ld = static_cast<LicosData *>(tc.block().userData());
+    auto *ld = static_cast<LicosData *>(tc.block().userData());
     if(ld!=nullptr){
-      int p = this->positionInCurrentBlock(tc);
+      const auto p = this->positionInCurrentBlock(tc);
       if((p>=ld->pos)&&(ld->pos+ld->function.size()>=p)){
-	ELM& elm = ELM::getExternalLibraryManager();
+	auto& elm = ELM::getExternalLibraryManager();
 	QString src;
-	QString lib = ld->library;
+	auto lib = ld->library;
 	QFileInfo lfi(lib);
 	if(!lfi.isAbsolute()){
 	  lib = lfi.fileName();
@@ -1323,10 +1311,10 @@ namespace qemacs
     cp -= tc.position();
     int i = this->getLineIndentation(blocks,tokenizer,tc);
     tc.select(QTextCursor::LineUnderCursor);
-    QString line = tc.selectedText();
+    const auto line = tc.selectedText();
     // number of spaces at the beginning of the line
     int p;
-    int found = false;
+    bool found = false;
     for(p=0;(p!=line.size())&&(!found);){
       if(line[p].isSpace()){
 	++p;
@@ -1398,7 +1386,7 @@ namespace qemacs
   } // end of LicosMajorMode::indentRegion
 
   void
-  LicosMajorMode::comment(void)
+  LicosMajorMode::comment()
   {
     QTextCursor tc = this->textEdit.textCursor();
     if(tc.hasSelection()){
@@ -1616,7 +1604,7 @@ namespace qemacs
   } // end of LicosMajorMode::comment
 
   void
-  LicosMajorMode::format(void)
+  LicosMajorMode::format()
   {} // end of LicosMajorMode::format
 
   static StandardQEmacsMajorModeProxy<LicosMajorMode> proxy("licos",QVector<QRegExp>()

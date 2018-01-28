@@ -5,8 +5,8 @@
  * \brief 28 sept. 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSBUILDINFORMATION_H_
-#define _LIB_QEMACS_QEMACSBUILDINFORMATION_H_ 
+#ifndef LIB_QEMACS_QEMACSBUILDINFORMATION_HXX
+#define LIB_QEMACS_QEMACSBUILDINFORMATION_HXX 
 
 #include<QtCore/QString>
 #include"QEmacs/Config.hxx"
@@ -25,40 +25,40 @@ namespace qemacs
     getDataDirectory();
 
     static const char *
-    getVersionName(void);
+    getVersionName();
 
     static const char *
-    getVersionNumber(void);
+    getVersionNumber();
 
     static const char *
-    getVersionIdentifier(void);
+    getVersionIdentifier();
 
     static const char *
-    getBugReportAdress(void);
+    getBugReportAdress();
 
     static const char *
-    getCompilerName(void);
+    getCompilerName();
 
     static const char *
-    getBuildOs(void);
+    getBuildOs();
 
     static const char *
-    getBuildCpu(void);
+    getBuildCpu();
 
     static const char *
-    getHostOs(void);
+    getHostOs();
 
     static const char *
-    getHostCpu(void);
+    getHostCpu();
 
     static const char *
-    getTargetOs(void);
+    getTargetOs();
 
     static const char *
-    getTargetCpu(void);
+    getTargetCpu();
 
     static const char *
-    getSVNRevision(void);
+    getSVNRevision();
 
     static QString
     getHeader(const QString& = "");
@@ -67,5 +67,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_QEMACSBUILDINFORMATION_H */
+#endif /* LIB_QEMACS_QEMACSBUILDINFORMATION_HXX */
 

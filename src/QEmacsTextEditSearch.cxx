@@ -74,14 +74,12 @@ namespace qemacs{
     return true;
   } // end of QEmacsTextEditSearchFilter::filterKeyPressEvent
 
-  bool
-  QEmacsTextEditSearchFilter::isOk(void) const
+  bool QEmacsTextEditSearchFilter::isOk() const
   {
     return true;
   } // end of QEmacsTextEditSearch::isOk
 
-  QEmacsTextEditSearchFilter::~QEmacsTextEditSearchFilter()
-  {} // end of QEmacsTextEditSearchFilter::~SearchFilter
+  QEmacsTextEditSearchFilter::~QEmacsTextEditSearchFilter() = default;
 
   QEmacsTextEditSearch::QEmacsTextEditSearch(QEmacsTextEditBase& t,
 					     QEmacsWidget& p,
@@ -101,8 +99,7 @@ namespace qemacs{
     this->setFlag(f);
   }
   
-  QEmacsTextEditSearch::~QEmacsTextEditSearch()
-  {} // end of QEmacsTextEditSearch::~QEmacsTextEditSearch
+  QEmacsTextEditSearch::~QEmacsTextEditSearch() = default;
 
   void
   QEmacsTextEditSearch::search(const QString& s)
@@ -114,14 +111,14 @@ namespace qemacs{
   } // end of QEmacsTextEditSearch::search
 
   void
-  QEmacsTextEditSearch::searchFilterDestroyed(void)
+  QEmacsTextEditSearch::searchFilterDestroyed()
   {
     this->sf = nullptr;
     this->qemacs.removeUserInput(this);
   }
 
   void
-  QEmacsTextEditSearch::findNext(void)
+  QEmacsTextEditSearch::findNext()
   {
     QTextCursor c = this->textEdit.textCursor();
     int p = c.selectionEnd();
@@ -139,11 +136,11 @@ namespace qemacs{
   } // end of QEmacsTextEditSearch::updateCursor
 
   void
-  QEmacsTextEditSearch::treatUserInput(void)
+  QEmacsTextEditSearch::treatUserInput()
   {}
 
   QTextDocument::FindFlags
-  QEmacsTextEditSearch::getFlag(void) const
+  QEmacsTextEditSearch::getFlag() const
   {
     return this->flag;
   }

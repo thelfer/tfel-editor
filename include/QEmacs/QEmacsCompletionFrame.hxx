@@ -5,8 +5,8 @@
  * \brief 17 août 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSCOMPLETIONFRAME_H_
-#define _LIB_QEMACS_QEMACSCOMPLETIONFRAME_H_ 
+#ifndef LIB_QEMACS_QEMACSCOMPLETIONFRAME_HXX
+#define LIB_QEMACS_QEMACSCOMPLETIONFRAME_HXX 
 
 #include<QtCore/QString>
 #include<QtGui/QTextEdit>
@@ -25,5 +25,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_QEMACSCOMPLETIONFRAME_H */
+#endif /* LIB_QEMACS_QEMACSCOMPLETIONFRAME_HXX */
 

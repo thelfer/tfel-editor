@@ -5,8 +5,8 @@
  * \brief 05 sept. 2012
  */
 
-#ifndef _LIB_QEMACS_CMAJORMODEBASE_H_
-#define _LIB_QEMACS_CMAJORMODEBASE_H_ 
+#ifndef LIB_QEMACS_CMAJORMODEBASE_HXX
+#define LIB_QEMACS_CMAJORMODEBASE_HXX 
 
 #include"QEmacs/Config.hxx"
 #include"QEmacs/CompiledLanguageMajorModeBase.hxx"
@@ -33,21 +33,17 @@ namespace qemacs
     /*!
      * format a paragraph
      */
-    virtual void
-    format(void) override;
+    void format() override;
     /*!
      * comment/uncomment a region
      */
-    virtual void
-    comment(void) override;
+    void comment() override;
 
-    virtual void
-    indentLine(const QTextCursor&) override;
+    void indentLine(const QTextCursor&) override;
     
-    virtual void
-    indentRegion(const QTextCursor&) override;
+    void indentRegion(const QTextCursor&) override;
 
-    virtual ~CMajorModeBase();
+    ~CMajorModeBase() override;
     
   protected:
 
@@ -66,5 +62,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_CMAJORMODEBASE_H */
+#endif /* LIB_QEMACS_CMAJORMODEBASE_HXX */
 

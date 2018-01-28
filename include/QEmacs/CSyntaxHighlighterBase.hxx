@@ -5,8 +5,8 @@
  * \brief 03 juil. 2012
  */
 
-#ifndef _LIB_QEMACS_CSYNTAXHIGHLIGHTERBASE_H_
-#define _LIB_QEMACS_CSYNTAXHIGHLIGHTERBASE_H_ 
+#ifndef LIB_QEMACS_CSYNTAXHIGHLIGHTERBASE_HXX
+#define LIB_QEMACS_CSYNTAXHIGHLIGHTERBASE_HXX 
 
 #include<QtCore/QString>
 #include<QtCore/QVector>
@@ -63,5 +63,5 @@ namespace qemacs
 } // end of namespace qemacs
 
 
-#endif /* _LIB_QEMACS_CSYNTAXHIGHLIGHTERBASE_H */
+#endif /* LIB_QEMACS_CSYNTAXHIGHLIGHTERBASE_HXX */
 

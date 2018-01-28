@@ -5,8 +5,8 @@
  * \brief 21 juin 2013
  */
 
-#ifndef _LIB_QEMACS_CONFIG_H_
-#define _LIB_QEMACS_CONFIG_H_ 
+#ifndef LIB_QEMACS_CONFIG_HXX
+#define LIB_QEMACS_CONFIG_HXX 
 
 #include"TFEL/Config/TFELConfig.hxx"
 
@@ -24,5 +24,5 @@
 #  define QEMACS_VISIBILITY_EXPORT TFEL_VISIBILITY_EXPORT
 #endif
 
-#endif /* _LIB_QEMACS_CONFIG_H */
+#endif /* LIB_QEMACS_CONFIG_HXX */
 

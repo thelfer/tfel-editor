@@ -5,8 +5,8 @@
  * \brief 18 sept. 2012
  */
 
-#ifndef _LIB_QEMACS_LICOSTOKENIZER_H_
-#define _LIB_QEMACS_LICOSTOKENIZER_H_ 
+#ifndef LIB_QEMACS_LICOSTOKENIZER_HXX
+#define LIB_QEMACS_LICOSTOKENIZER_HXX 
 
 #include<QVector>
 
@@ -35,21 +35,20 @@ namespace qemacs
      * \param[in] s : string to be parsed
      * \param[in] l : line number
      */ 
-    virtual void
-    parseString(const QString&,
-		const unsigned short = 0u);
+    void parseString(const QString&,
+		     const unsigned short = 0u) override;
 
     /*!
      * \return the curret state
      */
     State
-    getState(void) const;
+    getState() const;
 
     /*!
      * \return the beginning of currently opened arrays
      */
     QVector<unsigned short>
-    getBeginningOfArrays(void) const;
+    getBeginningOfArrays() const;
 
     /*!
      * \return the error message
@@ -63,8 +62,7 @@ namespace qemacs
     virtual void
     setFailedState(const QString&);
 
-    virtual void
-    reset(void);
+    void reset() override;
 
   protected:
 
@@ -81,5 +79,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_LICOSTOKENIZER_H */
+#endif /* LIB_QEMACS_LICOSTOKENIZER_H */
 

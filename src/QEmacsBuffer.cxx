@@ -11,25 +11,14 @@
 #include<QtCore/QTime>
 #include<QtCore/QTimer>
 #include<QtCore/QFileInfo>
-
-#ifdef QEMACS_QT4
-#include<QtGui/QTabBar>
-#include<QtGui/QScrollBar>
-#include<QtGui/QHBoxLayout>
-#include<QtGui/QSplitter>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QTabBar>
 #include<QtWidgets/QScrollBar>
 #include<QtWidgets/QHBoxLayout>
 #include<QtWidgets/QSplitter>
-#endif /* QEMACS_QT5 */
-
 #include"QEmacs/Utilities.hxx"
 #include"QEmacs/QEmacsWidget.hxx"
 #include"QEmacs/QEmacsPlainTextEdit.hxx"
 #include"QEmacs/QEmacsMajorMode.hxx"
-
 #include"QEmacs/QWebViewWrapper.hxx"
 #include"QEmacs/QAbstractScrollAreaWrapper.hxx"
 #include"QEmacs/QEmacsBuffer.hxx"
@@ -59,17 +48,15 @@ namespace qemacs
       // }
     }
     
-    virtual void
-    focusInEvent(QFocusEvent *) override
+    void focusInEvent(QFocusEvent *) override
     {
       QTabWidget::setFocus();
       this->currentWidget()->setFocus();
     }
 
-    void
-    removeTab(int i)
+    void removeTab(int i)
     {
-      QWidget *w = QTabWidget::widget(i);
+      auto *w = QTabWidget::widget(i);
       if(w==nullptr){
 	return;
       }
@@ -110,7 +97,7 @@ namespace qemacs
   }
 
   int
-  QEmacsBuffer::getId(void) const
+  QEmacsBuffer::getId() const
   {
     return this->id;
   } // end of QEmacsBuffer::getId
@@ -122,13 +109,13 @@ namespace qemacs
   } // end of QEmacsBuffer::emitNewTreatedFile
 
   QString
-  QEmacsBuffer::getBufferRawName(void) const
+  QEmacsBuffer::getBufferRawName() const
   {
     return this->e->getFileName();
   } // end of QEmacsBuffer::setBufferName
 
   QString
-  QEmacsBuffer::getBufferName(void) const
+  QEmacsBuffer::getBufferName() const
   {
     QString s = this->getBufferNameSuffix();
     QString f = QFileInfo(this->getBufferRawName()).fileName();
@@ -139,7 +126,7 @@ namespace qemacs
   } // end of QEmacsBuffer::setBufferName
 
   QString
-  QEmacsBuffer::getBufferNameSuffix(void) const
+  QEmacsBuffer::getBufferNameSuffix() const
   {
     return this->bufferNameSuffix;
   } // end of QEmacsBuffer::setBufferName
@@ -192,9 +179,9 @@ namespace qemacs
     this->info->addWidget(this->ti);
     this->info->addStretch();
     // main gui
-    QVBoxLayout *vl  = new QVBoxLayout;
-    QHBoxLayout *hl  = new QHBoxLayout;
-    QSplitter *sp  = new QSplitter;
+    auto *vl  = new QVBoxLayout;
+    auto *hl  = new QHBoxLayout;
+    auto *sp  = new QSplitter;
     sp->setOrientation(Qt::Vertical);
     QSizePolicy qs;
     qs.setHorizontalPolicy(QSizePolicy::Minimum);
@@ -244,7 +231,7 @@ namespace qemacs
   }
 
   void
-  QEmacsBuffer::updateBufferName(void)
+  QEmacsBuffer::updateBufferName()
   {
     QString o = this->getBufferName();
     this->bufferNameSuffix = this->qemacs.chooseBufferNameSuffix(this,this->e->getFileName()); 
@@ -254,20 +241,20 @@ namespace qemacs
   }
 
   QVector<QMenu*>
-  QEmacsBuffer::getSpecificMenus(void)
+  QEmacsBuffer::getSpecificMenus()
   {
     return this->e->getSpecificMenus();
   } // end of QEmacsBuffer::getSpecificMenu
 
   QIcon
-  QEmacsBuffer::getIcon(void) const
+  QEmacsBuffer::getIcon() const
   {
     return this->e->getIcon();
   } // end of QEmacsBuffer::getIcon
 
 
   void
-  QEmacsBuffer::updateDate(void)
+  QEmacsBuffer::updateDate()
   {
     QTime t = QTime::currentTime();
     int   h = t.hour(); 
@@ -309,7 +296,7 @@ namespace qemacs
   }
   
   void
-  QEmacsBuffer::updateBufferInformations(void)
+  QEmacsBuffer::updateBufferInformations()
   {
     QString i;
     const QString& s = this->getBufferNameSuffix();
@@ -340,13 +327,13 @@ namespace qemacs
   } // end QEmacsBuffer::updateBufferInformations
 
   QEmacsPlainTextEdit&
-  QEmacsBuffer::getMainFrame(void)
+  QEmacsBuffer::getMainFrame()
   {
     return *(this->e);
   } // end of QEmacsBuffer::getQEmacsTextEdit
 
   bool
-  QEmacsBuffer::hasSlaves(void) const
+  QEmacsBuffer::hasSlaves() const
   {
     if(this->slaves==nullptr){
       return false;
@@ -361,16 +348,16 @@ namespace qemacs
     if(s==nullptr){
       return nullptr;
     }
-    QWebView            *pw = qobject_cast<QWebView *>(s);
-    QAbstractScrollArea *p  = qobject_cast<QAbstractScrollArea *>(s);
+    auto *pw = qobject_cast<QWebView *>(s);
+    auto *p  = qobject_cast<QAbstractScrollArea *>(s);
     if(pw!=nullptr){
-      QWebViewWrapper *w = new QWebViewWrapper(pw,this);
+      auto *w = new QWebViewWrapper(pw,this);
       this->slaves->addTab(w,t);
       this->slaves->setCurrentWidget(w);
       this->slaves->show();
       return w;
     } else if(p!=nullptr){
-      QAbstractScrollAreaWrapper *w = new QAbstractScrollAreaWrapper(p,this);
+      auto *w = new QAbstractScrollAreaWrapper(p,this);
       this->slaves->addTab(w,t);
       this->slaves->setCurrentWidget(w);
       this->slaves->show();
@@ -460,7 +447,7 @@ namespace qemacs
   }
 
   void
-  QEmacsBuffer::focusCurrentSlave(void)
+  QEmacsBuffer::focusCurrentSlave()
   {
     if(this->slaves!=nullptr){
       QWidget *s = this->slaves->currentWidget();
@@ -471,7 +458,7 @@ namespace qemacs
   } // end of QEmacsBuffer::focusCurrentSlave
 
   bool
-  QEmacsBuffer::areSlavesVisible(void) const
+  QEmacsBuffer::areSlavesVisible() const
   {
     if(this->slaves==nullptr){
       return false;
@@ -480,13 +467,13 @@ namespace qemacs
   }
 
   void
-  QEmacsBuffer::focusMainFrame(void)
+  QEmacsBuffer::focusMainFrame()
   {
     this->e->setFocus();
   } // end of QEmacsBuffer::focusMainFrame
 
   void
-  QEmacsBuffer::showSlaves(void)
+  QEmacsBuffer::showSlaves()
   {
     if(this->slaves->count()==0){
       this->qemacs.displayInformativeMessage(QObject::tr("no slave to be shown"));
@@ -496,7 +483,7 @@ namespace qemacs
   } // end of QEmacsBuffer::showSlaves
 
   void
-  QEmacsBuffer::hideSlaves(void)
+  QEmacsBuffer::hideSlaves()
   {
     this->slaves->hide();
   } // end of QEmacsBuffer::hideSlaves
@@ -511,13 +498,13 @@ namespace qemacs
   }
 
   bool
-  QEmacsBuffer::isOkToClose(void) const
+  QEmacsBuffer::isOkToClose() const
   {
     return !this->e->document()->isModified();
   } // end of QEmacsBuffer::isOkToClose
 
   void
-  QEmacsBuffer::closeCurrentSlave(void)
+  QEmacsBuffer::closeCurrentSlave()
   {
     if(this->slaves->count()!=0){
       this->closeSlave(this->slaves->currentIndex());

@@ -23,18 +23,6 @@ namespace qemacs
       value(token_),flag(flag_)
   {}
   
-  Token::Token(const Token& src):
-    line(src.line),pos(src.pos),
-    value(src.value),flag(src.flag)
-  {}
-  
-  Token& Token::operator=(const Token& src)
-  {
-    this->line  = src.line;
-    this->pos   = src.pos;
-    this->value = src.value;
-    this->flag  = src.flag;
-    return *this;
-  }
-
+  Token::Token(const Token&) = default;
+  Token& Token::operator=(const Token&) = default;
 } // end of namespace qemacs

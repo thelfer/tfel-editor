@@ -5,16 +5,6 @@
  * \brief 04 juin 2012
  */
 
-#ifdef QEMACS_QT4
-#include<QtGui/QLabel>
-#include<QtGui/QComboBox>
-#include<QtGui/QGridLayout>
-#include<QtGui/QHBoxLayout>
-#include<QtGui/QCheckBox>
-#include<QtGui/QGroupBox>
-#include<QtGui/QDialogButtonBox>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QLabel>
 #include<QtWidgets/QComboBox>
 #include<QtWidgets/QGridLayout>
@@ -22,8 +12,6 @@
 #include<QtWidgets/QCheckBox>
 #include<QtWidgets/QGroupBox>
 #include<QtWidgets/QDialogButtonBox>
-#endif /* QEMACS_QT5 */
-
 #include"QEmacs/MTestStudyOptions.hxx"
 
 namespace qemacs
@@ -38,16 +26,16 @@ namespace qemacs
     : QDialog(p),
       o(options)
   {
-    QVBoxLayout *vl  = new QVBoxLayout();
-    QGridLayout *gl1 = new QGridLayout();
-    QGridLayout *gl2 = new QGridLayout();
-    QHBoxLayout *hl  = new QHBoxLayout();
-    QComboBox * vlv  = new QComboBox;
+    auto *vl  = new QVBoxLayout();
+    auto *gl1 = new QGridLayout();
+    auto *gl2 = new QGridLayout();
+    auto *hl  = new QHBoxLayout();
+    auto *vlv = new QComboBox;
     vlv->addItems(QStringList() << "quiet"  << "level0"
 		  << "level1"   << "level2" << "level3"
 		  << "debug" << "full");
     vlv->setCurrentIndex(2);
-    gl1->addWidget(new QLabel(QObject::tr("Verbose level"),0,0));
+    gl1->addWidget(new QLabel(QObject::tr("Verbose level"),nullptr,nullptr));
     gl1->addWidget(vlv,0,1);
     // advanced options
     QGroupBox   *ao  = new QGroupBox(QObject::tr("Advanced options"));

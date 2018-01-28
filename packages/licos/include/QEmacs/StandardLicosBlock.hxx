@@ -5,8 +5,8 @@
  * \brief 17 sept. 2012
  */
 
-#ifndef _LIB_QEMACS_STANDARDLICOSBLOCK_H_
-#define _LIB_QEMACS_STANDARDLICOSBLOCK_H_ 
+#ifndef LIB_QEMACS_STANDARDLICOSBLOCK_HXX
+#define LIB_QEMACS_STANDARDLICOSBLOCK_HXX 
 
 #include<QtCore/QMap>
 
@@ -21,23 +21,20 @@ namespace qemacs
 
     StandardLicosBlock(const QString&);
   
-    virtual QString name(void) const;
+    QString name() const override;
 
-    virtual QString blockEnd(void) const;
+    QString blockEnd() const override;
 
-    virtual void
-    treatParameters(const QStringList&);
+    void treatParameters(const QStringList&) override;
   
-    virtual void
-    treatArguments(const CxxTokenizer::const_iterator,
-		   const CxxTokenizer::const_iterator);
+    void treatArguments(const CxxTokenizer::const_iterator,
+			const CxxTokenizer::const_iterator) override;
   
-    virtual bool isSubKey(const QString&) const;
+    bool isSubKey(const QString&) const override;
 
-    virtual bool isSubBlock(const QString&) const;
+    bool isSubBlock(const QString&) const override;
 
-    virtual QSharedPointer<LicosBlock>
-    getSubBlock(const QString&) const;
+    QSharedPointer<LicosBlock> getSubBlock(const QString&) const override;
 
     virtual void
     addBlocks(const QMap<QString,QSharedPointer<LicosBlock> >&);
@@ -73,5 +70,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_STANDARDLICOSBLOCK_H */
+#endif /* LIB_QEMACS_STANDARDLICOSBLOCK_H */
 

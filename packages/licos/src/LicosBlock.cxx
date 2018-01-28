@@ -10,8 +10,7 @@
 namespace qemacs
 {
 
-  static QStringList
-  buildParameterKeys()
+  static QStringList buildParameterKeys()
   {
     return QStringList() << "Double" << "Int"
 			 << "Array"  << "Map"
@@ -20,14 +19,12 @@ namespace qemacs
 			 << "Dictionnary";
   }
   
-  const QStringList&
-  getParameterKeys(void)
+  const QStringList& getParameterKeys()
   {
     static QStringList l(buildParameterKeys());
     return l;
   } // end of getParameterKeys
   
-  LicosBlock::~LicosBlock()
-  {} // end of LicosBlock::~LicosBlock
+  LicosBlock::~LicosBlock() = default;
 
 } // end of namespace qemacs

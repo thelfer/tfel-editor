@@ -29,7 +29,7 @@ namespace qemacs
   public:
     
     static const QStringList&
-    getKeysList(void);
+    getKeysList();
 
     static bool
     isCastemKeyWord(const QString&);
@@ -38,22 +38,17 @@ namespace qemacs
 		    QEmacsBuffer&,
 		    QEmacsTextEditBase&);
 
-    virtual QString
-    getName() const override;
+    QString getName() const override;
+    
+    QString getDescription() const override;
 
-    virtual QString
-    getDescription() const override;
+    void setSyntaxHighlighter(QTextDocument *) override;
 
-    virtual void
-    setSyntaxHighlighter(QTextDocument *) override;
-
-    virtual bool
-    handleShortCut(const int,
-		   const Qt::KeyboardModifiers,
-		   const int) override;
-
-    virtual QCompleter*
-    getCompleter(void) override;
+    bool handleShortCut(const int,
+			const Qt::KeyboardModifiers,
+			const int) override;
+    
+    QCompleter* getCompleter() override;
 
     /*!
      * complete the context menu actions
@@ -61,27 +56,21 @@ namespace qemacs
      * \param[in] c : text cursor at the position where the menu will
      * appear
      */
-    virtual void
-    completeContextMenu(QMenu *const,
-			const QTextCursor&) override;
+    void completeContextMenu(QMenu *const,
+			     const QTextCursor&) override;
 
-    virtual void
-    completeCurrentWord(QEmacsTextEditBase&,
-			const QString&) override;
+    void completeCurrentWord(QEmacsTextEditBase&,
+			     const QString&) override;
 
-    virtual int
-    getMinimalCompletionLength(void) override;
+    int getMinimalCompletionLength() override;
 
-    virtual void
-    format(void) override;
+    void format() override;
     
-    virtual void
-    indentLine(const QTextCursor&) override;
+    void indentLine(const QTextCursor&) override;
 
-    virtual QString
-    getCommentSyntax(void) override;
+    QString getCommentSyntax() override;
 
-    virtual ~CastemMajorMode();
+    ~CastemMajorMode() override;
 
   protected slots:
 
@@ -91,7 +80,7 @@ namespace qemacs
   protected:
 
     static QStringList
-    buildKeysList(void);
+    buildKeysList();
 
     virtual void
     displayHelp(const QString&,
@@ -104,7 +93,7 @@ namespace qemacs
     sendToCastem(const QString&);
 
     virtual void
-    startCastem(void);
+    startCastem();
 
     // completer
     QCompleter* c;

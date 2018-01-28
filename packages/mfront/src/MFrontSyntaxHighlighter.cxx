@@ -27,7 +27,7 @@ namespace qemacs
       for(const auto& k:mkeys){
 	keys.append(QString::fromStdString(k));
       }
-    } catch(std::exception& e){
+    } catch(std::exception&){
       return;
     }
     this->mfrontKeyFormat.setForeground(Qt::blue);

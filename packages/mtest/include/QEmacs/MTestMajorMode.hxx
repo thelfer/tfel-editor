@@ -5,8 +5,8 @@
  * \brief 03 juil. 2012
  */
 
-#ifndef _LIB_QEMACS_MTESTMAJORMODE_H_
-#define _LIB_QEMACS_MTESTMAJORMODE_H_ 
+#ifndef LIB_QEMACS_MTESTMAJORMODE_HXX
+#define LIB_QEMACS_MTESTMAJORMODE_HXX 
 
 #include"QEmacs/CxxMajorMode.hxx"
 
@@ -30,39 +30,33 @@ namespace qemacs
 		    QEmacsBuffer&,
 		    QEmacsTextEditBase&);
 
-    virtual QString
-    getName(void) const override;
+    QString getName() const override;
 
-    virtual QString
-    getDescription(void) const override;
+    QString getDescription() const override;
     
-    virtual void
-    completeContextMenu(QMenu *const,
-			const QTextCursor&) override;
+    void completeContextMenu(QMenu *const,
+			     const QTextCursor&) override;
 
-    virtual void
-    setSyntaxHighlighter(QTextDocument *const);
+    void setSyntaxHighlighter(QTextDocument *const) override;
 
-    virtual QCompleter*
-    getCompleter(void) override;
+    QCompleter* getCompleter() override;
 
-    QString
-    getCompletionPrefix(void) override;
+    QString getCompletionPrefix() override;
 
-    virtual QMenu*
-    getSpecificMenu(void) override;
+    QMenu* getSpecificMenu() override;
 
-    virtual bool
-    keyPressEvent(QKeyEvent * const) override;
+    bool keyPressEvent(QKeyEvent * const) override;
     
-    virtual ~MTestMajorMode();
+    ~MTestMajorMode() override;
 
   protected slots:
-    //! method called when the Help menu is called
-    virtual void run(void);
-    //! method called when the Help menu is called
-    virtual void start(void);
-    //! method called when the Help menu is called
+    //! \brief method called when the Help menu is called
+    virtual void run();
+    //! \brief launch the import behaviour wizard
+    virtual void showImportBehaviourWizard();
+    //! \brief method called when the Help menu is called
+    virtual void start();
+    //! \brief method called when the Help menu is called
     virtual void
     actionTriggered(QAction *);
     /*!
@@ -71,21 +65,22 @@ namespace qemacs
     virtual void
     insertKeyword(QAction *);
   protected:
-    //! return the list of MTest keywords
+    //! \brief return the list of MTest keywords
     virtual QStringList
     getKeyWordsList() const;
-    //! return the scheme name
-    virtual QString
-    getScheme(void) const;
-    //! completer
+    //! \brief return the scheme name
+    virtual QString getScheme() const;
+    //! \brief completer
     QCompleter* c = nullptr;
-    //! help action
+    //! \brief help action
     QAction *ha = nullptr;
-    //! run mtest
+    //! \brief import behaviour action
+    QAction *iba = nullptr;
+    //! \brief run mtest
     QAction *ra = nullptr;
   }; // end of struct MTestMajorMode
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_MTESTMAJORMODE_H */
+#endif /* LIB_QEMACS_MTESTMAJORMODE_H */
 

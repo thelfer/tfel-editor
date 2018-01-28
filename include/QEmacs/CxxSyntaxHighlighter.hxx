@@ -5,8 +5,8 @@
  * \brief 30 juin 2012
  */
 
-#ifndef _LIB_QEMACS_CXXSYNTAXHIGHLIGHTER_H_
-#define _LIB_QEMACS_CXXSYNTAXHIGHLIGHTER_H_ 
+#ifndef LIB_QEMACS_CXXSYNTAXHIGHLIGHTER_HXX
+#define LIB_QEMACS_CXXSYNTAXHIGHLIGHTER_HXX 
 
 #include"QEmacs/Config.hxx"
 #include"QEmacs/CSyntaxHighlighter.hxx"
@@ -34,5 +34,5 @@ namespace qemacs
   
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_CXXSYNTAXHIGHLIGHTER_H */
+#endif /* LIB_QEMACS_CXXSYNTAXHIGHLIGHTER_HXX */
 

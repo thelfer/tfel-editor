@@ -31,43 +31,36 @@ namespace qemacs
 		     &t,SLOT(insertCompletion(QString)));
   } // end of PipeTestMajorMode::PipeTestMajorMode
   
-  QString
-  PipeTestMajorMode::getName(void) const
+  QString PipeTestMajorMode::getName() const
   {
     return "PipeTest";
   } // end of PipeTestMajorMode::getName
     
-  QString
-  PipeTestMajorMode::getDescription(void) const
+  QString PipeTestMajorMode::getDescription() const
   {
     return "major mode dedicated to the mtest extension to pipe";
   } // end of CppMajorMode
 
-  QString
-  PipeTestMajorMode::getScheme(void) const
+  QString PipeTestMajorMode::getScheme() const
   {
     return "ptest";
   }
   
-  void
-  PipeTestMajorMode::setSyntaxHighlighter(QTextDocument *const d)
+  void PipeTestMajorMode::setSyntaxHighlighter(QTextDocument *const d)
   {
     new PipeTestSyntaxHighlighter(d);
   } // end of PipeTestMajorMode::setSyntaxHighlighter
 
-  QStringList
-  PipeTestMajorMode::getKeyWordsList() const{
+  QStringList PipeTestMajorMode::getKeyWordsList() const{
     return PipeTestSyntaxHighlighter::getPipeTestKeys();
   }
 
-  QCompleter*
-  PipeTestMajorMode::getCompleter(void)
+  QCompleter* PipeTestMajorMode::getCompleter()
   {
     return this->c;
   } // end of getCompleter
   
-  PipeTestMajorMode::~PipeTestMajorMode()
-  {} // end of PipeTestMajorMode::~PipeTestMajorMode()
+  PipeTestMajorMode::~PipeTestMajorMode() = default;
   
   static StandardQEmacsMajorModeProxy<PipeTestMajorMode> proxy("PipeTest",
 							       QVector<QRegExp>() << QRegExp("^\\w+\\.ptest"));

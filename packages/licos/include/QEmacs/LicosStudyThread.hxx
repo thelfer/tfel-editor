@@ -5,19 +5,14 @@
  * \brief 20 mai 2012
  */
 
-#ifndef _LIB_QEMACS_LICOSSTUDYTHREAD_H_
-#define _LIB_QEMACS_LICOSSTUDYTHREAD_H_ 
+#ifndef LIB_QEMACS_LICOSSTUDYTHREAD_HXX
+#define LIB_QEMACS_LICOSSTUDYTHREAD_HXX 
 
 #include<QtCore/QProcess>
 #include<QtCore/QString>
 #include<QtCore/QStringList>
 #include<QtCore/QThread>
-#ifdef QEMACS_QT4
-#include<QtGui/QPlainTextEdit>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QPlainTextEdit>
-#endif /* QEMACS_QT5 */
 #include<QtNetwork/QLocalServer>
 #include<QtNetwork/QLocalSocket>
 
@@ -55,7 +50,7 @@ namespace qemacs
     /*!
      * run the study
      */
-    void run();
+    void run() override;
 
     /*!
      * return true if the study success
@@ -66,9 +61,9 @@ namespace qemacs
      * return the error messsage if the study failed
      */
     QString
-    getErrorMessage(void) const;
+    getErrorMessage() const;
 
-    ~LicosStudyThread();
+    ~LicosStudyThread() override;
 			
   signals:
 
@@ -106,4 +101,4 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_LICOSSTUDYTHREAD_H */
+#endif /* LIB_QEMACS_LICOSSTUDYTHREAD_H */

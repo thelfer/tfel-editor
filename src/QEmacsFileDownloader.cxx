@@ -12,8 +12,7 @@ namespace qemacs
     m_WebCtrl.get(request);
   }
 
-  QEmacsFileDownloader::~QEmacsFileDownloader()
-  {}
+  QEmacsFileDownloader::~QEmacsFileDownloader() = default;
 
   void QEmacsFileDownloader::fileDownloaded(QNetworkReply* pReply)
   {

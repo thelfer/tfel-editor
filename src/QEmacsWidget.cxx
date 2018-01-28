@@ -9,21 +9,11 @@
 #include<QtCore/QTimer>
 #include<QtCore/QDebug>
 #include<QtCore/QTextStream>
-
-#ifdef QEMACS_QT4
-#include<QtGui/QCompleter>
-#include<QtGui/QMessageBox>
-#include<QtGui/QFileDialog>
-#include<QtGui/QHBoxLayout>
-#include<QtGui/QVBoxLayout>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QCompleter>
 #include<QtWidgets/QMessageBox>
 #include<QtWidgets/QFileDialog>
 #include<QtWidgets/QHBoxLayout>
 #include<QtWidgets/QVBoxLayout>
-#endif /* QEMACS_QT5 */
 #include<QtGui/QCloseEvent>
 
 #include"QEmacs/QEmacsCommand.hxx"
@@ -95,13 +85,11 @@ namespace qemacs
       this->input->setText(npath);
     }
 
-    ~OpenFile()
-    {}
+    ~OpenFile() override = default;
 
   protected:
 
-    virtual void
-    treatUserInput(void) override
+    void treatUserInput() override
     {
       this->qemacs.openFile(this->input->text());
     }
@@ -127,21 +115,19 @@ namespace qemacs
       if(!this->defaultBuffer.isEmpty()){
 	b << ""; // add the emtpy string for default completion
       }
-      QCompleter * c = new QCompleter(buffers,&p);
+      auto *c = new QCompleter(buffers,&p);
       c->setWidget(this->input);
       c->setCompletionMode(QCompleter::InlineCompletion);
       this->input->setCompleter(c,false);
     }
 
-    ~ChangeBuffer()
-    {}
+    ~ChangeBuffer() override = default;
 
   protected:
 
-    virtual void
-    treatUserInput(void) override
+    void treatUserInput() override
     {
-      QString t = this->input->text();
+      const auto t = this->input->text();
       if(t.isEmpty()){
 	this->qemacs.changeBuffer(this->defaultBuffer);
       } else {
@@ -170,13 +156,11 @@ namespace qemacs
       this->input->setCompleter(c,false);
     }
 
-    ~Command()
-    {}
+    ~Command() override = default;
 
   protected:
 
-    virtual void
-    treatUserInput(void) override
+    void treatUserInput() override
     {
       // the input must be kept before calling the removeUserInput
       // method (this causes the qemacswdget to delete this).
@@ -219,7 +203,7 @@ namespace qemacs
       nid(0)
   {
     QEmacsModeRessourceLoader loader;
-    QVBoxLayout * vl = new QVBoxLayout;
+    auto * vl = new QVBoxLayout;
     this->buffers->setFocusPolicy(Qt::NoFocus);
     this->setFocusPolicy(Qt::NoFocus);
     this->um->setReadOnly(true);
@@ -245,11 +229,11 @@ namespace qemacs
   QEmacsWidget::changeMainFramesFont(const QFont& f)
   {
     for(int i=0;i!=this->buffers->count();++i){
-      QEmacsBuffer *b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
+      auto *b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
       if(b==nullptr){
 	continue;
       }
-      QEmacsPlainTextEdit& t = b->getMainFrame();
+      auto& t = b->getMainFrame();
       t.setFont(f);
     }
   } // end of QEmacsWidget::changeMainFrameFont
@@ -265,7 +249,7 @@ namespace qemacs
       af = fi.absoluteFilePath();
     }
     for(int i=0;i!=this->buffers->count();++i){
-      QEmacsBuffer *b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
+      auto *b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
       if(b==nullptr){
 	continue;
       }
@@ -298,7 +282,7 @@ namespace qemacs
   } // end of QEmacs::openFile(const QString&)
 
   void
-  QEmacsWidget::createEmptyBuffer(void)
+  QEmacsWidget::createEmptyBuffer()
   {
     QEmacsBuffer *b = this->createNewBuffer();
     this->buffers->addWidget(b);
@@ -365,7 +349,7 @@ namespace qemacs
       if(!this->bHistory.isEmpty()){
 	this->changeBuffer(this->bHistory.front());
       } else {
-	QEmacsBuffer *nb = qobject_cast<QEmacsBuffer *>(this->buffers->currentWidget());
+	auto *nb = qobject_cast<QEmacsBuffer *>(this->buffers->currentWidget());
 	if(nb!=nullptr){
 	  this->setCurrentBuffer(nb);
 	}
@@ -391,41 +375,41 @@ namespace qemacs
     emit bufferNameChanged();
   }
 
-  void
-  QEmacsWidget::saveAllBuffers(void)
+  void QEmacsWidget::saveAllBuffers()
   {
     int i;
     for(i=0;i!=this->buffers->count();++i){
-      QEmacsBuffer *b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
+      auto *b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
       if(b==nullptr){
 	continue;
       }
-      QEmacsPlainTextEdit& t = b->getMainFrame();
+      auto& t = b->getMainFrame();
       if(t.document()->isModified()){
 	t.save();
       }
     }
-  } // end of QEmacsWidget::saveAllBuffers(void)
+  } // end of QEmacsWidget::saveAllBuffers()
 
   bool
-  QEmacsWidget::isOkToClose(void)
+  QEmacsWidget::isOkToClose()
   {
     int i;
     bool found = false;
     for(i=0;(i!=this->buffers->count())&&(!found);++i){
-      QEmacsBuffer *b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
+      auto *b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
       if(b==nullptr){
 	continue;
       }
       found = !b->isOkToClose();
     }
     if (found){
-      QMessageBox::StandardButton ret;
-      ret = QMessageBox::warning(this, tr("QEmacs"),
-				 tr("At least one buffer has been modified.\n"
-				    "Do you want to save your changes?"),
-				 QMessageBox::SaveAll | QMessageBox::Discard
-				 | QMessageBox::Cancel);
+      auto ret = QMessageBox::warning(this, tr("QEmacs"),
+				      tr("At least one buffer has "
+					 "been modified.\n"
+					 "Do you want to save your changes?"),
+				      QMessageBox::SaveAll |
+				      QMessageBox::Discard |
+				      QMessageBox::Cancel);
       if (ret == QMessageBox::Cancel){
 	return false;
       } else if (ret == QMessageBox::SaveAll){
@@ -520,7 +504,7 @@ namespace qemacs
   } // end of QEmacsWidget::removeUserInput
 
   void
-  QEmacsWidget::removeUserInput(void)
+  QEmacsWidget::removeUserInput()
   {
     if(this->ui.isEmpty()){
       return;
@@ -529,7 +513,7 @@ namespace qemacs
   } // end of QEmacsWidget::removeUserInput
 
   void
-  QEmacsWidget::removeUserInputs(void)
+  QEmacsWidget::removeUserInputs()
   {
     while(!this->ui.isEmpty()){
       this->removeUserInput(this->ui.back());
@@ -537,13 +521,13 @@ namespace qemacs
   } // end of QEmacsWidget::removeUserInputs
 
   bool
-  QEmacsWidget::hasUserInput(void) const
+  QEmacsWidget::hasUserInput() const
   {
     return !this->ui.isEmpty();
   }
 
   void
-  QEmacsWidget::focusUserInput(void)
+  QEmacsWidget::focusUserInput()
   {
     if(!this->ui.isEmpty()){
       this->ui.back()->setFocus();
@@ -551,7 +535,7 @@ namespace qemacs
   }
 
   void
-  QEmacsWidget::resetUserInput(void)
+  QEmacsWidget::resetUserInput()
   {
     if(!this->ui.isEmpty()){
       this->minibuffer->setCurrentWidget(this->ui.back());
@@ -562,7 +546,7 @@ namespace qemacs
   } // end of QEmacsWidget::resetPreviousUserInput
 
   const QStringList&
-  QEmacsWidget::getKillRing(void) const
+  QEmacsWidget::getKillRing() const
   {
     return this->killRing;
   } // end of QEmacsWidget::getKillRing
@@ -580,7 +564,7 @@ namespace qemacs
   } // end of QEmacsWidget::addToKillRing
 
   QStringList
-  QEmacsWidget::getBuffersNames(void) const
+  QEmacsWidget::getBuffersNames() const
   {
     QStringList n;
     for(int i=0;i!=this->buffers->count();++i){
@@ -598,7 +582,7 @@ namespace qemacs
   } // end of QEmacsWidget::getBuffersNames
 
   QVector<QIcon>
-  QEmacsWidget::getBuffersIcons(void) const
+  QEmacsWidget::getBuffersIcons() const
   {
     QVector<QIcon> icons;
     for(int i=0;i!=this->buffers->count();++i){
@@ -611,7 +595,7 @@ namespace qemacs
   }
 
   QVector<int>
-  QEmacsWidget::getBuffersIds(void) const
+  QEmacsWidget::getBuffersIds() const
   {
     QVector<int> ids;
     for(int i=0;i!=this->buffers->count();++i){
@@ -627,7 +611,7 @@ namespace qemacs
   QEmacsWidget::changeBuffer(const QString& n)
   {
     for(int i=0;i!=this->buffers->count();++i){
-      QEmacsBuffer * b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
+      auto * b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
       if(b!=nullptr){
 	if(b->getBufferName()==n){
 	  this->setCurrentBuffer(b);
@@ -637,11 +621,10 @@ namespace qemacs
     }
   } // end of QEmacsWidget::changeBuffer
 
-  void
-  QEmacsWidget::changeBuffer(const int id)
+  void QEmacsWidget::changeBuffer(const int id)
   {
     for(int i=0;i!=this->buffers->count();++i){
-      QEmacsBuffer * b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
+      auto * b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
       if(b!=nullptr){
 	if(b->getId()==id){
 	  this->setCurrentBuffer(b);
@@ -659,14 +642,14 @@ namespace qemacs
       return "";
     }
     QFileInfo info(f);
-    QString n  = info.fileName();
+    const auto n  = info.fileName();
     QString s;
     int m = 0;
     bool found = true;
     while(found){
       found = false;
       for(int i=0;(i!=this->buffers->count())&&(!found);++i){
-	QEmacsBuffer * ob = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
+	auto * ob = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
 	if(ob!=nullptr){
 	  if(ob!=b){
 	    found = ((n == ob->getBufferName()) &&
@@ -685,22 +668,22 @@ namespace qemacs
   void
   QEmacsWidget::changeBuffer()
   {
-    QEmacsBuffer *cb = qobject_cast<QEmacsBuffer*>(this->buffers->currentWidget());
+    auto *cb = qobject_cast<QEmacsBuffer*>(this->buffers->currentWidget());
     if(cb==nullptr){
       return;
     }
-    const QString& bn = cb->getBufferName();
+    const auto& bn = cb->getBufferName();
     QStringList bnames;
     for(int i=0;i!=this->buffers->count();++i){
-      QEmacsBuffer *b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
+      auto *b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
       if(b!=nullptr){
-	const QString& n = b->getBufferName();
+	const auto& n = b->getBufferName();
 	if(bn!=n){
 	  bnames.append(n);
 	}
       }
     }
-    if(bnames.size()==0){
+    if(bnames.empty()){
       this->displayInformativeMessage(QObject::tr("no other buffer"));
       return;
     }
@@ -720,7 +703,7 @@ namespace qemacs
   {
     this->buffers->setCurrentWidget(b);
     b->setFocus();
-    QString n = b->getBufferName();
+    const auto n = b->getBufferName();
     this->bHistory.removeAll(n);
     this->bHistory.push_front(n);
     emit currentBufferChanged();
@@ -733,14 +716,12 @@ namespace qemacs
       : QEmacsYesOrNoUserInput(QObject::tr("buffer '%1' has been modified; kill anyway ?").arg(p.getCurrentBuffer().getBufferName()),p),
 	t(p)
     {}
-    virtual bool
-    isBlocking(void) const override
+    bool isBlocking() const override
     {
       return true;
     } // end of isBlocking
   protected:
-    virtual void
-    treatUserInput() override
+    void treatUserInput() override
     {
       if(this->input->text()=="y"){
 	this->t.removeBuffer(&(this->buffer));
@@ -755,7 +736,7 @@ namespace qemacs
     if(this->buffers->count()==0){
       return QVector<QMenu*>();
     }
-    QEmacsBuffer *b = qobject_cast<QEmacsBuffer*>(this->buffers->currentWidget());
+    auto *b = qobject_cast<QEmacsBuffer*>(this->buffers->currentWidget());
     return b->getSpecificMenus();
   } // end of QEmacsWidget::getCurrentBufferMenu()
 
@@ -766,7 +747,7 @@ namespace qemacs
   } // end of QEmacsWidget::emitNewTreatedFile
 
   void
-  QEmacsWidget::launchCommand(void)
+  QEmacsWidget::launchCommand()
   {
     if(!this->ui.isEmpty()){
       this->displayInformativeMessage(QObject::tr("command attemted "
@@ -791,16 +772,13 @@ namespace qemacs
     delete qc;
   } // end of QEmacsWidget::launchCommand
 
-  QEmacsBuffer&
-  QEmacsWidget::getCurrentBuffer(void)
+  QEmacsBuffer& QEmacsWidget::getCurrentBuffer()
   {
-    QEmacsBuffer *b = qobject_cast<QEmacsBuffer*>(this->buffers->currentWidget());
-    return *b;    
+    return *(qobject_cast<QEmacsBuffer*>(this->buffers->currentWidget()));
   } // end of QEmacsWidget::getCurrentBuffer
 
-  void
-  QEmacsWidget::closeBuffer(QEmacsBuffer& buffer,
-			    const bool b)
+  void QEmacsWidget::closeBuffer(QEmacsBuffer& buffer,
+				 const bool b)
   {
     if(b){
 #pragma message("unimplemented")
@@ -814,10 +792,9 @@ namespace qemacs
     }
   } // end of QEmacsWidget::closeCurrentBuffer
   
-  void
-  QEmacsWidget::closeCurrentBuffer(const bool b)
+  void QEmacsWidget::closeCurrentBuffer(const bool b)
   {
-    QEmacsBuffer *buffer = qobject_cast<QEmacsBuffer*>(this->buffers->currentWidget());
+    auto *buffer = qobject_cast<QEmacsBuffer*>(this->buffers->currentWidget());
     if(buffer==nullptr){
       return;
     }
@@ -832,14 +809,13 @@ namespace qemacs
     }
   } // end of QEmacsWidget::closeCurrentBuffer
 
-  void
-  QEmacsWidget::saveCurrentBuffer()
+  void QEmacsWidget::saveCurrentBuffer()
   {
-    QEmacsBuffer *b = qobject_cast<QEmacsBuffer*>(this->buffers->currentWidget());
+    auto *b = qobject_cast<QEmacsBuffer*>(this->buffers->currentWidget());
     if(b==nullptr){
       return;
     }
-    QEmacsPlainTextEdit& t = b->getMainFrame();
+    auto& t = b->getMainFrame();
     if(t.document()->isModified()){
       t.save();
     }

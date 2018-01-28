@@ -5,8 +5,8 @@
  * \brief 18 août 2012
  */
 
-#ifndef _LIB_QEMACS_LATEXMAJORMODE_H_
-#define _LIB_QEMACS_LATEXMAJORMODE_H_ 
+#ifndef LIB_QEMACS_LATEXMAJORMODE_HXX
+#define LIB_QEMACS_LATEXMAJORMODE_HXX 
 
 #include<QtCore/QPointer>
 
@@ -37,14 +37,11 @@ namespace qemacs
 		   QEmacsBuffer&,
 		   QEmacsTextEditBase&);
 
-    virtual QString
-    getName(void) const override;
+    QString getName() const override;
 
-    virtual QString
-    getDescription(void) const override;
+    QString getDescription() const override;
     
-    virtual void
-    setSyntaxHighlighter(QTextDocument *const) override;
+    void setSyntaxHighlighter(QTextDocument *const) override;
 
     /*!
      * complete the context menu actions
@@ -52,25 +49,19 @@ namespace qemacs
      * \param[in] c : text cursor at the position where the menu will
      * appear
      */
-    virtual void
-    completeContextMenu(QMenu *const,
-			const QTextCursor&) override;
+    void completeContextMenu(QMenu *const,
+			     const QTextCursor&) override;
 
-    virtual QCompleter*
-    getCompleter(void) override;
+    QCompleter* getCompleter() override;
 
-    virtual void
-    completeCurrentWord(QEmacsTextEditBase&,
+    void completeCurrentWord(QEmacsTextEditBase&,
 			const QString&) override;
 
-    virtual QMenu*
-    getSpecificMenu() override;
+    QMenu* getSpecificMenu() override;
 
-    virtual bool
-    keyPressEvent(QKeyEvent * const) override;
+    bool keyPressEvent(QKeyEvent * const) override;
 
-    virtual bool
-    mousePressEvent(QMouseEvent * const) override;
+    bool mousePressEvent(QMouseEvent * const) override;
 
     /*!
      * treat "Ctrl-k1 Mod-k2" shortcuts not handled by QEmacsTextEditBase
@@ -80,42 +71,34 @@ namespace qemacs
      * \param[in] k2 : second key
      * \return true if the short cut is handled by this mode
      */
-    virtual bool
-    handleShortCut(const int,
-		   const Qt::KeyboardModifiers,
-		   const int) override;
+    bool handleShortCut(const int,
+			const Qt::KeyboardModifiers,
+			const int) override;
 
     /*!
      * indent the current line
-     */    
-    virtual void
-    indentLine(const QTextCursor&) override;
+     */  
+    void indentLine(const QTextCursor&) override;
 
     /*!
      * indent selected region
-     */    
-    virtual void
-    indentRegion(const QTextCursor&) override;
+     */
+    void indentRegion(const QTextCursor&) override;
 
-    virtual QIcon
-    getIcon(void) const override;
+    QIcon getIcon() const override;
 
     /*!
      * format the selected paragraph
      */
-    virtual void
-    format(void) override;
+    void format() override;
 
-    virtual QString
-    getCommentSyntax() override;
+    QString getCommentSyntax() override;
 
-    SpellChecker&
-    getSpellChecker(void);
+    SpellChecker& getSpellChecker();
 
-    virtual void
-    setSpellCheckLanguage(const QString&) override;
+    void setSpellCheckLanguage(const QString&) override;
 
-    virtual ~LaTeXMajorMode();
+    ~LaTeXMajorMode() override;
 
   protected slots:
 
@@ -192,5 +175,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_LATEXMAJORMODE_H */
+#endif /* LIB_QEMACS_LATEXMAJORMODE_H */
 

@@ -5,22 +5,14 @@
  * \brief 14 déc. 2012
  */
 
-#ifndef _LIB_MATERIALPROPERTYSELECTOR_H_
-#define _LIB_MATERIALPROPERTYSELECTOR_H_ 
+#ifndef LIB_MATERIALPROPERTYSELECTOR_HXX
+#define LIB_MATERIALPROPERTYSELECTOR_HXX 
 
 #include<QtCore/QVector>
 #include<QtCore/QAbstractItemModel>
-
-#ifdef QEMACS_QT4
-#include<QtGui/QLabel>
-#include<QtGui/QWidget>
-#include<QtGui/QTableView>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QLabel>
 #include<QtWidgets/QWidget>
 #include<QtWidgets/QTableView>
-#endif /* QEMACS_QT5 */
 #include<QtGui/QTextBlock>
 
 namespace qemacs
@@ -38,26 +30,24 @@ namespace qemacs
 
     MaterialPropertyModel(QObject *const);
 
-    virtual int
-    rowCount(const QModelIndex&) const;
+    int rowCount(const QModelIndex&) const override;
 
-    virtual int
-    columnCount(const QModelIndex&) const;
+    int columnCount(const QModelIndex&) const override;
 
     QVariant data(const QModelIndex&,
-		  int) const;
+		  int) const override;
     
     QVariant headerData(int section,
 			Qt::Orientation,
-			int) const;
+			int) const override;
   
-    void sort(int, Qt::SortOrder);
+    void sort(int, Qt::SortOrder) override;
 
     virtual void
     setMaterialProperties(const QVector<MaterialProperty>&);
 
     const QVector<MaterialProperty>&
-    materialProperties(void) const;
+    materialProperties() const;
 
   protected:
 
@@ -102,7 +92,7 @@ namespace qemacs
     updateMFMModel(const QString&);
 
     virtual void
-    openLibrary(void);
+    openLibrary();
 
     virtual void
     addMaterialProperties();
@@ -123,5 +113,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_MATERIALPROPERTYSELECTOR_H */
+#endif /* LIB_MATERIALPROPERTYSELECTOR_H */
 

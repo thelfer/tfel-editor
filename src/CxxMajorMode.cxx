@@ -22,19 +22,19 @@ namespace qemacs
   {} // end of CxxMajorMode::CxxMajorMode
 
   QString
-  CxxMajorMode::getName(void) const
+  CxxMajorMode::getName() const
   {
     return "C++";
   } // end of CxxMajorMode::CxxMajorMode
 
   QString
-  CxxMajorMode::getLanguageName(void) const
+  CxxMajorMode::getLanguageName() const
   {
     return this->getName();
   } // end of CxxMajorMode::getLanguageName
 
   QString
-  CxxMajorMode::getDescription(void) const
+  CxxMajorMode::getDescription() const
   {
     return "major mode dedicated to the C++ language";
   } // end of CxxMajorMode::CxxMajorMode
@@ -58,8 +58,7 @@ namespace qemacs
     new CxxSyntaxHighlighter(d);
   } // end of CxxMajorMode::setSyntaxHighlighter
 
-  CxxMajorMode::~CxxMajorMode()
-  {} // end of CxxMajorMode::~CxxMajorMode()
+  CxxMajorMode::~CxxMajorMode() = default;
 
   static StandardQEmacsMajorModeProxy<CxxMajorMode> proxy("C++",QVector<QRegExp>() 
 							  << QRegExp("^[\\w-]+\\.cxx$") 

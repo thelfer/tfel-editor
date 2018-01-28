@@ -5,8 +5,8 @@
  * \brief 30 juin 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSMAJORMODEFACTORY_H_
-#define _LIB_QEMACS_QEMACSMAJORMODEFACTORY_H_ 
+#ifndef LIB_QEMACS_QEMACSMAJORMODEFACTORY_HXX
+#define LIB_QEMACS_QEMACSMAJORMODEFACTORY_HXX 
 
 #include<memory>
 
@@ -29,14 +29,12 @@ namespace qemacs
   struct QEMACS_VISIBILITY_EXPORT QEmacsMajorModeProxy
   {
     virtual QString
-    getName(void) const = 0;
+    getName() const = 0;
     virtual QEmacsMajorMode*
     getQEmacsMajorMode(QEmacsWidget&,
 		       QEmacsBuffer&,
 		       QEmacsTextEditBase&) const = 0;
-    /*!
-     * destructor
-     */
+    //! destructor
     virtual ~QEmacsMajorModeProxy();
   }; // end of struct QEmacsMajorModeProxy
 
@@ -58,19 +56,15 @@ namespace qemacs
     /*!
      * \param[in] n : return the major mode name
      */
-    virtual QString
-    getName(void) const override;
+    QString getName() const override;
     /*!
      * \return a new instance of the major mode
      */
-    virtual QEmacsMajorMode *
-    getQEmacsMajorMode(QEmacsWidget&,
-		       QEmacsBuffer&,
-		       QEmacsTextEditBase&) const override;
-    /*!
-     * destructor
-     */
-    ~StandardQEmacsMajorModeProxy();
+    QEmacsMajorMode * getQEmacsMajorMode(QEmacsWidget&,
+					 QEmacsBuffer&,
+					 QEmacsTextEditBase&) const override;
+    //! destructor
+    ~StandardQEmacsMajorModeProxy() override;
   private:
     //! major mode name
     const QString name;
@@ -118,7 +112,7 @@ namespace qemacs
 		       const bool = true);
     
     QStringList
-    getAvailableQEmacsMajorModesNames(void) const;
+    getAvailableQEmacsMajorModesNames() const;
 
     bool
     hasQEmacsMajorMode(const QString&) const;
@@ -143,4 +137,4 @@ namespace qemacs
 
 #include"QEmacs/QEmacsMajorModeFactory.ixx"
 
-#endif /* _LIB_QEMACS_QEMACSMAJORMODEFACTORY_H */
+#endif /* LIB_QEMACS_QEMACSMAJORMODEFACTORY_HXX */

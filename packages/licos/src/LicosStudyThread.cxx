@@ -56,7 +56,7 @@ namespace qemacs
   }
 
   void
-  LicosStudyThread::studyFinished(void)
+  LicosStudyThread::studyFinished()
   {
     this->success      = this->study->succeed();
     this->errorMessage = this->study->getErrorMessage();
@@ -72,7 +72,7 @@ namespace qemacs
   }
 
   QString
-  LicosStudyThread::getErrorMessage(void) const
+  LicosStudyThread::getErrorMessage() const
   {
     return this->errorMessage;
   } // end of LicosStudyThread::getErrorMessage

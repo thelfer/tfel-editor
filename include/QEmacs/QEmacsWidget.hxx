@@ -5,27 +5,16 @@
  * \brief 27 juin 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSWIDGET_H_
-#define _LIB_QEMACS_QEMACSWIDGET_H_ 
+#ifndef LIB_QEMACS_QEMACSWIDGET_HXX
+#define LIB_QEMACS_QEMACSWIDGET_HXX 
 
 #include<QtCore/QString>
-#ifdef QEMACS_QT4
-#include<QtGui/QLabel>
-#include<QtGui/QAction>
-#include<QtGui/QWidget>
-#include<QtGui/QLineEdit>
-#include<QtGui/QHBoxLayout>
-#include<QtGui/QStackedWidget>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QLabel>
 #include<QtWidgets/QAction>
 #include<QtWidgets/QWidget>
 #include<QtWidgets/QLineEdit>
 #include<QtWidgets/QHBoxLayout>
 #include<QtWidgets/QStackedWidget>
-#endif /* QEMACS_QT5 */
-
 #include"QEmacs/Config.hxx"
 
 namespace qemacs
@@ -60,16 +49,16 @@ namespace qemacs
     QEmacsWidget(QWidget *const = nullptr);
 
     virtual bool
-    isOkToClose(void);
+    isOkToClose();
 
     virtual QStringList
-    getBuffersNames(void) const;
+    getBuffersNames() const;
 
     virtual QVector<QIcon>
-    getBuffersIcons(void) const;
+    getBuffersIcons() const;
 
     virtual QVector<int>
-    getBuffersIds(void) const;
+    getBuffersIds() const;
 
     virtual void
     changeBuffer(const QString&);
@@ -85,18 +74,18 @@ namespace qemacs
     getCurrentBufferSpecificMenus();
 
     virtual QEmacsBuffer&
-    getCurrentBuffer(void);
+    getCurrentBuffer();
 
     virtual void
     changeBuffer();
 
     virtual void
-    launchCommand(void);
+    launchCommand();
 
     virtual void
     launchCommand(const QString&);
 
-    virtual ~QEmacsWidget();
+    ~QEmacsWidget() override;
 
   public slots:
 
@@ -111,7 +100,7 @@ namespace qemacs
      * open a file in a new buffer
      */  
     virtual void
-    openFile(void);
+    openFile();
       
     /*!
      * open a file in a new buffer
@@ -124,19 +113,19 @@ namespace qemacs
      * create a new buffer
      */  
     virtual void
-    createEmptyBuffer(void);
+    createEmptyBuffer();
 
     /*!
      * save all modified buffers
      */  
     virtual void
-    saveAllBuffers(void);
+    saveAllBuffers();
 
     virtual void
     displayInformativeMessage(const QString& m);
 
     virtual const QStringList&
-    getKillRing(void) const;
+    getKillRing() const;
 
     virtual void
     addToKillRing(const QString&);
@@ -152,16 +141,16 @@ namespace qemacs
     getBufferVisitingFile(const QString&);
 
     virtual bool
-    hasUserInput(void) const;
+    hasUserInput() const;
 
     virtual void
-    focusUserInput(void);
+    focusUserInput();
 
     virtual void
-    removeUserInputs(void);
+    removeUserInputs();
 
     virtual void
-    removeUserInput(void);
+    removeUserInput();
 
     virtual void
     removeUserInput(QEmacsLineEdit *);
@@ -199,7 +188,7 @@ namespace qemacs
   protected slots:
 
     virtual void
-    resetUserInput(void);
+    resetUserInput();
 
     virtual void
     updateBufferName(QEmacsBuffer *,
@@ -269,5 +258,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_QEMACSWIDGET_H */
+#endif /* LIB_QEMACS_QEMACSWIDGET_HXX */
 

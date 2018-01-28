@@ -5,8 +5,8 @@
  * \brief 03 juil. 2012
  */
 
-#ifndef _LIB_QEMACS_LICOSMAJORMODE_H_
-#define _LIB_QEMACS_LICOSMAJORMODE_H_ 
+#ifndef LIB_QEMACS_LICOSMAJORMODE_HXX
+#define LIB_QEMACS_LICOSMAJORMODE_HXX 
 
 #include<QtCore/QVector>
 
@@ -39,14 +39,11 @@ namespace qemacs
 		   QEmacsBuffer&,
 		   QEmacsTextEditBase&);
 
-    virtual QString
-    getName(void) const;
+    QString getName() const override;
 
-    virtual QString
-    getDescription(void) const;
+    QString getDescription() const override;
     
-    virtual void
-    setSyntaxHighlighter(QTextDocument *const);
+    void setSyntaxHighlighter(QTextDocument *const) override;
 
     /*!
      * complete the context menu actions
@@ -54,25 +51,19 @@ namespace qemacs
      * \param[in] c : text cursor at the position where the menu will
      * appear
      */
-    virtual void
-    completeContextMenu(QMenu *const,
-			const QTextCursor&);
+    void completeContextMenu(QMenu *const,
+			     const QTextCursor&) override;
 
-    virtual QCompleter*
-    getCompleter(void);
+    QCompleter* getCompleter() override;
 
-    virtual void
-    completeCurrentWord(QEmacsTextEditBase&,
-			const QString&);
+    void completeCurrentWord(QEmacsTextEditBase&,
+			     const QString&) override;
 
-    virtual QMenu*
-    getSpecificMenu();
+    QMenu* getSpecificMenu() override;
 
-    virtual bool
-    keyPressEvent(QKeyEvent * const);
+    bool keyPressEvent(QKeyEvent * const) override;
 
-    virtual bool
-    mousePressEvent(QMouseEvent * const);
+    bool mousePressEvent(QMouseEvent * const) override;
 
     /*!
      * treat "Ctrl-k1 Mod-k2" shortcuts not handled by QEmacsTextEditBase
@@ -82,47 +73,41 @@ namespace qemacs
      * \param[in] k2 : second key
      * \return true if the short cut is handled by this mode
      */
-    virtual bool
-    handleShortCut(const int,
-		   const Qt::KeyboardModifiers,
-		   const int);
+    bool handleShortCut(const int,
+			const Qt::KeyboardModifiers,
+			const int) override;
 
     /*!
      * indent the current line
      */    
-    virtual void
-    indentLine(const QTextCursor&);
+    void indentLine(const QTextCursor&) override;
 
     /*!
      * indent selected region
      */    
-    virtual void
-    indentRegion(const QTextCursor&);
+    void indentRegion(const QTextCursor&) override;
 
-    virtual QIcon
-    getIcon(void) const;
+    QIcon getIcon() const override;
 
-    virtual void
-    comment(void);
+    void comment() override;
 
-    virtual void
-    format(void);
+    void format() override;
 
-    virtual ~LicosMajorMode();
+    ~LicosMajorMode() override;
 
   protected slots:
 
     virtual void
-    dryrunLicos(void);
+    dryrunLicos();
 
     virtual void
-    showMaterialWizard(void);
+    showMaterialWizard();
 
     virtual void
-    showThermalBehaviourWizard(void);
+    showThermalBehaviourWizard();
 
     virtual void
-    showMechanicalBehaviourWizard(void);
+    showMechanicalBehaviourWizard();
 
     virtual void
     runLicos();
@@ -140,7 +125,7 @@ namespace qemacs
     openDocumentation(QAction *);
 
     virtual void 
-    addMaterialProperties(void);
+    addMaterialProperties();
 
   protected:
 
@@ -222,10 +207,10 @@ namespace qemacs
     libraryNameUnderCursor(const QTextCursor&);
 
     virtual void
-    createActions(void);
+    createActions();
 
     virtual void
-    createSearchActions(void);    
+    createSearchActions();    
 
     virtual void
     createAnalyseUsingMFMAction(const QString&);
@@ -313,5 +298,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_LICOSMAJORMODE_H */
+#endif /* LIB_QEMACS_LICOSMAJORMODE_H */
 

@@ -24,13 +24,13 @@ namespace qemacs
   {} // end of StandardLicosBlock::treatArguments
 
   QString
-  StandardLicosBlock::name(void) const
+  StandardLicosBlock::name() const
   {
     return this->n;
   }
 
   QString
-  StandardLicosBlock::blockEnd(void) const
+  StandardLicosBlock::blockEnd() const
   {
     return "EndOf"+this->n;
   }
@@ -69,10 +69,9 @@ namespace qemacs
   }
 
   void
-  StandardLicosBlock::addBlocks(const QMap<QString,QSharedPointer<LicosBlock> >& b)
+  StandardLicosBlock::addBlocks(const QMap<QString,QSharedPointer<LicosBlock>>& b)
   {
-    typedef QSharedPointer<LicosBlock> BPtr;
-    QMapIterator<QString,BPtr> p(b);
+    QMapIterator<QString,QSharedPointer<LicosBlock>> p(b);
     while (p.hasNext()) {
       p.next();
       this->blocks.insert(p.key(),p.value());
@@ -80,14 +79,12 @@ namespace qemacs
 
   }
 
-  void
-  StandardLicosBlock::addBlock(LicosBlock * const b)
+  void StandardLicosBlock::addBlock(LicosBlock * const b)
   {
     this->addBlock(QSharedPointer<LicosBlock>(b));
   }
 
-  void
-  StandardLicosBlock::addBlock(const QSharedPointer<LicosBlock> b)
+  void StandardLicosBlock::addBlock(const QSharedPointer<LicosBlock> b)
   {
     this->blocks[b->name()] = b;
   }
@@ -96,7 +93,7 @@ namespace qemacs
   StandardLicosBlock::addBlock(const QString& n_,
 			       const QStringList& k)
   {
-    StandardLicosBlock *b =  new StandardLicosBlock(n_);
+    auto *b =  new StandardLicosBlock(n_);
     b->addKeys(k);
     this->blocks[n_] = QSharedPointer<LicosBlock>(b);
   }

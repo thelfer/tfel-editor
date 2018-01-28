@@ -5,15 +5,10 @@
  * \brief 07 déc. 2012
  */
 
-#ifndef _LIB_QWEBVIEWWRAPPER_H_
-#define _LIB_QWEBVIEWWRAPPER_H_ 
+#ifndef LIB_QWEBVIEWWRAPPER_HXX
+#define LIB_QWEBVIEWWRAPPER_HXX 
 
-#ifdef QEMACS_QT4
-#include<QtWebKit/QWebView>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWebKitWidgets/QWebView>
-#endif /* QEMACS_QT5 */
 
 namespace qemacs
 {
@@ -40,5 +35,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QWEBVIEWWRAPPER_H */
+#endif /* LIB_QWEBVIEWWRAPPER_HXX */
 

@@ -5,8 +5,8 @@
  * \brief 26 août 2012
  */
 
-#ifndef _LIB_QEMACS_COMPILEDLANGUAGEMAJORMODEBASE_H_
-#define _LIB_QEMACS_COMPILEDLANGUAGEMAJORMODEBASE_H_ 
+#ifndef LIB_QEMACS_COMPILEDLANGUAGEMAJORMODEBASE_HXX
+#define LIB_QEMACS_COMPILEDLANGUAGEMAJORMODEBASE_HXX 
 
 #include"QEmacs/Config.hxx"
 #include"QEmacs/QEmacsMajorModeBase.hxx"
@@ -36,10 +36,10 @@ namespace qemacs
   protected:
 
     virtual QString
-    getLanguageName(void) const = 0;
+    getLanguageName() const = 0;
     
     virtual QString
-    getDefaultCompilationCommand(void) const;
+    getDefaultCompilationCommand() const;
     
     void runCompilation();
 
@@ -49,5 +49,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_COMPILEDLANGUAGEMAJORMODEBASE_H */
+#endif /* LIB_QEMACS_COMPILEDLANGUAGEMAJORMODEBASE_HXX */
 

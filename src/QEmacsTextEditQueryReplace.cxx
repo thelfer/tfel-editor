@@ -71,11 +71,10 @@ namespace qemacs
     }
   }
 
-  QEmacsTextEditQueryReplace::~QEmacsTextEditQueryReplace()
-  {}
+  QEmacsTextEditQueryReplace::~QEmacsTextEditQueryReplace() = default;
 
   void
-  QEmacsTextEditQueryReplace::treatUserInput(void)
+  QEmacsTextEditQueryReplace::treatUserInput()
   {
     QEmacsTextEditBase& t = this->textEdit;
     QEmacsWidget& q       = this->qemacs;
@@ -127,7 +126,7 @@ namespace qemacs
   }
 
   QStringList
-  QEmacsTextEditQueryReplace::getHistory(void)
+  QEmacsTextEditQueryReplace::getHistory()
   {
     QSettings settings;
     return settings.value("user input/query replace/history").toStringList();

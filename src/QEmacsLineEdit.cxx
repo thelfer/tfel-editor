@@ -7,20 +7,11 @@
 
 #include<QtCore/QDebug>
 #include<QtCore/QSettings>
-
-#ifdef QEMACS_QT4
-#include<QtGui/QDirModel>
-#include<QtGui/QCompleter>
-#include<QtGui/QHBoxLayout>
-#include<QtGui/QAbstractItemView>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
+#include<QtGui/QKeyEvent>
 #include<QtWidgets/QDirModel>
 #include<QtWidgets/QCompleter>
 #include<QtWidgets/QHBoxLayout>
 #include<QtWidgets/QAbstractItemView>
-#endif /* QEMACS_QT5 */
-#include<QtGui/QKeyEvent>
 
 #include"QEmacs/Utilities.hxx"
 #include"QEmacs/QEmacsWidget.hxx"
@@ -37,7 +28,7 @@ namespace qemacs
     : QLineEdit(&p),
       qemacs(q),
       lineEdit(p),
-      c_(0),
+      c_(nullptr),
       completerHandledByQLineEdit(false),
       pring(0),
       ctrlx(false),
@@ -74,7 +65,7 @@ namespace qemacs
   } // end of QEmacsLineEdit::CustomLineEdit::setCompleter
 
   QCompleter*
-  QEmacsLineEdit::CustomLineEdit::completer(void) const
+  QEmacsLineEdit::CustomLineEdit::completer() const
   {
     return this->c_;
   } // end of QEmacsLineEdit::CustomLineEdit::completer
@@ -95,13 +86,12 @@ namespace qemacs
     this->setInputHistory(s.value(a).toStringList());
   }
 
-  bool
-  QEmacsLineEdit::CustomLineEdit::event(QEvent *ev)
+  bool QEmacsLineEdit::CustomLineEdit::event(QEvent *ev)
   {
     if(ev->type()==QEvent::KeyPress){
-      QKeyEvent *kev = static_cast<QKeyEvent *>(ev);
+      auto *kev = static_cast<QKeyEvent *>(ev);
       if(kev->key()==Qt::Key_Tab){
-	QCompleter *c = this->completer();
+	auto *c = this->completer();
 	if(c!=nullptr){
 	  this->complete();
 	}
@@ -137,7 +127,7 @@ namespace qemacs
       }
       r = commonPart(cc);
       QString base = this->extractBaseForCompletion(r);
-      if((r==this->text())&&(cc.size()!=1)&&(cc.size()!=0)){
+      if((r==this->text())&&(cc.size()!=1)&&(!cc.empty())){
 	// show completions
 	int s = base.size();
 	for(int i = 0;i!=cc.size();++i){
@@ -348,9 +338,9 @@ namespace qemacs
       // vl(new QVBoxLayout),
       hl(new QHBoxLayout),
       label(new QLabel(this)),
-      input(0),
-      completions(0),
-      scompletions(0),
+      input(nullptr),
+      completions(nullptr),
+      scompletions(nullptr),
       isUserEditingFinished(false)
   {
     this->setBackgroundRole(QPalette::Foreground);
@@ -385,13 +375,13 @@ namespace qemacs
   } // end of QEmacsLineEdit::QEmacsLineEdit
   
   bool
-  QEmacsLineEdit::isBlocking(void) const
+  QEmacsLineEdit::isBlocking() const
   {
     return false;
   } // end of QEmacsLineEdit::isBlocking
 
   void
-  QEmacsLineEdit::hideCompletions(void)
+  QEmacsLineEdit::hideCompletions()
   {
     this->buffer.hideSlave(this->scompletions);
   } // end of QEmacsLineEdit::hideCompletions
@@ -409,8 +399,8 @@ namespace qemacs
     }
     this->completions->clear();
     this->completions->insertHtml("<font color=\"blue\">Possible completions :</font>");
-    int d = cl.size()/3;
-    int m = cl.size()%3;
+    const auto d = cl.size()/3;
+    const auto m = cl.size()%3;
     QString table;
     table += "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">";
     for(int i=0;i!=d;++i){
@@ -444,14 +434,12 @@ namespace qemacs
     this->buffer.showSlaves();
   } // end of QEmacsLineEdit::showCompletions
 
-  void
-  QEmacsLineEdit::setLabel(const QString& l)
+  void QEmacsLineEdit::setLabel(const QString& l)
   {
     this->label->setText("<font color=blue> "+l+" </font>");
   }
 
-  void
-  QEmacsLineEdit::keyPressEvent(QKeyEvent * e)
+  void QEmacsLineEdit::keyPressEvent(QKeyEvent * e)
   {
     if(this->input==nullptr){
       return;
@@ -489,12 +477,11 @@ namespace qemacs
 		     this,SLOT(inputTextEdited(const QString&)));
   }
 
-  void
-  QEmacsLineEdit::userEditingFinished()
+  void QEmacsLineEdit::userEditingFinished()
   {
     if(!this->isUserEditingFinished){
       this->isUserEditingFinished = true;
-      QStringList h = this->input->getInputHistory();
+      auto h = this->input->getInputHistory();
       h.append(this->input->text());
       this->input->setInputHistory(h);
       if(!this->inputHistorySettingAddress.isEmpty()){
@@ -506,8 +493,7 @@ namespace qemacs
     }
   } // end of QEmacsLineEdit::userEditingFinished()
 
-  void
-  QEmacsLineEdit::cancel()
+  void QEmacsLineEdit::cancel()
   {
     QObject::disconnect(this->input,SIGNAL(returnPressed()),
 			this,SLOT(userEditingFinished()));
@@ -515,8 +501,7 @@ namespace qemacs
     emit finished(this);
   } // end of QEmacsLineEdit::cancel()
 
-  void
-  QEmacsLineEdit::setFocus()
+  void QEmacsLineEdit::setFocus()
   {
     this->input->setFocus();
   } // end of QEmacsLineEdit::setFocus()
@@ -550,8 +535,7 @@ namespace qemacs
       : CustomLineEdit(q,p)
     {} // end of YesOrNoLineEdit
 
-    virtual void
-    keyPressEvent(QKeyEvent *ev) override
+    void keyPressEvent(QKeyEvent *ev) override
     {
       if((ev->modifiers() == Qt::ControlModifier)&&(ev->key()==Qt::Key_G)){
 	auto qle = qobject_cast<QEmacsLineEdit *>(this->parent());
@@ -597,8 +581,8 @@ namespace qemacs
 		     QEmacsLineEdit& p)
       : CustomLineEdit(q,p)
     {
-      QCompleter *c  = new QCompleter(&p);
-      QDirModel  *dm = new QDirModel(c);
+      auto *c  = new QCompleter(&p);
+      auto *dm = new QDirModel(c);
       c->setModel(dm);
       c->setCompletionMode(QCompleter::InlineCompletion);
       this->setCompleter(c,false);
@@ -606,10 +590,9 @@ namespace qemacs
 
   protected:
 
-    virtual void
-    complete(void) override
+    void complete() override
     {
-      QString p = this->text();
+      auto p = this->text();
 #ifdef Q_OS_UNIX
       if(p.startsWith("~/")){
 	QString homePath = QDir::home().absolutePath();
@@ -628,9 +611,7 @@ namespace qemacs
       this->setText(c,b);
     } // end of complete
     
-
-    virtual QString
-    extractBaseForCompletion(const QString& c) override
+    QString extractBaseForCompletion(const QString& c) override
     {
       QFileInfo f(c);
       QString d = f.dir().absolutePath();
@@ -687,7 +668,7 @@ namespace qemacs
   } // end of QEmacsProcessLineEdit::QEmacsProcessLineEdit
   
   void
-  QEmacsProcessLineEdit::treatUserInput(void)
+  QEmacsProcessLineEdit::treatUserInput()
   {
     const QString c = this->input->text();
     QStringList args = c.split(" ",QString::SkipEmptyParts);
@@ -710,12 +691,12 @@ namespace qemacs
       this->qemacs.displayInformativeMessage(QObject::tr("empty command"));
       return;
     }
-    QEmacsBuffer&   b = this->qemacs.getCurrentBuffer();
-    QEmacsPlainTextEdit& t = b.getMainFrame();
-    ProcessOutputFrame *po = new ProcessOutputFrame(this->qemacs,b);
+    auto&   b = this->qemacs.getCurrentBuffer();
+    auto& t = b.getMainFrame();
+    auto *po = new ProcessOutputFrame(this->qemacs,b);
     QFileInfo fn(t.getCompleteFileName());
     QDir d(fn.dir());
-    QProcess& p = po->getProcess();
+    auto& p = po->getProcess();
     if(d.exists()){
       p.setWorkingDirectory(d.absolutePath());
     } else {
@@ -728,8 +709,7 @@ namespace qemacs
     b.addSlave("*"+on+"* ouput",po);
   } // end of QEmacsProcessLineEdit::run
 
-  QEmacsProcessLineEdit::~QEmacsProcessLineEdit()
-  {}
+  QEmacsProcessLineEdit::~QEmacsProcessLineEdit() = default;
 
   QEmacsShellProcessLineEdit::QEmacsShellProcessLineEdit(const QString& l,
 							 const QString& c,
@@ -739,7 +719,7 @@ namespace qemacs
   {} // end of QEmacsShellProcessLineEdit::QEmacsShellProcessLineEdit
   
   void
-  QEmacsShellProcessLineEdit::treatUserInput(void)
+  QEmacsShellProcessLineEdit::treatUserInput()
   {
     const QString c = this->input->text();
     if(c.isEmpty()){
@@ -753,8 +733,7 @@ namespace qemacs
     this->run(c,s,QStringList() << "-c" << c);
   } // end of QEmacsShellProcessLineEdit::treatUserInput
 
-  QEmacsShellProcessLineEdit::~QEmacsShellProcessLineEdit()
-  {}
+  QEmacsShellProcessLineEdit::~QEmacsShellProcessLineEdit() = default;
 
 } // end of namespace qemacs
 

@@ -5,8 +5,8 @@
  * \brief 01 août 2012
  */
 
-#ifndef _LIB_QEMACS_UTILITIES_H_
-#define _LIB_QEMACS_UTILITIES_H_ 
+#ifndef LIB_QEMACS_UTILITIES_HXX
+#define LIB_QEMACS_UTILITIES_HXX 
 
 #include"QEmacs/Config.hxx"
 
@@ -46,9 +46,9 @@ namespace qemacs
   commonPart(const QStringList&);
 
   QEMACS_VISIBILITY_EXPORT QString
-  fileNameRegExp(void);
+  fileNameRegExp();
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_UTILITIES_H */
+#endif /* LIB_QEMACS_UTILITIES_HXX */
 

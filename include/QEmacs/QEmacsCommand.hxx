@@ -5,8 +5,8 @@
  * \brief 02 août 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSCOMMAND_H_
-#define _LIB_QEMACS_QEMACSCOMMAND_H_ 
+#ifndef LIB_QEMACS_QEMACSCOMMAND_HXX
+#define LIB_QEMACS_QEMACSCOMMAND_HXX 
 
 #include<QtCore/QObject>
 
@@ -44,5 +44,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_QEMACSCOMMAND_H */
+#endif /* LIB_QEMACS_QEMACSCOMMAND_HXX */
 

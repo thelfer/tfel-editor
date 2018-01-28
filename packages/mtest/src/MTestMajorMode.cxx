@@ -16,6 +16,7 @@
 #include"QEmacs/MTestSyntaxHighlighter.hxx"
 #include"QEmacs/QEmacsMajorModeFactory.hxx"
 
+#include"QEmacs/ImportBehaviour.hxx"
 #include"QEmacs/MTestMajorMode.hxx"
 
 namespace qemacs
@@ -36,22 +37,22 @@ namespace qemacs
     this->ra = new QAction(QObject::tr("Run mtest"),this);
     QObject::connect(this->ra, SIGNAL(triggered()),
 		     this, SLOT(run()));
+    this->iba  = new QAction(QObject::tr("Import Behaviour"),this);
+    QObject::connect(this->iba, SIGNAL(triggered()),
+		     this, SLOT(showImportBehaviourWizard()));
   } // end of MTestMajorMode::MTestMajorMode
   
-  QString
-  MTestMajorMode::getName(void) const
+  QString MTestMajorMode::getName() const
   {
     return "MTest";
   } // end of MTestMajorMode::getName
     
-  QString
-  MTestMajorMode::getDescription(void) const
+  QString MTestMajorMode::getDescription() const
   {
     return "major mode dedicated to the mtest code";
   } // end of CppMajorMode
 
-  bool
-  MTestMajorMode::keyPressEvent(QKeyEvent * const e)
+  bool MTestMajorMode::keyPressEvent(QKeyEvent * const e)
   {
     const auto k = e->key();
     const auto m = e->modifiers(); 
@@ -62,19 +63,20 @@ namespace qemacs
     return false;
   } // end of MTestMajorMode::keyPressEvent
   
-  QMenu*
-  MTestMajorMode::getSpecificMenu()
+  QMenu* MTestMajorMode::getSpecificMenu()
   {
-    QWidget *t = qobject_cast<QWidget *>(this->parent());
+    auto *t = qobject_cast<QWidget *>(this->parent());
     if(t==nullptr){
       return nullptr;
     }
-    QMenu *m(new QMenu(this->getName(),t));
+    auto  *m = new QMenu(this->getName(),t);
     m->addAction(this->ra);
     m->addSeparator();
-    QMenu *km = m->addMenu(QObject::tr("Keywords"));
+    m->addAction(this->iba);
+    m->addSeparator();
+    auto *km = m->addMenu(QObject::tr("Keywords"));
     auto keys = this->getKeyWordsList();
-    qSort(keys);
+    std::sort(keys.begin(),keys.end());
     for(const auto& k : keys){
       auto * ka = new QAction(k,this);
       ka->setData(k);
@@ -85,26 +87,23 @@ namespace qemacs
     return m;
   }
 
-  void
-  MTestMajorMode::insertKeyword(QAction *a){
+  void MTestMajorMode::insertKeyword(QAction *a){
     const auto k = a->data().toString();
     if(k.isEmpty()){
       return;
     }
-    QTextCursor tc = this->textEdit.textCursor();
+    auto tc = this->textEdit.textCursor();
     tc.insertText(k+' ');
     this->textEdit.setTextCursor(tc);
   }
   
-  void
-  MTestMajorMode::setSyntaxHighlighter(QTextDocument *const d)
+  void MTestMajorMode::setSyntaxHighlighter(QTextDocument *const d)
   {
     new MTestSyntaxHighlighter(d);
   } // end of MTestMajorMode::setSyntaxHighlighter
     
-  void
-  MTestMajorMode::completeContextMenu(QMenu *const m,
-				      const QTextCursor& tc)
+  void MTestMajorMode::completeContextMenu(QMenu *const m,
+					   const QTextCursor& tc)
   {
     auto keys = this->getKeyWordsList();
     QEmacsMajorModeBase::completeContextMenu(m,tc);
@@ -112,10 +111,10 @@ namespace qemacs
     b.movePosition(QTextCursor::StartOfBlock,
 		   QTextCursor::MoveAnchor);
     b.select(QTextCursor::LineUnderCursor);
-    QString l = b.selectedText();
+    const auto l = b.selectedText();
     QRegExp r("^(@\\w+)");
     if(r.indexIn(l)>=0){
-      QString k = r.cap(1);
+      const auto k = r.cap(1);
       if(keys.indexOf(k)!=-1){
 	delete this->ha;
 	this->ha=new QAction(QObject::tr("Help on %1").arg(k),this);
@@ -133,19 +132,16 @@ namespace qemacs
     }
   }
 
-  QStringList
-  MTestMajorMode::getKeyWordsList() const{
+  QStringList MTestMajorMode::getKeyWordsList() const{
     return MTestSyntaxHighlighter::getMTestKeys();
   }
 
-  QString
-  MTestMajorMode::getScheme(void) const
+  QString MTestMajorMode::getScheme() const
   {
     return "mtest";
   }
   
-  void
-  MTestMajorMode::actionTriggered(QAction *a)
+  void MTestMajorMode::actionTriggered(QAction *a)
   {
     if(a==this->ha){
       const auto k = this->ha->data().toString();
@@ -162,14 +158,12 @@ namespace qemacs
     }
   }
 
-  QCompleter*
-  MTestMajorMode::getCompleter(void)
+  QCompleter* MTestMajorMode::getCompleter()
   {
     return this->c;
   } // end of getCompleter
 
-  QString
-  MTestMajorMode::getCompletionPrefix(void)
+  QString MTestMajorMode::getCompletionPrefix()
   {
     auto tc = this->textEdit.textCursor();
     tc.movePosition(QTextCursor::StartOfWord,
@@ -185,7 +179,7 @@ namespace qemacs
   }
   
   void
-  MTestMajorMode::run(void)
+  MTestMajorMode::run()
   {
     if(this->textEdit.isModified()){
       QEmacsTextEditBase::SaveInput *input = this->textEdit.getSaveInput();
@@ -198,7 +192,7 @@ namespace qemacs
   }
 
   void
-  MTestMajorMode::start(void)
+  MTestMajorMode::start()
   {
     QString n = this->textEdit.getCompleteFileName();
     if(n.isEmpty()){
@@ -230,12 +224,19 @@ namespace qemacs
       //      p.waitForFinished(1000);	
     }
   } // end of MTestMajorMode::start
+
+  void MTestMajorMode::showImportBehaviourWizard()
+  {
+    ImportBehaviour w(this->textEdit);
+    if(w.exec()==QDialog::Accepted){
+      
+    }
+  } // end of MTestMajorMode::showImportBehaviourWizard
   
-  MTestMajorMode::~MTestMajorMode()
-  {} // end of MTestMajorMode::~MTestMajorMode()
+  MTestMajorMode::~MTestMajorMode() = default;
   
   static StandardQEmacsMajorModeProxy<MTestMajorMode> proxy("MTest",
-							     QVector<QRegExp>() << QRegExp("^\\w+\\.mtest"));
+							     QVector<QRegExp>() << QRegExp("^[\\w-]+\\.mtest"));
 
 } // end of namespace qemacs
 

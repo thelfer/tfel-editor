@@ -58,4 +58,4 @@ namespace qemacs
     }
   }
 
-}
+} // end of namespace qemacs

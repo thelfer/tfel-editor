@@ -6,16 +6,9 @@
  */
 
 #include<QtCore/QDebug>
-#ifdef QEMACS_QT4
-#include<QtGui/QMessageBox>
-#include<QtGui/QHBoxLayout>
-#include<QtGui/QVBoxLayout>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QMessageBox>
 #include<QtWidgets/QHBoxLayout>
 #include<QtWidgets/QVBoxLayout>
-#endif /* QEMACS_QT5 */
 
 #include"QEmacs/Utilities.hxx"
 #include"QEmacs/QEmacsWidget.hxx"
@@ -33,8 +26,8 @@ namespace qemacs
     : QWidget(&w),
       textEdit(new QEmacsPlainTextEdit(w,b))
   {
-    QHBoxLayout *hl = new QHBoxLayout;
-    QVBoxLayout *vl = new QVBoxLayout;
+    auto *hl = new QHBoxLayout;
+    auto *vl = new QVBoxLayout;
     hl->addWidget(this->textEdit);
     this->pbar     = new QProgressBar;
     this->pbar->setMaximum(100);

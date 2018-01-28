@@ -5,8 +5,8 @@
  * \brief 04 juil. 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSMAJORMODEBASE_H_
-#define _LIB_QEMACS_QEMACSMAJORMODEBASE_H_ 
+#ifndef LIB_QEMACS_QEMACSMAJORMODEBASE_HXX
+#define LIB_QEMACS_QEMACSMAJORMODEBASE_HXX 
 
 #include<QtCore/QMap>
 #include<QtCore/QString>
@@ -43,47 +43,39 @@ namespace qemacs
      * default implementation of the getCompleter method
      * \return a NULL pointer
      */
-    virtual QCompleter*
-    getCompleter(void) override;
+    QCompleter* getCompleter() override;
     /*!
      * \return this->textEdit.getCurrentWord()
      */
-    virtual QString
-    getCompletionPrefix(void) override;
+    QString getCompletionPrefix() override;
     /*!
      * \return the minimal number of characters for a completion to be
      * considered
      */
-    virtual int
-    getMinimalCompletionLength(void) override;
+    int getMinimalCompletionLength() override;
 
-    virtual void
-    completeCurrentWord(QEmacsTextEditBase&,
-			const QString&) override;
+    void completeCurrentWord(QEmacsTextEditBase&,
+			     const QString&) override;
     /*!
      * default implementation of the getSpecificMenu method
      * \return a NULL pointer
      */
-    virtual QMenu*
-    getSpecificMenu() override;
+    QMenu* getSpecificMenu() override;
     /*!
      * default implementation of the getIcon method
      * \return a default constructed QICon
      */
-    virtual QIcon
-    getIcon(void) const override;
+    QIcon getIcon() const override;
     /*!
      * This method is called before any treatment by QEmacsTextEditBase
      * and allows the mode to override default shortcuts
      */
-    virtual bool
-    keyPressEvent(QKeyEvent * const) override;
+    bool keyPressEvent(QKeyEvent * const) override;
     /*!
      * This method is called before any treatment by QEmacsTextEditBase
      * and allows the mode to override default behaviour
      */
-    virtual bool
-    mousePressEvent(QMouseEvent * const) override;
+    bool mousePressEvent(QMouseEvent * const) override;
     /*!
      * treat "Ctrl-k1 Mod-k2" shortcuts not handled by QEmacsTextEditBase
      * where k1 is either Qt::Key_X or Qt::Key_C.
@@ -92,41 +84,33 @@ namespace qemacs
      * \param[in] k2 : second key
      * \return true if the short cut is handled by this mode
      */
-    virtual bool
-    handleShortCut(const int,
-		   const Qt::KeyboardModifiers,
-		   const int) override;
+    bool handleShortCut(const int,
+			const Qt::KeyboardModifiers,
+			const int) override;
     /*!
      * complete the context menu actions
      * \param[in] m : complete the context menu
      * \param[in] c : text cursor at the position where the menu will
      * appear
      */
-    virtual void
-    completeContextMenu(QMenu * const,
-			const QTextCursor&) override;
+    void completeContextMenu(QMenu * const,
+			     const QTextCursor&) override;
     /*!
      * indent the current line
      */    
-    virtual void
-    indentLine(const QTextCursor&) override;
+    void indentLine(const QTextCursor&) override;
     /*!
      * indent selected region
      */    
-    virtual void
-    indentRegion(const QTextCursor&) override;
+    void indentRegion(const QTextCursor&) override;
 
-    virtual void
-    setSpellCheckLanguage(const QString&) override;
+    void setSpellCheckLanguage(const QString&) override;
 
+    void comment() override;
 
-    virtual void
-    comment(void) override;
+    virtual QString getCommentSyntax();
 
-    virtual QString
-    getCommentSyntax(void);
-
-    virtual ~QEmacsMajorModeBase();
+    ~QEmacsMajorModeBase() override;
 
   protected:
 
@@ -193,5 +177,5 @@ namespace qemacs
 } // end of namespace qemacs
 
 
-#endif /* _LIB_QEMACS_QEMACSMAJORMODEBASE_H */
+#endif /* LIB_QEMACS_QEMACSMAJORMODEBASE_HXX */
 

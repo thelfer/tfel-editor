@@ -92,7 +92,7 @@ namespace qemacs
   }
 
   void
-  LicosStudy::processReachedNextStage(void){
+  LicosStudy::processReachedNextStage(){
     QObject::disconnect(this->in, SIGNAL(readyRead()),
 			this, SLOT(processReachedNextStage()));
     QString s = this->receive<QString>();
@@ -140,17 +140,17 @@ namespace qemacs
     QByteArray block;
     QDataStream o(&block, QIODevice::WriteOnly);
     o.setVersion(QDataStream::Qt_4_0);
-    o << (quint16)0;
+    o << static_cast<quint16>(0);
     o << msg;
     o.device()->seek(0);
-    o << (quint16)(block.size() - sizeof(quint16));
+    o << static_cast<quint16>(block.size() - sizeof(quint16));
     this->out->write(block);
     this->out->flush();
   }
   
   template<>
   QString
-  LicosStudy::receive<QString>(void)
+  LicosStudy::receive<QString>()
   {
     QDataStream id(this->in);
     id.setVersion(QDataStream::Qt_4_0);
@@ -158,7 +158,7 @@ namespace qemacs
     while(this->in->bytesAvailable()==0){
       this->in->waitForReadyRead(10);
     }
-    if (this->in->bytesAvailable() < (int)sizeof(quint16)){
+    if (this->in->bytesAvailable() < static_cast<int>(sizeof(quint16))){
       this->fails("invalid message");
     }
     id >> blockSize;
@@ -171,7 +171,7 @@ namespace qemacs
   }
 
   void
-  LicosStudy::displayProcessOutput(void)
+  LicosStudy::displayProcessOutput()
   {
     QByteArray data = this->process->readAllStandardOutput();
     QTextCodec *codec = QTextCodec::codecForLocale();
@@ -263,7 +263,7 @@ namespace qemacs
   } // end of LicosStudy::fails
 
   void
-  LicosStudy::quit(void)
+  LicosStudy::quit()
   {
     if(this->in!=nullptr){
       QObject::disconnect(this->in, SIGNAL(error(QLocalSocket::LocalSocketError)),
@@ -298,13 +298,13 @@ namespace qemacs
   }
 
   QString
-  LicosStudy::getErrorMessage(void) const
+  LicosStudy::getErrorMessage() const
   {
     return this->errorMessage;
   }
 
   bool
-  LicosStudy::succeed(void) const
+  LicosStudy::succeed() const
   {
     return this->success;
   } // end of LicosStudy::succeed
@@ -330,7 +330,7 @@ namespace qemacs
     this->server->close();
   }
 
-  LicosStudy::~LicosStudy(void)
+  LicosStudy::~LicosStudy()
   {
     this->stopComputations();
   } // end of LicosStudy::~LicosStudy

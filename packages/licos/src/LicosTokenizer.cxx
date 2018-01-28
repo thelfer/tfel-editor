@@ -46,7 +46,7 @@ namespace qemacs
 	    this->state = ARRAYOPENED;
 	    this->apos << p->pos;
 	  } else if(p->value=="}"){
-	    if(this->apos.size()==0){
+	    if(this->apos.empty()){
 	      this->state = FAILED;
 	      this->error =  "closing unoppened array at line '";
 	      this->error += QString::number(p->line)+"'";
@@ -64,13 +64,13 @@ namespace qemacs
   }
 
   LicosTokenizer::State
-  LicosTokenizer::getState(void) const
+  LicosTokenizer::getState() const
   {
     return this->state;
   }
 
   QVector<unsigned short>
-  LicosTokenizer::getBeginningOfArrays(void) const
+  LicosTokenizer::getBeginningOfArrays() const
   {
     return this->apos;
   }

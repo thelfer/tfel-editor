@@ -7,13 +7,8 @@
 
 #include <QtCore/QDebug>
 #include <QtCore/QTimer>
-#ifdef QEMACS_QT4
-#include <QtGui/QAbstractItemView>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include <QtCore/QStringListModel>
 #include <QtWidgets/QAbstractItemView>
-#endif /* QEMACS_QT5 */
 
 #include "MFront/InitDSLs.hxx"
 #include "MFront/DSLFactory.hxx"
@@ -46,17 +41,17 @@ namespace qemacs {
     this->rt->start(500);
   } // end of MFrontMajorMode::MFrontMajorMode
 
-  QString MFrontMajorMode::getName(void) const {
+  QString MFrontMajorMode::getName() const {
     return "MFront";
   } // end of MFrontMajorMode::getName
 
-  QString MFrontMajorMode::getDescription(void) const {
+  QString MFrontMajorMode::getDescription() const {
     return "major mode dedicated to the MFront code generator";
   } // end of CppMajorMode
 
-  QCompleter *MFrontMajorMode::getCompleter(void) { return this->c; }
+  QCompleter *MFrontMajorMode::getCompleter() { return this->c; }
 
-  QString MFrontMajorMode::getCompletionPrefix(void) {
+  QString MFrontMajorMode::getCompletionPrefix() {
     auto tc = this->textEdit.textCursor();
     tc.movePosition(QTextCursor::StartOfWord, QTextCursor::MoveAnchor);
     if (!tc.atBlockStart()) {
@@ -77,7 +72,7 @@ namespace qemacs {
     new MFrontSyntaxHighlighter(d, this->getDSLName());
   } // end of MFrontMajorMode::setSyntaxHighlighter
 
-  void MFrontMajorMode::updateSyntaxHighlighterAndCompleter(void) {
+  void MFrontMajorMode::updateSyntaxHighlighterAndCompleter() {
     this->rt->stop();
 #ifdef QEMACS_QT5
     if (!this->c->popup()->isVisible()) {
@@ -116,7 +111,7 @@ namespace qemacs {
     }
   }
 
-  QString MFrontMajorMode::getDSLName(void) const {
+  QString MFrontMajorMode::getDSLName() const {
     try {
       CxxTokenizer t;
       t.parseString(this->textEdit.document()->toPlainText());
@@ -171,6 +166,6 @@ namespace qemacs {
   MFrontMajorMode::~MFrontMajorMode() = default;
 
   static StandardQEmacsMajorModeProxy<MFrontMajorMode>
-  proxy("MFront", QVector<QRegExp>() << QRegExp("^\\w+\\.mfront"));
+  proxy("MFront", QVector<QRegExp>() << QRegExp("^[\\w-+]\\.mfront"));
 
 } // end of namespace qemacs

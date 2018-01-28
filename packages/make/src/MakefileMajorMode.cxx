@@ -20,13 +20,13 @@ namespace qemacs
   {} // end of MakefileMajorMode::MakefileMajorMode
 
   QString
-  MakefileMajorMode::getName(void) const
+  MakefileMajorMode::getName() const
   {
     return "Makefile";
   } // end of MakefileMajorMode::MakefileMajorMode
 
   QString
-  MakefileMajorMode::getDescription(void) const
+  MakefileMajorMode::getDescription() const
   {
     return "major mode dedicated to Makefile";
   } // end of MakefileMajorMode::MakefileMajorMode
@@ -44,7 +44,7 @@ namespace qemacs
   } // end of LicosMajorMode::keyPressEvent
 
   QString
-  MakefileMajorMode::getCommentSyntax(void)
+  MakefileMajorMode::getCommentSyntax()
   {
     return "#";
   } // end of MakefileMajorMode::getCommentSyntax
@@ -55,12 +55,10 @@ namespace qemacs
     //    new MakefileSyntaxHighlighter(d);
   } // end of MakefileMajorMode::setSyntaxHighlighter
 
-  void
-  MakefileMajorMode::format(void)
+  void MakefileMajorMode::format()
   {}
 
-  MakefileMajorMode::~MakefileMajorMode()
-  {} // end of MakefileMajorMode::~MakefileMajorMode()
+  MakefileMajorMode::~MakefileMajorMode() = default;
 
   static StandardQEmacsMajorModeProxy<MakefileMajorMode> proxy("Makefile",
 							       QVector<QRegExp>() << QRegExp("^Makefile$"));

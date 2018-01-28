@@ -1,6 +1,6 @@
 AM_CPPFLAGS = -I$(top_srcdir)/packages/licos/include \
 	      -I$(top_srcdir)/include                \
-	      @QT4_CFLAGS@                           \
+	      @QT_CXXFLAGS@                           \
 	      `@TFELCONFIG@ --includes --cppflags`
 
 packagesdir = @prefix@/share/qemacs/packages
@@ -34,10 +34,10 @@ LICOSMODERESOURCES=images/LicosIcon.png\
 		   images/LicosPDFIcon.png
 
 LicosModeResources.cxx : LicosModeResources.qrc $(LICOSMODERESOURCES)
-	@RCC@ -name LicosModeResources @srcdir@/LicosModeResources.qrc -o LicosModeResources.cxx
+	@QT_RCC@ -name LicosModeResources @srcdir@/LicosModeResources.qrc -o LicosModeResources.cxx
 
 moc_%.cxx : @top_srcdir@/packages/licos/include/QEmacs/%.hxx
-	@MOC@ $< -o $@	
+	@QT_MOC@ $< -o $@	
 
 clean-local:
 	$(RM) $(nodist_libLicosQEmacsMode_la_SOURCES)

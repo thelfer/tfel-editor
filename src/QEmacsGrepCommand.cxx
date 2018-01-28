@@ -20,9 +20,9 @@ namespace qemacs
   {} // end of QEmacsGrepCommand::QEmacsGrepCommand
   
   void
-  QEmacsGrepCommand::execute(void)
+  QEmacsGrepCommand::execute()
   {
-    QEmacsWidget *p = qobject_cast<QEmacsWidget *>(this->parent());
+    auto *p = qobject_cast<QEmacsWidget *>(this->parent());
     if(p==nullptr){
       return;
     }
@@ -33,8 +33,7 @@ namespace qemacs
     p->setUserInput(l);
   } // end of QEmacsGrepCommand::execute
     
-  QEmacsGrepCommand::~QEmacsGrepCommand()
-  {} // end of ~QEmacsGrepCommand
+  QEmacsGrepCommand::~QEmacsGrepCommand() = default;
 
   static StandardQEmacsCommandProxy<QEmacsGrepCommand> proxy("grep");
 

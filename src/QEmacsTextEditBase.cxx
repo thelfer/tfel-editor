@@ -9,17 +9,6 @@
 #include<QtCore/QDebug>
 #include<QtCore/QPointer>
 #include<QtCore/QSettings>
-
-#ifdef QEMACS_QT4
-#include<QtGui/QMenu>
-#include<QtGui/QScrollBar>
-#include<QtGui/QMessageBox>
-#include<QtGui/QFileDialog>
-#include<QtGui/QApplication>
-#include<QtGui/QAbstractItemView>
-#include<QtGui/QFontDialog>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QMenu>
 #include<QtWidgets/QScrollBar>
 #include<QtWidgets/QMessageBox>
@@ -27,13 +16,11 @@
 #include<QtWidgets/QApplication>
 #include<QtWidgets/QAbstractItemView>
 #include<QtWidgets/QFontDialog>
-#endif /* QEMACS_QT5 */
 #include<QtGui/QKeyEvent>
 #include<QtGui/QMouseEvent>
 #include<QtGui/QTextBlock>
 #include<QtGui/QIntValidator>
 #include<QtGui/QTextDocumentWriter>
-        
 #include"QEmacs/QEmacsMajorModeFactory.hxx"
 #include"QEmacs/QEmacsWidget.hxx"
 #include"QEmacs/QEmacsBuffer.hxx"
@@ -61,8 +48,7 @@ namespace qemacs
       mainFrame(false),
       keyProcessing(false)
   {
-    typedef QEmacsHunspellDictionariesManager HunspellDictionaries;
-    HunspellDictionaries& dm = HunspellDictionaries::getQEmacsHunspellDictionariesManager();
+    auto& dm = QEmacsHunspellDictionariesManager::getQEmacsHunspellDictionariesManager();
     this->spellCheckLanguage = dm.getDefaultSpellCheckLanguage();
   } // end of QEmacsTextEditBase::QEmacsTextEditBase
 
@@ -122,12 +108,12 @@ namespace qemacs
   {
     if(o==this->widget()){
       if(e->type()==QEvent::KeyPress){
-	QKeyEvent *ke = static_cast<QKeyEvent *>(e);
+	auto *ke = static_cast<QKeyEvent *>(e);
 	return this->handleKeyPressEvent(ke);
       }
     } else if(o==this->widget()->viewport()){
       if(e->type()==QEvent::MouseButtonPress){
-	QMouseEvent *me = static_cast<QMouseEvent *>(e);
+	auto *me = static_cast<QMouseEvent *>(e);
 	return this->handleMousePressEvent(me);
       }
     }
@@ -180,16 +166,14 @@ namespace qemacs
 	file(f)
     {} // end of KillOtherBufferAndWriteFile
 
-    virtual bool
-    isBlocking(void) const override
+    bool isBlocking() const override
     {
       return true;
     } // end of isBlocking
 
   protected:
 
-    virtual void
-    treatUserInput(void) override
+    void treatUserInput() override
     {
       if(this->input->text()=="y"){
 	this->qemacs.closeBuffer(this->buffer,false);
@@ -217,16 +201,14 @@ namespace qemacs
 	file(f)
     {} // end of OverWriteFile
 
-    virtual bool
-    isBlocking(void) const override
+    bool isBlocking() const override
     {
       return true;
     } // end of isBlocking
 
   protected:
 
-    virtual void
-    treatUserInput(void) override
+    void treatUserInput() override
     {
       if(this->input->text()=="y"){
 	// check if another buffer does not visit this file
@@ -270,21 +252,18 @@ namespace qemacs
       this->input->setText(npath);
     }
 
-    virtual bool
-    isBlocking(void) const override
+    bool isBlocking() const override
     {
       return true;
     } // end of isBlocking
 
-    virtual ~WriteFile()
-    {}
+    ~WriteFile() override = default;
 
   protected:
 
-    virtual void
-    treatUserInput(void) override
+    void treatUserInput() override
     {
-      QString f = this->input->text();
+      const auto f = this->input->text();
       if(f==this->textEdit.getCompleteFileName()){
 	QString msg;
 	msg = QObject::tr("current file specified");
@@ -353,11 +332,10 @@ namespace qemacs
     this->input->setValidator(new QIntValidator(this->input));
   }
   
-  QEmacsTextEditBase::GotoLine::~GotoLine()
-  {}
+  QEmacsTextEditBase::GotoLine::~GotoLine() = default;
   
   void
-  QEmacsTextEditBase::GotoLine::treatUserInput(void)
+  QEmacsTextEditBase::GotoLine::treatUserInput()
   {
     bool b;
     int line = this->input->text().toInt(&b);
@@ -500,13 +478,13 @@ namespace qemacs
   } // end of QEmacsTextEditBase::getCurrentWord
 
   bool
-  QEmacsTextEditBase::hasMajorMode(void) const
+  QEmacsTextEditBase::hasMajorMode() const
   {
     return this->mode!=nullptr;
   } // end of QEmacsTextEditBase::hasMajorMode
 
   const QEmacsMajorMode&
-  QEmacsTextEditBase::getMajorMode(void) const
+  QEmacsTextEditBase::getMajorMode() const
   {
     if(this->mode==nullptr){
       throw(std::runtime_error("QEmacsTextEditBase::getQEmacsMode: "
@@ -516,7 +494,7 @@ namespace qemacs
   } // end of QEmacsTextEditBase::getQEmacsMode
 
   bool
-  QEmacsTextEditBase::isModified(void) const
+  QEmacsTextEditBase::isModified() const
   {
     return this->document()->isModified();
   } // end of QEmacsTextEditBase::isModified
@@ -542,7 +520,7 @@ namespace qemacs
   }
 
   QVector<QMenu*>
-  QEmacsTextEditBase::getSpecificMenus(void)
+  QEmacsTextEditBase::getSpecificMenus()
   {
     QVector<QMenu*> m;
     if(this->mode!=nullptr){
@@ -555,7 +533,7 @@ namespace qemacs
   } // end of QEmacsTextEditBase::getSpecificMenu
 
   QIcon
-  QEmacsTextEditBase::getIcon(void) const
+  QEmacsTextEditBase::getIcon() const
   {
     if(this->mode==nullptr){
       return QIcon();
@@ -573,7 +551,7 @@ namespace qemacs
   }
 
   void
-  QEmacsTextEditBase::removeKeyPressEventFilter(void)
+  QEmacsTextEditBase::removeKeyPressEventFilter()
   {
     if(this->filter!=nullptr){
       QObject::disconnect(this->filter,SIGNAL(destroyed()),
@@ -584,7 +562,7 @@ namespace qemacs
   } // end of QEmacsTextEditBase::removeKeyPressEventFilter
 
   void
-  QEmacsTextEditBase::keyPressEventFilterDestroyed(void)
+  QEmacsTextEditBase::keyPressEventFilterDestroyed()
   {
     this->filter = nullptr;
   } // end of QEmacsTextEditBase::keyPressEventFilterDestroyed
@@ -620,25 +598,25 @@ namespace qemacs
   } // end of QEmacsTextEditBase::setFileName
 
   QString
-  QEmacsTextEditBase::getFileName(void) const
+  QEmacsTextEditBase::getFileName() const
   { 
     return this->fileName;
   } // end of QEmacsTextEditBase::getFileName
 
   QString
-  QEmacsTextEditBase::getCompleteFileName(void) const
+  QEmacsTextEditBase::getCompleteFileName() const
   {
     return this->fileName;
   } // end of QEmacsTextEditBase::getCompleteFileName
 
   QEmacsTextEditBase::SaveInput *
-  QEmacsTextEditBase::getSaveInput(void)
+  QEmacsTextEditBase::getSaveInput()
   {
     return new SaveInput(this->qemacs,*this);
   }
 
   void
-  QEmacsTextEditBase::save(void)
+  QEmacsTextEditBase::save()
   {
     if(!this->document()->isModified()){
       this->qemacs.displayInformativeMessage(QObject::tr("(no changes need to be saved)"));
@@ -661,7 +639,7 @@ namespace qemacs
   } // end of QEmacsTextEditBase::save
 
   void
-  QEmacsTextEditBase::writeFile(void)
+  QEmacsTextEditBase::writeFile()
   {
     QFileInfo fn(this->getCompleteFileName());
     QDir d(fn.dir());
@@ -693,7 +671,7 @@ namespace qemacs
   }
 
   void
-  QEmacsTextEditBase::emitCursorPositionChanged(void)
+  QEmacsTextEditBase::emitCursorPositionChanged()
   {
     emit cursorPositionChanged();
   } // end of QEmacsTextEditBase::emitCursorPositionChanged
@@ -702,7 +680,7 @@ namespace qemacs
   QEmacsTextEditBase::event(QEvent *ev)
   {
     if(ev->type()==QEvent::KeyPress){
-      QKeyEvent *kev = static_cast<QKeyEvent *>(ev);
+      auto *kev = static_cast<QKeyEvent *>(ev);
       if(kev->key()==Qt::Key_Tab){
 	this->handleKeyPressEvent(kev);
 	ev->accept();
@@ -752,7 +730,7 @@ namespace qemacs
     if(this->mode!=nullptr){
       completer = this->mode->getCompleter();
     }
-    if (completer && completer->popup()->isVisible()) {
+    if ((completer!=nullptr) && (completer->popup()->isVisible())) {
       // The following keys are forwarded by the completer to the widget
       if(m == Qt::NoModifier){
 	switch (k) {
@@ -952,7 +930,7 @@ namespace qemacs
     if(this->mode!=nullptr){
       completer = this->mode->getCompleter();
     }
-    if (completer && completer->popup()->isVisible()) {
+    if ((completer!=nullptr) && (completer->popup()->isVisible())) {
       // The following keys are forwarded by the completer to the widget
       if(m == Qt::NoModifier){
 	switch (k) {
@@ -1440,13 +1418,13 @@ namespace qemacs
   } // end of QEmacsTextEditBase::setMainFrame
 
   bool
-  QEmacsTextEditBase::isMainFrame(void) const
+  QEmacsTextEditBase::isMainFrame() const
   {
     return this->mainFrame;
   } // end of QEmacsTextEditBase::isMainFrame
 
   bool
-  QEmacsTextEditBase::isSlave(void) const
+  QEmacsTextEditBase::isSlave() const
   {
     return !(this->isMainFrame());
   } // end of QEmacsTextEditBase::isSlave

@@ -23,4 +23,4 @@ namespace qemacs{
     this->cCharAsString = true;
   } // end of GnuplotSyntaxHighlighter
 
-}
+} // end of namespace qemacs

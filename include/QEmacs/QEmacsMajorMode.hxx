@@ -5,21 +5,13 @@
  * \brief 28 juin 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSMAJORMODE_H_
-#define _LIB_QEMACS_QEMACSMAJORMODE_H_ 
+#ifndef LIB_QEMACS_QEMACSMAJORMODE_HXX
+#define LIB_QEMACS_QEMACSMAJORMODE_HXX 
 
 #include<QtCore/QStringList>
-
-#ifdef QEMACS_QT4
-#include<QtGui/QMenu>
-#include<QtGui/QCompleter>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
+#include<QtGui/QTextDocument>
 #include<QtWidgets/QMenu>
 #include<QtWidgets/QCompleter>
-#endif /* QEMACS_QT5 */
-#include<QtGui/QTextDocument>
-
 #include"QEmacs/Config.hxx"
 
 namespace qemacs
@@ -47,13 +39,13 @@ namespace qemacs
      * return the name of the major mode
      */
     virtual QString
-    getName(void) const = 0;
+    getName() const = 0;
 
     /*!
      * return the description of the major mode
      */
     virtual QString
-    getDescription(void) const = 0;
+    getDescription() const = 0;
 
     /*!
      * hightlight the current document
@@ -71,42 +63,41 @@ namespace qemacs
     completeContextMenu(QMenu * const,
 			const QTextCursor&) = 0;
 
-    virtual QCompleter*
-    getCompleter(void) = 0;
+    virtual QCompleter* getCompleter() = 0;
     /*!
      * \return the completion prefix
      * \note most of the time, it is this->textEdit.getCurrentWord()
      */
     virtual QString
-    getCompletionPrefix(void) = 0;
+    getCompletionPrefix() = 0;
     /*!
      * \return the minimal number of characters for a completion to be
      * considered
      */
     virtual int
-    getMinimalCompletionLength(void) = 0;
+    getMinimalCompletionLength() = 0;
 
     virtual void
     completeCurrentWord(QEmacsTextEditBase&,
 			const QString&) = 0;
 
     virtual QMenu*
-    getSpecificMenu(void) = 0;
+    getSpecificMenu() = 0;
 
     virtual QIcon
-    getIcon(void) const = 0;
+    getIcon() const = 0;
 
     /*!
      * format a paragraph
      */
     virtual void
-    format(void) = 0;
+    format() = 0;
 
     /*!
      * comment/uncomment a region
      */
     virtual void
-    comment(void) = 0;
+    comment() = 0;
 
     /*!
      * This method is called before any treatment by QEmacsTextEditBase
@@ -159,5 +150,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_QEMACSMAJORMODE_H */
+#endif /* LIB_QEMACS_QEMACSMAJORMODE_HXX */
 

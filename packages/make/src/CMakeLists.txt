@@ -1,6 +1,3 @@
-if(enable-qt4)
-  include(${QT_USE_FILE})
-endif(enable-qt4)
 add_definitions(${QT_DEFINITIONS})
 include_directories("${PROJECT_SOURCE_DIR}/packages/make/include")
 include_directories("${PROJECT_SOURCE_DIR}/include")
@@ -16,10 +13,8 @@ qt_sources(MakefileQEmacsMode_SOURCES
 qemacs_package(MakefileQEmacsMode
   ${MakefileQEmacsMode_SOURCES})
 
-if(enable-qt5)
-  target_link_libraries(MakefileQEmacsMode
-    TFELQEmacs
-    Qt5::Core
-    Qt5::Widgets
-    )
-endif(enable-qt5)
+target_link_libraries(MakefileQEmacsMode
+  TFELQEmacs
+  Qt5::Core
+  Qt5::Widgets
+  )

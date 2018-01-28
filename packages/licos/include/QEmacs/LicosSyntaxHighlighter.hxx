@@ -5,8 +5,8 @@
  * \brief 30 juin 2012
  */
 
-#ifndef _LIB_QEMACS_LICOSSYNTAXHIGHLIGHTER_H_
-#define _LIB_QEMACS_LICOSSYNTAXHIGHLIGHTER_H_ 
+#ifndef LIB_QEMACS_LICOSSYNTAXHIGHLIGHTER_HXX
+#define LIB_QEMACS_LICOSSYNTAXHIGHLIGHTER_HXX 
 
 #include"QEmacs/CSyntaxHighlighterBase.hxx"
 
@@ -44,16 +44,15 @@ namespace qemacs
      */
     LicosSyntaxHighlighter(QTextDocument *const);
 
-    virtual void
-    highlightBlock(const QString &);
+    void highlightBlock(const QString &) override;
 
   protected:
 
     static QStringList
-    buildKeysList(void);
+    buildKeysList();
 
     static QStringList
-    buildBlocksList(void);
+    buildBlocksList();
 
     QVector<QRegExp> importExprs;
 
@@ -64,5 +63,5 @@ namespace qemacs
   
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_LICOSSYNTAXHIGHLIGHTER_H */
+#endif /* LIB_QEMACS_LICOSSYNTAXHIGHLIGHTER_H */
 

@@ -1,7 +1,3 @@
-if(enable-qt4)
-  include(${QT_USE_FILE})
-  add_definitions(${QT_DEFINITIONS})
-endif(enable-qt4)
 include_directories("${PROJECT_SOURCE_DIR}/packages/latex/include")
 include_directories("${PROJECT_SOURCE_DIR}/include")
 include_directories("${TFEL_INCLUDE_PATH}")
@@ -22,10 +18,8 @@ qemacs_package(LaTeXQEmacsMode
   ${LaTeXQEmacsResources_RCC}
   LaTeXOutputMajorMode.cxx)
 
-if(enable-qt5)
-  target_link_libraries(LaTeXQEmacsMode
-    TFELQEmacs
-    Qt5::Core
-    Qt5::Widgets
-    )
-endif(enable-qt5)
+target_link_libraries(LaTeXQEmacsMode
+  TFELQEmacs
+  Qt5::Core
+  Qt5::Widgets
+  )

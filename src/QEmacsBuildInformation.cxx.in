@@ -22,73 +22,73 @@ namespace qemacs{
   }
   
   const char *
-  QEmacsBuildInformation::getVersionName(void)
+  QEmacsBuildInformation::getVersionName()
   {
     return PACKAGE_NAME;
   }
 
   const char *
-  QEmacsBuildInformation::getVersionNumber(void)
+  QEmacsBuildInformation::getVersionNumber()
   {
     return VERSION;
   }
 
   const char *
-  QEmacsBuildInformation::getVersionIdentifier(void)
+  QEmacsBuildInformation::getVersionIdentifier()
   {
     return VERSION;
   }
 
   const char *
-  QEmacsBuildInformation::getBugReportAdress(void)
+  QEmacsBuildInformation::getBugReportAdress()
   {
     return PACKAGE_BUGREPORT;
   }
 
   const char *
-  QEmacsBuildInformation::getCompilerName(void)
+  QEmacsBuildInformation::getCompilerName()
   {
     return "@CXX@";
   }
 
   const char *
-  QEmacsBuildInformation::getBuildCpu(void)
+  QEmacsBuildInformation::getBuildCpu()
   {
     return "@build_cpu@";
   }
 
   const char *
-  QEmacsBuildInformation::getBuildOs(void)
+  QEmacsBuildInformation::getBuildOs()
   {
     return "@build_os@";
   }
 
   const char *
-  QEmacsBuildInformation::getHostCpu(void)
+  QEmacsBuildInformation::getHostCpu()
   {
     return "@host_cpu@";
   }
 
   const char *
-  QEmacsBuildInformation::getHostOs(void)
+  QEmacsBuildInformation::getHostOs()
   {
     return "@host_os@";
   }
 
   const char *
-  QEmacsBuildInformation::getTargetCpu(void)
+  QEmacsBuildInformation::getTargetCpu()
   {
     return "@target_cpu@";
   }
 
   const char *
-  QEmacsBuildInformation::getTargetOs(void)
+  QEmacsBuildInformation::getTargetOs()
   {
     return "@target_os@";
   }
 
   const char *
-  QEmacsBuildInformation::getSVNRevision(void)
+  QEmacsBuildInformation::getSVNRevision()
   {
     return "";
   }

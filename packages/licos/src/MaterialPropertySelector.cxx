@@ -5,22 +5,12 @@
  * \brief 14 déc. 2012
  */
 
+#include<algorithm>
+
 #include<QtCore/QSet>
 #include<QtCore/QDebug>
 #include<QtCore/QProcess>
 #include<QtCore/QtAlgorithms>
-
-#ifdef QEMACS_QT4
-#include<QtGui/QLabel>
-#include<QtGui/QHeaderView>
-#include<QtGui/QVBoxLayout>
-#include<QtGui/QHBoxLayout>
-#include<QtGui/QLineEdit>
-#include<QtGui/QPushButton>
-#include<QtGui/QFileDialog>
-#include<QtGui/QDialogButtonBox>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QLabel>
 #include<QtWidgets/QHeaderView>
 #include<QtWidgets/QVBoxLayout>
@@ -30,7 +20,6 @@
 #include<QtWidgets/QFileDialog>
 #include<QtWidgets/QDialogButtonBox>
 #include<QtWidgets/QDialog>
-#endif /* QEMACS_QT5 */
 
 #include"QEmacs/Utilities.hxx"
 #include"QEmacs/MaterialPropertySelector.hxx"
@@ -117,20 +106,20 @@ namespace qemacs
   MaterialPropertyModel::sort(int c, Qt::SortOrder o)
   {
     if((c==0)&&(o==Qt::AscendingOrder)){
-      qSort(this->m.begin(),this->m.end(),MaterialPropertyModel::sort2);
+      std::sort(this->m.begin(),this->m.end(),MaterialPropertyModel::sort2);
     } else if((c==0)&&(o==Qt::DescendingOrder)){
-      qSort(this->m.begin(),this->m.end(),MaterialPropertyModel::sort1);
+      std::sort(this->m.begin(),this->m.end(),MaterialPropertyModel::sort1);
     } else if((c==1)&&(o==Qt::AscendingOrder)){
-      qSort(this->m.begin(),this->m.end(),MaterialPropertyModel::sort4);
+      std::sort(this->m.begin(),this->m.end(),MaterialPropertyModel::sort4);
     } else if((c==1)&&(o==Qt::DescendingOrder)){
-      qSort(this->m.begin(),this->m.end(),MaterialPropertyModel::sort3);
+      std::sort(this->m.begin(),this->m.end(),MaterialPropertyModel::sort3);
     }
     this->beginResetModel();
     this->endResetModel();
   }
 
   const QVector<MaterialProperty>&
-  MaterialPropertyModel::materialProperties(void) const
+  MaterialPropertyModel::materialProperties() const
   {
     return this->m;
   }
@@ -150,12 +139,12 @@ namespace qemacs
       l(new QLabel(QObject::tr("<b>Material properties available in MFrontMaterials:</b>"))),
       lf(new QLineEdit)
   {
-    QVBoxLayout *mlayout = new QVBoxLayout;
-    QHBoxLayout *flayout = new QHBoxLayout;
+    auto *mlayout = new QVBoxLayout;
+    auto *flayout = new QHBoxLayout;
     // MFrontMaterials
     this->l->setAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-    QLabel    *f  = new QLabel(QObject::tr("Material filter or library:"));
-    QPushButton *openlib = new QPushButton(QIcon::fromTheme("document-open"),"");
+    auto *f = new QLabel(QObject::tr("Material filter or library:"));
+    auto *openlib = new QPushButton(QIcon::fromTheme("document-open"),"");
     f->setBuddy(lf);
     this->view->setModel(model);
     this->view->setSortingEnabled(true);
@@ -163,8 +152,8 @@ namespace qemacs
     this->view->verticalHeader()->setVisible(false);
     this->view->setSelectionBehavior(QAbstractItemView::SelectRows);
     this->updateMFMModel(".\\+");
-    QDialogButtonBox *buttonBox = new QDialogButtonBox();
-    QPushButton *add    = new QPushButton(tr("&Add"));
+    auto *buttonBox = new QDialogButtonBox();
+    auto *add       = new QPushButton(tr("&Add"));
     buttonBox->addButton(add,QDialogButtonBox::ActionRole);
     mlayout->addWidget(l);
     mlayout->addWidget(view);
@@ -183,8 +172,7 @@ namespace qemacs
 		     this,SLOT(updateMFMModel(const QString&)));
   } // end of MaterialPropertySelector::MaterialPropertySelector
 
-  void
-  MaterialPropertySelector::addMaterialProperties()
+  void MaterialPropertySelector::addMaterialProperties()
   {
     const QModelIndexList lmp = this->view->selectionModel()->selectedIndexes();
     const QVector<MaterialProperty>& m = this->model->materialProperties();
@@ -201,8 +189,7 @@ namespace qemacs
     emit materialPropertiesSelected(r);
   }
 
-  void
-  MaterialPropertySelector::openLibrary()
+  void MaterialPropertySelector::openLibrary()
   {
     const QString& f = QFileDialog::getOpenFileName(this,
     						    QObject::tr("Open File"),
@@ -213,8 +200,7 @@ namespace qemacs
     this->lf->setText(f);
   } // end of MaterialPropertySelector::openLibrary
 
-  void
-  MaterialPropertySelector::updateMFMModel(const QString& m)
+  void MaterialPropertySelector::updateMFMModel(const QString& m)
   {
     if(m.endsWith(".so")){
       QFileInfo f(m);

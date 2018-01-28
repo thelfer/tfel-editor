@@ -5,8 +5,8 @@
  * \brief 02 août 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSTEXTEDITSEARCH_H_
-#define _LIB_QEMACS_QEMACSTEXTEDITSEARCH_H_ 
+#ifndef LIB_QEMACS_QEMACSTEXTEDITSEARCH_HXX
+#define LIB_QEMACS_QEMACSTEXTEDITSEARCH_HXX 
 
 #include<QtGui/QTextCursor>
 #include<QtGui/QTextDocument>
@@ -36,13 +36,11 @@ namespace qemacs{
     QEmacsTextEditSearchFilter(QEmacsTextEditBase&,
 			       QEmacsTextEditSearch&);
     
-    virtual bool
-    isOk(void) const override;
+    bool isOk() const override;
 
-    virtual bool
-    filterKeyPressEvent(QKeyEvent * const) override;
+    bool filterKeyPressEvent(QKeyEvent * const) override;
     
-    ~QEmacsTextEditSearchFilter();
+    ~QEmacsTextEditSearchFilter() override;
 		   
   public slots:
     
@@ -77,7 +75,7 @@ namespace qemacs{
     virtual QTextDocument::FindFlags
     getFlag() const;
 
-    virtual ~QEmacsTextEditSearch();
+    ~QEmacsTextEditSearch() override;
 
   protected slots:
 
@@ -87,12 +85,12 @@ namespace qemacs{
   public slots:
 
     virtual void
-    searchFilterDestroyed(void);
+    searchFilterDestroyed();
 
   protected:
 
     virtual void
-    treatUserInput(void) override;
+    treatUserInput() override;
     
     QEmacsWidget& qemacs;
 
@@ -109,5 +107,5 @@ namespace qemacs{
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_QEMACSTEXTEDITSEARCH_H */
+#endif /* LIB_QEMACS_QEMACSTEXTEDITSEARCH_HXX */
 

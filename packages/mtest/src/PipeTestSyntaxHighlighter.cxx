@@ -12,7 +12,7 @@ namespace qemacs
 {
 
   static QStringList
-  PipeTestSyntaxHighlighter_buildGetPipeTestKeys(void)
+  PipeTestSyntaxHighlighter_buildGetPipeTestKeys()
   {
     mtest::PipeTestParser p;
     auto keys = QStringList{};
@@ -20,10 +20,10 @@ namespace qemacs
       keys.append(QString::fromStdString(k));
     }
     return keys;
-  } // end of PipeTestSyntaxHighlighter_buildGetPipeTestKeys(void)
+  } // end of PipeTestSyntaxHighlighter_buildGetPipeTestKeys()
   
   QStringList&
-  PipeTestSyntaxHighlighter::getPipeTestKeys(void)
+  PipeTestSyntaxHighlighter::getPipeTestKeys()
   {
     static QStringList keys(PipeTestSyntaxHighlighter_buildGetPipeTestKeys());
     return keys;
@@ -44,7 +44,7 @@ namespace qemacs
   }
 
   QStringList
-  PipeTestSyntaxHighlighter::getKeyWordsList(void) const
+  PipeTestSyntaxHighlighter::getKeyWordsList() const
   {
     static QStringList keys(PipeTestSyntaxHighlighter_buildGetPipeTestKeys());
     return keys;

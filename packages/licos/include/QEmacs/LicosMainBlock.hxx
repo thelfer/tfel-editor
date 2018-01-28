@@ -5,8 +5,8 @@
  * \brief 17 sept. 2012
  */
 
-#ifndef _LIB_QEMACS_LICOSMAINBLOCK_H_
-#define _LIB_QEMACS_LICOSMAINBLOCK_H_ 
+#ifndef LIB_QEMACS_LICOSMAINBLOCK_HXX
+#define LIB_QEMACS_LICOSMAINBLOCK_HXX 
 
 #include"QEmacs/StandardLicosBlock.hxx"
 
@@ -24,5 +24,5 @@ namespace qemacs
   
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_LICOSMAINBLOCK_H */
+#endif /* LIB_QEMACS_LICOSMAINBLOCK_H */
 

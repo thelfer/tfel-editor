@@ -45,7 +45,7 @@ namespace qemacs
 			     "union","unsigned","using","virtual","void",
 			     "volatile","wchar_t","while"};
 
-  unsigned short getNumberOfCxxKeywords(void)
+  unsigned short getNumberOfCxxKeywords()
   {
     return sizeof(reservedCxxKeywords)/sizeof(char*);
   }
@@ -96,7 +96,7 @@ namespace qemacs
     return i;
   }
 
-  bool CxxTokenizer::isCCommentOpened(void) const
+  bool CxxTokenizer::isCCommentOpened() const
   {
     return this->cStyleCommentOpened;
   } // end of CxxTokenizer::isCCommentOpened
@@ -329,7 +329,7 @@ namespace qemacs
   }
 
   void
-  CxxTokenizer::stripComments(void){
+  CxxTokenizer::stripComments(){
     using namespace std;
     TokensContainer::iterator p;    
     for(p=this->fileTokens.begin();p!=this->fileTokens.end();++p){
@@ -344,11 +344,7 @@ namespace qemacs
 		const unsigned short p,
 		const QChar c)
   {
-    if((p+1<w.size())&&
-       (w[p+1]==c)){
-      return true;
-    }
-    return false;
+    return ((p+1<w.size())&&(w[p+1]==c));
   }
 
   static bool
@@ -704,32 +700,32 @@ namespace qemacs
   } // end of CxxTokenizer::isValidFunctionIdentifier
 
   const Token&
-  CxxTokenizer::back(void) const
+  CxxTokenizer::back() const
   {
     return this->fileTokens.back();
   } // end of CxxTokenizer::back
 
   CxxTokenizer::const_iterator
-  CxxTokenizer::begin(void) const
+  CxxTokenizer::begin() const
   {
     return this->fileTokens.begin();
   } // end of CxxTokenizer::begin
 
   CxxTokenizer::const_iterator
-  CxxTokenizer::end(void) const
+  CxxTokenizer::end() const
   {
     return this->fileTokens.end();
   } // end of CxxTokenizer::end
 
   void
-  CxxTokenizer::clear(void)
+  CxxTokenizer::clear()
   {
     this->cStyleCommentOpened = false;
     this->fileTokens.clear();
   } // end of CxxTokenizer::clear
 
   void
-  CxxTokenizer::reset(void)
+  CxxTokenizer::reset()
   {
     this->clear();
   } // end of CxxTokenizer::reset
@@ -787,8 +783,7 @@ namespace qemacs
     return this->fileTokens.size();
   } // end of CxxTokenizer::size
 
-  CxxTokenizer::~CxxTokenizer()
-  {}
+  CxxTokenizer::~CxxTokenizer() = default;
 
 } // end of namespace qemacs
 
@@ -1286,7 +1281,7 @@ namespace qemacs
 
 
 // void 
-// CxxTokenizer::splitTokens(void)
+// CxxTokenizer::splitTokens()
 // {
 //   using namespace std;
 //   TokensContainer::iterator p;
@@ -1308,7 +1303,7 @@ namespace qemacs
 // } // end of CxxTokenizer::splitStandardTokens
 
 // void
-// CxxTokenizer::treatPreprocessorDirectives(void)
+// CxxTokenizer::treatPreprocessorDirectives()
 // {
 //   using namespace std;
 

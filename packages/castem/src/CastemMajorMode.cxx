@@ -9,10 +9,8 @@
 #include<QtCore/QUrl>
 #include<QtCore/QFileInfo>
 #include<QtCore/QTemporaryFile>
-
 #include<QtGui/QSyntaxHighlighter>
 #include<QtGui/QDesktopServices>
-
 #include"QEmacs/QEmacsBuffer.hxx"
 #include"QEmacs/ProcessOutputFrame.hxx"
 #include"QEmacs/QEmacsTextEditBase.hxx"
@@ -24,7 +22,7 @@ namespace qemacs
 {
   
   QStringList
-  CastemMajorMode::buildKeysList(void)
+  CastemMajorMode::buildKeysList()
   {
     return {"DROITE" , "MOT"    , "OPTION", "FIN",
 	"DENSITE", "LAPLACE", "CERCLE", "COTE",
@@ -150,7 +148,7 @@ namespace qemacs
   } // end of buildKeysList
 
   const QStringList&
-  CastemMajorMode::getKeysList(void)
+  CastemMajorMode::getKeysList()
   {
     static QStringList keys(buildKeysList());
     return keys;
@@ -172,8 +170,7 @@ namespace qemacs
 		     &t,SLOT(insertCompletion(QString)));
   } // end of CastemMajorMode
   
-  void
-  CastemMajorMode::sendToCastem(const QString& l)
+  void CastemMajorMode::sendToCastem(const QString& l)
   {
     this->startCastem();
     if(this->co==nullptr){
@@ -183,18 +180,13 @@ namespace qemacs
     if(p.state()!=QProcess::Running){
       return;
     }
-#ifdef QEMACS_QT4
-    p.write((l+'\n').toAscii());
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
     p.write((l+'\n').toLatin1());
-#endif /* QEMACS_QT5 */
   } // end of CastemMajorMode::sendToCastem
 
 
 
   void
-  CastemMajorMode::startCastem(void)
+  CastemMajorMode::startCastem()
   {
     if(this->co==nullptr){
       this->co = new ProcessInteractionFrame(this->qemacs,this->buffer);
@@ -235,7 +227,7 @@ namespace qemacs
   }
   
   QCompleter*
-  CastemMajorMode::getCompleter(void)
+  CastemMajorMode::getCompleter()
   {
     return this->c;
   } // end of getCompleter
@@ -314,7 +306,7 @@ namespace qemacs
       this->ha1->setData(w);
       this->ha2=new QAction(QObject::tr("Help on %1 (web)").arg(w),this);
       this->ha2->setData(w);
-      const QList<QAction *>& cactions = m->actions();	
+      const auto& cactions = m->actions();	
       if(cactions.isEmpty()){
 	m->addAction(this->ha1);
 	m->addAction(this->ha2);
@@ -331,10 +323,10 @@ namespace qemacs
   CastemMajorMode::actionTriggered(QAction *a)
   {
     if(a==this->ha1){
-      const QString w = this->ha1->data().toString();
+      const auto w = this->ha1->data().toString();
       this->displayHelp(w,w.left(4));
     } else if(a==this->ha2){
-      const QString w = this->ha2->data().toString();
+      const auto w = this->ha2->data().toString();
       this->openWebHelp(w.left(4));
     }
   }
@@ -357,19 +349,14 @@ namespace qemacs
     QDir dir(path);
     dir.mkdir(path);
     if(dir.exists()) {
-      ProcessOutputFrame *nf = new ProcessOutputFrame(this->qemacs,this->buffer);
+      auto *nf = new ProcessOutputFrame(this->qemacs,this->buffer);
       this->buffer.addSlave(QObject::tr("notice %1").arg(w),nf);
       QProcess& p = nf->getProcess();
       p.setWorkingDirectory(dir.absolutePath());
       if(p.state()!=QProcess::Running){
 	p.start("castem2014_PLEIADES",QStringList());
 	p.waitForStarted();
-#ifdef QEMACS_QT4
-	p.write(QString("INFO '%1';\n").arg(w2).toAscii());
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 	p.write(QString("INFO '%1';\n").arg(w2).toLatin1());
-#endif /* QEMACS_QT5 */
 	p.write("FIN;\n");
 	p.waitForFinished(1000);	
       }
@@ -388,24 +375,20 @@ namespace qemacs
 
   } // end of CastemMajorMode::displayHelp
 
-  void
-  CastemMajorMode::openWebHelp(const QString& w2)
+  void CastemMajorMode::openWebHelp(const QString& w2)
   {
     QDesktopServices::openUrl(QUrl("http://www-cast3m.cea.fr/index.php?page=notices&notice="+w2.toLower()));
   } // end of CastemMajorMode::openWebHelp
 
-  int
-  CastemMajorMode::getMinimalCompletionLength(void)
+  int CastemMajorMode::getMinimalCompletionLength()
   {
     return 2;
   } // end of CastemMajorMode::getMinimalCompletionLength
 
-  void
-  CastemMajorMode::format()
+  void CastemMajorMode::format()
   {} // end of CastemMajorMode::format
 
-  QString
-  CastemMajorMode::getCommentSyntax(void)
+  QString CastemMajorMode::getCommentSyntax()
   {
     return "*";
   } // end of CastemMajorMode::getCommentSyntax

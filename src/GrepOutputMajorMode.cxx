@@ -27,28 +27,26 @@ namespace qemacs
   {
     QString file;
     int line;
-    ~GrepUserData()
-    {}
+    ~GrepUserData() override = default;
   }; // end of GrepUserData
 
   struct GrepOutputSyntaxHighlighter
     : public QSyntaxHighlighter
   {
-    GrepOutputSyntaxHighlighter(QTextDocument *p)
+    explicit GrepOutputSyntaxHighlighter(QTextDocument *p)
       : QSyntaxHighlighter(p)
     {
       this->line.setForeground(Qt::darkGreen);
     } // end of GrepOutputSyntaxHighlighter
 
-    virtual void
-    highlightBlock(const QString &text) override
+    void highlightBlock(const QString &text) override
     {
       QRegExp expr("^([/-\\w|\\.]+):(\\d+):");
       expr.setMinimal(true);
       int index = expr.indexIn(text);
       if((index >= 0)&&(expr.captureCount()==2)){
-	GrepUserData * d = new GrepUserData;
-	QString n = expr.cap(2);
+	auto *d = new GrepUserData;
+	auto n  = expr.cap(2);
 	bool b;
 	d->file = expr.cap(1);
 	d->line = n.toInt(&b);
@@ -83,86 +81,80 @@ namespace qemacs
       : QEmacsMajorModeBase(w,b,t,&t)
     {}
 
-    virtual QString
-    getName(void) const override
+    QString getName() const override
     {
       return "grep-output";
     } // end of getName
 
-    virtual QString
-    getDescription(void) const override
+    QString getDescription() const override
     {
       return "major mode dedicated to the output of the grep utility";
     } // end of getDescription
 
-    virtual void
-    setSyntaxHighlighter(QTextDocument* d) override
+    void setSyntaxHighlighter(QTextDocument* d) override
     {
       new GrepOutputSyntaxHighlighter(d);
     } // end of setSyntaxHighlighter
 
-    virtual bool
-    mousePressEvent(QMouseEvent *e) override
+    bool mousePressEvent(QMouseEvent *e) override
     {
       if(e->buttons()==Qt::LeftButton){
-	ProcessOutputFrame *po = qobject_cast<ProcessOutputFrame *>(&(this->textEdit));
+	auto *po = qobject_cast<ProcessOutputFrame *>(&(this->textEdit));
 	if(po==nullptr){
 	  return true;
 	}
-	QTextCursor c = this->textEdit.cursorForPosition(e->pos()); 
-	QTextBlockUserData *ud = c.block().userData();
+	auto c   = this->textEdit.cursorForPosition(e->pos()); 
+	auto *ud = c.block().userData();
 	if(ud==nullptr){
 	  return false;
 	}
-	GrepUserData *d = static_cast<GrepUserData *>(ud);
-	const QString wd = po->getProcess().workingDirectory();
+	auto*d = static_cast<GrepUserData *>(ud);
+	const auto wd = po->getProcess().workingDirectory();
 	if(!wd.isEmpty()){
 	  this->qemacs.openFile(wd+QDir::separator()+d->file);
 	} else {
 	  this->qemacs.openFile(d->file);
 	}
-	QEmacsPlainTextEdit& t = this->qemacs.getCurrentBuffer().getMainFrame();
+	auto& t = this->qemacs.getCurrentBuffer().getMainFrame();
 	t.gotoLine(d->line);
       }
       return false;
     }
 
-    virtual bool
-    keyPressEvent(QKeyEvent *e) override
+    bool keyPressEvent(QKeyEvent *e) override
     {
       if(((e->modifiers()==Qt::AltModifier)&&(e->key()==Qt::Key_M))||
 	 ((e->modifiers()==Qt::NoModifier)&&(e->key()==Qt::Key_Return))){
-	ProcessOutputFrame *po = qobject_cast<ProcessOutputFrame *>(&(this->textEdit));
+	auto *po = qobject_cast<ProcessOutputFrame *>(&(this->textEdit));
 	if(po==nullptr){
 	  return false;
 	}
-	QTextCursor c = this->textEdit.textCursor(); 
-	QTextBlockUserData *ud = c.block().userData();
+	auto c   = this->textEdit.textCursor(); 
+	auto *ud = c.block().userData();
 	if(ud==nullptr){
 	  return false;
 	}
-	GrepUserData *d = static_cast<GrepUserData *>(ud);
-	const QString wd = po->getProcess().workingDirectory();
+	auto* d = static_cast<GrepUserData *>(ud);
+	const auto wd = po->getProcess().workingDirectory();
 	if(!wd.isEmpty()){
 	  this->qemacs.openFile(wd+QDir::separator()+d->file);
 	} else {
 	  this->qemacs.openFile(d->file);
 	}
-	QEmacsPlainTextEdit& t = this->qemacs.getCurrentBuffer().getMainFrame();
+	auto& t = this->qemacs.getCurrentBuffer().getMainFrame();
 	t.gotoLine(d->line);
 	return true;
       }
       return false;
     }
 
-    virtual void format(void) override
+    void format() override
     {}
 
-    virtual void comment() override
+    void comment() override
     {}
 
-    virtual ~GrepOutputMajorMode()
-    {}
+    ~GrepOutputMajorMode() override = default;
 
   }; // end of GrepOutputMajorMode
   

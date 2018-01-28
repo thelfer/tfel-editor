@@ -8,52 +8,39 @@
 #include<cstdlib>
 #include<iostream>
 #include<stdexcept>
-
 #include<QtCore/QDir>
 #include<QtCore/QDebug>
 #include<QtCore/QStringList>
-#ifdef QEMACS_QT4
-#include<QtGui/QApplication>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QApplication>
-#endif /* QEMACS_QT5 */
-
-
 #include"TFEL/System/ExternalLibraryManager.hxx"
-
 #include"QEmacs/QEmacsBuildInformation.hxx"
 #include"QEmacs/QEmacsMainWindow.hxx"
 
-static void
-loadExternalPackages()
+static void loadExternalPackages()
 {
-  using namespace std;
   using namespace qemacs;
   using namespace tfel::system;
   QStringList paths;
-  QStringList::const_iterator p;
   // trying the qemacs load path
-  const char * userFiles = ::getenv("QEMACS_LOAD_PATH");
+  auto * userFiles = ::getenv("QEMACS_LOAD_PATH");
   if(userFiles!=nullptr){
     paths << QString(userFiles).split(":",QString::SkipEmptyParts);
   }
   // add the standard path
   paths << QEmacsBuildInformation::getDataDirectory();
-  for(p=paths.begin();p!=paths.end();++p){
-    QDir d(*p); 
+  for(const auto& p : paths){
+    QDir d(p); 
     if(d.exists()){
-      QStringList libs = d.entryList(QStringList("*.so"),QDir::Files);
-      QStringList::const_iterator pl;
-      for(pl=libs.begin();pl!=libs.end();++pl){
-	const string& l = (*p+QDir::separator ()+*pl).toStdString();
+      const auto libs = d.entryList(QStringList("*.so"),QDir::Files);
+      for(const auto& rl : libs){
+	const auto l = (p+QDir::separator()+rl).toStdString();
 	try{
-	  ExternalLibraryManager& lm = ExternalLibraryManager::getExternalLibraryManager();
+	  auto& lm = ExternalLibraryManager::getExternalLibraryManager();
 	  lm.loadLibrary(l);
-	} catch(exception& e){
-	  cerr << "loading library : '" << l << "' failed ('"
-	       << e.what() << "')" << endl;
-	  exit(EXIT_FAILURE);
+	} catch(std::exception& e){
+	  std::cerr << "loading library : '" << l << "' failed ('"
+	       << e.what() << "')" << std::endl;
+	  std::exit(EXIT_FAILURE);
 	}
       }
     }

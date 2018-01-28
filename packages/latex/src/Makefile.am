@@ -1,6 +1,6 @@
 AM_CPPFLAGS = -I$(top_srcdir)/packages/latex/include \
 	      -I$(top_srcdir)/include                \
-	      @QT4_CFLAGS@                           \
+	      @QT_CXXFLAGS@                           \
 	      `@TFELCONFIG@ --includes --cppflags`
 
 packagesdir = @prefix@/share/qemacs/packages
@@ -17,10 +17,10 @@ nodist_libLaTeXQEmacsMode_la_SOURCES = moc_LaTeXMajorMode.cxx         \
 LATEXMODERESOURCES=images/LaTeXIcon.svg
 
 LaTeXModeResources.cxx : LaTeXModeResources.qrc $(LATEXMODERESOURCES)
-	@RCC@ -name LaTeXModeResources @srcdir@/LaTeXModeResources.qrc -o LaTeXModeResources.cxx
+	@QT_RCC@ -name LaTeXModeResources @srcdir@/LaTeXModeResources.qrc -o LaTeXModeResources.cxx
 
 moc_%.cxx : @top_srcdir@/packages/latex/include/QEmacs/%.hxx
-	@MOC@ $< -o $@	
+	@QT_MOC@ $< -o $@	
 
 clean-local:
 	$(RM) $(nodist_libLaTeXQEmacsMode_la_SOURCES)

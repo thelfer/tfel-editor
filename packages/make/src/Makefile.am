@@ -1,6 +1,6 @@
 AM_CPPFLAGS = -I$(top_srcdir)/packages/make/include \
 	      -I$(top_srcdir)/include               \
-	      @QT4_CFLAGS@                          \
+	      @QT_CXXFLAGS@                          \
 	      `@TFELCONFIG@ --includes --cppflags`
 
 packagesdir = @prefix@/share/qemacs/packages
@@ -13,6 +13,6 @@ clean-local:
 	$(RM) $(nodist_libMakefileQEmacsMode_la_SOURCES)
 
 moc_%.cxx : @top_srcdir@/packages/make/include/QEmacs/%.hxx
-	@MOC@ $< -o $@	
+	@QT_MOC@ $< -o $@	
 
 EXTRA_DIST=CMakeLists.txt

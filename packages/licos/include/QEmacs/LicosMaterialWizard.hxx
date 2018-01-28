@@ -5,15 +5,10 @@
  * \brief 27 sept. 2012
  */
 
-#ifndef _LIB_QEMACS_LICOSMATERIALWIZARD_H_
-#define _LIB_QEMACS_LICOSMATERIALWIZARD_H_ 
+#ifndef LIB_QEMACS_LICOSMATERIALWIZARD_HXX
+#define LIB_QEMACS_LICOSMATERIALWIZARD_HXX 
 
-#ifdef QEMACS_QT4
-#include<QtGui/QWizard>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QWizard>
-#endif /* QEMACS_QT5 */
 
 namespace qemacs{
 
@@ -38,8 +33,7 @@ namespace qemacs{
      */
     LicosMaterialWizard(QEmacsTextEditBase&);
 
-    bool
-    validateCurrentPage () ;
+    bool validateCurrentPage() override;
 
     void writeMaterial();
 
@@ -63,5 +57,5 @@ namespace qemacs{
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_LICOSMATERIALWIZARD_H */
+#endif /* LIB_QEMACS_LICOSMATERIALWIZARD_H */
 

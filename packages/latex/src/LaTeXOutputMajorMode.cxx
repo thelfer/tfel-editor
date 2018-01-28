@@ -25,10 +25,9 @@ namespace qemacs
   struct LaTeXUserData
     : public QTextBlockUserData
   {
+    ~LaTeXUserData() override = default;
     QString file;
     int line;
-    ~LaTeXUserData()
-    {}
   }; // end of LaTeXUserData
 
   /*!
@@ -61,8 +60,7 @@ namespace qemacs
       warning2.setMinimal(true);
     } // end of LaTeXOutputSyntaxHighlighter
 
-    virtual void
-    highlightBlock(const QString &text) override
+    void highlightBlock(const QString &text) override
     {
       this->setCurrentBlockState(0);
       if(this->previousBlockState()==1){
@@ -87,9 +85,9 @@ namespace qemacs
 	  this->setFormat(0,text.size(),this->latexLineError);
 	}
 	if(err3.indexIn(text)!=-1){
-	  LaTeXUserData * d = new LaTeXUserData;
-	  QString f = err3.cap(1);
-	  QString l = err3.cap(2);
+	  auto *d = new LaTeXUserData;
+	  const auto f = err3.cap(1);
+	  const auto l = err3.cap(2);
 	  bool b;
 	  d->file = f;
 	  d->line = l.toInt(&b);
@@ -139,42 +137,38 @@ namespace qemacs
       : QEmacsMajorModeBase(w,b,t,&t)
     {}
 
-    virtual QString
-    getName(void) const override
+    QString getName() const override
     {
       return "latex-output";
     } // end of LicosMajorMode
 
-    virtual QString
-    getDescription(void) const override
+    QString getDescription() const override
     {
       return "major mode dedicated to the output of the grep utility";
     } // end of getDescription
 
-    virtual void
-    setSyntaxHighlighter(QTextDocument* d) override
+    void setSyntaxHighlighter(QTextDocument* d) override
     {
       new LaTeXOutputSyntaxHighlighter(d);
     } // end of setSyntaxHighlighter
 
-    virtual bool
-    mousePressEvent(QMouseEvent * e) override
+    bool mousePressEvent(QMouseEvent * e) override
     {
       if(e->buttons()==Qt::LeftButton){
-	ProcessOutputFrame *po = qobject_cast<ProcessOutputFrame *>(&(this->textEdit));
+	auto *po = qobject_cast<ProcessOutputFrame *>(&(this->textEdit));
 	if(po==nullptr){
 	  return true;
 	}
-	QTextCursor c = this->textEdit.cursorForPosition(e->pos()); 
-	QTextBlockUserData *ud = c.block().userData();
+	auto c = this->textEdit.cursorForPosition(e->pos()); 
+	auto *ud = c.block().userData();
 	if(ud==nullptr){
 	  return false;
 	}
-	LaTeXUserData *d = static_cast<LaTeXUserData *>(ud);
+	auto *d = static_cast<LaTeXUserData *>(ud);
 	QFileInfo fi(d->file);
 	QString file;
 	if(fi.isRelative()){
-	  const QString wd = po->getProcess().workingDirectory();
+	  const auto wd = po->getProcess().workingDirectory();
 	  if(!wd.isEmpty()){
 	    file = wd+QDir::separator()+d->file;
 	  } else {
@@ -186,7 +180,7 @@ namespace qemacs
 	fi.setFile(file);
 	if(fi.exists()){
 	  this->qemacs.openFile(file);
-	  QEmacsPlainTextEdit& t = this->qemacs.getCurrentBuffer().getMainFrame();
+	  auto& t = this->qemacs.getCurrentBuffer().getMainFrame();
 	  t.gotoLine(d->line);
 	} else {
 	  this->qemacs.displayInformativeMessage(QObject::tr("file named '%1'").arg(file));
@@ -195,8 +189,7 @@ namespace qemacs
       return false;
     }
 
-    virtual bool
-    keyPressEvent(QKeyEvent *) override
+    bool keyPressEvent(QKeyEvent *) override
     {
       // if(((e->modifiers()==Qt::AltModifier)&&(e->key()==Qt::Key_M))||
       // 	 ((e->modifiers()==Qt::NoModifier)&&(e->key()==Qt::Key_Return))){
@@ -223,14 +216,13 @@ namespace qemacs
       return false;
     }
 
-    virtual void format(void) override
+    void format() override
     {}
 
-    virtual void comment() override
+    void comment() override
     {}
 
-    ~LaTeXOutputMajorMode()
-    {}
+    ~LaTeXOutputMajorMode() override;
 
   }; // end of LaTeXOutputMajorMode
   

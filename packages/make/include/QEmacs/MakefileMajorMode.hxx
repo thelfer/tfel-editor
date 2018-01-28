@@ -5,8 +5,8 @@
  * \brief 26 août 2012
  */
 
-#ifndef _LIB_QEMACS_MAKEFILEMAJORMODE_H_
-#define _LIB_QEMACS_MAKEFILEMAJORMODE_H_ 
+#ifndef LIB_QEMACS_MAKEFILEMAJORMODE_HXX
+#define LIB_QEMACS_MAKEFILEMAJORMODE_HXX 
 
 #include"QEmacs/QEmacsMajorModeBase.hxx"
 
@@ -25,34 +25,28 @@ namespace qemacs
 		      QEmacsBuffer&,
 		      QEmacsTextEditBase&);
 
-    virtual QString
-    getName(void) const override;
+    QString getName() const override;
 
-    virtual QString
-    getDescription(void) const override;
+    QString getDescription() const override;
     
     /*!
      * This method is called before any treatment by
      * QEmacsTextEditBase and allows the mode to override default
      * shortcuts
      */
-    virtual bool
-    keyPressEvent(QKeyEvent * const) override;
+    bool keyPressEvent(QKeyEvent * const) override;
 
-    virtual void
-    setSyntaxHighlighter(QTextDocument *const) override;
+    void setSyntaxHighlighter(QTextDocument *const) override;
 
-    virtual void
-    format(void) override;
+    void format() override;
 
-    virtual QString
-    getCommentSyntax(void) override;
+    QString getCommentSyntax() override;
 
-    virtual ~MakefileMajorMode();
+    ~MakefileMajorMode() override;
 
   }; // end of struct MakefileMajorMode
   
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_MAKEFILEMAJORMODE_H */
+#endif /* LIB_QEMACS_MAKEFILEMAJORMODE_H */
 

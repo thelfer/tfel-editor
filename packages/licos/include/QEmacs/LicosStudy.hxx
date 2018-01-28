@@ -5,23 +5,16 @@
  * \brief 20 mai 2012
  */
 
-#ifndef _LIB_QEMACS_LICOSSTUDY_H_
-#define _LIB_QEMACS_LICOSSTUDY_H_ 
+#ifndef LIB_QEMACS_LICOSSTUDY_HXX
+#define LIB_QEMACS_LICOSSTUDY_HXX 
 
 #include<QtCore/QProcess>
 #include<QtCore/QString>
 #include<QtCore/QStringList>
 #include<QtCore/QObject>
-
-#ifdef QEMACS_QT4
-#include<QtGui/QPlainTextEdit>
-#endif /* QEMACS_QT4 */
-#ifdef QEMACS_QT5
 #include<QtWidgets/QPlainTextEdit>
-#endif /* QEMACS_QT5 */
 #include<QtNetwork/QLocalServer>
 #include<QtNetwork/QLocalSocket>
-
 #include"QEmacs/LicosStudyOptions.hxx"
 
 namespace qemacs
@@ -61,7 +54,7 @@ namespace qemacs
      * return the error messsage if the study failed
      */
     QString
-    getErrorMessage(void) const;
+    getErrorMessage() const;
 
     ~LicosStudy();
 
@@ -71,7 +64,7 @@ namespace qemacs
 
   signals:
       
-    void finished(void);
+    void finished();
 
     void newPeriod(int);
 
@@ -79,9 +72,9 @@ namespace qemacs
 
   private slots:
 
-    void processInitialised(void);
+    void processInitialised();
 
-    void processReachedNextStage(void);
+    void processReachedNextStage();
 
     void processError(QProcess::ProcessError);
 
@@ -110,7 +103,7 @@ namespace qemacs
     void quit();
 
     template<typename T>
-    T receive(void);
+    T receive();
 
     QLocalServer *server;
 
@@ -138,9 +131,9 @@ namespace qemacs
 
   template<>
   QString
-  LicosStudy::receive<QString>(void);
+  LicosStudy::receive<QString>();
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_LICOSSTUDY_H */
+#endif /* LIB_QEMACS_LICOSSTUDY_H */
 

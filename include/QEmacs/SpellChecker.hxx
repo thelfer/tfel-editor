@@ -30,8 +30,8 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef _LIB_QEMACS_SPELLCHECKER_H_
-#define _LIB_QEMACS_SPELLCHECKER_H_ 
+#ifndef LIB_QEMACS_SPELLCHECKER_HXX
+#define LIB_QEMACS_SPELLCHECKER_HXX 
 
 #include<utility>
 
@@ -82,5 +82,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_SPELLCHECKER_H */
+#endif /* LIB_QEMACS_SPELLCHECKER_HXX */
 

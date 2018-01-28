@@ -26,7 +26,7 @@ namespace qemacs
   {} // end of CMajorModeBase::CMajorModeBase
 
   void
-  CMajorModeBase::format(void)
+  CMajorModeBase::format()
   {
     auto c = this->textEdit.textCursor();
     auto b = c;
@@ -37,7 +37,7 @@ namespace qemacs
   } // end of CMajorModeBase::format
 
   void
-  CMajorModeBase::comment(void)
+  CMajorModeBase::comment()
   {} // end of CMajorModeBase::comment
 
   void
@@ -129,7 +129,6 @@ namespace qemacs
     this->indent(b,e,c);
   } // end of QEmacsMajorModeBase::indentRegion
 
-  CMajorModeBase::~CMajorModeBase()
-  {} // end of CMajorModeBase::~CMajorModeBase
+  CMajorModeBase::~CMajorModeBase() = default;
   
 } // end of namespace qemacs

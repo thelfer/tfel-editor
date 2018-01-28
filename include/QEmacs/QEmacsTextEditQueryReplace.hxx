@@ -5,8 +5,8 @@
  * \brief 06 août 2012
  */
 
-#ifndef _LIB_QEMACS_QEMACSTEXTEDITQUERYREPLACE_H_
-#define _LIB_QEMACS_QEMACSTEXTEDITQUERYREPLACE_H_ 
+#ifndef LIB_QEMACS_QEMACSTEXTEDITQUERYREPLACE_HXX
+#define LIB_QEMACS_QEMACSTEXTEDITQUERYREPLACE_HXX 
 
 #include"QEmacs/QEmacsLineEdit.hxx"
 
@@ -23,15 +23,13 @@ namespace qemacs{
     QEmacsTextEditQueryReplace(QEmacsTextEditBase&,
 			       QEmacsWidget&);
 
-    ~QEmacsTextEditQueryReplace();
+    ~QEmacsTextEditQueryReplace() override;
 
   protected:
 
-    static QStringList
-    getHistory(void);
+    static QStringList getHistory();
 
-    static void
-    addToHistory(const QString&);
+    static void addToHistory(const QString&);
 
     QEmacsTextEditQueryReplace(QEmacsTextEditBase&,
 			       QEmacsWidget&,
@@ -42,8 +40,7 @@ namespace qemacs{
 			       const QString&,
 			       const QString&);
 
-    virtual void
-    treatUserInput(void) override;
+    void treatUserInput() override;
 
     QEmacsWidget&       qemacs;
     QEmacsTextEditBase& textEdit;
@@ -54,5 +51,5 @@ namespace qemacs{
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_QEMACSTEXTEDITQUERYREPLACE_H */
+#endif /* LIB_QEMACS_QEMACSTEXTEDITQUERYREPLACE_HXX */
 
