@@ -8,6 +8,7 @@ EXTRA_DIST=OptimizeForArchitecture.cmake \
 	   intel.cmake			 \
 	   msvc.cmake			 \
 	   pathscale.cmake		 \
+	   pgi.cmake		         \
 	   qt.cmake			 \
 	   pandoc.cmake			 \
 	   tfel.cmake			 \

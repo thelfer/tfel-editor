@@ -6,7 +6,11 @@ tfel_enable_cxx_compiler_flag(COMPILER_WARNINGS  "Wno-global-constructors")
 tfel_enable_cxx_compiler_flag2(COMPILER_WARNINGS "Wno-c++98-compat" "Wno_c__98_compat_AVAILABLE")
 
 tfel_enable_cxx_compiler_flag(OPTIMISATION_FLAGS_MARCH "march=native")
-tfel_enable_cxx_compiler_flag(OPTIMISATION_FLAGS2 "ffast-math")
+if(enable-fast-math)
+  tfel_enable_cxx_compiler_flag(OPTIMISATION_FLAGS  "ffast-math")
+else(enable-fast-math)
+  tfel_enable_cxx_compiler_flag(OPTIMISATION_FLAGS2 "ffast-math")
+endif(enable-fast-math)
 
 tfel_enable_cxx_compiler_flag(VISIBILITY_FLAGS "fvisibility=hidden")
 tfel_enable_cxx_compiler_flag(VISIBILITY_FLAGS "fvisibility-inlines-hidden")
