@@ -14,7 +14,7 @@
 namespace qemacs
 {
 
-  class QEmacsTextBrowser
+  class QEMACS_VISIBILITY_EXPORT QEmacsTextBrowser
     : public QEmacsTextEditBase
   {
 

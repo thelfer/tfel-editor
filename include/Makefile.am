@@ -15,7 +15,7 @@ nobase_include_HEADERS = QEmacs/Config.hxx                            \
 			 QEmacs/QEmacsCommandFactory.ixx              \
 			 QEmacs/QEmacsBuffer.hxx                      \
 			 QEmacs/QAbstractScrollAreaWrapper.hxx	      \
-			 QEmacs/QWebViewWrapper.hxx		      \
+			 QEmacs/QWebEngineViewWrapper.hxx             \
 		 	 QEmacs/QEmacsTextEditBase.hxx                \
 		 	 QEmacs/QEmacsPlainTextEdit.hxx               \
 		 	 QEmacs/QEmacsTextBrowser.hxx                 \

@@ -122,7 +122,6 @@ namespace qemacs
 			  QEmacsWidget& q,
 			  QEmacsLineEdit& p)
       : CustomLineEdit(q,p),
-	qemacs(q),
 	textEdit(t)
     {} // end of RectangleModeLineEdit
 
@@ -149,8 +148,6 @@ namespace qemacs
     
   protected:
 
-    QEmacsWidget& qemacs;
-
     QEmacsTextEditBase& textEdit;
 
   };
@@ -160,7 +157,6 @@ namespace qemacs
   QEmacsRectangleMode::QEmacsRectangleMode(QEmacsTextEditBase& t,
 					   QEmacsWidget& p)
     : QEmacsLineEdit(QObject::tr("Ctrl-X r "),p,false),
-      qemacs(p),
       textEdit(t)
   {
     this->setLineEdit(new RectangleModeLineEdit(t,p,*this));

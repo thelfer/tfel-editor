@@ -18,7 +18,6 @@ namespace qemacs
   QEmacsTextEditQueryReplace::QEmacsTextEditQueryReplace(QEmacsTextEditBase& t,
 							 QEmacsWidget& p)
     : QEmacsLineEdit("",p),
-      qemacs(p),
       textEdit(t),
       stage(0)
   {
@@ -37,7 +36,6 @@ namespace qemacs
 							 QEmacsWidget& p,
 							 const QString& s1_)
     : QEmacsLineEdit(QObject::tr("query replace %1 with :").arg(s1_),p),
-      qemacs(p),
       textEdit(t),
       s1(s1_),
       stage(1)
@@ -52,7 +50,6 @@ namespace qemacs
     : QEmacsLineEdit(QObject::tr("query replacing %1 with %2 "
 				 "(type 'y', 'n' or '!')")
 		     .arg(s1_).arg(s2_),p),
-      qemacs(p),
       textEdit(t),
       stage(2)
   {

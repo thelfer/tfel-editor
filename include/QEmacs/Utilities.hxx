@@ -19,7 +19,7 @@ class QHBoxLayout;
 //! forward declaration
 class QAbstractScrollArea;
 //! forward declaration
-class QWebView;
+class QWebEngineView;
 
 namespace qemacs
 {
@@ -35,8 +35,8 @@ namespace qemacs
 				 QAbstractScrollArea *const);
 
   void
-  setQWebViewInLayout(QHBoxLayout * const,
-		      QWebView *const);
+  setQWebEngineViewInLayout(QHBoxLayout * const,
+		      QWebEngineView *const);
 
   QString
   commonPart(const QString&,

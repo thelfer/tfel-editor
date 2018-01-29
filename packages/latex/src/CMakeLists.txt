@@ -21,5 +21,4 @@ qemacs_package(LaTeXQEmacsMode
 target_link_libraries(LaTeXQEmacsMode
   TFELQEmacs
   Qt5::Core
-  Qt5::Widgets
-  )
+  Qt5::Widgets)

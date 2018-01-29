@@ -25,7 +25,7 @@ namespace qemacs{
   /*!
    * A key press event filter which forward the user
    */
-  class QEmacsTextEditSearchFilter
+  class QEMACS_VISIBILITY_EXPORT QEmacsTextEditSearchFilter
     : public QEmacsTextEditKeyPressEventFilter
   {
     
@@ -54,7 +54,7 @@ namespace qemacs{
     
   }; // end of QEmacsTextEditSearchFilter
 
-  class QEmacsTextEditSearch
+  class QEMACS_VISIBILITY_EXPORT QEmacsTextEditSearch
     : public QEmacsLineEdit
   {
 
@@ -89,11 +89,8 @@ namespace qemacs{
 
   protected:
 
-    virtual void
-    treatUserInput() override;
+    void treatUserInput() override;
     
-    QEmacsWidget& qemacs;
-
     QEmacsTextEditBase& textEdit;
 
     QEmacsTextEditSearchFilter *sf;

@@ -10,6 +10,7 @@
 
 #include<QtCore/QObject>
 #include<QtGui/QKeyEvent>
+#include"QEmacs/Config.hxx"
 
 namespace qemacs
 {
@@ -23,7 +24,7 @@ namespace qemacs
    * A filter is called on standard key (the only modifier accepted is
    * the Shift key)
    */
-  class QEmacsTextEditKeyPressEventFilter
+  class QEMACS_VISIBILITY_EXPORT QEmacsTextEditKeyPressEventFilter
     : public QObject
   {
 
@@ -33,17 +34,15 @@ namespace qemacs
 
     QEmacsTextEditKeyPressEventFilter(QEmacsTextEditBase&);
 
-    virtual bool
-    filterKeyPressEvent(QKeyEvent * const) = 0;
+    virtual bool filterKeyPressEvent(QKeyEvent * const) = 0;
 
     /*!
      * return true if this object can be set : if something goes wrong
      * in the constructor, this must be reported through this method
      */
-    virtual bool
-    isOk() const = 0;
+    virtual bool isOk() const = 0;
 
-    virtual ~QEmacsTextEditKeyPressEventFilter();
+    ~QEmacsTextEditKeyPressEventFilter() override;
 
   }; // end of QEmacsTextEditKeyPressEventFilter
 

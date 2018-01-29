@@ -3,8 +3,8 @@ find_package(Qt5 5.3 COMPONENTS
   Xml Svg
   Network
   PrintSupport
-  WebKit
-  WebKitWidgets
+  WebEngine
+  WebEngineWidgets
   REQUIRED)
 
 macro(moc_source header_directory file)

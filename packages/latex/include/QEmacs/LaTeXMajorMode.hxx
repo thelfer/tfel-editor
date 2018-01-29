@@ -5,8 +5,8 @@
  * \brief 18 août 2012
  */
 
-#ifndef LIB_QEMACS_LATEXMAJORMODE_HXX
-#define LIB_QEMACS_LATEXMAJORMODE_HXX 
+#ifndef _LIB_QEMACS_LATEXMAJORMODE_H_
+#define _LIB_QEMACS_LATEXMAJORMODE_H_ 
 
 #include<QtCore/QPointer>
 
@@ -55,7 +55,7 @@ namespace qemacs
     QCompleter* getCompleter() override;
 
     void completeCurrentWord(QEmacsTextEditBase&,
-			const QString&) override;
+			     const QString&) override;
 
     QMenu* getSpecificMenu() override;
 
@@ -74,12 +74,10 @@ namespace qemacs
     bool handleShortCut(const int,
 			const Qt::KeyboardModifiers,
 			const int) override;
-
     /*!
      * indent the current line
-     */  
+     */
     void indentLine(const QTextCursor&) override;
-
     /*!
      * indent selected region
      */
@@ -102,14 +100,11 @@ namespace qemacs
 
   protected slots:
 
-    virtual void
-    runLaTeX();
+    virtual void runLaTeX();
 
-    virtual void
-    startLaTeX();
+    virtual void startLaTeX();
 
-    virtual void
-    replaceMispelledWordBySuggestion(QAction *);
+    virtual void replaceMispelledWordBySuggestion(QAction *);
 
   protected:
 
@@ -123,34 +118,28 @@ namespace qemacs
      * \param[in] apos : abosolution position of the beginning of the
      * portion of text in the line
      */
-    virtual void
-    completeContextMenuForMispelledWord(QMenu *,
-					const QString&,
-					const int,
-					const int);
-
+    virtual void completeContextMenuForMispelledWord(QMenu *,
+						     const QString&,
+						     const int,
+						     const int);
     /*!
      * compute indentation of the current line
      * \param[out] i  : indentation of the previous line (0 if first line)
      * \param[out] di : indentation increment of the given line 
      * \param[out] b  : true if the increment shall be used for the current line 
      */
-    virtual void
-    getLineIndentation(const QTextCursor&,
-		       int&,
-		       int&,
-		       bool&) const;
+    virtual void getLineIndentation(const QTextCursor&,
+				    int&,
+				    int&,
+				    bool&) const;
     
     /*!
      * \return the indentation increment of the current line
      * \param[in] line : line 
      */
-    virtual int
-    getIndentationIncrement(const QString&) const;    
+    virtual int getIndentationIncrement(const QString&) const;    
 
-    virtual QString
-    getTeXMasterFile();
-
+    virtual QString getTeXMasterFile();
 
     QRegExp rb;
     QRegExp re;
@@ -175,5 +164,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* LIB_QEMACS_LATEXMAJORMODE_H */
+#endif /* _LIB_QEMACS_LATEXMAJORMODE_H */
 

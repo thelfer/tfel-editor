@@ -54,7 +54,7 @@ libTFELQEmacs_la_SOURCES = QEmacsResources.cxx                   \
 			   CxxSyntaxHighlighter.cxx              \
 			   ProcessOutputFrame.cxx                \
 			   QAbstractScrollAreaWrapper.cxx        \
-			   QWebViewWrapper.cxx                   \
+			   QWebEngineViewWrapper.cxx             \
 			   ProcessInteractionFrame.cxx
 
 nodist_libTFELQEmacs_la_SOURCES = moc_QEmacsWidget.cxx                      \
@@ -78,7 +78,7 @@ nodist_libTFELQEmacs_la_SOURCES = moc_QEmacsWidget.cxx                      \
 				  moc_CxxSyntaxHighlighter.cxx              \
 				  moc_ProcessOutputFrame.cxx                \
 			   	  moc_QAbstractScrollAreaWrapper.cxx        \
-			   	  moc_QWebViewWrapper.cxx                   \
+			   	  moc_QWebEngineViewWrapper.cxx             \
 			   	  moc_QEmacsFileDownloader.cxx              \
 				  moc_ProcessInteractionFrame.cxx
 

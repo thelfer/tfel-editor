@@ -33,7 +33,7 @@ qt_sources(TFELQEmacs_SOURCES
   CxxSyntaxHighlighter
   ProcessOutputFrame
   QAbstractScrollAreaWrapper
-  QWebViewWrapper
+  QWebEngineViewWrapper
   ProcessInteractionFrame)
 
 qemacs_library(TFELQEmacs
@@ -60,8 +60,8 @@ target_link_libraries(TFELQEmacs
   Qt5::Core
   Qt5::Widgets
   Qt5::Network
-  Qt5::WebKit
-  Qt5::WebKitWidgets
+  Qt5::WebEngine
+  Qt5::WebEngineWidgets
   Qt5::PrintSupport)
 
 qt_sources(qemacs_SOURCES

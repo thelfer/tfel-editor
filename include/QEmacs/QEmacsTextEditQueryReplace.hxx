@@ -42,7 +42,6 @@ namespace qemacs{
 
     void treatUserInput() override;
 
-    QEmacsWidget&       qemacs;
     QEmacsTextEditBase& textEdit;
     QString s1;
     int stage;

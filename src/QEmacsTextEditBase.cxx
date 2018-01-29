@@ -160,9 +160,8 @@ namespace qemacs
 				QEmacsBuffer& b,
 				const QString& f)
       : QEmacsYesOrNoUserInput(QObject::tr("another buffer is visiting file '%1', proceed ?").arg(f),p),
-	qemacs(p),
 	textEdit(t),
-	buffer(b),
+	kb(b),
 	file(f)
     {} // end of KillOtherBufferAndWriteFile
 
@@ -176,14 +175,13 @@ namespace qemacs
     void treatUserInput() override
     {
       if(this->input->text()=="y"){
-	this->qemacs.closeBuffer(this->buffer,false);
+	this->qemacs.closeBuffer(this->kb,false);
 	this->textEdit.writeFile(this->file);
       }
     } // end of treatUserInput
 
-    QEmacsWidget&       qemacs;
     QEmacsTextEditBase& textEdit;
-    QEmacsBuffer&       buffer;
+    QEmacsBuffer& kb;
     QString file;
 
   };    
@@ -196,7 +194,6 @@ namespace qemacs
 		  QEmacsTextEditBase& t,
 		  const QString& f)
       : QEmacsYesOrNoUserInput(QObject::tr("overwrite file '%1' :").arg(f),p),
-	qemacs(p),
 	textEdit(t),
 	file(f)
     {} // end of OverWriteFile
@@ -226,7 +223,6 @@ namespace qemacs
       }
     } // end of treatUserInput
 
-    QEmacsWidget&       qemacs;
     QEmacsTextEditBase& textEdit;
     QString file;
 
@@ -240,7 +236,6 @@ namespace qemacs
 	      QEmacsTextEditBase& t,
 	      const QString& path)
       : QEmacsFilePathUserInput(QObject::tr("write file :"),p),
-	qemacs(p),
 	textEdit(t)
     {
       QString npath(path);
@@ -299,7 +294,6 @@ namespace qemacs
       }
     }
 
-    QEmacsWidget&       qemacs;
     QEmacsTextEditBase& textEdit;
 
   }; // end of struct QEmacsTextEdit::WriteFile
@@ -334,8 +328,7 @@ namespace qemacs
   
   QEmacsTextEditBase::GotoLine::~GotoLine() = default;
   
-  void
-  QEmacsTextEditBase::GotoLine::treatUserInput()
+  void QEmacsTextEditBase::GotoLine::treatUserInput()
   {
     bool b;
     int line = this->input->text().toInt(&b);
@@ -344,8 +337,7 @@ namespace qemacs
     }
   }
 
-  void
-  QEmacsTextEditBase::setSpellCheckLanguage(const QString& l)
+  void QEmacsTextEditBase::setSpellCheckLanguage(const QString& l)
   {
     this->spellCheckLanguage = l;
     if(this->mode!=nullptr){
@@ -353,8 +345,7 @@ namespace qemacs
     }
   } // end of QEmacsTextEditBase::setSpellCheckLanguage
   
-  void
-  QEmacsTextEditBase::setMajorMode()
+  void QEmacsTextEditBase::setMajorMode()
   {
     QEmacsMajorModeFactory& fm = QEmacsMajorModeFactory::getQEmacsMajorModeFactory();
     QEmacsMajorMode * m = fm.getQEmacsMajorModeForFile(QFileInfo(this->getFileName()).fileName(),
@@ -363,16 +354,14 @@ namespace qemacs
     this->setMajorMode(m);
   } // end of QEmacsTextEditBase::setMajorMode
 
-  void
-  QEmacsTextEditBase::setMajorMode(const QString& n)
+  void QEmacsTextEditBase::setMajorMode(const QString& n)
   {
-    QEmacsMajorModeFactory& fm = QEmacsMajorModeFactory::getQEmacsMajorModeFactory();
-    QEmacsMajorMode * m = fm.getQEmacsMajorModeByName(n,this->qemacs,this->buffer,*this);
+    auto& fm = QEmacsMajorModeFactory::getQEmacsMajorModeFactory();
+    auto* m  = fm.getQEmacsMajorModeByName(n,this->qemacs,this->buffer,*this);
     this->setMajorMode(m);
   } // end of QEmacsTextEditBase::setMajorMode
 
-  void
-  QEmacsTextEditBase::setMajorMode(QEmacsMajorMode *const m)
+  void QEmacsTextEditBase::setMajorMode(QEmacsMajorMode *const m)
   {
     if(m==nullptr){
       return;
@@ -469,22 +458,19 @@ namespace qemacs
     this->setTextCursor(c);
   }
 
-  QString
-  QEmacsTextEditBase::getCurrentWord() const
+  QString QEmacsTextEditBase::getCurrentWord() const
   {
-    QTextCursor tc = this->textCursor();
+    auto tc = this->textCursor();
     tc.select(QTextCursor::WordUnderCursor);
     return tc.selectedText();
   } // end of QEmacsTextEditBase::getCurrentWord
 
-  bool
-  QEmacsTextEditBase::hasMajorMode() const
+  bool QEmacsTextEditBase::hasMajorMode() const
   {
     return this->mode!=nullptr;
   } // end of QEmacsTextEditBase::hasMajorMode
 
-  const QEmacsMajorMode&
-  QEmacsTextEditBase::getMajorMode() const
+  const QEmacsMajorMode& QEmacsTextEditBase::getMajorMode() const
   {
     if(this->mode==nullptr){
       throw(std::runtime_error("QEmacsTextEditBase::getQEmacsMode: "
@@ -493,24 +479,21 @@ namespace qemacs
     return *(this->mode);
   } // end of QEmacsTextEditBase::getQEmacsMode
 
-  bool
-  QEmacsTextEditBase::isModified() const
+  bool QEmacsTextEditBase::isModified() const
   {
     return this->document()->isModified();
   } // end of QEmacsTextEditBase::isModified
 
-  void
-  QEmacsTextEditBase::addToKillRing(const QString& t)
+  void QEmacsTextEditBase::addToKillRing(const QString& t)
   {
     this->qemacs.addToKillRing(t);
   } // end of QEmacsTextEditBase::addToKillRing
 
-  void
-  QEmacsTextEditBase::highlightCurrentLine()
+  void QEmacsTextEditBase::highlightCurrentLine()
   {
     QList<QTextEdit::ExtraSelection> e;
     QTextEdit::ExtraSelection selection;
-    QColor lineColor = QColor(Qt::yellow).lighter(180);
+    auto lineColor = QColor(Qt::yellow).lighter(180);
     selection.format.setBackground(lineColor);
     selection.format.setProperty(QTextFormat::FullWidthSelection, true);
     selection.cursor = textCursor();
@@ -519,9 +502,7 @@ namespace qemacs
     this->setExtraSelections(e);
   }
 
-  QVector<QMenu*>
-  QEmacsTextEditBase::getSpecificMenus()
-  {
+  QVector<QMenu*> QEmacsTextEditBase::getSpecificMenus(){
     QVector<QMenu*> m;
     if(this->mode!=nullptr){
       QMenu* mm = this->mode->getSpecificMenu();
@@ -532,8 +513,7 @@ namespace qemacs
     return m;
   } // end of QEmacsTextEditBase::getSpecificMenu
 
-  QIcon
-  QEmacsTextEditBase::getIcon() const
+  QIcon QEmacsTextEditBase::getIcon() const
   {
     if(this->mode==nullptr){
       return QIcon();
@@ -541,8 +521,7 @@ namespace qemacs
     return this->mode->getIcon();
   }
 
-  void
-  QEmacsTextEditBase::insertCompletion(QString completion)
+  void QEmacsTextEditBase::insertCompletion(QString completion)
   {
     if(this->mode==nullptr){
       return;
@@ -550,8 +529,7 @@ namespace qemacs
     this->mode->completeCurrentWord(*this,completion);
   }
 
-  void
-  QEmacsTextEditBase::removeKeyPressEventFilter()
+  void QEmacsTextEditBase::removeKeyPressEventFilter()
   {
     if(this->filter!=nullptr){
       QObject::disconnect(this->filter,SIGNAL(destroyed()),
@@ -561,14 +539,12 @@ namespace qemacs
     }
   } // end of QEmacsTextEditBase::removeKeyPressEventFilter
 
-  void
-  QEmacsTextEditBase::keyPressEventFilterDestroyed()
+  void QEmacsTextEditBase::keyPressEventFilterDestroyed()
   {
     this->filter = nullptr;
   } // end of QEmacsTextEditBase::keyPressEventFilterDestroyed
   
-  bool
-  QEmacsTextEditBase::setKeyPressEventFilter(QEmacsTextEditKeyPressEventFilter * const f)
+  bool QEmacsTextEditBase::setKeyPressEventFilter(QEmacsTextEditKeyPressEventFilter * const f)
   {
     if(f==nullptr){
       return false;
@@ -586,9 +562,7 @@ namespace qemacs
     return true;
   }
 
-  void
-  QEmacsTextEditBase::setFileName(const QString& f)
-  {
+  void QEmacsTextEditBase::setFileName(const QString& f){
      QFileInfo fi(f);
      this->fileName = fi.absoluteFilePath();
      if(this->mode==nullptr){
@@ -597,26 +571,22 @@ namespace qemacs
      emit fileNameChanged(this->fileName);
   } // end of QEmacsTextEditBase::setFileName
 
-  QString
-  QEmacsTextEditBase::getFileName() const
+  QString QEmacsTextEditBase::getFileName() const
   { 
     return this->fileName;
   } // end of QEmacsTextEditBase::getFileName
 
-  QString
-  QEmacsTextEditBase::getCompleteFileName() const
+  QString QEmacsTextEditBase::getCompleteFileName() const
   {
     return this->fileName;
   } // end of QEmacsTextEditBase::getCompleteFileName
 
-  QEmacsTextEditBase::SaveInput *
-  QEmacsTextEditBase::getSaveInput()
+  QEmacsTextEditBase::SaveInput * QEmacsTextEditBase::getSaveInput()
   {
     return new SaveInput(this->qemacs,*this);
   }
 
-  void
-  QEmacsTextEditBase::save()
+  void QEmacsTextEditBase::save()
   {
     if(!this->document()->isModified()){
       this->qemacs.displayInformativeMessage(QObject::tr("(no changes need to be saved)"));

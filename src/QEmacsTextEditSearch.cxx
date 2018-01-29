@@ -85,7 +85,6 @@ namespace qemacs{
 					     QEmacsWidget& p,
 					     const QTextDocument::FindFlags f)
       : QEmacsLineEdit("",p),
-	qemacs(p),
 	textEdit(t),
 	sf(new QEmacsTextEditSearchFilter(t,*this)),
 	flag(nullptr)

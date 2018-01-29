@@ -222,7 +222,7 @@ namespace qemacs
     void comment() override
     {}
 
-    ~LaTeXOutputMajorMode() override;
+    ~LaTeXOutputMajorMode() override = default;
 
   }; // end of LaTeXOutputMajorMode
   

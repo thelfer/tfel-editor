@@ -9,11 +9,12 @@
 #define LIB_QABSTRACTSCROLLAREAWRAPPER_HXX 
 
 #include<QtWidgets/QAbstractScrollArea>
+#include"QEmacs/Config.hxx"
 
 namespace qemacs
 {
 
-  class QAbstractScrollAreaWrapper
+  class QEMACS_VISIBILITY_EXPORT QAbstractScrollAreaWrapper
     : public QWidget
   {
     Q_OBJECT

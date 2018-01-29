@@ -112,9 +112,9 @@ namespace qemacs
 
       bool event(QEvent *) override;
       
-      void setInputHistory(const QStringList&);
+      virtual void setInputHistory(const QStringList&);
       
-      QStringList getInputHistory() const;
+      virtual QStringList getInputHistory() const;
 
       void keyPressEvent(QKeyEvent *) override;
 
@@ -243,13 +243,10 @@ namespace qemacs
 
     void treatUserInput() override;
 
-    virtual void
-    run(const QString&,
-	const QString&,
-	const QStringList&);
+    virtual void run(const QString&,
+		     const QString&,
+		     const QStringList&);
 
-    QEmacsWidget& qemacs;
-    
     const QString mode;
 
   }; // end of QEmacsProcessLineEdit

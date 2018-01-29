@@ -73,8 +73,7 @@ namespace qemacs
 
     OpenFile(QEmacsWidget& p,
 	     const QString& path)
-      : QEmacsFilePathUserInput(QObject::tr("open file :"),p),
-	qemacs(p)
+      : QEmacsFilePathUserInput(QObject::tr("open file :"),p)
     {
       QString npath(path);
       if(!npath.isEmpty()){
@@ -94,8 +93,6 @@ namespace qemacs
       this->qemacs.openFile(this->input->text());
     }
 
-    QEmacsWidget& qemacs;
-
   }; // end of struct QEmacsTextEdit::OpenFile
 
   struct QEmacsWidget::ChangeBuffer
@@ -103,19 +100,18 @@ namespace qemacs
   {
 
     ChangeBuffer(QEmacsWidget& p,
-		 const QStringList& buffers,
+		 const QStringList& bn,
 		 const QString& d)
       : QEmacsLineEdit(QObject::tr("switch to buffer")
 		       + (!d.isEmpty() ? QObject::tr("(default '%1')").arg(d) : "")
 		       +QObject::tr(" :"),p),
-	qemacs(p),
 	defaultBuffer(d)
     {
-      QStringList b(buffers);
+      QStringList b(bn);
       if(!this->defaultBuffer.isEmpty()){
 	b << ""; // add the emtpy string for default completion
       }
-      auto *c = new QCompleter(buffers,&p);
+      auto *c = new QCompleter(bn,&p);
       c->setWidget(this->input);
       c->setCompletionMode(QCompleter::InlineCompletion);
       this->input->setCompleter(c,false);
@@ -135,8 +131,6 @@ namespace qemacs
       }
     }
 
-    QEmacsWidget& qemacs;
-
     QString defaultBuffer;
 
   }; // end of struct QEmacsTextEdit::ChangeBuffer
@@ -146,11 +140,10 @@ namespace qemacs
   {
 
     Command(QEmacsWidget& p)
-      : QEmacsLineEdit(QObject::tr("qemacs command :"),p),
-	qemacs(p)
+      : QEmacsLineEdit(QObject::tr("qemacs command :"),p)
     {
-      QEmacsCommandFactory& f = QEmacsCommandFactory::getQEmacsCommandFactory();
-      QCompleter * c = new QCompleter(f.getAvailableQEmacsCommandsNames(),&p);
+      auto& f = QEmacsCommandFactory::getQEmacsCommandFactory();
+      auto* c = new QCompleter(f.getAvailableQEmacsCommandsNames(),&p);
       c->setWidget(this->input);
       c->setCompletionMode(QCompleter::InlineCompletion);
       this->input->setCompleter(c,false);
@@ -169,12 +162,9 @@ namespace qemacs
       this->qemacs.launchCommand(i);
     }
 
-    QEmacsWidget& qemacs;
-
   }; // end of struct QEmacsTextEdit::Command
 
-  QStringList&
-  QEmacsWidget::getRecentFiles()
+  QStringList& QEmacsWidget::getRecentFiles()
   {
     static QStringList files;
     return files;

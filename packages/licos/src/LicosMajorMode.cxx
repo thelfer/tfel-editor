@@ -48,7 +48,6 @@ namespace qemacs
     LicosInsertBlock(QEmacsWidget& p,
 		     QEmacsTextEditBase& t)
       : QEmacsLineEdit(QObject::tr("insert block :"),p),
-	qemacs(p),
 	textEdit(t)
     {
       const auto n = LicosSyntaxHighlighter::getBlocks();
@@ -87,8 +86,6 @@ namespace qemacs
 	this->textEdit.setTextCursor(tc);
       }
     }
-
-    QEmacsWidget& qemacs;
 
     QEmacsTextEditBase& textEdit;
 

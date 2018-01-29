@@ -19,7 +19,7 @@
 #include"QEmacs/QEmacsWidget.hxx"
 #include"QEmacs/QEmacsPlainTextEdit.hxx"
 #include"QEmacs/QEmacsMajorMode.hxx"
-#include"QEmacs/QWebViewWrapper.hxx"
+#include"QEmacs/QWebEngineViewWrapper.hxx"
 #include"QEmacs/QAbstractScrollAreaWrapper.hxx"
 #include"QEmacs/QEmacsBuffer.hxx"
 
@@ -348,10 +348,10 @@ namespace qemacs
     if(s==nullptr){
       return nullptr;
     }
-    auto *pw = qobject_cast<QWebView *>(s);
+    auto *pw = qobject_cast<QWebEngineView *>(s);
     auto *p  = qobject_cast<QAbstractScrollArea *>(s);
     if(pw!=nullptr){
-      auto *w = new QWebViewWrapper(pw,this);
+      auto *w = new QWebEngineViewWrapper(pw,this);
       this->slaves->addTab(w,t);
       this->slaves->setCurrentWidget(w);
       this->slaves->show();

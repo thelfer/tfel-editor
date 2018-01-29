@@ -11,8 +11,7 @@
 #include<QtWidgets/QScrollBar>
 #include<QtWidgets/QHBoxLayout>
 #include<QtWidgets/QAbstractScrollArea>
-#include<QtWebKitWidgets/QWebView>
-#include<QtWebKitWidgets/QWebFrame>
+#include<QtWebEngineWidgets/QWebEngineView>
 #include"QEmacs/Utilities.hxx"
 
 namespace qemacs
@@ -47,11 +46,11 @@ namespace qemacs
     hl->setSpacing(0);
   }
 
-  void setQWebViewInLayout(QHBoxLayout * const hl,
-			   QWebView *const a)
+  void setQWebEngineViewInLayout(QHBoxLayout * const hl,
+				 QWebEngineView *const a)
   {
-    a->page()->mainFrame()->setScrollBarPolicy(Qt::Vertical,
-					       Qt::ScrollBarAlwaysOff);
+    // a->page()->setScrollBarPolicy(Qt::Vertical,
+    // 				  Qt::ScrollBarAlwaysOff);
     // QScrollBar* s = a->page()->mainFrame()->verticalScrollBar();
     //    hl->addWidget(s);
     hl->addWidget(a);

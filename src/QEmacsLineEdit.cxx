@@ -659,7 +659,6 @@ namespace qemacs
 					       const QString& m,
 					       QEmacsWidget& p)
     : QEmacsLineEdit(l,p),
-      qemacs(p),
       mode(m)
   {
     if(!c.isEmpty()){

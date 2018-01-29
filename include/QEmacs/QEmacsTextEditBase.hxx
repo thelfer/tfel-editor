@@ -28,7 +28,7 @@ namespace qemacs
   //! forward declaration
   class QEmacsMajorMode;
 
-  class QEmacsTextEditBase
+  class QEMACS_VISIBILITY_EXPORT QEmacsTextEditBase
     : public QWidget
   {
 
@@ -101,9 +101,12 @@ namespace qemacs
     /*!
      * \param[in] n : mode name
      */
-    virtual void
-    setMajorMode(const QString&);
+    virtual void setMajorMode(const QString&);
 
+    virtual void setMajorMode();
+
+    virtual void setMajorMode(QEmacsMajorMode *const);
+    
     virtual void
     setFileName(const QString&);
 
@@ -336,12 +339,6 @@ namespace qemacs
 
     virtual void
     addToKillRing(const QString&);
-
-    virtual void
-    setMajorMode();
-
-    virtual void
-    setMajorMode(QEmacsMajorMode *const);
 
     virtual void
     createContextMenuActions();

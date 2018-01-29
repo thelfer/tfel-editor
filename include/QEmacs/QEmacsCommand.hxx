@@ -9,6 +9,7 @@
 #define LIB_QEMACS_QEMACSCOMMAND_HXX 
 
 #include<QtCore/QObject>
+#include"QEmacs/Config.hxx"
 
 namespace qemacs
 {
@@ -19,7 +20,7 @@ namespace qemacs
   /*!
    * Abstract class for all commands
    */
-  class QEmacsCommand
+  class QEMACS_VISIBILITY_EXPORT QEmacsCommand
     : public QObject
   {
 

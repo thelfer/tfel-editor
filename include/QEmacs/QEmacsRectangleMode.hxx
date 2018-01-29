@@ -44,8 +44,6 @@ namespace qemacs
 
     void pasteRectangle();
 
-    QEmacsWidget& qemacs;
-
     QEmacsTextEditBase& textEdit;
 
   }; // end of struct QEmacsRectangleMode

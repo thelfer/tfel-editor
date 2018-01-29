@@ -18,6 +18,7 @@
 #include<QtWidgets/QTabWidget>
 #include<QtWidgets/QHBoxLayout>
 #include<QtWidgets/QAbstractScrollArea>
+#include"QEmacs/Config.hxx"
 
 namespace qemacs
 {
@@ -31,7 +32,7 @@ namespace qemacs
   /*!
    * class in charge of managing one buffer
    */
-  class QEmacsBuffer
+  class QEMACS_VISIBILITY_EXPORT QEmacsBuffer
     : public QWidget
   {
       

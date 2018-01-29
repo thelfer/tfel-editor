@@ -23,8 +23,7 @@
 namespace qemacs
 {
   
-  static int
-  countNumberOfCurlyBraces(const QString& s)
+  static int countNumberOfCurlyBraces(const QString& s)
   {
     int n = 0;
     for(int i=0;i!=s.size();++i){
@@ -49,14 +48,13 @@ namespace qemacs
     return n;
   }
 
-  struct LaTeXMajorMode::LaTeXInsertBlock final
+  struct LaTeXMajorMode::LaTeXInsertBlock
     : public QEmacsLineEdit
   {
 
     LaTeXInsertBlock(QEmacsWidget& p,
 		     QEmacsTextEditBase& t)
       : QEmacsLineEdit(QObject::tr("insert block :"),p),
-	qemacs(p),
 	textEdit(t)
     {
       QStringList n;
@@ -75,7 +73,7 @@ namespace qemacs
 
     void treatUserInput() override
     {
-      const QString& b = this->input->text();
+      const auto& b = this->input->text();
       if(!b.isEmpty()){
 	QTextCursor tc = this->textEdit.textCursor();
 	if(tc.hasSelection()){
@@ -106,8 +104,6 @@ namespace qemacs
 	}
       }
     }
-
-    QEmacsWidget& qemacs;
 
     QEmacsTextEditBase& textEdit;
 
@@ -143,14 +139,13 @@ namespace qemacs
       re("\\\\end\\{\\w+\\}"),
       rb2("^\\s*\\\\begin\\{\\w+\\}"),
       re2("^\\s*\\\\end\\{\\w+\\}"),
-      c(nullptr),
+      c(0),
       highlighter(nullptr)
   {
     qDebug() << "TeX-master : " << this->getTeXMasterFile();
   } // end of LaTeXMajorMode::LaTeXMajorMode
 
-  QString
-  LaTeXMajorMode::getTeXMasterFile()
+  QString LaTeXMajorMode::getTeXMasterFile()
   {
     QRegExp r("^\\s*%%% TeX-master: \"([\\w-0-9_\\./]+)\"\\s*$");
     QTextCursor tc = this->textEdit.textCursor();
@@ -171,44 +166,33 @@ namespace qemacs
     return QString();
   } // end of LaTeXMajorMode::getTeXMasterFile
 
-  QString
-  LaTeXMajorMode::getName() const
+   QString LaTeXMajorMode::getName() const
   {
     return "LaTeX";
   } // end of LaTeXMajorMode::LaTeXMajorMode
 
-  QString
-  LaTeXMajorMode::getDescription() const
+  QString LaTeXMajorMode::getDescription() const
   {
     return "major mode dedicated to the LaTeX";
   } // end of LaTeXMajorMode::LaTeXMajorMode
 
-  void
-  LaTeXMajorMode::setSyntaxHighlighter(QTextDocument *const d)
+  void LaTeXMajorMode::setSyntaxHighlighter(QTextDocument *const d)
   {
     this->highlighter = new LaTeXSyntaxHighlighter(*this,d);
   } // end of LaTeXMajorMode::setSyntaxHighlighter
 
-  LaTeXMajorMode::~LaTeXMajorMode()
-  {
-    delete this->c;
-  } // end of LaTeXMajorMode::~LaTeXMajorMode()
-
-  QCompleter*
-  LaTeXMajorMode::getCompleter()
+  QCompleter* LaTeXMajorMode::getCompleter()
   {
     return this->c;
   } // end of LaTeXMajorMode::getCompleter
 
-  void
-  LaTeXMajorMode::completeCurrentWord(QEmacsTextEditBase& t,
-				      const QString& w)
+  void LaTeXMajorMode::completeCurrentWord(QEmacsTextEditBase& t,
+					   const QString& w)
   {
     QEmacsMajorModeBase::completeCurrentWord(t,w);
   } // end of LaTeXMajorModeBase::completeCurrentWord
 
-  void
-  LaTeXMajorMode::runLaTeX()
+  void LaTeXMajorMode::runLaTeX()
   {
     if(this->textEdit.isModified()){
       QEmacsTextEditBase::SaveInput *input = this->textEdit.getSaveInput();
@@ -220,8 +204,7 @@ namespace qemacs
     this->startLaTeX();
   }
 
-  void
-  LaTeXMajorMode::startLaTeX()
+  void LaTeXMajorMode::startLaTeX()
   {
     QString m = this->getTeXMasterFile();
     if(m.isEmpty()){
@@ -261,31 +244,30 @@ namespace qemacs
     p.start("latex",args);
   } // end of LaTeXMajorMode::startLaTeX
 
-  QMenu*
-  LaTeXMajorMode::getSpecificMenu()
+  QMenu* LaTeXMajorMode::getSpecificMenu()
   {
     return nullptr;
   } // end of CppMajorMode::getSpecificMenu
 
-  QIcon
-  LaTeXMajorMode::getIcon() const
+  QIcon LaTeXMajorMode::getIcon() const
   {
     static QIcon i(":/LaTeXIcon.svg");
     return i;
   } // end of LaTeXMajorMode::getIcon()
 
-  void
-  LaTeXMajorMode::completeContextMenu(QMenu *const m,
-				      const QTextCursor& tc)
+  void LaTeXMajorMode::completeContextMenu(QMenu *const m,
+					   const QTextCursor& tc)
   {
+    typedef LaTeXSyntaxHighlighter::HighlightingRule Rule;
+    typedef QVector<Rule> Rules;
     QEmacsMajorModeBase::completeContextMenu(m,tc);
     if(this->highlighter!=nullptr){
       QTextCursor bl(tc);
       bl.movePosition(QTextCursor::StartOfBlock,
 		      QTextCursor::KeepAnchor);
       int posl = tc.position()-bl.position();
-      const auto text = tc.block().text();
-      const auto& rules = LaTeXSyntaxHighlighter::getHighlightingRules();
+      const QString text = tc.block().text();
+      const Rules& rules = LaTeXSyntaxHighlighter::getHighlightingRules();
       // remove comments
       int pc = LaTeXSyntaxHighlighter::startOfComment(text);
       QString l;
@@ -300,9 +282,11 @@ namespace qemacs
       int pos = 0;
       while(pos!=l.size()){
 	int cpos = -1;
-	auto mp = rules.end();
-	for(auto p=rules.begin();p!=rules.end();++p){
-	  const auto& rule = *p;
+	Rules::const_iterator mp;
+	Rules::const_iterator p;
+	mp = rules.end();
+	for(p=rules.begin();p!=rules.end();++p){
+	  const Rule &rule = *p;
 	  QRegExp e(rule.pattern);
 	  int rp = e.indexIn(text,pos);
 	  if(rp!=-1){
@@ -320,7 +304,7 @@ namespace qemacs
 	    }
 	  }
 	  // treating the LaTeX command
-	  const auto& rule = *mp;
+	  const Rule& rule = *mp;
 	  QRegExp e(rule.pattern);
 	  e.indexIn(text,pos);
 	  int length = e.matchedLength();
@@ -336,8 +320,7 @@ namespace qemacs
     }
   }
 
-  void
-  LaTeXMajorMode::setSpellCheckLanguage(const QString& l)
+  void LaTeXMajorMode::setSpellCheckLanguage(const QString& l)
   {
     this->spellChecker.setSpellCheckLanguage(l);
     if(this->highlighter!=nullptr){
@@ -345,11 +328,10 @@ namespace qemacs
     }
   } // end of LaTeXMajorMode::setSpellCheckLanguage
 
-  void
-  LaTeXMajorMode::completeContextMenuForMispelledWord(QMenu *m,
-						      const QString& l,
-						      const int p,
-						      const int ap)
+  void LaTeXMajorMode::completeContextMenuForMispelledWord(QMenu *m,
+							   const QString& l,
+							   const int p,
+							   const int ap)
   {
     int pos = 0;
     while(pos!=l.size()){
@@ -371,15 +353,15 @@ namespace qemacs
 	      delete *pa;
 	    }
 	    this->suggestions.clear();
-	    const auto s = this->spellChecker.suggest(w);
+	    QStringList s = this->spellChecker.suggest(w);
 	    QStringList::const_iterator ps;
 	    for(ps=s.begin();ps!=s.end();++ps){
-	      auto *a = new QAction(*ps,this);
+	      QAction *a = new QAction(*ps,this);
 	      a->setData(*ps);
 	      this->suggestions.push_back(a);
 	    }
-	    if(!this->suggestions.empty()){
-	      auto cactions = m->actions();	
+	    if(this->suggestions.size()!=0){
+	      QList<QAction *> cactions = m->actions();	
 	      if(!cactions.isEmpty()){
 		m->insertAction(*(cactions.begin()),
 				m->addSeparator());
@@ -404,15 +386,12 @@ namespace qemacs
     }
   } // end of LaTeXMajorMode::completeContextMenuForMispelledWord
 
-
-  SpellChecker&
-  LaTeXMajorMode::getSpellChecker()
+  SpellChecker& LaTeXMajorMode::getSpellChecker()
   {
     return this->spellChecker;
   }
 
-  void
-  LaTeXMajorMode::replaceMispelledWordBySuggestion(QAction * a)
+  void LaTeXMajorMode::replaceMispelledWordBySuggestion(QAction * a)
   {
     if(this->suggestions.indexOf(a)!=-1){
       QTextCursor tc(this->textEdit.textCursor());
@@ -427,10 +406,9 @@ namespace qemacs
     }
   } // end of LaTeXMajorMode::replaceMispelledWordBySuggestion
 
-  bool
-  LaTeXMajorMode::handleShortCut(const int k1,
-				 const Qt::KeyboardModifiers m,
-				 const int k2)
+  bool LaTeXMajorMode::handleShortCut(const int k1,
+				      const Qt::KeyboardModifiers m,
+				      const int k2)
   {
     if((k1==Qt::Key_C)&&(m==Qt::ControlModifier)&&(k2==Qt::Key_E)){
       this->qemacs.setUserInput(new LaTeXInsertBlock(this->qemacs,
@@ -440,14 +418,12 @@ namespace qemacs
     return false;
   } // end of LaTeXMajorMode::handleShortCut
 
-  bool
-  LaTeXMajorMode::mousePressEvent(QMouseEvent * const)
+  bool LaTeXMajorMode::mousePressEvent(QMouseEvent * const)
   {
     return false;
   } // end of LaTeXMajorMode::mousePressEvent
 
-  void
-  LaTeXMajorMode::format()
+  void LaTeXMajorMode::format()
   {
     QTextCursor bc;
     QTextCursor ec;
@@ -618,8 +594,7 @@ namespace qemacs
     cc.endEditBlock();
   } // end of LaTeXMajorMode::format
 
-  bool
-  LaTeXMajorMode::keyPressEvent(QKeyEvent * const e)
+  bool LaTeXMajorMode::keyPressEvent(QKeyEvent * const e)
   {
     const int k                   = e->key();
     const Qt::KeyboardModifiers m = e->modifiers(); 
@@ -630,8 +605,7 @@ namespace qemacs
     return false;
   } // end of LaTeXMajorMode::keyPressEvent
 
-  void
-  LaTeXMajorMode::indentLine(const QTextCursor& tc)
+  void LaTeXMajorMode::indentLine(const QTextCursor& tc)
   {
     int i;
     int di;
@@ -644,11 +618,10 @@ namespace qemacs
     }
   } // end of LaTeXMajorMode::indentLine
   
-  void
-  LaTeXMajorMode::getLineIndentation(const QTextCursor& tc_,
-				     int& i,
-				     int& di,
-				     bool& b) const
+  void LaTeXMajorMode::getLineIndentation(const QTextCursor& tc_,
+					  int& i,
+					  int& di,
+					  bool& b) const
   {
     // getting the line
     QTextCursor tc(tc_);
@@ -675,8 +648,7 @@ namespace qemacs
     di = this->getIndentationIncrement(l);
   } // end of LaTeXMajorMode::getLineIndentation
 
-  int
-  LaTeXMajorMode::getIndentationIncrement(const QString& line) const
+  int LaTeXMajorMode::getIndentationIncrement(const QString& line) const
   {
     int di = 0;
     QString l = LaTeXSyntaxHighlighter::stripComment(line).trimmed();
@@ -736,8 +708,7 @@ namespace qemacs
     return di;
   }
 
-  void
-  LaTeXMajorMode::indentRegion(const QTextCursor& tc)
+  void LaTeXMajorMode::indentRegion(const QTextCursor& tc)
   {
     if(!tc.hasSelection()){
       return;
@@ -788,12 +759,16 @@ namespace qemacs
     this->textEdit.setTextCursor(b);
   } // end of LaTeXMajorMode::indentRegion
 
-  QString
-  LaTeXMajorMode::getCommentSyntax()
+  QString LaTeXMajorMode::getCommentSyntax()
   {
     return "%";
   } // end of LaTeXMajorMode::getCommentSyntax
 
+  LaTeXMajorMode::~LaTeXMajorMode()
+  {
+    delete this->c;
+  } // end of LaTeXMajorMode::~LaTeXMajorMode()
+  
   static StandardQEmacsMajorModeProxy<LaTeXMajorMode> proxy("LaTeX",QVector<QRegExp>()
 							    << QRegExp("^[\\w-0-9_\\.]+\\.tex")
 							    << QRegExp("^[\\w-0-9_\\.]+\\.sty"));
