@@ -32,4 +32,6 @@ endif(CMAKE_CONFIGURATION_TYPES)
 
 add_subdirectory(include)
 add_subdirectory(src)
+if(NOT WIN32)
 add_subdirectory(packages)
+endif(NOT WIN32)

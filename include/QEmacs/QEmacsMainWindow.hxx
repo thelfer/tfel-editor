@@ -15,7 +15,7 @@
 namespace qemacs
 {
   
-  class QEMACS_VISIBILITY_EXPORT QEmacsMainWindow
+  class QEmacsMainWindow
     : public QMainWindow
   {
 
