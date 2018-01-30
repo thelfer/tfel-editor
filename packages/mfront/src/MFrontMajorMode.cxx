@@ -26,7 +26,8 @@ namespace qemacs {
 
   MFrontMajorMode::MFrontMajorMode(QEmacsWidget &w, QEmacsBuffer &b,
 				   QEmacsTextEditBase &t)
-    : CxxMajorMode(w, b, t) {
+    : CxxMajorMode(w, b, t)
+  {
     mfront::initDSLs();
     this->c = new QCompleter(this->getKeyWordsList(), &t);
     this->c->setWidget(&t);
@@ -166,6 +167,6 @@ namespace qemacs {
   MFrontMajorMode::~MFrontMajorMode() = default;
 
   static StandardQEmacsMajorModeProxy<MFrontMajorMode>
-  proxy("MFront", QVector<QRegExp>() << QRegExp("^[\\w-+]\\.mfront"));
+  proxy("MFront", QVector<QRegExp>() << QRegExp("^[\\w-0-9_\\.]+\\.mfront"));
 
 } // end of namespace qemacs
