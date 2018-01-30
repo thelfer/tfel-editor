@@ -37,20 +37,20 @@ namespace qemacs
     this->setCentralWidget(e);
     this->createActions();
     this->createMainMenu();
-    QObject::connect(&s,SIGNAL(shortCutStyleChanged()),
-		     this,SLOT(updateOptionsMenu()));
-    QObject::connect(e,SIGNAL(closed()),
-		     this,SLOT(close()));
-    QObject::connect(e,SIGNAL(bufferNameChanged()),
-		     this,SLOT(updateBuffersMenu()));
-    QObject::connect(e,SIGNAL(bufferAdded()),
-		     this,SLOT(updateBuffersMenu()));
-    QObject::connect(e,SIGNAL(bufferRemoved()),
-		     this,SLOT(updateBuffersMenu()));
-    QObject::connect(e,SIGNAL(currentBufferChanged()),
-		     this,SLOT(createMainMenu()));
-    QObject::connect(e,SIGNAL(newTreatedFile(const QString&)),
-		     this,SLOT(addToRecentFiles(const QString&)));
+    QObject::connect(&s,&QEmacsShortCutStyle::shortCutStyleChanged,
+		     this,&QEmacsMainWindow::updateOptionsMenu);
+    QObject::connect(e,&QEmacsWidget::closed,
+		     this,&QEmacsMainWindow::close);
+    QObject::connect(e,&QEmacsWidget::bufferNameChanged,
+		     this,&QEmacsMainWindow::updateBuffersMenu);
+    QObject::connect(e,&QEmacsWidget::bufferAdded,
+		     this,&QEmacsMainWindow::updateBuffersMenu);
+    QObject::connect(e,&QEmacsWidget::bufferRemoved,
+		     this,&QEmacsMainWindow::updateBuffersMenu);
+    QObject::connect(e,&QEmacsWidget::currentBufferChanged,
+		     this,&QEmacsMainWindow::createMainMenu);
+    QObject::connect(e,&QEmacsWidget::newTreatedFile,
+		     this,&QEmacsMainWindow::addToRecentFiles);
     if(f.empty()){
       e->createEmptyBuffer();
     } else {
@@ -74,10 +74,9 @@ namespace qemacs
     }
     rf.push_back(f);
     if(rf.size()>=50){
-      QString file = rf.front();
+      const auto file = rf.front();
       if(s.contains("positions in files")){
-	QMap<QString, QVariant> pl;
-	pl = s.value("positions in files").value<QMap<QString, QVariant> >();
+	auto pl = s.value("positions in files").value<QMap<QString, QVariant>>();
 	if(pl.contains(file)){
 	  pl.remove(file);
 	  s.setValue("positions in files",pl);
@@ -92,13 +91,13 @@ namespace qemacs
   {
     auto* e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if(e!=nullptr){
-      QObject::disconnect(e,SIGNAL(closed()),
-			  this,SLOT(close()));
+      QObject::disconnect(e,&QEmacsWidget::closed,
+			  this,&QEmacsMainWindow::close);
       if(e->close()){
 	ev->accept();
       } else {
-	QObject::connect(e,SIGNAL(closed()),
-			 this,SLOT(close()));
+	QObject::connect(e,&QEmacsWidget::closed,
+			 this,&QEmacsMainWindow::close);
 	ev->ignore();
       }
     }
@@ -107,8 +106,7 @@ namespace qemacs
   void QEmacsMainWindow::openFile()
   {
     auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
-    const auto& f = QFileDialog::getOpenFileName(this,
-    						    tr("Open File"));
+    const auto& f = QFileDialog::getOpenFileName(this,tr("Open File"));
     if(f.isEmpty()){
       return;
     }
@@ -117,7 +115,7 @@ namespace qemacs
 
   void QEmacsMainWindow::selectFont()
   {
-    QEmacsWidget *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
+    auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if(e!=nullptr){
       bool ok;
       QFont f = QFontDialog::getFont(&ok, this);
@@ -132,115 +130,115 @@ namespace qemacs
 
   void QEmacsMainWindow::createActions()
   {
-    QEmacsWidget *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
+    auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     this->na = new QAction(tr("N&ew"), this);
     this->na->setStatusTip(tr("New buffer"));
     this->na->setIcon(QIcon::fromTheme("document-new"));
     this->na->setIconVisibleInMenu(true);
-    QObject::connect(this->na, SIGNAL(triggered()),
-		     e, SLOT(createEmptyBuffer()));
+    QObject::connect(this->na,&QAction::triggered,
+		     e,&QEmacsWidget::createEmptyBuffer);
     this->oa = new QAction(tr("O&pen"), this);
     this->oa->setStatusTip(tr("Open a file"));
     this->oa->setIcon(QIcon::fromTheme("document-open"));
     this->oa->setIconVisibleInMenu(true);
-    QObject::connect(this->oa, SIGNAL(triggered()),
-		     this, SLOT(openFile()));
+    QObject::connect(this->oa,&QAction::triggered,
+		     this,&QEmacsMainWindow::openFile);
     this->sa = new QAction(tr("S&ave current buffer"), this);
     this->sa->setStatusTip(tr("Save the current buffer"));
     this->sa->setIcon(QIcon::fromTheme("document-save"));
     this->sa->setIconVisibleInMenu(true);
-    QObject::connect(this->sa, SIGNAL(triggered()),
-		     e, SLOT(saveCurrentBuffer()));
+    QObject::connect(this->sa,&QAction::triggered,
+		     e,&QEmacsWidget::saveCurrentBuffer);
     this->ka = new QAction(tr("C&lose current buffer"), this);
     this->ka->setStatusTip(tr("Close the current buffer"));
-    QObject::connect(this->ka, SIGNAL(triggered()),
-		     e, SLOT(closeCurrentBuffer()));
+    QObject::connect(this->ka,&QAction::triggered,
+		     e,&QEmacsWidget::closeCurrentBuffer);
     this->pra = new QAction(tr("Print current buffer"), this);
     this->pra->setIcon(QIcon::fromTheme("document-print"));
     this->pra->setIconVisibleInMenu(true);
     this->pra->setStatusTip(tr("Print the current buffer"));
-    QObject::connect(this->pra, SIGNAL(triggered()),
-		     this, SLOT(print()));
+    QObject::connect(this->pra,&QAction::triggered,
+		     this,&QEmacsMainWindow::print);
     this->saa = new QAction(tr("S&ave all buffers"), this);
     this->saa->setStatusTip(tr("Save all buffers"));
-    QObject::connect(this->saa, SIGNAL(triggered()),
-		     e, SLOT(saveAllBuffers()));
+    QObject::connect(this->saa,&QAction::triggered,
+		     e,&QEmacsWidget::saveAllBuffers);
     // edit actions
     this->ua  = new QAction(tr("U&ndo"), this);
     this->ua->setIcon(QIcon::fromTheme("edit-undo"));
     this->ua->setIconVisibleInMenu(true);
-    QObject::connect(this->ua, SIGNAL(triggered()),
-		     this, SLOT(undo()));
+    QObject::connect(this->ua,&QAction::triggered,
+		     this,&QEmacsMainWindow::undo);
     this->ra  = new QAction(tr("R&edo"), this);
     this->ra->setIcon(QIcon::fromTheme("edit-redo"));
     this->ra->setIconVisibleInMenu(true);
-    QObject::connect(this->ra, SIGNAL(triggered()),
-		     this, SLOT(redo()));
+    QObject::connect(this->ra,&QAction::triggered,
+		     this,&QEmacsMainWindow::redo);
     this->sea  = new QAction(tr("S&elect All"), this);
     this->sea->setIcon(QIcon::fromTheme("edit-select-all"));
     this->sea->setIconVisibleInMenu(true);
-    QObject::connect(this->sea, SIGNAL(triggered()),
-		     this, SLOT(selectAll()));
+    QObject::connect(this->sea,&QAction::triggered,
+		     this,&QEmacsMainWindow::selectAll);
     this->ca  = new QAction(tr("C&ut"), this);
     this->ca->setStatusTip(tr("Cut the selected text"));
     this->ca->setIcon(QIcon::fromTheme("edit-cut"));
     this->ca->setIconVisibleInMenu(true);
-    QObject::connect(this->ca, SIGNAL(triggered()),
-		     this, SLOT(cut()));
+    QObject::connect(this->ca,&QAction::triggered,
+		     this,&QEmacsMainWindow::cut);
     this->ca2  = new QAction(tr("C&opy"), this);
     this->ca2->setStatusTip(tr("Copy the selected text to clipboard"));
     this->ca2->setIcon(QIcon::fromTheme("edit-copy"));
     this->ca2->setIconVisibleInMenu(true);
-    QObject::connect(this->ca2, SIGNAL(triggered()),
-		     this, SLOT(copy()));
+    QObject::connect(this->ca2,&QAction::triggered,
+		     this,&QEmacsMainWindow::copy);
     this->pa  = new QAction(tr("P&aste"), this);
     this->pa->setStatusTip(tr("Paste from clipboard"));
     this->pa->setIcon(QIcon::fromTheme("edit-paste"));
     this->pa->setIconVisibleInMenu(true);
-    QObject::connect(this->pa, SIGNAL(triggered()),
-		     this, SLOT(paste()));
+    QObject::connect(this->pa,&QAction::triggered,
+		     this,&QEmacsMainWindow::paste);
     // exit actions
     this->ea = new QAction(tr("E&xit"), this);
     this->ea->setStatusTip(tr("Exit qemacs"));
     this->ea->setIcon(QIcon::fromTheme("window-close"));
     this->ea->setIconVisibleInMenu(true);
-    QObject::connect(this->ea, SIGNAL(triggered()),
-		     this, SLOT(close()));
+    QObject::connect(this->ea,&QAction::triggered,
+		     this,&QEmacsMainWindow::close);
     // font actions
     this->fa = new QAction(tr("Main Frames' F&ont"), this);
     this->fa->setStatusTip(tr("Select Font"));
-    QObject::connect(this->fa, SIGNAL(triggered()),
-		     this, SLOT(selectFont()));
+    QObject::connect(this->fa,&QAction::triggered,
+		     this,&QEmacsMainWindow::selectFont);
     this->esca = new QAction(tr("Change to emacs's style shortcuts"), this);
     this->esca->setStatusTip(tr("Use emacs's style shortcuts"));
-    QObject::connect(this->esca, SIGNAL(triggered()),
-		     this, SLOT(useEmacsShortCuts()));
+    QObject::connect(this->esca,&QAction::triggered,
+		     this,&QEmacsMainWindow::useEmacsShortCuts);
     this->qsca = new QAction(tr("Change to Qt's style shortcuts"), this);
     this->qsca->setStatusTip(tr("Use Qt's style shortcuts"));
-    QObject::connect(this->qsca, SIGNAL(triggered()),
-		     this, SLOT(useQtShortCuts()));
+    QObject::connect(this->qsca,&QAction::triggered,
+		     this,&QEmacsMainWindow::useQtShortCuts);
     // help actions
     this->aa = new QAction(tr("&About"), this);
     this->aa->setStatusTip(tr("Show the application's About box"));
     this->aa->setIcon(QIcon::fromTheme("help-about"));
     this->aa->setIconVisibleInMenu(true);
-    connect(this->aa, SIGNAL(triggered()), this, SLOT(about()));
+    connect(this->aa,&QAction::triggered,
+	    this,&QEmacsMainWindow::about);
     this->aa2 = new QAction(tr("About &Qt"), this);
     this->aa2->setStatusTip(tr("Show the Qt library's About box"));
-    connect(this->aa2, SIGNAL(triggered()),
-	    qApp, SLOT(aboutQt()));
+    connect(this->aa2,&QAction::triggered,
+	    qApp,&QApplication::aboutQt);
   } // end of QEmacsMainWindow::createActions
 
-  void
-  QEmacsMainWindow::updateOptionsMenu()
+  void QEmacsMainWindow::updateOptionsMenu()
   {
     typedef QEmacsHunspellDictionariesManager HunspellDictionaries;
-    QEmacsShortCutStyle& s = QEmacsShortCutStyle::getQEmacsShortCutStyle();
+    auto& s = QEmacsShortCutStyle::getQEmacsShortCutStyle();
     this->om->clear();
     // font
     this->om->addAction(this->fa);
     // available dictionaries
-    HunspellDictionaries& dm = HunspellDictionaries::getQEmacsHunspellDictionariesManager();
+    auto& dm = HunspellDictionaries::getQEmacsHunspellDictionariesManager();
     QStringList dicts = dm.getAvailableDictionnaries();
     this->changeSpellCheckLanguageActions.clear();
     if(!dicts.isEmpty()){
@@ -251,8 +249,8 @@ namespace qemacs
 	a->setData(*pd);
 	this->changeSpellCheckLanguageActions.push_back(a);
       }
-      QObject::connect(d,SIGNAL(triggered(QAction*)),
-		       this,SLOT(spellCheckLanguageActionTriggered(QAction*)));
+      QObject::connect(d,&QMenu::triggered,
+		       this,&QEmacsMainWindow::spellCheckLanguageActionTriggered);
     }
     // short cuts
     if(s.getStyle()!=QEmacsShortCutStyle::EMACS){
@@ -276,15 +274,14 @@ namespace qemacs
   } // end of QEmacsMainWindow::spellCheckLanguageActionTriggered
 
 
-  void
-  QEmacsMainWindow::updateBuffersMenu()
+  void QEmacsMainWindow::updateBuffersMenu()
   {
     this->bm->clear();
     QEmacsWidget *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if(e!=nullptr){
-      const QStringList&    bnames = e->getBuffersNames();
-      const QVector<QIcon>& bicons = e->getBuffersIcons();
-      const QVector<int>&   bids   = e->getBuffersIds();
+      const auto& bnames = e->getBuffersNames();
+      const auto& bicons = e->getBuffersIcons();
+      const auto& bids   = e->getBuffersIds();
       if((bnames.size()!=bicons.size())||
 	 (bnames.size()!=bids.size())){
 	return;
@@ -303,36 +300,32 @@ namespace qemacs
     }
   } // end of QEmacsMainWindow::updateBuffersMenu
 
-  void
-  QEmacsMainWindow::bufferMenuActionTriggered(QAction * a)
+  void QEmacsMainWindow::bufferMenuActionTriggered(QAction * a)
   {
-    QEmacsWidget *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
+    auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if(e!=nullptr){
       int id = a->data().toInt();
       e->changeBuffer(id);
     }
   }
   
-  void
-  QEmacsMainWindow::useEmacsShortCuts()
+  void QEmacsMainWindow::useEmacsShortCuts()
   {
-    QEmacsShortCutStyle& s = QEmacsShortCutStyle::getQEmacsShortCutStyle();
+    auto& s = QEmacsShortCutStyle::getQEmacsShortCutStyle();
     s.setStyle(QEmacsShortCutStyle::EMACS);
     this->updateOptionsMenu();
   } // end of QEmacsMainWindow::useEmacsShortCuts
 
-  void
-  QEmacsMainWindow::useQtShortCuts()
+  void QEmacsMainWindow::useQtShortCuts()
   {
-    QEmacsShortCutStyle& s = QEmacsShortCutStyle::getQEmacsShortCutStyle();
+    auto& s = QEmacsShortCutStyle::getQEmacsShortCutStyle();
     s.setStyle(QEmacsShortCutStyle::QT);
     this->updateOptionsMenu();
   } // end of QEmacsMainWindow::useQtShortCuts
 
-  void
-  QEmacsMainWindow::createMainMenu()
+  void QEmacsMainWindow::createMainMenu()
   {
-    QEmacsWidget *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
+    auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     QSettings settings;
     this->menuBar()->clear();
     // this->menuBar()->setStyleSheet("background: rgba(0,0,0,100%)");
@@ -366,8 +359,8 @@ namespace qemacs
     // buffer menu
     this->bm = this->menuBar()->addMenu(tr("Buffers"));
     this->updateBuffersMenu();
-    QObject::connect(this->bm,SIGNAL(triggered(QAction*)),
-		     this,SLOT(bufferMenuActionTriggered(QAction *)));
+    QObject::connect(this->bm,&QMenu::triggered,
+		     this,&QEmacsMainWindow::bufferMenuActionTriggered);
     QVector<QMenu *> m = e->getCurrentBufferSpecificMenus();
     QVector<QMenu *>::const_iterator p;
     for(p=m.begin();p!=m.end();++p){
@@ -382,9 +375,8 @@ namespace qemacs
     this->hm->addAction(this->aa2);    
   } // end of QEmacsMainWindow::createMainMenu
 
-  void
-  QEmacsMainWindow::createRecentFilesMenu(QMenu * const m,
-					  const QStringList& files)
+  void QEmacsMainWindow::createRecentFilesMenu(QMenu * const m,
+					       const QStringList& files)
   {
     int n = 0;
     int s = files.size();
@@ -399,91 +391,82 @@ namespace qemacs
 	rf->setData(fi.absoluteFilePath());
       }
     }
-    QObject::connect(m,SIGNAL(triggered(QAction *)),
-		     this,SLOT(openRecentFileActionTriggered(QAction *)));
+    QObject::connect(m,&QMenu::triggered,
+		     this,&QEmacsMainWindow::openRecentFileActionTriggered);
   } // end of QEmacsMainWindow::createRecentFilesMenu
   
-  void
-  QEmacsMainWindow::openRecentFileActionTriggered(QAction *a)
+  void QEmacsMainWindow::openRecentFileActionTriggered(QAction *a)
   {
-    QEmacsWidget *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
+    auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if(e!=nullptr){
       e->openFile(a->data().toString());
     }
   } // end of QEmacsMainWindow::openRecentFileActionTriggered
 
-  void
-  QEmacsMainWindow::about()
+  void QEmacsMainWindow::about()
   {
     QMessageBox::about(this, tr("About QEmacs"),
 		       tr("The <b>QEmacs</b> is a simple "
 			  "qt based text editor."));
   } // end of QEmacsMainWindow::about()
 
-  void
-  QEmacsMainWindow::cut()
+  void QEmacsMainWindow::cut()
   {
-    QEmacsWidget *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
+    auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if(e!=nullptr){
       QEmacsPlainTextEdit& t = e->getCurrentBuffer().getMainFrame();
       t.cut();
     }
   } // end of QEmacsMainWindow::cut
 
-  void
-  QEmacsMainWindow::undo()
+  void QEmacsMainWindow::undo()
   {
-    QEmacsWidget *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
+    auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if(e!=nullptr){
       QEmacsPlainTextEdit& t = e->getCurrentBuffer().getMainFrame();
       t.undo();
     }
   } // end of QEmacsMainWindow::undo
 
-  void
-  QEmacsMainWindow::redo()
+  void QEmacsMainWindow::redo()
   {
-    QEmacsWidget *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
+    auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if(e!=nullptr){
       QEmacsPlainTextEdit& t = e->getCurrentBuffer().getMainFrame();
       t.redo();
     }
   } // end of QEmacsMainWindow::redo
 
-  void
-  QEmacsMainWindow::selectAll()
+  void QEmacsMainWindow::selectAll()
   {
-    QEmacsWidget *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
+    auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if(e!=nullptr){
       QEmacsPlainTextEdit& t = e->getCurrentBuffer().getMainFrame();
       t.selectAll();
     }
   } // end of QEmacsMainWindow::selectAll
 
-  void
-  QEmacsMainWindow::copy()
+  void QEmacsMainWindow::copy()
   {
-    QEmacsWidget *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
+    auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if(e!=nullptr){
       QEmacsPlainTextEdit& t = e->getCurrentBuffer().getMainFrame();
       t.copy();
     }
   } // end of QEmacsMainWindow::copy
 
-  void
-  QEmacsMainWindow::paste()
+  void QEmacsMainWindow::paste()
   {
-    QEmacsWidget *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
+    auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if(e!=nullptr){
       QEmacsPlainTextEdit& t = e->getCurrentBuffer().getMainFrame();
       t.paste();
     }
   } // end of QEmacsMainWindow::paste
 
-  void
-  QEmacsMainWindow::print()
+  void QEmacsMainWindow::print()
   {
-    QEmacsWidget *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
+    auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if(e!=nullptr){
       QPrinter printer;
       QPrintDialog printDialog(&printer,this);
@@ -494,8 +477,7 @@ namespace qemacs
     }    
   }
 
-  QSize
-  QEmacsMainWindow::sizeHint() const
+  QSize QEmacsMainWindow::sizeHint() const
   {
     return QSize(800,600);
   } // end of QEmacsMainWindow::sizeHint()

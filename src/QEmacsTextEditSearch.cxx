@@ -20,21 +20,19 @@ namespace qemacs{
       textEdit(t),
       s(p)
   {
-    QObject::connect(&p,SIGNAL(destroyed()),
-		     this,SLOT(lineEditDestroyed()));
+    QObject::connect(&p,&QEmacsTextEditSearch::destroyed,
+		     this,&QEmacsTextEditSearchFilter::lineEditDestroyed);
   }
   
-  void
-  QEmacsTextEditSearchFilter::lineEditDestroyed()
+  void QEmacsTextEditSearchFilter::lineEditDestroyed()
   {
     delete this;
   }
   
-  bool
-  QEmacsTextEditSearchFilter::filterKeyPressEvent(QKeyEvent * const e)
+  bool QEmacsTextEditSearchFilter::filterKeyPressEvent(QKeyEvent * const e)
   {
-    const int k                   = e->key();
-    const Qt::KeyboardModifiers m = e->modifiers(); 
+    const auto k = e->key();
+    const auto m = e->modifiers(); 
     if((m==Qt::NoModifier)&&(k==Qt::Key_Escape)){
       this->textEdit.removeKeyPressEventFilter();
       return true;
@@ -90,18 +88,15 @@ namespace qemacs{
 	flag(nullptr)
   {
     this->cursor = this->textEdit.textCursor();
-    QObject::connect(this->sf,SIGNAL(destroyed()),
-		     this,SLOT(searchFilterDestroyed()));
-    QObject::connect(this,SIGNAL(textChanged(const QString&)),
-		     this,SLOT(search(const QString&)));
+    QObject::connect(this->sf,&QEmacsTextEditSearchFilter::destroyed,
+		     this,&QEmacsTextEditSearch::searchFilterDestroyed);
+    QObject::connect(this,&QEmacsTextEditSearch::textChanged,
+		     this,&QEmacsTextEditSearch::search);
     this->textEdit.setKeyPressEventFilter(this->sf);
     this->setFlag(f);
   }
   
-  QEmacsTextEditSearch::~QEmacsTextEditSearch() = default;
-
-  void
-  QEmacsTextEditSearch::search(const QString& s)
+  void QEmacsTextEditSearch::search(const QString& s)
   {
     this->textEdit.setTextCursor(this->cursor);
     if(!this->textEdit.find(s,this->flag)){
@@ -109,18 +104,16 @@ namespace qemacs{
     }
   } // end of QEmacsTextEditSearch::search
 
-  void
-  QEmacsTextEditSearch::searchFilterDestroyed()
+  void QEmacsTextEditSearch::searchFilterDestroyed()
   {
     this->sf = nullptr;
     this->qemacs.removeUserInput(this);
   }
 
-  void
-  QEmacsTextEditSearch::findNext()
+  void QEmacsTextEditSearch::findNext()
   {
-    QTextCursor c = this->textEdit.textCursor();
-    int p = c.selectionEnd();
+    auto c = this->textEdit.textCursor();
+    const auto p = c.selectionEnd();
     if(c.hasSelection()){
       c.setPosition(p,QTextCursor::KeepAnchor);
     } else {
@@ -134,18 +127,15 @@ namespace qemacs{
     }
   } // end of QEmacsTextEditSearch::updateCursor
 
-  void
-  QEmacsTextEditSearch::treatUserInput()
+  void QEmacsTextEditSearch::treatUserInput()
   {}
 
-  QTextDocument::FindFlags
-  QEmacsTextEditSearch::getFlag() const
+  QTextDocument::FindFlags QEmacsTextEditSearch::getFlag() const
   {
     return this->flag;
   }
 
-  void
-  QEmacsTextEditSearch::setFlag(const QTextDocument::FindFlags f)
+  void QEmacsTextEditSearch::setFlag(const QTextDocument::FindFlags f)
   {
     this->flag = f;
     if(this->flag==0){
@@ -154,5 +144,7 @@ namespace qemacs{
       this->setLabel("i-search backward :");
     }
   }
+
+  QEmacsTextEditSearch::~QEmacsTextEditSearch() = default;
 
 } // end of namespace qemacs

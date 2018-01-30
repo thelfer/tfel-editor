@@ -22,8 +22,8 @@ namespace qemacs
     auto *s = new MaterialPropertySelector(this);
     mlayout->addWidget(s);  
     this->setLayout(mlayout);
-    QObject::connect(s,SIGNAL(materialPropertiesSelected(const QVector<MaterialProperty>&)),
-		     this,SLOT(insertMaterialProperties(const QVector<MaterialProperty>&)));
+    QObject::connect(s,&MaterialPropertySelector::materialPropertiesSelected,
+		     this,&LicosInsertMaterialPropertyDialog::insertMaterialProperties);
   }
   
   void

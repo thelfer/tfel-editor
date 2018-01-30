@@ -47,77 +47,54 @@ namespace qemacs
 		 const int,
 		 QEmacsWidget&);
 
-    virtual int
-    getId() const;
+    virtual int getId() const;
     
-    virtual QString
-    getBufferName() const;
+    virtual QString getBufferName() const;
 
-    virtual QString
-    getBufferNameSuffix() const;
+    virtual QString getBufferNameSuffix() const;
 
-    virtual QString
-    getBufferRawName() const;
+    virtual QString getBufferRawName() const;
 
-    virtual QEmacsPlainTextEdit&
-    getMainFrame();
+    virtual QEmacsPlainTextEdit& getMainFrame();
 
-    virtual QVector<QMenu*>
-    getSpecificMenus();
+    virtual QVector<QMenu*> getSpecificMenus();
 
-    virtual QIcon
-    getIcon() const;
+    virtual QIcon getIcon() const;
 
+    int getSlaveIndex(QWidget * const p) const;
 
-    int
-    getSlaveIndex(QWidget * const p) const;
+    virtual QWidget * addSlave(const QString&,
+			       QWidget *const);
 
-    virtual QWidget *
-    addSlave(const QString&,
-	     QWidget *const);
+    virtual QString getSlaveName(QWidget *const) const;
 
-    virtual QString
-    getSlaveName(QWidget *const) const;
+    virtual void setSlaveName(QWidget *const,
+			      const QString &);
 
-    virtual void
-    setSlaveName(QWidget *const,
-		 const QString &);
+    virtual void setSlaveIcon(QWidget *const,
+			      const QIcon&);
 
-    virtual void
-    setSlaveIcon(QWidget *const,
-		 const QIcon&);
+    virtual void removeSlave(QWidget *const);
 
-    virtual void
-    removeSlave(QWidget *const);
+    virtual void hideSlave(QWidget *const);
 
-    virtual void
-    hideSlave(QWidget *const);
+    virtual bool hasSlaves() const;
 
-    virtual bool
-    hasSlaves() const;
+    virtual bool areSlavesVisible() const;
 
-    virtual bool
-    areSlavesVisible() const;
-
-    virtual bool
-    isOkToClose() const;
+    virtual bool isOkToClose() const;
 			     
   public slots:
 
-    virtual void
-    showSlaves();
+    virtual void showSlaves();
 
-    virtual void
-    hideSlaves();
+    virtual void hideSlaves();
 
-    virtual void
-    focusCurrentSlave();
+    virtual void focusCurrentSlave();
 
-    virtual void
-    focusMainFrame();
+    virtual void focusMainFrame();
 
-    virtual void
-    closeCurrentSlave();
+    virtual void closeCurrentSlave();
     
   signals:
 
@@ -133,40 +110,30 @@ namespace qemacs
     void newTreatedFile(const QString&);
 
   protected slots:
+    
+    void focusInEvent(QFocusEvent *) override;
 
-    virtual void
-    focusInEvent(QFocusEvent *) override;
+    virtual void updatePosition();
 
-    virtual void
-    updatePosition();
+    virtual void updateDate();
 
-    virtual void
-    updateDate();
+    virtual void updateBufferInformations();
 
-    virtual void
-    updateBufferInformations();
+    virtual void updateBufferName();
 
-    virtual void
-    updateBufferName();
+    virtual void closeSlave(int);
 
-    virtual void
-    closeSlave(int);
-
-    virtual void
-    emitNewTreatedFile(const QString&);
+    virtual void emitNewTreatedFile(const QString&);
 
   protected:
 
     struct SlaveTabWidget;
 
-    void
-    initialize();
+    void initialize();
 
     QEmacsWidget& qemacs;
     
-    /*!
-     * slave widget
-     */
+    //! slave widgets
     SlaveTabWidget *slaves;
 
     QEmacsPlainTextEdit *e;

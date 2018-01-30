@@ -33,20 +33,20 @@ namespace qemacs {
     this->c->setWidget(&t);
     this->c->setCaseSensitivity(Qt::CaseInsensitive);
     this->c->setCompletionMode(QCompleter::PopupCompletion);
-    QObject::connect(this->c, SIGNAL(activated(QString)), &t,
-		     SLOT(insertCompletion(QString)));
+    QObject::connect(this->c,static_cast<void (QCompleter:: *)(const QString&)>(&QCompleter::activated),
+		     &t,&QEmacsTextEditBase::insertCompletion);
     // timer
     this->rt = new QTimer(this);
-    connect(this->rt, SIGNAL(timeout()), this,
-	    SLOT(updateSyntaxHighlighterAndCompleter()));
+    connect(this->rt,&QTimer::timeout,
+	    this,&MFrontMajorMode::updateSyntaxHighlighterAndCompleter);
     this->rt->start(500);
   } // end of MFrontMajorMode::MFrontMajorMode
 
-  QString MFrontMajorMode::getName() const {
+  QString MFrontMajorMode::getName() const{
     return "MFront";
   } // end of MFrontMajorMode::getName
 
-  QString MFrontMajorMode::getDescription() const {
+  QString MFrontMajorMode::getDescription() const{
     return "major mode dedicated to the MFront code generator";
   } // end of CppMajorMode
 
@@ -106,8 +106,8 @@ namespace qemacs {
 	  m->insertSeparator(*(cactions.begin()));
 	  m->insertAction(*(cactions.begin()), this->ha);
 	}
-	QObject::connect(m, SIGNAL(triggered(QAction *)), this,
-			 SLOT(actionTriggered(QAction *)));
+	QObject::connect(m,&QMenu::triggered,
+			 this,&MFrontMajorMode::actionTriggered);
       }
     }
   }

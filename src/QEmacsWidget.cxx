@@ -30,16 +30,12 @@ struct QEmacsModeRessourceLoader
     : l(getLoader())
   {}
 private:
-  struct Loader
-  {
-    Loader()
-    {
+  struct Loader{
+    Loader(){
       Q_INIT_RESOURCE(QEmacsResources);
     }
   };
-  static Loader&
-  getLoader()
-  {
+  static Loader& getLoader(){
     static Loader l;
     return l;
   }
@@ -49,8 +45,7 @@ private:
 namespace qemacs
 {
 
-  static void
-  setQLineEditFont(QLineEdit *l)
+  static void setQLineEditFont(QLineEdit *l)
   {
     QFont f = l->font();
     f.setPointSize(8);
@@ -58,8 +53,7 @@ namespace qemacs
     l->setContentsMargins(0,0,0,0);
   }
 
-  static void
-  setQEmacsLineEditFont(QEmacsLineEdit *l)
+  static void setQEmacsLineEditFont(QEmacsLineEdit *l)
   {
     QFont f = l->font();
     f.setPointSize(8);
@@ -315,19 +309,14 @@ namespace qemacs
       ++(this->nid);
       this->emitNewTreatedFile(b->getMainFrame().getCompleteFileName());
     }
-    QObject::connect(b,SIGNAL(bufferNameChanged(QEmacsBuffer *,
-						const QString&,
-						const QString&)),
-		     this,SLOT(updateBufferName(QEmacsBuffer *,
-						const QString&,
-						const QString&)));
-    QObject::connect(b,SIGNAL(newTreatedFile(const QString&)),
-		     this,SLOT(emitNewTreatedFile(const QString&)));
+    QObject::connect(b,&QEmacsBuffer::bufferNameChanged,
+		     this,&QEmacsWidget::updateBufferName);
+    QObject::connect(b,&QEmacsBuffer::newTreatedFile,
+		     this,&QEmacsWidget::emitNewTreatedFile);
     return b;
   } // end of QEmacsWidget::createNewBuffer
 
-  void
-  QEmacsWidget::removeBuffer(QEmacsBuffer * b)
+  void QEmacsWidget::removeBuffer(QEmacsBuffer * b)
   {
     QString n = b->getBufferName();
     this->bHistory.removeAll(n);
@@ -429,17 +418,14 @@ namespace qemacs
     }
   } // end of QEmacsWidget::close
   
-  void
-  QEmacsWidget::displayInformativeMessage(const QString& m)
+  void QEmacsWidget::displayInformativeMessage(const QString& m)
   {
     this->um->setText(m);
     this->minibuffer->setCurrentWidget(this->um);
-    QTimer::singleShot(1000, this,
-		       SLOT(resetUserInput()));
+    QTimer::singleShot(1000,this,&QEmacsWidget::resetUserInput);
   } // end of QEmacsWidget::displayInformativeMessage
 
-  void
-  QEmacsWidget::setUserInput(QEmacsLineEdit* const l)
+  void QEmacsWidget::setUserInput(QEmacsLineEdit* const l)
   {
     if(l==nullptr){
       return;
@@ -463,14 +449,13 @@ namespace qemacs
     if(this->ui.back()->isBlocking()){
       this->buffers->setEnabled(false);
     }
-    QObject::connect(this->ui.back(),SIGNAL(finished(QEmacsLineEdit *)),
-		     this,SLOT(removeUserInput(QEmacsLineEdit *)));
-    QObject::connect(this->ui.back(),SIGNAL(destroyed(QEmacsLineEdit *)),
-		     this,SLOT(removeUserInput(QEmacsLineEdit *)));
+    QObject::connect(this->ui.back(),&QEmacsLineEdit::finished,
+		     this,static_cast<void (QEmacsWidget:: *)(QEmacsLineEdit *)>(&QEmacsWidget::removeUserInput));
+    QObject::connect(this->ui.back(),&QEmacsLineEdit::destroyed,
+		     this,static_cast<void (QEmacsWidget:: *)(QEmacsLineEdit *)>(&QEmacsWidget::removeUserInput));
   }
 
-  void
-  QEmacsWidget::removeUserInput(QEmacsLineEdit *p)
+  void QEmacsWidget::removeUserInput(QEmacsLineEdit *p)
   {
     if(this->ui.isEmpty()){
       return;
@@ -493,8 +478,7 @@ namespace qemacs
     p->deleteLater();
   } // end of QEmacsWidget::removeUserInput
 
-  void
-  QEmacsWidget::removeUserInput()
+  void QEmacsWidget::removeUserInput()
   {
     if(this->ui.isEmpty()){
       return;
@@ -502,30 +486,26 @@ namespace qemacs
     this->removeUserInput(this->ui.back());
   } // end of QEmacsWidget::removeUserInput
 
-  void
-  QEmacsWidget::removeUserInputs()
+  void QEmacsWidget::removeUserInputs()
   {
     while(!this->ui.isEmpty()){
       this->removeUserInput(this->ui.back());
     }
   } // end of QEmacsWidget::removeUserInputs
 
-  bool
-  QEmacsWidget::hasUserInput() const
+  bool QEmacsWidget::hasUserInput() const
   {
     return !this->ui.isEmpty();
   }
 
-  void
-  QEmacsWidget::focusUserInput()
+  void QEmacsWidget::focusUserInput()
   {
     if(!this->ui.isEmpty()){
       this->ui.back()->setFocus();
     }
   }
 
-  void
-  QEmacsWidget::resetUserInput()
+  void QEmacsWidget::resetUserInput()
   {
     if(!this->ui.isEmpty()){
       this->minibuffer->setCurrentWidget(this->ui.back());
@@ -535,8 +515,7 @@ namespace qemacs
     this->um->clear();
   } // end of QEmacsWidget::resetPreviousUserInput
 
-  const QStringList&
-  QEmacsWidget::getKillRing() const
+  const QStringList& QEmacsWidget::getKillRing() const
   {
     return this->killRing;
   } // end of QEmacsWidget::getKillRing
@@ -553,8 +532,7 @@ namespace qemacs
     this->killRing << t;
   } // end of QEmacsWidget::addToKillRing
 
-  QStringList
-  QEmacsWidget::getBuffersNames() const
+  QStringList QEmacsWidget::getBuffersNames() const
   {
     QStringList n;
     for(int i=0;i!=this->buffers->count();++i){
@@ -571,8 +549,7 @@ namespace qemacs
     return n;
   } // end of QEmacsWidget::getBuffersNames
 
-  QVector<QIcon>
-  QEmacsWidget::getBuffersIcons() const
+  QVector<QIcon> QEmacsWidget::getBuffersIcons() const
   {
     QVector<QIcon> icons;
     for(int i=0;i!=this->buffers->count();++i){
@@ -584,8 +561,7 @@ namespace qemacs
     return icons;
   }
 
-  QVector<int>
-  QEmacsWidget::getBuffersIds() const
+  QVector<int> QEmacsWidget::getBuffersIds() const
   {
     QVector<int> ids;
     for(int i=0;i!=this->buffers->count();++i){
@@ -597,8 +573,7 @@ namespace qemacs
     return ids;
   }
 
-  void
-  QEmacsWidget::changeBuffer(const QString& n)
+  void QEmacsWidget::changeBuffer(const QString& n)
   {
     for(int i=0;i!=this->buffers->count();++i){
       auto * b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
@@ -624,9 +599,8 @@ namespace qemacs
     }
   } // end of QEmacsWidget::changeBuffer
 
-  QString
-  QEmacsWidget::chooseBufferNameSuffix(QEmacsBuffer * b,
-				       const QString& f)
+  QString QEmacsWidget::chooseBufferNameSuffix(QEmacsBuffer * b,
+					       const QString& f)
   {
     if(f.isEmpty()){
       return "";
@@ -655,8 +629,7 @@ namespace qemacs
     return s;
   } // end of QEmacsWidget::chooseBufferName
 
-  void
-  QEmacsWidget::changeBuffer()
+  void QEmacsWidget::changeBuffer()
   {
     auto *cb = qobject_cast<QEmacsBuffer*>(this->buffers->currentWidget());
     if(cb==nullptr){
@@ -688,8 +661,7 @@ namespace qemacs
     }
   } // end of QEmacsWidget::changeBuffer
 
-  void
-  QEmacsWidget::setCurrentBuffer(QEmacsBuffer * const b)
+  void QEmacsWidget::setCurrentBuffer(QEmacsBuffer * const b)
   {
     this->buffers->setCurrentWidget(b);
     b->setFocus();
@@ -720,8 +692,7 @@ namespace qemacs
     QEmacsWidget& t;
   };
 
-  QVector<QMenu*>
-  QEmacsWidget::getCurrentBufferSpecificMenus()
+  QVector<QMenu*> QEmacsWidget::getCurrentBufferSpecificMenus()
   {
     if(this->buffers->count()==0){
       return QVector<QMenu*>();
@@ -730,27 +701,24 @@ namespace qemacs
     return b->getSpecificMenus();
   } // end of QEmacsWidget::getCurrentBufferMenu()
 
-  void
-  QEmacsWidget::emitNewTreatedFile(const QString& f)
+  void QEmacsWidget::emitNewTreatedFile(const QString& f)
   {
     emit newTreatedFile(f);
   } // end of QEmacsWidget::emitNewTreatedFile
 
-  void
-  QEmacsWidget::launchCommand()
+  void QEmacsWidget::launchCommand()
   {
     if(!this->ui.isEmpty()){
       this->displayInformativeMessage(QObject::tr("command attemted "
 						  "to use minibuffer "
 						  "while in minibuffer"));
     }
-    QEmacsLineEdit * l = new QEmacsWidget::Command(*this);
+    auto *l = new QEmacsWidget::Command(*this);
     l->setInputHistorySettingAddress("command/history");
     this->setUserInput(l);
   } // end of QEmacsWidget::launchCommand
 
-  void
-  QEmacsWidget::launchCommand(const QString& c)
+  void QEmacsWidget::launchCommand(const QString& c)
   {
     QEmacsCommandFactory& f = QEmacsCommandFactory::getQEmacsCommandFactory();
     QEmacsCommand *qc = f.getQEmacsCommand(c,*this);

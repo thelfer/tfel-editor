@@ -31,21 +31,18 @@ namespace qemacs
     : QAbstractTableModel(p)
   {}
   
-  int
-  MaterialPropertyModel::rowCount(const QModelIndex&) const
+  int MaterialPropertyModel::rowCount(const QModelIndex&) const
   {
     return this->m.size();
   }
   
-  int
-  MaterialPropertyModel::columnCount(const QModelIndex&) const
+  int MaterialPropertyModel::columnCount(const QModelIndex&) const
   {
     return 2;
   }
 
-  QVariant
-  MaterialPropertyModel::data(const QModelIndex& i,
-			      int r) const
+  QVariant MaterialPropertyModel::data(const QModelIndex& i,
+				       int r) const
   {
     if(!i.isValid()){
       return QVariant();
@@ -164,18 +161,18 @@ namespace qemacs
     mlayout->addWidget(buttonBox);  
     this->setLayout(mlayout);
     this->setMinimumWidth(600);
-    QObject::connect(openlib, SIGNAL(pressed()),
-		     this, SLOT(openLibrary()));
-    QObject::connect(add, SIGNAL(pressed()),
-		     this, SLOT(addMaterialProperties()));
-    QObject::connect(lf,SIGNAL(textChanged(const QString&)),
-		     this,SLOT(updateMFMModel(const QString&)));
+    QObject::connect(openlib,&QPushButton::pressed,
+		     this,&MaterialPropertySelector::openLibrary);
+    QObject::connect(add,&QPushButton::pressed,
+		     this,&MaterialPropertySelector::addMaterialProperties);
+    QObject::connect(lf,&QLineEdit::textChanged,
+		     this,&MaterialPropertySelector::updateMFMModel);
   } // end of MaterialPropertySelector::MaterialPropertySelector
 
   void MaterialPropertySelector::addMaterialProperties()
   {
-    const QModelIndexList lmp = this->view->selectionModel()->selectedIndexes();
-    const QVector<MaterialProperty>& m = this->model->materialProperties();
+    const auto lmp = this->view->selectionModel()->selectedIndexes();
+    const auto &m  = this->model->materialProperties();
     QVector<MaterialProperty> r;
     QSet<int> rows;
     QModelIndexList::const_iterator p;
@@ -191,9 +188,8 @@ namespace qemacs
 
   void MaterialPropertySelector::openLibrary()
   {
-    const QString& f = QFileDialog::getOpenFileName(this,
-    						    QObject::tr("Open File"),
-						    "","*.so");
+    const auto& f = QFileDialog::getOpenFileName(this,QObject::tr("Open File"),
+						 "","*.so");
     if(f.isEmpty()){
       return;
     }
@@ -214,8 +210,7 @@ namespace qemacs
     this->view->horizontalHeader()->setStretchLastSection(true);
   } // end of MaterialPropertySelector::updateMFMModel
 
-  QVector<MaterialProperty>
-  MaterialPropertySelector::callMFMLaws(const QString& r) const
+  QVector<MaterialProperty> MaterialPropertySelector::callMFMLaws(const QString& r) const
   {
     static QRegExp rout("("+fileNameRegExp()+")\\s+\\(("+fileNameRegExp()+")\\)");
     QVector<MaterialProperty> mprops;

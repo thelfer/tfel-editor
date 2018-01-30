@@ -27,22 +27,19 @@ namespace qemacs
     this->c->setWidget(&t);
     this->c->setCaseSensitivity(Qt::CaseInsensitive);
     this->c->setCompletionMode(QCompleter::PopupCompletion);
-    QObject::connect(this->c,SIGNAL(activated(QString)),
-		     &t,SLOT(insertCompletion(QString)));
+    QObject::connect(this->c,static_cast<void (QCompleter:: *)(const QString&)>(&QCompleter::activated),
+		     &t,&QEmacsTextEditBase::insertCompletion);
   } // end of PipeTestMajorMode::PipeTestMajorMode
   
-  QString PipeTestMajorMode::getName() const
-  {
+  QString PipeTestMajorMode::getName() const{
     return "PipeTest";
   } // end of PipeTestMajorMode::getName
     
-  QString PipeTestMajorMode::getDescription() const
-  {
+  QString PipeTestMajorMode::getDescription() const{
     return "major mode dedicated to the mtest extension to pipe";
   } // end of CppMajorMode
 
-  QString PipeTestMajorMode::getScheme() const
-  {
+  QString PipeTestMajorMode::getScheme() const{
     return "ptest";
   }
   

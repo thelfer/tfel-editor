@@ -16,6 +16,8 @@
 #include<QtWidgets/QApplication>
 #include<QtWidgets/QAbstractItemView>
 #include<QtWidgets/QFontDialog>
+#include<QtWidgets/QTextEdit>
+#include<QtWidgets/QPlainTextEdit>
 #include<QtGui/QKeyEvent>
 #include<QtGui/QMouseEvent>
 #include<QtGui/QTextBlock>
@@ -67,15 +69,13 @@ namespace qemacs
     }
   }
 
-  void
-  QEmacsTextEditBase::setFont(const QFont& f)
+  void QEmacsTextEditBase::setFont(const QFont& f)
   {
     QAbstractScrollArea *const e = this->widget();
     e->setFont(f);
   }
 
-  void
-  QEmacsTextEditBase::initialize(QAbstractScrollArea *const e)
+  void QEmacsTextEditBase::initialize(QAbstractScrollArea *const e)
   {
     this->ua = nullptr;
     this->ra = nullptr;
@@ -93,18 +93,24 @@ namespace qemacs
       this->setFont(f);
     }
     // signals for line highlighting
-    QObject::connect(e, SIGNAL(cursorPositionChanged()),
-		     this, SLOT(highlightCurrentLine()));
-    QObject::connect(e, SIGNAL(cursorPositionChanged()),
-		     this, SLOT(emitCursorPositionChanged()));
+    if(auto *te = qobject_cast<QTextEdit*>(e)){
+      QObject::connect(te,&QTextEdit::cursorPositionChanged,
+		       this,&QEmacsTextEditBase::highlightCurrentLine);
+      QObject::connect(te,&QTextEdit::cursorPositionChanged,
+		       this,&QEmacsTextEditBase::emitCursorPositionChanged);
+    } else if(auto *pte = qobject_cast<QPlainTextEdit*>(e)){
+      QObject::connect(pte,&QPlainTextEdit::cursorPositionChanged,
+		       this,&QEmacsTextEditBase::highlightCurrentLine);
+      QObject::connect(pte,&QPlainTextEdit::cursorPositionChanged,
+		       this,&QEmacsTextEditBase::emitCursorPositionChanged);
+    }
     // event filter
     e->installEventFilter(this);
     e->viewport()->installEventFilter(this);
   } // end of QEmacsTextEditBase::initialize
 
-  bool
-  QEmacsTextEditBase::eventFilter(QObject *o,
-				  QEvent *e)
+  bool QEmacsTextEditBase::eventFilter(QObject *o,
+				       QEvent *e)
   {
     if(o==this->widget()){
       if(e->type()==QEvent::KeyPress){
@@ -120,8 +126,7 @@ namespace qemacs
     return false;
   }
 
-  QString
-  QEmacsTextEditBase::getModifier(const QKeyEvent& e)
+  QString QEmacsTextEditBase::getModifier(const QKeyEvent& e)
   {
     QString m;
     if(e.modifiers()&Qt::ControlModifier){
@@ -396,50 +401,48 @@ namespace qemacs
     this->sa = nullptr;
   }
 
-  void
-  QEmacsTextEditBase::createContextMenuActions()
+  void QEmacsTextEditBase::createContextMenuActions()
   {
     this->deleteContextMenuActions();
     // undo action
     this->ua = new QAction(QObject::tr("&Undo"),this);
     this->ua->setIcon(QIcon::fromTheme("edit-undo"));
     this->ua->setIconVisibleInMenu(true);
-    QObject::connect(this->ua, SIGNAL(triggered()),
-		     this, SLOT(undo()));
+    QObject::connect(this->ua,&QAction::triggered,
+		     this,&QEmacsTextEditBase::undo);
     // redo action
     this->ra = new QAction(QObject::tr("&Redo"),this);
     this->ra->setIcon(QIcon::fromTheme("edit-redo"));
     this->ra->setIconVisibleInMenu(true);
-    QObject::connect(this->ra, SIGNAL(triggered()),
-		     this, SLOT(redo()));
+    QObject::connect(this->ra,&QAction::triggered,
+		     this,&QEmacsTextEditBase::redo);
     // cut action
     this->ca = new QAction(QObject::tr("Cu&t"),this);
     this->ca->setIcon(QIcon::fromTheme("edit-cut"));
     this->ca->setIconVisibleInMenu(true);
-    QObject::connect(this->ca, SIGNAL(triggered()),
-		     this, SLOT(cut()));
+    QObject::connect(this->ca,&QAction::triggered,
+		     this,&QEmacsTextEditBase::cut);
     // copy action
     this->coa = new QAction(QObject::tr("&Copy"),this);
     this->coa->setIcon(QIcon::fromTheme("edit-copy"));
     this->coa->setIconVisibleInMenu(true);
-    QObject::connect(this->coa, SIGNAL(triggered()),
-		     this, SLOT(copy()));
+    QObject::connect(this->coa,&QAction::triggered,
+		     this,&QEmacsTextEditBase::copy);
     // paste action
     this->pa = new QAction(QObject::tr("&Paste"),this);
     this->pa->setIcon(QIcon::fromTheme("edit-paste"));
     this->pa->setIconVisibleInMenu(true);
-    QObject::connect(this->pa, SIGNAL(triggered()),
-		     this, SLOT(paste()));
+    QObject::connect(this->pa,&QAction::triggered,
+		     this,&QEmacsTextEditBase::paste);
     // select all action
     this->sa = new QAction(QObject::tr("Select All"),this);
     this->sa->setIcon(QIcon::fromTheme("edit-select-all"));
     this->sa->setIconVisibleInMenu(true);
-    QObject::connect(this->sa, SIGNAL(triggered()),
-		     this, SLOT(selectAll()));
+    QObject::connect(this->sa,&QAction::triggered,
+		     this,&QEmacsTextEditBase::selectAll);
   }
 
-  void
-  QEmacsTextEditBase::gotoLine(int l)
+  void QEmacsTextEditBase::gotoLine(int l)
   {
     QTextCursor c = this->textCursor();
     if(l>=0){
@@ -521,7 +524,7 @@ namespace qemacs
     return this->mode->getIcon();
   }
 
-  void QEmacsTextEditBase::insertCompletion(QString completion)
+  void QEmacsTextEditBase::insertCompletion(const QString& completion)
   {
     if(this->mode==nullptr){
       return;
@@ -532,8 +535,8 @@ namespace qemacs
   void QEmacsTextEditBase::removeKeyPressEventFilter()
   {
     if(this->filter!=nullptr){
-      QObject::disconnect(this->filter,SIGNAL(destroyed()),
-			  this,SLOT(keyPressEventFilterDestroyed()));
+      QObject::disconnect(this->filter,&QEmacsTextEditKeyPressEventFilter::destroyed,
+			  this,&QEmacsTextEditBase::keyPressEventFilterDestroyed);
       this->filter->deleteLater();
       this->filter = nullptr;
     }
@@ -557,8 +560,8 @@ namespace qemacs
       return false;
     }
     this->filter = f;
-    QObject::connect(this->filter,SIGNAL(destroyed()),
-		     this,SLOT(keyPressEventFilterDestroyed()));
+    QObject::connect(this->filter,&QEmacsTextEditKeyPressEventFilter::destroyed,
+		     this,&QEmacsTextEditBase::keyPressEventFilterDestroyed);
     return true;
   }
 
@@ -1380,27 +1383,23 @@ namespace qemacs
     return false;
   }
 
-  void
-  QEmacsTextEditBase::setMainFrame(const bool b)
+  void QEmacsTextEditBase::setMainFrame(const bool b)
   {
     //    this->setMinimumHeight(400);
     this->mainFrame = b;
   } // end of QEmacsTextEditBase::setMainFrame
 
-  bool
-  QEmacsTextEditBase::isMainFrame() const
+  bool QEmacsTextEditBase::isMainFrame() const
   {
     return this->mainFrame;
   } // end of QEmacsTextEditBase::isMainFrame
 
-  bool
-  QEmacsTextEditBase::isSlave() const
+  bool QEmacsTextEditBase::isSlave() const
   {
     return !(this->isMainFrame());
   } // end of QEmacsTextEditBase::isSlave
 
-  void
-  QEmacsTextEditBase::setMoveMode(QTextCursor::MoveMode m)
+  void QEmacsTextEditBase::setMoveMode(QTextCursor::MoveMode m)
   {
     this->moveMode = m;
   }
@@ -1408,8 +1407,8 @@ namespace qemacs
   QEmacsTextEditBase::~QEmacsTextEditBase()
   {
     if(this->filter!=nullptr){
-      QObject::disconnect(this->filter,SIGNAL(destroyed()),
-			  this,SLOT(keyPressEventFilterDestroyed()));
+      QObject::disconnect(this->filter,&QEmacsTextEditKeyPressEventFilter::destroyed,
+			  this,&QEmacsTextEditBase::keyPressEventFilterDestroyed);
     }
     this->deleteContextMenuActions();
     delete this->filter;

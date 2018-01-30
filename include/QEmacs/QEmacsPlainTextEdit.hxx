@@ -31,8 +31,7 @@ namespace qemacs
 			QEmacsWidget&,
 			QEmacsBuffer&);
 
-    virtual void
-    print(QPrinter *const);
+    virtual void print(QPrinter *const);
       
     ~QEmacsPlainTextEdit() override;
 
@@ -102,8 +101,7 @@ namespace qemacs
 
   protected:
 
-    virtual void
-    readTemplateFile(const QString&);
+    void readTemplateFile(const QString&);
 
     QPlainTextEdit *e;
 

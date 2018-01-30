@@ -24,33 +24,30 @@ namespace qemacs
       options(o)
 {}
 
-  void
-  LicosStudyThread::run()
+  void LicosStudyThread::run()
   {
     LicosStudy s(this->inputFile,
 		 this->options,
 		 this->args);
     this->study = &s;
-    QObject::connect(&s,SIGNAL(newProcessOutput(QString)),
-		     this,SLOT(forwardProcessOutput(QString)));
-    QObject::connect(&s,SIGNAL(newPeriod(int)),
-		     this,SLOT(forwardNewPeriod(int)));
-    QObject::connect(&s,SIGNAL(finished()),
-		     this,SLOT(studyFinished()));
-    QObject::connect(this,SIGNAL(killProcess()),
-		     &s,SLOT(stopComputations()));
+    QObject::connect(&s,&LicosStudy::newProcessOutput,
+		     this,&LicosStudyThread::forwardProcessOutput);
+    QObject::connect(&s,&LicosStudy::newPeriod,
+		     this,&LicosStudyThread::forwardNewPeriod);
+    QObject::connect(&s,&LicosStudy::finished,
+		     this,&LicosStudyThread::studyFinished);
+    QObject::connect(this,&LicosStudyThread::killProcess,
+		     &s,&LicosStudy::stopComputations);
     s.run();
     this->exec();
   }
 
-  void
-  LicosStudyThread::forwardProcessOutput(QString o)
+  void LicosStudyThread::forwardProcessOutput(QString o)
   {
     emit newProcessOutput(o);
   }
 
-  void
-  LicosStudyThread::forwardNewPeriod(int s)
+  void LicosStudyThread::forwardNewPeriod(int s)
   {
     emit newPeriod(s);
   }

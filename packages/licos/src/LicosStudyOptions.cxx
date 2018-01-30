@@ -49,7 +49,7 @@ namespace qemacs
     gl1->addWidget(new QLabel(QObject::tr("Warning level")),1,0);
     gl1->addWidget(wlv,1,1);
     // advanced options
-    QGroupBox   *ao  = new QGroupBox(QObject::tr("Advanced options"));
+    auto *ao  = new QGroupBox(QObject::tr("Advanced options"));
     gl2->addWidget(new QLabel(QObject::tr("Allow missing dependencies")),0,0);
     gl2->addWidget(new QCheckBox,0,1,Qt::AlignHCenter);
     gl2->addWidget(new QLabel(QObject::tr("Trac floatting point exceptions")),1,0);
@@ -60,25 +60,25 @@ namespace qemacs
     gl2->addWidget(new QCheckBox,3,1,Qt::AlignHCenter);
     ao->setLayout(gl2);
     ao->setFlat(true);
-
-    QDialogButtonBox  *dbb;
-    dbb =  new QDialogButtonBox(QDialogButtonBox::Ok |
-				QDialogButtonBox::Cancel);
+    auto dbb =  new QDialogButtonBox(QDialogButtonBox::Ok |
+				     QDialogButtonBox::Cancel);
     hl->addWidget(dbb);
-    QObject::connect(dbb, SIGNAL(accepted()), this, SLOT(accept()));
-    QObject::connect(dbb, SIGNAL(rejected()), this, SLOT(reject()));
-    QObject::connect(vlv, SIGNAL(activated(const QString&)),
-		     this, SLOT(verboseLevelChanged(const QString&)));
-    QObject::connect(wlv, SIGNAL(activated(const QString&)),
-		     this, SLOT(warningLevelChanged(const QString&)));
-    QObject::connect(gl2-> itemAtPosition(0,1)->widget(), SIGNAL(toggled(bool)),
-		     this, SLOT(allowMissingDependenciesChecked(bool)));
-    QObject::connect(gl2-> itemAtPosition(1,1)->widget(), SIGNAL(toggled(bool)),
-		     this, SLOT(fpeChecked(bool)));
-    QObject::connect(gl2-> itemAtPosition(2,1)->widget(), SIGNAL(toggled(bool)),
-		     this, SLOT(printBackTraceChecked(bool)));
-    QObject::connect(gl2-> itemAtPosition(3,1)->widget(), SIGNAL(toggled(bool)),
-		     this, SLOT(debugModeChecked(bool)));
+    QObject::connect(dbb,&QDialogButtonBox::accepted,
+		     this,&LicosStudyOptionsDialog::accept);
+    QObject::connect(dbb,&QDialogButtonBox::rejected,
+		     this,&LicosStudyOptionsDialog::reject);
+    QObject::connect(vlv,static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::activated),
+		     this,&LicosStudyOptionsDialog::verboseLevelChanged);
+    QObject::connect(wlv,static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::activated),
+		     this,&LicosStudyOptionsDialog::warningLevelChanged);
+    QObject::connect(qobject_cast<QCheckBox*>(gl2->itemAtPosition(0,1)->widget()),&QCheckBox::toggled,
+		     this,&LicosStudyOptionsDialog::allowMissingDependenciesChecked);
+    QObject::connect(qobject_cast<QCheckBox*>(gl2->itemAtPosition(1,1)->widget()),&QCheckBox::toggled,
+		     this,&LicosStudyOptionsDialog::fpeChecked);
+    QObject::connect(qobject_cast<QCheckBox*>(gl2->itemAtPosition(2,1)->widget()),&QCheckBox::toggled,
+		     this,&LicosStudyOptionsDialog::printBackTraceChecked);
+    QObject::connect(qobject_cast<QCheckBox*>(gl2->itemAtPosition(3,1)->widget()),&QCheckBox::toggled,
+		     this,&LicosStudyOptionsDialog::debugModeChecked);
     vl->addLayout(gl1);
     vl->addWidget(ao);
     vl->addLayout(hl);

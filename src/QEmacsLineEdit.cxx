@@ -374,28 +374,25 @@ namespace qemacs
     this->setLayout(this->hl);
   } // end of QEmacsLineEdit::QEmacsLineEdit
   
-  bool
-  QEmacsLineEdit::isBlocking() const
+  bool QEmacsLineEdit::isBlocking() const
   {
     return false;
   } // end of QEmacsLineEdit::isBlocking
 
-  void
-  QEmacsLineEdit::hideCompletions()
+  void QEmacsLineEdit::hideCompletions()
   {
     this->buffer.hideSlave(this->scompletions);
   } // end of QEmacsLineEdit::hideCompletions
 
-  void
-  QEmacsLineEdit::showCompletions(const QString&,
-				  const QStringList& cl)
+  void QEmacsLineEdit::showCompletions(const QString&,
+				       const QStringList& cl)
   {
     if(this->completions==nullptr){
       this->completions = new QEmacsTextEdit(this->qemacs,this->buffer);
       this->completions->setReadOnly(true);
       this->scompletions = this->buffer.addSlave("*completions*",this->completions);
-      QObject::connect(this,SIGNAL(textChanged(const QString&)),
-		       this,SLOT(hideCompletions()));
+      QObject::connect(this,&QEmacsLineEdit::textChanged,
+		       this,&QEmacsLineEdit::hideCompletions);
     }
     this->completions->clear();
     this->completions->insertHtml("<font color=\"blue\">Possible completions :</font>");
@@ -447,20 +444,19 @@ namespace qemacs
     this->input->event(e);
   }
 
-  void
-  QEmacsLineEdit::setLineEdit(QEmacsLineEdit::CustomLineEdit *const i)
+  void QEmacsLineEdit::setLineEdit(QEmacsLineEdit::CustomLineEdit *const i)
   {
     if(i==nullptr){
       return;
     }
     if(this->input!=nullptr){
       this->hl->removeWidget(this->input);
-      QObject::disconnect(this->input,SIGNAL(returnPressed()),
-			  this,SLOT(userEditingFinished()));
-      QObject::disconnect(this->input,SIGNAL(textChanged(const QString&)),
-			  this,SLOT(inputTextChanged(const QString&)));
-      QObject::disconnect(this->input,SIGNAL(textEdited(const QString&)),
-			  this,SLOT(inputTextEdited(const QString&)));
+      QObject::disconnect(this->input,&QEmacsLineEdit::CustomLineEdit::returnPressed,
+			  this,&QEmacsLineEdit::userEditingFinished);
+      QObject::disconnect(this->input,&QEmacsLineEdit::CustomLineEdit::textChanged,
+			  this,&QEmacsLineEdit::inputTextChanged);
+      QObject::disconnect(this->input,&QEmacsLineEdit::CustomLineEdit::textEdited,
+			  this,&QEmacsLineEdit::inputTextEdited);
       this->input->deleteLater();
     }
     this->input = i;
@@ -469,12 +465,12 @@ namespace qemacs
     this->input->setFrame(false);
     this->input->setStyleSheet("background: rgba(255,255,255,100%)");
     this->hl->addWidget(this->input);
-    QObject::connect(this->input,SIGNAL(returnPressed()),
-		     this,SLOT(userEditingFinished()));
-    QObject::connect(this->input,SIGNAL(textChanged(const QString&)),
-		     this,SLOT(inputTextChanged(const QString&)));
-    QObject::connect(this->input,SIGNAL(textEdited(const QString&)),
-		     this,SLOT(inputTextEdited(const QString&)));
+    QObject::connect(this->input,&QEmacsLineEdit::CustomLineEdit::returnPressed,
+		     this,&QEmacsLineEdit::userEditingFinished);
+    QObject::connect(this->input,&QEmacsLineEdit::CustomLineEdit::textChanged,
+		     this,&QEmacsLineEdit::inputTextChanged);
+    QObject::connect(this->input,&QEmacsLineEdit::CustomLineEdit::textEdited,
+		     this,&QEmacsLineEdit::inputTextEdited);
   }
 
   void QEmacsLineEdit::userEditingFinished()
@@ -493,28 +489,22 @@ namespace qemacs
     }
   } // end of QEmacsLineEdit::userEditingFinished()
 
-  void QEmacsLineEdit::cancel()
-  {
-    QObject::disconnect(this->input,SIGNAL(returnPressed()),
-			this,SLOT(userEditingFinished()));
+  void QEmacsLineEdit::cancel(){
+    QObject::disconnect(this->input,&QEmacsLineEdit::CustomLineEdit::returnPressed,
+			this,&QEmacsLineEdit::userEditingFinished);
     this->isUserEditingFinished = true;
     emit finished(this);
   } // end of QEmacsLineEdit::cancel()
 
-  void QEmacsLineEdit::setFocus()
-  {
+  void QEmacsLineEdit::setFocus(){
     this->input->setFocus();
   } // end of QEmacsLineEdit::setFocus()
 
-  void
-  QEmacsLineEdit::inputTextChanged(const QString & t)
-  {
+  void QEmacsLineEdit::inputTextChanged(const QString & t){
     emit textChanged(t);
   }
 
-  void
-  QEmacsLineEdit::inputTextEdited(const QString & t)
-  {
+  void QEmacsLineEdit::inputTextEdited(const QString & t){
     emit textEdited(t);
   }
 

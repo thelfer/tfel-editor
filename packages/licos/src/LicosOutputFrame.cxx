@@ -39,29 +39,26 @@ namespace qemacs
     vl->addWidget(pbar);
     this->setLayout(vl);
     this->licos = new LicosStudyThread(f,options,QStringList(),this);
-    QObject::connect(this->licos,SIGNAL(newProcessOutput(QString)),
-		     this,SLOT(displayProcessOutput(QString)));
-    QObject::connect(this->licos,SIGNAL(newPeriod(int)),
-		     this,SLOT(newPeriod(int)));
-    QObject::connect(this->licos,SIGNAL(finished(bool,QString)),
-		     this,SLOT(studyFinished(bool,QString)));
+    QObject::connect(this->licos,&LicosStudyThread::newProcessOutput,
+		     this,&LicosOutputFrame::displayProcessOutput);
+    QObject::connect(this->licos,&LicosStudyThread::newPeriod,
+		     this,&LicosOutputFrame::newPeriod);
+    QObject::connect(this->licos,&LicosStudyThread::finished,
+		     this,&LicosOutputFrame::studyFinished);
     this->licos->start();
   } // end of LicosOutputFrame::LicosOutputFrame
 
-  void
-  LicosOutputFrame::displayProcessOutput(QString o)
+  void LicosOutputFrame::displayProcessOutput(QString o)
   {
     this->textEdit->appendPlainText(o);
   }
 
-  void
-  LicosOutputFrame::newPeriod(int s)
+  void LicosOutputFrame::newPeriod(int s)
   {
     this->pbar->setValue(s);
   }
 
-  void
-  LicosOutputFrame::studyFinished(bool s, QString e)
+  void LicosOutputFrame::studyFinished(bool s, QString e)
   {
     if(s){
       this->textEdit->appendHtml("<font color=blue><b>success</b></font>");
@@ -78,8 +75,7 @@ namespace qemacs
     emit finished(s,e);
   }
 
-  void
-  LicosOutputFrame::closeEvent(QCloseEvent *)
+  void LicosOutputFrame::closeEvent(QCloseEvent *)
   {
     if(this->licos!=nullptr){
       this->licos->deleteLater();

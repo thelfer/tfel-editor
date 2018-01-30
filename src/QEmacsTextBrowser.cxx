@@ -26,7 +26,7 @@ namespace qemacs
 {
 
   QEmacsTextBrowser::QEmacsTextBrowser(QEmacsWidget& g,
-					   QEmacsBuffer& b)
+				       QEmacsBuffer& b)
     : QEmacsTextEditBase(g,b),
       e(new QTextBrowser(this))
   {
@@ -67,50 +67,42 @@ namespace qemacs
     this->setFileName(f);
   } // end of QEmacsTextBrowser::QEmacsTextBrowser()
 
-  QAbstractScrollArea *
-  QEmacsTextBrowser::widget()
+  QAbstractScrollArea* QEmacsTextBrowser::widget()
   {
     return this->e;
   }
 
-  void
-  QEmacsTextBrowser::undo()
+  void QEmacsTextBrowser::undo()
   {
     this->e->undo();
   } // end of QEmacsTextBrowser::undo
 
-  void
-  QEmacsTextBrowser::redo()
+  void QEmacsTextBrowser::redo()
   {
     this->e->redo();
   } // end of QEmacsTextBrowser::redo
 
-  void
-  QEmacsTextBrowser::cut()
+  void QEmacsTextBrowser::cut()
   {
     this->e->cut();
   }
 
-  void
-  QEmacsTextBrowser::paste()
+  void QEmacsTextBrowser::paste()
   {
     this->e->paste();
   }
   
-  void
-  QEmacsTextBrowser::selectAll()
+  void QEmacsTextBrowser::selectAll()
   {
     this->e->selectAll();
   }
   
-  void
-  QEmacsTextBrowser::copy()
+  void QEmacsTextBrowser::copy()
   {
     this->e->copy();
   }
 
-  void
-  QEmacsTextBrowser::clear()
+  void QEmacsTextBrowser::clear()
   {
     this->e->clear();
   }
@@ -121,8 +113,7 @@ namespace qemacs
     return this->e->isReadOnly();
   }
   
-  void
-  QEmacsTextBrowser::appendPlainText(const QString& t)
+  void QEmacsTextBrowser::appendPlainText(const QString& t)
   {
     QTextCursor tc = this->e->textCursor();
     tc.movePosition(QTextCursor::End,
@@ -130,20 +121,17 @@ namespace qemacs
     tc.insertText(t);
   }
 
-  void
-  QEmacsTextBrowser::insertPlainText(const QString& t)
+  void QEmacsTextBrowser::insertPlainText(const QString& t)
   {
     return this->e->insertPlainText(t);
   }
 
-  void
-  QEmacsTextBrowser::setPlainText(const QString& t)
+  void QEmacsTextBrowser::setPlainText(const QString& t)
   {
     return this->e->setPlainText(t);
   }
 
-  void
-  QEmacsTextBrowser::appendHtml(const QString& t)
+  void QEmacsTextBrowser::appendHtml(const QString& t)
   {
     QTextCursor tc = this->e->textCursor();
     tc.movePosition(QTextCursor::End,
@@ -151,14 +139,12 @@ namespace qemacs
     tc.insertHtml(t);
   }
 
-  void
-  QEmacsTextBrowser::insertHtml(const QString& t)
+  void QEmacsTextBrowser::insertHtml(const QString& t)
   {
     return this->e->textCursor().insertHtml(t);
   }
 
-  void
-  QEmacsTextBrowser::setHtml(const QString& t)
+  void QEmacsTextBrowser::setHtml(const QString& t)
   {
     this->clear();
     this->insertHtml(t);
@@ -176,20 +162,17 @@ namespace qemacs
     return this->e->cursorRect(tc);
   }
   
-  void
-  QEmacsTextBrowser::setUndoRedoEnabled(bool b)
+  void QEmacsTextBrowser::setUndoRedoEnabled(bool b)
   {
     return this->e->setUndoRedoEnabled(b);
   }
 
-  void
-  QEmacsTextBrowser::setReadOnly(bool b)
+  void QEmacsTextBrowser::setReadOnly(bool b)
   {
     return this->e->setReadOnly(b);
   }
   
-  void
-  QEmacsTextBrowser::moveCursor(QTextCursor::MoveOperation mo,
+  void QEmacsTextBrowser::moveCursor(QTextCursor::MoveOperation mo,
 				  QTextCursor::MoveMode mm)
   {
     return this->e->moveCursor(mo,mm);
@@ -201,8 +184,7 @@ namespace qemacs
     return this->e->document();
   } // end of QEmacsTextBrowser::document
 
-  void
-  QEmacsTextBrowser::setExtraSelections(const QList<QTextEdit::ExtraSelection>& l)
+  void QEmacsTextBrowser::setExtraSelections(const QList<QTextEdit::ExtraSelection>& l)
   {
     return this->e->setExtraSelections(l);
   }
@@ -238,14 +220,12 @@ namespace qemacs
     return this->e->isUndoRedoEnabled();
   }
   
-  void
-  QEmacsTextBrowser::setTextCursor(const QTextCursor& tc)
+  void QEmacsTextBrowser::setTextCursor(const QTextCursor& tc)
   {
     return this->e->setTextCursor(tc);
   }
 
-  void
-  QEmacsTextBrowser::setTextInteractionFlags(Qt::TextInteractionFlags f)
+  void QEmacsTextBrowser::setTextInteractionFlags(Qt::TextInteractionFlags f)
   {
     this->e->setTextInteractionFlags(f);
   }

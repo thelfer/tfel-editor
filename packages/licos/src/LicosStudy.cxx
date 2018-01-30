@@ -28,19 +28,18 @@ namespace qemacs
       options(o)
   {}
 
-  void
-  LicosStudy::run()
+  void LicosStudy::run()
   {
-    QObject::connect(this->in, SIGNAL(error(QLocalSocket::LocalSocketError)),
-		     this, SLOT(displayInputSocketError(QLocalSocket::LocalSocketError)));
-    QObject::connect(this->process,SIGNAL(error(QProcess::ProcessError)),
-		     this,SLOT(processError(QProcess::ProcessError)));
-    QObject::connect(this->process,SIGNAL(finished(int,QProcess::ExitStatus)),
-		     this,SLOT(processFinished(int,QProcess::ExitStatus)));
-    QObject::connect(this->server, SIGNAL(newConnection()),
-    		     this, SLOT(processInitialised()));
-    QObject::connect(this->process,SIGNAL(readyReadStandardOutput()),
-		     this,SLOT(displayProcessOutput()));
+    QObject::connect(this->in,static_cast<void (QLocalSocket::*)(QLocalSocket::LocalSocketError)>(&QLocalSocket::error),
+		     this,&LicosStudy::displayInputSocketError);
+    QObject::connect(this->process,static_cast<void (QProcess::*)(QProcess::ProcessError)>(&QProcess::error),
+		     this,&LicosStudy::processError);
+    QObject::connect(this->process,static_cast<void (QProcess::*)(int,QProcess::ExitStatus)>(&QProcess::finished),
+		     this,&LicosStudy::processFinished);
+    QObject::connect(this->server,&QLocalServer::newConnection,
+    		     this,&LicosStudy::processInitialised);
+    QObject::connect(this->process,&QProcess::readyReadStandardOutput,
+		     this,&LicosStudy::displayProcessOutput);
     // this is the input for the sub-process (and the output of
     // this...), hence the name
     QString sname("licos.in");
@@ -55,14 +54,13 @@ namespace qemacs
     this->process->start("xlicos-client",QStringList() << "licos");
   } // end of LicosStudy::run
 
-  void
-  LicosStudy::processInitialised(){
-    QObject::disconnect(this->server, SIGNAL(newConnection()),
-			this, SLOT(processInitialised()));
+  void LicosStudy::processInitialised(){
+    QObject::disconnect(this->server,&QLocalServer::newConnection,
+			this,&LicosStudy::processInitialised);
     QString sname("licos.out");
     this->out = this->server->nextPendingConnection();
-    QObject::connect(this->out, SIGNAL(error(QLocalSocket::LocalSocketError)),
-		     this, SLOT(displayOutputSocketError(QLocalSocket::LocalSocketError)));
+    QObject::connect(this->out,static_cast<void (QLocalSocket::*)(QLocalSocket::LocalSocketError)>(&QLocalSocket::error),
+		     this,&LicosStudy::displayOutputSocketError);
     this->in->connectToServer(sname,QIODevice::ReadOnly);
     if(this->in->state()!=QLocalSocket::ConnectedState){
       this->fails(tr("Unable to connect to socket '%1'")
@@ -77,8 +75,8 @@ namespace qemacs
     }
     this->inServer = this->receive<QString>();
     // treating options
-    QObject::connect(this->in, SIGNAL(readyRead()),
-		     this, SLOT(processReachedNextStage()));
+    QObject::connect(this->in,&QLocalSocket::readyRead,
+		     this,&LicosStudy::processReachedNextStage);
     this->send("initialize");
     this->sendOption("VerboseLevel",this->options.vlvl);
     this->sendOption("WarningLevel",this->options.wlvl);
@@ -91,10 +89,9 @@ namespace qemacs
     this->send(this->inputFile);
   }
 
-  void
-  LicosStudy::processReachedNextStage(){
-    QObject::disconnect(this->in, SIGNAL(readyRead()),
-			this, SLOT(processReachedNextStage()));
+  void LicosStudy::processReachedNextStage(){
+    QObject::disconnect(this->in,&QLocalSocket::readyRead,
+			this,&LicosStudy::processReachedNextStage);
     QString s = this->receive<QString>();
     if(s=="readInputFile"){
       this->send("run");
@@ -114,28 +111,25 @@ namespace qemacs
     } else {
       this->fails(tr("Unknonw process stage '%1'").arg(s));
     }
-    QObject::connect(this->in, SIGNAL(readyRead()),
-		     this, SLOT(processReachedNextStage()));
+    QObject::connect(this->in,&QLocalSocket::readyRead,
+		     this,&LicosStudy::processReachedNextStage);
   }
 
-  void
-  LicosStudy::sendOption(const QString& o,
-			 const QString& v)
+  void LicosStudy::sendOption(const QString& o,
+			      const QString& v)
   {
     this->send("option");
     this->send(o);
     this->send(v);
   }
 
-  void
-  LicosStudy::send(const char *const m)
+  void LicosStudy::send(const char *const m)
   {
     QString msg(m);
     this->send(msg);
   }
 
-  void
-  LicosStudy::send(const QString& msg)
+  void LicosStudy::send(const QString& msg)
   {
     QByteArray block;
     QDataStream o(&block, QIODevice::WriteOnly);
@@ -149,8 +143,7 @@ namespace qemacs
   }
   
   template<>
-  QString
-  LicosStudy::receive<QString>()
+  QString LicosStudy::receive<QString>()
   {
     QDataStream id(this->in);
     id.setVersion(QDataStream::Qt_4_0);
@@ -170,8 +163,7 @@ namespace qemacs
     return m;
   }
 
-  void
-  LicosStudy::displayProcessOutput()
+  void LicosStudy::displayProcessOutput()
   {
     QByteArray data = this->process->readAllStandardOutput();
     QTextCodec *codec = QTextCodec::codecForLocale();
@@ -180,21 +172,18 @@ namespace qemacs
     delete decoder;
   } // end of LicosStudy::displayProcessOutput
 
-  void
-  LicosStudy::displayInputSocketError(QLocalSocket::LocalSocketError e)
+  void LicosStudy::displayInputSocketError(QLocalSocket::LocalSocketError e)
   {
     this->displaySocketError(this->in,e);
   }
 
-  void
-  LicosStudy::displayOutputSocketError(QLocalSocket::LocalSocketError e)
+  void LicosStudy::displayOutputSocketError(QLocalSocket::LocalSocketError e)
   {
     this->displaySocketError(this->out,e);
   }
 
-  void
-  LicosStudy::displaySocketError(QLocalSocket *s,
-				 QLocalSocket::LocalSocketError e)
+  void LicosStudy::displaySocketError(QLocalSocket *s,
+				      QLocalSocket::LocalSocketError e)
   {
     QString msg;
     if(e== QLocalSocket::SocketTimeoutError){
@@ -218,8 +207,7 @@ namespace qemacs
     this->fails(msg);
   }
 
-  void
-  LicosStudy::processError(QProcess::ProcessError e)
+  void LicosStudy::processError(QProcess::ProcessError e)
   {
     QString m;
     switch(e){
@@ -250,8 +238,7 @@ namespace qemacs
     }
   }
 
-  void
-  LicosStudy::fails(const QString& msg)
+  void LicosStudy::fails(const QString& msg)
   {
     this->success = false;
     this->errorMessage = msg;
@@ -262,31 +249,27 @@ namespace qemacs
     return this->quit();
   } // end of LicosStudy::fails
 
-  void
-  LicosStudy::quit()
+  void LicosStudy::quit()
   {
     if(this->in!=nullptr){
-      QObject::disconnect(this->in, SIGNAL(error(QLocalSocket::LocalSocketError)),
-			  this, SLOT(displayInputSocketError(QLocalSocket::LocalSocketError)));
+      QObject::disconnect(this->in,static_cast<void (QLocalSocket::*)(QLocalSocket::LocalSocketError)>(&QLocalSocket::error),
+			  this,&LicosStudy::displayInputSocketError);
     }
     if(this->out!=nullptr){
-      QObject::disconnect(this->out, SIGNAL(error(QLocalSocket::LocalSocketError)),
-			  this, SLOT(displayOutputSocketError(QLocalSocket::LocalSocketError)));
+      QObject::disconnect(this->out,static_cast<void (QLocalSocket::*)(QLocalSocket::LocalSocketError)>(&QLocalSocket::error),
+			  this,&LicosStudy::displayOutputSocketError);
     }
     if(this->process!=nullptr){
-      QObject::disconnect(this->process,SIGNAL(error(QProcess::ProcessError)),
-			  this,SLOT(processError(QProcess::ProcessError)));
-      QObject::disconnect(this->process,SIGNAL(finished(int,QProcess::ExitStatus)),
-			  this,SLOT(processFinished(int,QProcess::ExitStatus)));
+      QObject::disconnect(this->process,static_cast<void (QProcess::*)(QProcess::ProcessError)>(&QProcess::error),
+			  this,&LicosStudy::processError);
+      QObject::disconnect(this->process,static_cast<void (QProcess::*)(int,QProcess::ExitStatus)>(&QProcess::finished),
+			  this,&LicosStudy::processFinished);
     }
-
     emit finished();
     return;
   }
 
-  void
-  LicosStudy::processFinished(int s,
-			      QProcess::ExitStatus)
+  void LicosStudy::processFinished(int s,QProcess::ExitStatus)
   {
     if(s!=0){
       this->fails(tr("xlicos-client failed"));
@@ -294,23 +277,19 @@ namespace qemacs
     } else {
       this->success = true;
     }
-    
   }
 
-  QString
-  LicosStudy::getErrorMessage() const
+  QString LicosStudy::getErrorMessage() const
   {
     return this->errorMessage;
   }
 
-  bool
-  LicosStudy::succeed() const
+  bool LicosStudy::succeed() const
   {
     return this->success;
   } // end of LicosStudy::succeed
 
-  void
-  LicosStudy::stopComputations()
+  void LicosStudy::stopComputations()
   {
     this->in->disconnectFromServer();
     if(this->process->state()==QProcess::Running){
@@ -330,8 +309,7 @@ namespace qemacs
     this->server->close();
   }
 
-  LicosStudy::~LicosStudy()
-  {
+  LicosStudy::~LicosStudy(){
     this->stopComputations();
   } // end of LicosStudy::~LicosStudy
 

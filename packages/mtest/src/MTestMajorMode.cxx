@@ -31,24 +31,22 @@ namespace qemacs
     this->c->setWidget(&t);
     this->c->setCaseSensitivity(Qt::CaseInsensitive);
     this->c->setCompletionMode(QCompleter::PopupCompletion);
-    QObject::connect(this->c,SIGNAL(activated(QString)),
-		     &t,SLOT(insertCompletion(QString)));
+    QObject::connect(this->c,static_cast<void (QCompleter:: *)(const QString&)>(&QCompleter::activated),
+		     &t,&QEmacsTextEditBase::insertCompletion);
     // creating actions
     this->ra = new QAction(QObject::tr("Run mtest"),this);
-    QObject::connect(this->ra, SIGNAL(triggered()),
-		     this, SLOT(run()));
+    QObject::connect(this->ra,&QAction::triggered,
+		     this,&MTestMajorMode::run);
     this->iba  = new QAction(QObject::tr("Import Behaviour"),this);
-    QObject::connect(this->iba, SIGNAL(triggered()),
-		     this, SLOT(showImportBehaviourWizard()));
+    QObject::connect(this->iba,&QAction::triggered,
+		     this,&MTestMajorMode::showImportBehaviourWizard);
   } // end of MTestMajorMode::MTestMajorMode
   
-  QString MTestMajorMode::getName() const
-  {
+  QString MTestMajorMode::getName() const{
     return "MTest";
   } // end of MTestMajorMode::getName
     
-  QString MTestMajorMode::getDescription() const
-  {
+  QString MTestMajorMode::getDescription() const{
     return "major mode dedicated to the mtest code";
   } // end of CppMajorMode
 
@@ -82,8 +80,8 @@ namespace qemacs
       ka->setData(k);
       km->addAction(ka);
     }
-    QObject::connect(km,SIGNAL(triggered(QAction *)),
-		     this,SLOT(insertKeyword(QAction *)));
+    QObject::connect(km,&QMenu::triggered,
+		     this,&MTestMajorMode::insertKeyword);
     return m;
   }
 
@@ -126,8 +124,8 @@ namespace qemacs
 	  m->insertSeparator(*(cactions.begin()));
 	  m->insertAction(*(cactions.begin()),this->ha);
 	}
-	QObject::connect(m,SIGNAL(triggered(QAction *)),
-			 this,SLOT(actionTriggered(QAction *)));
+	QObject::connect(m,&QMenu::triggered,
+			 this,&MTestMajorMode::actionTriggered);
       }
     }
   }
@@ -178,21 +176,19 @@ namespace qemacs
     return CxxMajorMode::getCompletionPrefix();
   }
   
-  void
-  MTestMajorMode::run()
+  void MTestMajorMode::run()
   {
     if(this->textEdit.isModified()){
       QEmacsTextEditBase::SaveInput *input = this->textEdit.getSaveInput();
-      QObject::connect(input,SIGNAL(finished(QEmacsLineEdit *)),
-		       this,SLOT(start()));
+      QObject::connect(input,&QEmacsTextEditBase::SaveInput::finished,
+		       this,&MTestMajorMode::start);
       this->qemacs.setUserInput(input);
       return;
     }
     this->start();
   }
 
-  void
-  MTestMajorMode::start()
+  void MTestMajorMode::start()
   {
     QString n = this->textEdit.getCompleteFileName();
     if(n.isEmpty()){

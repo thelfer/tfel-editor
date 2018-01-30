@@ -23,32 +23,29 @@ namespace qemacs
   {
     QEmacsPlainTextEdit::setReadOnly(true); 
     this->process->setProcessChannelMode(QProcess::MergedChannels);
-    QObject::connect(this->process,SIGNAL(readyReadStandardOutput()),
-		     this,SLOT(displayProcessOutput()));
-    QObject::connect(this->process,SIGNAL(finished(int,QProcess::ExitStatus)),
-		     this,SLOT(processFinished(int,QProcess::ExitStatus)));
+    QObject::connect(this->process,&QProcess::readyReadStandardOutput,
+		     this,&ProcessOutputFrame::displayProcessOutput);
+    QObject::connect(this->process,static_cast<void (QProcess::*)(int,QProcess::ExitStatus)>(&QProcess::finished),
+		     this,&ProcessOutputFrame::processFinished);
   }
 
-  void 
-  ProcessOutputFrame::setReadOnly(bool)
+  void ProcessOutputFrame::setReadOnly(bool)
   {} // end of ProcessOutputFrame::setReadOnly
 
-  void
-  ProcessOutputFrame::displayProcessOutput()
+  void ProcessOutputFrame::displayProcessOutput()
   {
-    QObject::disconnect(this->process,SIGNAL(readyReadStandardOutput()),
-			this,SLOT(displayProcessOutput()));
+    QObject::disconnect(this->process,&QProcess::readyReadStandardOutput,
+			this,&ProcessOutputFrame::displayProcessOutput);
     QByteArray out = this->process->readAll();
     QTextCodec *codec = QTextCodec::codecForLocale();
     QTextDecoder *decoder = codec->makeDecoder();
     this->appendPlainText(decoder->toUnicode(out));
     delete decoder;
-    QObject::connect(this->process,SIGNAL(readyReadStandardOutput()),
-		     this,SLOT(displayProcessOutput()));
+    QObject::connect(this->process,&QProcess::readyReadStandardOutput,
+		     this,&ProcessOutputFrame::displayProcessOutput);
   } // end of ProcessOutputFrame::displayProcessOutput
 
-  void
-  ProcessOutputFrame::processFinished(int s,QProcess::ExitStatus)
+  void ProcessOutputFrame::processFinished(int s,QProcess::ExitStatus)
   {
     if(s==0){
       this->buffer.setSlaveIcon(this, QIcon(":/QEmacsSuccessIcon.png"));

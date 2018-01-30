@@ -79,12 +79,12 @@ namespace qemacs
     l->addLayout(g);
     this->setLayout(l);
 
-    QObject::connect(this->slb, SIGNAL(pressed()),
-		     this, SLOT(selectLibrary()));
-    QObject::connect(this->le,SIGNAL(textChanged(const QString&)),
-		     this,SLOT(updateBehaviourList(const QString&)));
-    QObject::connect(this->bl,SIGNAL(activated(const QString &)),
-		     be,SLOT(setText(const QString &)));
+    QObject::connect(this->slb,&QPushButton::pressed,
+		     this,&ImportBehaviour::SelectBehaviourPage::selectLibrary);
+    QObject::connect(this->le,&QLineEdit::textChanged,
+		     this,&ImportBehaviour::SelectBehaviourPage::updateBehaviourList);
+    QObject::connect(this->bl,static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::activated),
+		     be,&QLineEdit::setText);
     // baseClassLabel = new QLabel(tr("B&ase class:"));
     // baseClassLineEdit = new QLineEdit;
     // baseClassLabel->setBuddy(baseClassLineEdit);

@@ -196,8 +196,8 @@ namespace qemacs
   {
     if(this->textEdit.isModified()){
       QEmacsTextEditBase::SaveInput *input = this->textEdit.getSaveInput();
-      QObject::connect(input,SIGNAL(finished(QEmacsLineEdit *)),
-  		       this,SLOT(startLaTeX()));
+      QObject::connect(input,&QEmacsTextEditBase::SaveInput::finished,
+  		       this,&LaTeXMajorMode::startLaTeX);
       this->qemacs.setUserInput(input);
       return;
     }
@@ -375,8 +375,8 @@ namespace qemacs
 		  m->insertAction(*(cactions.begin()),a);
 		}
 	      }
-	      QObject::connect(m,SIGNAL(triggered(QAction *)),
-			       this,SLOT(replaceMispelledWordBySuggestion(QAction *)));
+	      QObject::connect(m,&QMenu::triggered,
+			       this,&LaTeXMajorMode::replaceMispelledWordBySuggestion);
 	    }
 	  }
 	}

@@ -6,9 +6,7 @@
  */
 
 #include<fstream>
-
 #include<QtCore/QDebug>
-
 #include<QtCore/QDir>
 #include<QtCore/QDate>
 #include<QtCore/QFile>
@@ -61,24 +59,25 @@ namespace qemacs
 	auto c = s.value("previously selected codec").toString();
 	view->setCurrentIndex(model->index(codecs.indexOf(c)));
       }
-      QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok
-							 | QDialogButtonBox::Cancel);
-     connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
-     connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+      auto *bb = new QDialogButtonBox(QDialogButtonBox::Ok|
+				      QDialogButtonBox::Cancel);
+      connect(bb,&QDialogButtonBox::accepted,
+	      this,&CodecSelectionDialog::accept);
+      connect(bb,&QDialogButtonBox::rejected,
+	      this,&CodecSelectionDialog::reject);
       mlayout->addWidget(l);
       mlayout->addWidget(view);  
-      mlayout->addWidget(buttonBox);  
+      mlayout->addWidget(bb);  
       this->setLayout(mlayout);
     } // end of CodecSelectionDialog
 
-    QString
-    selectedCodec() const
+    QString selectedCodec() const
     {
-      QModelIndex index = this->view->currentIndex();
+      const auto index = this->view->currentIndex();
       if(!index.isValid()){
 	return QString();
       }
-      QString c = this->model->stringList()[index.row()];
+      const auto c = this->model->stringList()[index.row()];
       QSettings s;
       s.setValue("previously selected codec",c);
       return c;
@@ -92,14 +91,12 @@ namespace qemacs
 
   static bool valid_utf8_file(const QString& f)
   {
-    using namespace std;
-    using namespace utf8;
-    ifstream ifs(f.toStdString().c_str());
+    std::ifstream ifs(f.toStdString().c_str());
     if (!ifs){
       return false; // even better, throw here
     }
-    istreambuf_iterator<char> it(ifs.rdbuf());
-    istreambuf_iterator<char> eos;
+    std::istreambuf_iterator<char> it(ifs.rdbuf());
+    std::istreambuf_iterator<char> eos;
     return utf8::is_valid(it, eos);
   }
 
@@ -206,56 +203,47 @@ namespace qemacs
     }
   } // end of QEmacsPlainTextEdit::QEmacsPlainTextEdit()
 
-  QAbstractScrollArea *
-  QEmacsPlainTextEdit::widget()
+  QAbstractScrollArea* QEmacsPlainTextEdit::widget()
   {
     return this->e;
   }
 
-  void
-  QEmacsPlainTextEdit::print(QPrinter *const p)
+  void QEmacsPlainTextEdit::print(QPrinter *const p)
   {
     this->e->print(p);
   }
 
-  void
-  QEmacsPlainTextEdit::undo()
+  void QEmacsPlainTextEdit::undo()
   {
     this->e->undo();
   } // end of QEmacsPlainTextEdit::undo
 
-  void
-  QEmacsPlainTextEdit::redo()
+  void QEmacsPlainTextEdit::redo()
   {
     this->e->redo();
   } // end of QEmacsPlainTextEdit::redo
 
-  void
-  QEmacsPlainTextEdit::cut()
+  void QEmacsPlainTextEdit::cut()
   {
     this->e->cut();
   }
 
-  void
-  QEmacsPlainTextEdit::paste()
+  void QEmacsPlainTextEdit::paste()
   {
     this->e->paste();
   }
   
-  void
-  QEmacsPlainTextEdit::selectAll()
+  void QEmacsPlainTextEdit::selectAll()
   {
     this->e->selectAll();
   }
   
-  void
-  QEmacsPlainTextEdit::copy()
+  void QEmacsPlainTextEdit::copy()
   {
     this->e->copy();
   }
 
-  void
-  QEmacsPlainTextEdit::clear()
+  void QEmacsPlainTextEdit::clear()
   {
     this->e->clear();
   }
@@ -266,38 +254,32 @@ namespace qemacs
     return this->e->isReadOnly();
   }
   
-  void
-  QEmacsPlainTextEdit::appendPlainText(const QString& t)
+  void QEmacsPlainTextEdit::appendPlainText(const QString& t)
   {
     return this->e->appendPlainText(t);
   }
 
-  void
-  QEmacsPlainTextEdit::insertPlainText(const QString& t)
+  void QEmacsPlainTextEdit::insertPlainText(const QString& t)
   {
     return this->e->insertPlainText(t);
   }
 
-  void
-  QEmacsPlainTextEdit::setPlainText(const QString& t)
+  void QEmacsPlainTextEdit::setPlainText(const QString& t)
   {
     return this->e->setPlainText(t);
   }
 
-  void
-  QEmacsPlainTextEdit::appendHtml(const QString& t)
+  void QEmacsPlainTextEdit::appendHtml(const QString& t)
   {
     return this->e->appendHtml(t);
   }
 
-  void
-  QEmacsPlainTextEdit::insertHtml(const QString& t)
+  void QEmacsPlainTextEdit::insertHtml(const QString& t)
   {
     return this->e->textCursor().insertHtml(t);
   }
 
-  void
-  QEmacsPlainTextEdit::setHtml(const QString& t)
+  void QEmacsPlainTextEdit::setHtml(const QString& t)
   {
     this->clear();
     this->insertHtml(t);
@@ -315,20 +297,17 @@ namespace qemacs
     return this->e->cursorRect(tc);
   }
   
-  void
-  QEmacsPlainTextEdit::setUndoRedoEnabled(bool b)
+  void QEmacsPlainTextEdit::setUndoRedoEnabled(bool b)
   {
     return this->e->setUndoRedoEnabled(b);
   }
 
-  void
-  QEmacsPlainTextEdit::setReadOnly(bool b)
+  void QEmacsPlainTextEdit::setReadOnly(bool b)
   {
     this->e->setReadOnly(b);
   }
   
-  void
-  QEmacsPlainTextEdit::moveCursor(QTextCursor::MoveOperation mo,
+  void QEmacsPlainTextEdit::moveCursor(QTextCursor::MoveOperation mo,
 				  QTextCursor::MoveMode mm)
   {
     return this->e->moveCursor(mo,mm);
@@ -340,8 +319,7 @@ namespace qemacs
     return this->e->document();
   } // end of QEmacsPlainTextEdit::document
 
-  void
-  QEmacsPlainTextEdit::setExtraSelections(const QList<QTextEdit::ExtraSelection>& l)
+  void QEmacsPlainTextEdit::setExtraSelections(const QList<QTextEdit::ExtraSelection>& l)
   {
     return this->e->setExtraSelections(l);
   }
@@ -364,9 +342,8 @@ namespace qemacs
     return this->e->cursorRect();
   }
 
-  bool
-  QEmacsPlainTextEdit::find(const QString& t,
-			    QTextDocument::FindFlags f)
+  bool QEmacsPlainTextEdit::find(const QString& t,
+				 QTextDocument::FindFlags f)
   {
     return this->e->find(t,f);
   }
@@ -377,20 +354,17 @@ namespace qemacs
     return this->e->isUndoRedoEnabled();
   }
   
-  void
-  QEmacsPlainTextEdit::setTextCursor(const QTextCursor& tc)
+  void QEmacsPlainTextEdit::setTextCursor(const QTextCursor& tc)
   {
     return this->e->setTextCursor(tc);
   }
 
-  void
-  QEmacsPlainTextEdit::setTextInteractionFlags(Qt::TextInteractionFlags f)
+  void QEmacsPlainTextEdit::setTextInteractionFlags(Qt::TextInteractionFlags f)
   {
     this->e->setTextInteractionFlags(f);
   }
 
-  void
-  QEmacsPlainTextEdit::readTemplateFile(const QString& f)
+  void QEmacsPlainTextEdit::readTemplateFile(const QString& f)
   {
     // reading the template file associated with the file
     QFileInfo i(f);

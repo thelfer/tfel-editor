@@ -21,8 +21,7 @@
 namespace qemacs
 {
   
-  QStringList
-  CastemMajorMode::buildKeysList()
+  QStringList CastemMajorMode::buildKeysList()
   {
     return {"DROITE" , "MOT"    , "OPTION", "FIN",
 	"DENSITE", "LAPLACE", "CERCLE", "COTE",
@@ -166,8 +165,8 @@ namespace qemacs
     this->c->setWidget(&t);
     this->c->setCaseSensitivity(Qt::CaseInsensitive);
     this->c->setCompletionMode(QCompleter::PopupCompletion);
-    QObject::connect(this->c,SIGNAL(activated(QString)),
-		     &t,SLOT(insertCompletion(QString)));
+    QObject::connect(this->c,static_cast<void (QCompleter:: *)(const QString&)>(&QCompleter::activated),
+		     &t,&QEmacsTextEditBase::insertCompletion);
   } // end of CastemMajorMode
   
   void CastemMajorMode::sendToCastem(const QString& l)
@@ -183,11 +182,7 @@ namespace qemacs
     p.write((l+'\n').toLatin1());
   } // end of CastemMajorMode::sendToCastem
 
-
-
-  void
-  CastemMajorMode::startCastem()
-  {
+  void CastemMajorMode::startCastem(){
     if(this->co==nullptr){
       this->co = new ProcessInteractionFrame(this->qemacs,this->buffer);
       QFileInfo fn(this->textEdit.getCompleteFileName());
@@ -207,35 +202,25 @@ namespace qemacs
     }
   }
 
-  QString
-  CastemMajorMode::getName() const
-  {
+  QString CastemMajorMode::getName() const{
     return "Cast3M";
   }
 
-  QString
-  CastemMajorMode::getDescription() const
-  {
+  QString CastemMajorMode::getDescription() const{
     return "major mode dedicated to the "
       "castem finite element solver";
   }
   
-  void
-  CastemMajorMode::setSyntaxHighlighter(QTextDocument* d)
-  {
+  void CastemMajorMode::setSyntaxHighlighter(QTextDocument* d){
     new CastemSyntaxHighlighter(d);
   }
   
-  QCompleter*
-  CastemMajorMode::getCompleter()
-  {
+  QCompleter* CastemMajorMode::getCompleter(){
     return this->c;
   } // end of getCompleter
   
-  void
-  CastemMajorMode::completeCurrentWord(QEmacsTextEditBase& t,
-				       const QString& w)
-  {
+  void CastemMajorMode::completeCurrentWord(QEmacsTextEditBase& t,
+					    const QString& w){
     QTextCursor tc = t.textCursor();
     tc.movePosition(QTextCursor::StartOfWord,
 		    QTextCursor::MoveAnchor);
@@ -246,9 +231,7 @@ namespace qemacs
     t.setTextCursor(tc);
   } // end of completeCurrentWord
   
-  bool
-  CastemMajorMode::isCastemKeyWord(const QString& w)
-  {
+  bool CastemMajorMode::isCastemKeyWord(const QString& w){
     const QStringList& keys = CastemMajorMode::getKeysList();
     foreach(const QString& k,keys){
       if(k.left(4)==w){
@@ -258,9 +241,7 @@ namespace qemacs
     return false;
   }
 
-  void
-  CastemMajorMode::indentLine(const QTextCursor& c_)
-  {
+  void CastemMajorMode::indentLine(const QTextCursor& c_){
     QTextCursor tc(c_);
     tc.beginEditBlock();
     tc.movePosition(QTextCursor::StartOfBlock,
@@ -269,10 +250,9 @@ namespace qemacs
     tc.endEditBlock();
   } // end of CastemMajorMode::indentLine
 
-  bool
-  CastemMajorMode::handleShortCut(const int k1,
-				  const Qt::KeyboardModifiers m,
-				  const int k2)
+  bool CastemMajorMode::handleShortCut(const int k1,
+				       const Qt::KeyboardModifiers m,
+				       const int k2)
   {
     if((k1==Qt::Key_X)&&(m==Qt::NoModifier)&&(k2==Qt::Key_H)){
       const QString& w  = this->textEdit.getCurrentWord();
@@ -291,9 +271,8 @@ namespace qemacs
     return false;
   } // end of CastemMajorMode::handleShortCut
 
-  void
-  CastemMajorMode::completeContextMenu(QMenu *const m,
-				       const QTextCursor& tc)
+  void CastemMajorMode::completeContextMenu(QMenu *const m,
+					    const QTextCursor& tc)
   {
     QEmacsMajorModeBase::completeContextMenu(m,tc);
     QTextCursor mtc(tc);
@@ -314,13 +293,12 @@ namespace qemacs
 	m->insertAction(*(cactions.begin()),this->ha1);
 	m->insertAction(*(cactions.begin()),this->ha2);
       }
-      QObject::connect(m,SIGNAL(triggered(QAction *)),
-		       this,SLOT(actionTriggered(QAction *)));
+      QObject::connect(m,&QMenu::triggered,
+		       this,&CastemMajorMode::actionTriggered);
     }
   } // end of CastemMajorMode::completeContextMenu
 
-  void
-  CastemMajorMode::actionTriggered(QAction *a)
+  void CastemMajorMode::actionTriggered(QAction *a)
   {
     if(a==this->ha1){
       const auto w = this->ha1->data().toString();
@@ -331,10 +309,8 @@ namespace qemacs
     }
   }
 
-  void
-  CastemMajorMode::displayHelp(const QString& w,
-			       const QString& w2)
-  {
+  void CastemMajorMode::displayHelp(const QString& w,
+				    const QString& w2){
     // creating a temporary directory
     QString path;
     {

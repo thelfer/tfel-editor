@@ -107,26 +107,19 @@ namespace qemacs
 
     virtual void setMajorMode(QEmacsMajorMode *const);
     
-    virtual void
-    setFileName(const QString&);
+    virtual void setFileName(const QString&);
 
-    virtual void
-    writeFile();
+    virtual void writeFile();
 
-    virtual void
-    writeFile(const QString&);
+    virtual void writeFile(const QString&);
 
-    virtual void
-    save();
+    virtual void save();
 
-    virtual void
-    gotoLine(int);
+    virtual void gotoLine(int);
     
-    virtual void
-    insertCompletion(QString);
+    virtual void insertCompletion(const QString&);
 
-    virtual void
-    setMoveMode(QTextCursor::MoveMode);
+    virtual void setMoveMode(QTextCursor::MoveMode);
 
   public:
 
@@ -137,11 +130,9 @@ namespace qemacs
       : public QEmacsYesOrNoUserInput
     {
 
-      virtual bool
-      isBlocking() const override;
+      bool isBlocking() const override;
 
-      virtual void
-      treatUserInput() override;
+      void treatUserInput() override;
 
     protected:
 
@@ -180,111 +171,80 @@ namespace qemacs
      * \note this function is only called if mouse tracking is
      * enabled;
      */
-    virtual void
-    mouseMoveEvent(QMouseEvent *) override;
+    void mouseMoveEvent(QMouseEvent *) override;
 
-    virtual QAbstractScrollArea *
-    widget() = 0;
+    virtual QAbstractScrollArea* widget() = 0;
 
     /*!
      * \return true if the buffer is a main frame
      */
-    virtual bool
-    isMainFrame() const;
+    virtual bool isMainFrame() const;
 
-    virtual void
-    setSpellCheckLanguage(const QString&);
+    virtual void setSpellCheckLanguage(const QString&);
 
     /*!
      * \return true if the buffer is not a main frame
      */
-    virtual bool
-    isSlave() const;
+    virtual bool isSlave() const;
 
-    virtual void
-    setFocus();
+    virtual void setFocus();
 
-    virtual QString
-    getFileName() const;
+    virtual QString getFileName() const;
 
-    virtual QString
-    getCompleteFileName() const;
+    virtual QString getCompleteFileName() const;
 
-    virtual SaveInput *
-    getSaveInput();
+    virtual SaveInput* getSaveInput();
 
     /*!
      * \return the word under cursor
      */
-    virtual QString
-    getCurrentWord() const;
+    virtual QString getCurrentWord() const;
 
-    virtual bool
-    isModified() const;
+    virtual bool isModified() const;
 
-    virtual bool
-    hasMajorMode() const;
+    virtual bool hasMajorMode() const;
 
-    virtual const QEmacsMajorMode&
-    getMajorMode() const;
+    virtual const QEmacsMajorMode& getMajorMode() const;
 
-    virtual QVector<QMenu*>
-    getSpecificMenus();
+    virtual QVector<QMenu*> getSpecificMenus();
 
-    virtual QIcon
-    getIcon() const;
+    virtual QIcon getIcon() const;
 
-    virtual bool
-    setKeyPressEventFilter(QEmacsTextEditKeyPressEventFilter * const);
+    virtual bool setKeyPressEventFilter(QEmacsTextEditKeyPressEventFilter * const);
 
-    virtual void
-    removeKeyPressEventFilter();
+    virtual void removeKeyPressEventFilter();
 
-    virtual QTextDocument*
-    document() const = 0;
+    virtual QTextDocument* document() const = 0;
     
-    virtual void
-    moveCursor(QTextCursor::MoveOperation,
-	       QTextCursor::MoveMode = QTextCursor::MoveAnchor) = 0;
+    virtual void moveCursor(QTextCursor::MoveOperation,
+			    QTextCursor::MoveMode = QTextCursor::MoveAnchor) = 0;
 
-    virtual bool
-    isReadOnly() = 0;
+    virtual bool isReadOnly() = 0;
     
-    virtual bool
-    find(const QString&,
-	 QTextDocument::FindFlags = nullptr) = 0;
+    virtual bool find(const QString&,
+		      QTextDocument::FindFlags = nullptr) = 0;
 
-    virtual QTextCursor
-    textCursor() const = 0;
+    virtual QTextCursor textCursor() const = 0;
     
-    virtual QTextCursor
-    cursorForPosition(const QPoint &pos) const = 0;
+    virtual QTextCursor cursorForPosition(const QPoint &pos) const = 0;
 
-    virtual QRect
-    cursorRect(const QTextCursor &cursor) const = 0;
+    virtual QRect cursorRect(const QTextCursor &cursor) const = 0;
 
-    virtual QRect
-    cursorRect() const = 0;
+    virtual QRect cursorRect() const = 0;
 
-    virtual void
-    setExtraSelections(const QList<QTextEdit::ExtraSelection> &) = 0;
+    virtual void setExtraSelections(const QList<QTextEdit::ExtraSelection> &) = 0;
 
-    virtual QList<QTextEdit::ExtraSelection>
-    extraSelections() const = 0;
+    virtual QList<QTextEdit::ExtraSelection> extraSelections() const = 0;
 
-    virtual bool
-    isUndoRedoEnabled() const = 0;
+    virtual bool isUndoRedoEnabled() const = 0;
 
   protected slots:
     
-    virtual void
-    highlightCurrentLine();
+    virtual void highlightCurrentLine();
 
-    virtual void
-    keyPressEventFilterDestroyed();
+    virtual void keyPressEventFilterDestroyed();
 
-    virtual void
-    emitCursorPositionChanged();
+    virtual void emitCursorPositionChanged();
 
   protected:
 
@@ -302,49 +262,35 @@ namespace qemacs
       
     protected:
       
-      virtual void
-      treatUserInput() override;
+      void treatUserInput() override;
 
       QEmacsTextEditBase& textEdit;
 	
     }; // end of struct GotoLine
 
-    static QString
-    getModifier(const QKeyEvent&);
+    static QString getModifier(const QKeyEvent&);
 
-    virtual bool
-    event(QEvent *) override;
+    bool event(QEvent *) override;
 
-    virtual bool
-    eventFilter(QObject *,
-		QEvent *) override;
+    bool eventFilter(QObject *,QEvent *) override;
 
-    virtual void
-    keyPressEvent(QKeyEvent *) override;
+    void keyPressEvent(QKeyEvent *) override;
 
-    virtual bool
-    handleKeyPressEvent(QKeyEvent *);
+    virtual bool handleKeyPressEvent(QKeyEvent *);
 
-    virtual bool
-    handleKeyPressEventWithEmacsShortCuts(QKeyEvent *);
+    virtual bool handleKeyPressEventWithEmacsShortCuts(QKeyEvent *);
 
-    virtual bool
-    handleKeyPressEventWithQtShortCuts(QKeyEvent *);
+    virtual bool handleKeyPressEventWithQtShortCuts(QKeyEvent *);
 
-    virtual bool
-    handleMousePressEvent(QMouseEvent *);
+    virtual bool handleMousePressEvent(QMouseEvent *);
 
-    void
-    initialize(QAbstractScrollArea * const);
+    virtual void initialize(QAbstractScrollArea * const);
 
-    virtual void
-    addToKillRing(const QString&);
+    virtual void addToKillRing(const QString&);
 
-    virtual void
-    createContextMenuActions();
+    virtual void createContextMenuActions();
 
-    virtual void
-    deleteContextMenuActions();
+    virtual void deleteContextMenuActions();
 
     //! reference to the widget
     QEmacsWidget& qemacs;

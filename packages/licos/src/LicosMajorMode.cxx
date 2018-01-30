@@ -5,15 +5,13 @@
  * \brief 03 juil. 2012
  */
 
-#include<QtCore/QDebug>
-
 #include<string>
 #include<stdexcept>
 
 #include<QtCore/QDir>
 #include<QtCore/QUrl>
+#include<QtCore/QDebug>
 #include<QtCore/QFileInfo>
-
 #include<QtWidgets/QMenu>
 #include<QtWidgets/QWizard>
 #include<QtWidgets/QMessageBox>
@@ -35,7 +33,6 @@
 #include"QEmacs/QEmacsLineEdit.hxx"
 #include"QEmacs/QEmacsPlainTextEdit.hxx"
 #include"QEmacs/QEmacsMajorModeFactory.hxx"
-
 #include"QEmacs/LicosInsertMaterialPropertyDialog.hxx"
 
 namespace qemacs
@@ -265,8 +262,8 @@ namespace qemacs
       l10doca(nullptr),l11doca(nullptr),
       idoca(nullptr),mdoca(nullptr)
   {
-    QStringList keys    = LicosSyntaxHighlighter::getKeys();
-    QStringList blocks = LicosSyntaxHighlighter::getBlocks();
+    auto keys    = LicosSyntaxHighlighter::getKeys();
+    const auto blocks = LicosSyntaxHighlighter::getBlocks();
     foreach (const QString &bl,blocks) {
       keys.append(bl);
       keys.append("EndOf"+bl);
@@ -274,8 +271,8 @@ namespace qemacs
     this->c = new QCompleter(keys,&t);
     this->c->setWidget(&t);
     this->c->setCompletionMode(QCompleter::PopupCompletion);
-    QObject::connect(this->c,SIGNAL(activated(QString)),
-		     &t,SLOT(insertCompletion(QString)));
+    QObject::connect(this->c,static_cast<void (QCompleter::*)(const QString&)>(&QCompleter::activated),
+		     &t,&QEmacsTextEditBase::insertCompletion);
     // QWidget *vp = t.widget()->viewport();
     // vp->setCursor(Qt::PointingHandCursor);
     t.setMouseTracking(true);
@@ -285,20 +282,17 @@ namespace qemacs
     this->createActions();
   } // end of LicosMajorMode::LicosMajorMode
 
-  QString
-  LicosMajorMode::getName() const
+  QString LicosMajorMode::getName() const
   {
     return "Licos";
   } // end of LicosMajorMode::getName
 
-  QString
-  LicosMajorMode::getDescription() const
+  QString LicosMajorMode::getDescription() const
   {
     return "major mode dedicated to the licos input file";
   } // end of LicosMajorMode::LicosMajorMode
 
-  void
-  LicosMajorMode::setSyntaxHighlighter(QTextDocument *const d)
+  void LicosMajorMode::setSyntaxHighlighter(QTextDocument *const d)
   {
     new LicosSyntaxHighlighter(d);
   } // end of LicosMajorMode::setSyntaxHighlighter
@@ -308,15 +302,13 @@ namespace qemacs
     delete this->c;
   } // end of LicosMajorMode::~LicosMajorMode()
 
-  QCompleter*
-  LicosMajorMode::getCompleter()
+  QCompleter* LicosMajorMode::getCompleter()
   {
     return this->c;
   } // end of LicosMajorMode::getCompleter
 
-  void
-  LicosMajorMode::completeCurrentWord(QEmacsTextEditBase& t,
-				      const QString& w)
+  void LicosMajorMode::completeCurrentWord(QEmacsTextEditBase& t,
+					   const QString& w)
   {
     QEmacsMajorModeBase::completeCurrentWord(t,w);
     QStringList pblocks = LicosSyntaxHighlighter::getBlocks();
@@ -338,27 +330,26 @@ namespace qemacs
     d.exec();
   } // end of LicosMajorMode::addMaterialProperties
 
-  void
-  LicosMajorMode::createActions()
+  void LicosMajorMode::createActions()
   {
     this->ra = new QAction(QObject::tr("Run Licos"),this);
-    QObject::connect(this->ra, SIGNAL(triggered()),
-		     this, SLOT(runLicos()));
+    QObject::connect(this->ra,&QAction::triggered,
+      this,&LicosMajorMode::runLicos);
     this->dra = new QAction(QObject::tr("Dry-run Licos"),this);
-    QObject::connect(this->dra, SIGNAL(triggered()),
-		     this, SLOT(dryrunLicos()));
+    QObject::connect(this->dra,&QAction::triggered,
+		     this,&LicosMajorMode::dryrunLicos);
     this->ampa = new QAction(QObject::tr("Add material properties"),this);
-    QObject::connect(this->ampa, SIGNAL(triggered()),
-		     this, SLOT(addMaterialProperties()));
+    QObject::connect(this->ampa,&QAction::triggered,
+		     this,&LicosMajorMode::addMaterialProperties);
     this->mwa  = new QAction(QObject::tr("Material Wizard"),this);
-    QObject::connect(this->mwa, SIGNAL(triggered()),
-		     this, SLOT(showMaterialWizard()));
+    QObject::connect(this->mwa,&QAction::triggered,
+		     this,&LicosMajorMode::showMaterialWizard);
     this->tbwa = new QAction(QObject::tr("ThermalBehaviour Wizard"),this);
-    QObject::connect(this->tbwa, SIGNAL(triggered()),
-		     this, SLOT(showThermalBehaviourWizard()));
+    QObject::connect(this->tbwa,&QAction::triggered,
+		     this,&LicosMajorMode::showThermalBehaviourWizard);
     this->mbwa = new QAction(QObject::tr("MechanicalBehaviour Wizard"),this);
-    QObject::connect(this->mbwa, SIGNAL(triggered()),
-		     this, SLOT(showMechanicalBehaviourWizard()));
+    QObject::connect(this->mbwa,&QAction::triggered,
+		     this,&LicosMajorMode::showMechanicalBehaviourWizard);
     this->msrca =  new QAction(QObject::tr("Open mfront source"),this);
     // documentations
     const QString& p1 = this->getLicosPath();
@@ -493,25 +484,22 @@ namespace qemacs
     this->msia = new QAction(l2,this);
   }
 
-  void
-  LicosMajorMode::runLicos()
+  void LicosMajorMode::runLicos()
   {
     if(this->textEdit.isModified()){
-      QEmacsTextEditBase::SaveInput *input = this->textEdit.getSaveInput();
-      QObject::connect(input,SIGNAL(finished(QEmacsLineEdit *)),
-		       this,SLOT(startLicos()));
+      auto *input = this->textEdit.getSaveInput();
+      QObject::connect(input,&QEmacsTextEditBase::SaveInput::finished,
+		       this,&LicosMajorMode::startLicos);
       this->qemacs.setUserInput(input);
       return;
     }
     this->startLicos();
   }
 
-  void
-  LicosMajorMode::dryrunLicos()
+  void LicosMajorMode::dryrunLicos()
   {} // end of LicosMajorMode::dryrunLicos
 
-  void
-  LicosMajorMode::showMaterialWizard()
+  void LicosMajorMode::showMaterialWizard()
   {
     LicosMaterialWizard w(this->textEdit);
     if(w.exec()==QDialog::Accepted){
@@ -519,8 +507,7 @@ namespace qemacs
     }
   } // end of LicosMajorMode::showMaterialWizard
 
-  void
-  LicosMajorMode::showThermalBehaviourWizard()
+  void LicosMajorMode::showThermalBehaviourWizard()
   {
     QWizard w;
     w.setWindowTitle(QObject::tr("Thermal behaviour wizard"));
@@ -528,8 +515,7 @@ namespace qemacs
     w.exec();
   } // end of LicosMajorMode::showThermalBehaviourWizard
 
-  void
-  LicosMajorMode::showMechanicalBehaviourWizard()
+  void LicosMajorMode::showMechanicalBehaviourWizard()
   {
     QWizard w;
     w.setWindowTitle(QObject::tr("Mechanical behaviour wizard"));
@@ -537,8 +523,7 @@ namespace qemacs
     w.exec();
   } // end of LicosMajorMode::showMechanicalBehaviourWizard
 
-  void
-  LicosMajorMode::startLicos()
+  void LicosMajorMode::startLicos()
   {
     QString n = this->textEdit.getCompleteFileName();
     if(n.isEmpty()){
@@ -553,14 +538,13 @@ namespace qemacs
     const auto& af = QFileInfo(n).absoluteFilePath ();
     auto *s = new LicosOutputFrame(this->qemacs,this->buffer,
 				   af,o);
-    QObject::connect(s,SIGNAL(finished(bool,QString)),
-		     this,SLOT(studyFinished(bool,QString)));
+    QObject::connect(s,&LicosOutputFrame::finished,
+		     this,&LicosMajorMode::studyFinished);
     this->buffer.addSlave(QObject::tr("Licos Output"),s);
   } // end of LicosMajorMode::runLicos
 
-  void
-  LicosMajorMode::studyFinished(bool s,
-				QString e)
+  void LicosMajorMode::studyFinished(bool s,
+				     QString e)
   {
     if(s){
       QMessageBox::information(&(this->textEdit),
@@ -643,8 +627,8 @@ namespace qemacs
 	  tm->addAction(*pt);
 	}
       }
-      QObject::connect(dm,SIGNAL(triggered(QAction *)),
-		       this,SLOT(openDocumentation(QAction *)));
+      QObject::connect(dm,&QMenu::triggered,
+		       this,&LicosMajorMode::openDocumentation);
     }
     return m;
   } // end of LicosMajorMode::getSpecificMenu
@@ -908,10 +892,10 @@ namespace qemacs
 	    m->insertMenu(*(cactions.begin()),msm);
 	    m->insertSeparator(*(cactions.begin()));
 	  }
-	  QObject::connect(lsm,SIGNAL(triggered(QAction *)),
-			   this,SLOT(actionTriggered(QAction *)));
-	  QObject::connect(msm,SIGNAL(triggered(QAction *)),
-			   this,SLOT(actionTriggered(QAction *)));
+	  QObject::connect(lsm,&QMenu::triggered,
+			   this,&LicosMajorMode::actionTriggered);
+	  QObject::connect(msm,&QMenu::triggered,
+			   this,&LicosMajorMode::actionTriggered);
 	}
       }
     }
@@ -985,7 +969,7 @@ namespace qemacs
 						 .arg(e.what()));
 	}
 	if(!src.isEmpty()){
-	  const QList<QAction *>& cactions = m->actions();
+	  const auto& cactions = m->actions();
 	  this->msrca->setData(src);
 	  if(cactions.isEmpty()){
 	    m->addAction(this->msrca);
@@ -998,15 +982,14 @@ namespace qemacs
       }
     }
     if(bConnect){
-      QObject::connect(m,SIGNAL(triggered(QAction *)),
-		       this,SLOT(actionTriggered(QAction *)));
+      QObject::connect(m,&QMenu::triggered,
+		       this,&LicosMajorMode::actionTriggered);
     }
   }
 
-  bool
-  LicosMajorMode::handleShortCut(const int k1,
-				 const Qt::KeyboardModifiers m,
-				 const int k2)
+  bool LicosMajorMode::handleShortCut(const int k1,
+				      const Qt::KeyboardModifiers m,
+				      const int k2)
   {
     if((k1==Qt::Key_C)&&(m==Qt::ControlModifier)&&(k2==Qt::Key_E)){
       this->qemacs.setUserInput(new LicosInsertBlock(this->qemacs,
@@ -1022,8 +1005,7 @@ namespace qemacs
     return false;
   } // end of LicosMajorMode::handleShortCut
 
-  QString
-  LicosMajorMode::getLicosPath() const
+  QString LicosMajorMode::getLicosPath() const
   {
     const char * w = ::getenv("LICOSHOME");
     if(w==nullptr){

@@ -139,8 +139,7 @@ namespace qemacs
     }
   } // end of QEmacsBuffer::focusInEvent
 
-  void
-  QEmacsBuffer::initialize()
+  void QEmacsBuffer::initialize()
   {
     // setting 
     this->e->setMainFrame(true);
@@ -210,51 +209,47 @@ namespace qemacs
     this->updateBufferInformations();
     this->setLayout(vl);
     // timer
-    QObject::connect(this->timer, SIGNAL(timeout()),
-		  this, SLOT(updateDate()));
+    QObject::connect(this->timer,&QTimer::timeout,
+		     this,&QEmacsBuffer::updateDate);
     // update every second
     this->timer->start(1000);
     // connecting signals
-    QObject::connect(this->e,SIGNAL(fileNameChanged(const QString&)),
-		     this,SLOT(emitNewTreatedFile(const QString&)));
-    QObject::connect(this->e,SIGNAL(fileNameChanged(const QString&)),
-		     this,SLOT(updateBufferName()));
-    QObject::connect(this->e,SIGNAL(cursorPositionChanged()),
-		     this,SLOT(updatePosition()));
-    QObject::connect(this->e,SIGNAL(cursorPositionChanged()),
-		     this,SLOT(updateDate()));
-    QObject::connect(this->e,SIGNAL(majorModeChanged()),
-		     this,SLOT(updateBufferInformations()));
-    QObject::connect(this->slaves,SIGNAL(tabCloseRequested(int)),
-		     this,SLOT(closeSlave(int)));
+    QObject::connect(this->e,&QEmacsPlainTextEdit::fileNameChanged,
+		     this,&QEmacsBuffer::emitNewTreatedFile);
+    QObject::connect(this->e,&QEmacsPlainTextEdit::fileNameChanged,
+		     this,&QEmacsBuffer::updateBufferName);
+    QObject::connect(this->e,&QEmacsPlainTextEdit::cursorPositionChanged,
+		     this,&QEmacsBuffer::updatePosition);
+    QObject::connect(this->e,&QEmacsPlainTextEdit::cursorPositionChanged,
+		     this,&QEmacsBuffer::updateDate);
+    QObject::connect(this->e,&QEmacsPlainTextEdit::majorModeChanged,
+		     this,&QEmacsBuffer::updateBufferInformations);
+    QObject::connect(this->slaves,&SlaveTabWidget::tabCloseRequested,
+		     this,&QEmacsBuffer::closeSlave);
     this->updateBufferName();
   }
 
-  void
-  QEmacsBuffer::updateBufferName()
+  void QEmacsBuffer::updateBufferName()
   {
-    QString o = this->getBufferName();
+    const auto o = this->getBufferName();
     this->bufferNameSuffix = this->qemacs.chooseBufferNameSuffix(this,this->e->getFileName()); 
     this->updateBufferInformations();
-    QString n = this->getBufferName();
+    const auto n = this->getBufferName();
     emit bufferNameChanged(this,o,n);
   }
 
-  QVector<QMenu*>
-  QEmacsBuffer::getSpecificMenus()
+  QVector<QMenu*> QEmacsBuffer::getSpecificMenus()
   {
     return this->e->getSpecificMenus();
   } // end of QEmacsBuffer::getSpecificMenu
 
-  QIcon
-  QEmacsBuffer::getIcon() const
+  QIcon QEmacsBuffer::getIcon() const
   {
     return this->e->getIcon();
   } // end of QEmacsBuffer::getIcon
 
 
-  void
-  QEmacsBuffer::updateDate()
+  void QEmacsBuffer::updateDate()
   {
     QTime t = QTime::currentTime();
     int   h = t.hour(); 
@@ -274,8 +269,7 @@ namespace qemacs
     this->ti->setText(tl);
   }
 
-  void
-  QEmacsBuffer::updatePosition()
+  void QEmacsBuffer::updatePosition()
   {
     const QTextCursor&   c = this->e->textCursor();
     const QTextDocument& d = *(this->e->document());
@@ -292,14 +286,14 @@ namespace qemacs
     QTextCursor b(c);
     b.movePosition(QTextCursor::StartOfBlock,
 		   QTextCursor::KeepAnchor);
-    this->api->setText("("+QString::number(cn)+","+QString::number(c.position()-b.position())+")");
+    this->api->setText("("+QString::number(cn)+","+
+		       QString::number(c.position()-b.position())+")");
   }
   
-  void
-  QEmacsBuffer::updateBufferInformations()
+  void QEmacsBuffer::updateBufferInformations()
   {
     QString i;
-    const QString& s = this->getBufferNameSuffix();
+    const auto& s = this->getBufferNameSuffix();
     if(s.isEmpty()){
       this->bni->setText("<b>"+this->getBufferName()+"</b>");
     } else {
@@ -326,14 +320,12 @@ namespace qemacs
     this->updateDate();
   } // end QEmacsBuffer::updateBufferInformations
 
-  QEmacsPlainTextEdit&
-  QEmacsBuffer::getMainFrame()
+  QEmacsPlainTextEdit& QEmacsBuffer::getMainFrame()
   {
     return *(this->e);
   } // end of QEmacsBuffer::getQEmacsTextEdit
 
-  bool
-  QEmacsBuffer::hasSlaves() const
+  bool QEmacsBuffer::hasSlaves() const
   {
     if(this->slaves==nullptr){
       return false;
@@ -341,9 +333,8 @@ namespace qemacs
     return this->slaves->count()!=0;
   }
 
-  QWidget *
-  QEmacsBuffer::addSlave(const QString& t,
-			 QWidget *const s)
+  QWidget * QEmacsBuffer::addSlave(const QString& t,
+				   QWidget *const s)
   {
     if(s==nullptr){
       return nullptr;
@@ -369,8 +360,7 @@ namespace qemacs
     return s;
   } // end of QEmacsBuffer::addSlave
 
-  int
-  QEmacsBuffer::getSlaveIndex(QWidget * const p) const
+  int QEmacsBuffer::getSlaveIndex(QWidget * const p) const
   {
     for(int i=0;i!=this->slaves->count();++i){
       QWidget *pi = this->slaves->widget(i);
@@ -388,8 +378,7 @@ namespace qemacs
     return -1;
   } // end of QEmacsBuffer::getSlaveIndex
 
-  QString
-  QEmacsBuffer::getSlaveName(QWidget * const p) const
+  QString QEmacsBuffer::getSlaveName(QWidget * const p) const
   {
     QString n;
     int i = this->getSlaveIndex(p);
@@ -399,9 +388,8 @@ namespace qemacs
     return n;
   }
 
-  void
-  QEmacsBuffer::setSlaveIcon(QWidget *const p,
-			     const QIcon& i)
+  void QEmacsBuffer::setSlaveIcon(QWidget *const p,
+				  const QIcon& i)
   {
     int sid = this->getSlaveIndex(p);
     if(sid!=-1){
@@ -409,9 +397,8 @@ namespace qemacs
     }
   }
 
-  void
-  QEmacsBuffer::setSlaveName(QWidget *const p,
-			     const QString & n)
+  void QEmacsBuffer::setSlaveName(QWidget *const p,
+				  const QString & n)
   {
     int i = this->getSlaveIndex(p);
     if(i!=-1){
@@ -419,8 +406,7 @@ namespace qemacs
     }
   } // end of QEmacsBuffer::setSlaveName
 
-  void
-  QEmacsBuffer::removeSlave(QWidget *const s)
+  void QEmacsBuffer::removeSlave(QWidget *const s)
   {
     for(int i=0;i!=this->slaves->count();++i){
       if(s==this->slaves->widget(i)){
@@ -430,8 +416,7 @@ namespace qemacs
     }
   }
 
-  void
-  QEmacsBuffer::hideSlave(QWidget *const s)
+  void QEmacsBuffer::hideSlave(QWidget *const s)
   {
     bool h = true;
     for(int i=0;i!=this->slaves->count();++i){
@@ -446,8 +431,7 @@ namespace qemacs
     }
   }
 
-  void
-  QEmacsBuffer::focusCurrentSlave()
+  void QEmacsBuffer::focusCurrentSlave()
   {
     if(this->slaves!=nullptr){
       QWidget *s = this->slaves->currentWidget();
@@ -457,8 +441,7 @@ namespace qemacs
     }
   } // end of QEmacsBuffer::focusCurrentSlave
 
-  bool
-  QEmacsBuffer::areSlavesVisible() const
+  bool QEmacsBuffer::areSlavesVisible() const
   {
     if(this->slaves==nullptr){
       return false;
@@ -466,14 +449,12 @@ namespace qemacs
     return this->slaves->isVisible();
   }
 
-  void
-  QEmacsBuffer::focusMainFrame()
+  void QEmacsBuffer::focusMainFrame()
   {
     this->e->setFocus();
   } // end of QEmacsBuffer::focusMainFrame
 
-  void
-  QEmacsBuffer::showSlaves()
+  void QEmacsBuffer::showSlaves()
   {
     if(this->slaves->count()==0){
       this->qemacs.displayInformativeMessage(QObject::tr("no slave to be shown"));
@@ -482,14 +463,12 @@ namespace qemacs
     this->slaves->show();
   } // end of QEmacsBuffer::showSlaves
 
-  void
-  QEmacsBuffer::hideSlaves()
+  void QEmacsBuffer::hideSlaves()
   {
     this->slaves->hide();
   } // end of QEmacsBuffer::hideSlaves
 
-  void
-  QEmacsBuffer::closeSlave(int i)
+  void QEmacsBuffer::closeSlave(int i)
   {
     this->slaves->removeTab(i);
     if(this->slaves->count()==0){
@@ -497,14 +476,12 @@ namespace qemacs
     }
   }
 
-  bool
-  QEmacsBuffer::isOkToClose() const
+  bool QEmacsBuffer::isOkToClose() const
   {
     return !this->e->document()->isModified();
   } // end of QEmacsBuffer::isOkToClose
 
-  void
-  QEmacsBuffer::closeCurrentSlave()
+  void QEmacsBuffer::closeCurrentSlave()
   {
     if(this->slaves->count()!=0){
       this->closeSlave(this->slaves->currentIndex());

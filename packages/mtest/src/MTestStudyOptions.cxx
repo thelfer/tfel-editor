@@ -38,8 +38,8 @@ namespace qemacs
     gl1->addWidget(new QLabel(QObject::tr("Verbose level"),nullptr,nullptr));
     gl1->addWidget(vlv,0,1);
     // advanced options
-    QGroupBox   *ao  = new QGroupBox(QObject::tr("Advanced options"));
-    auto* rf = new QCheckBox();
+    auto *ao = new QGroupBox(QObject::tr("Advanced options"));
+    auto *rf = new QCheckBox();
     rf->setCheckState(Qt::Checked);
     gl2->addWidget(new QLabel(QObject::tr("Result file")),1,0);
     gl2->addWidget(rf,1,1,Qt::AlignHCenter);
@@ -51,51 +51,46 @@ namespace qemacs
     gl2->addWidget(new QCheckBox,4,1,Qt::AlignHCenter);
     ao->setLayout(gl2);
     ao->setFlat(true);
-
-    QDialogButtonBox  *dbb;
-    dbb =  new QDialogButtonBox(QDialogButtonBox::Ok |
-				QDialogButtonBox::Cancel);
+    auto *dbb = new QDialogButtonBox(QDialogButtonBox::Ok |
+				     QDialogButtonBox::Cancel);
     hl->addWidget(dbb);
-    QObject::connect(dbb, SIGNAL(accepted()), this, SLOT(accept()));
-    QObject::connect(dbb, SIGNAL(rejected()), this, SLOT(reject()));
-    QObject::connect(vlv, SIGNAL(activated(const QString&)),
-		     this, SLOT(verboseLevelChanged(const QString&)));
-    QObject::connect(gl2-> itemAtPosition(1,1)->widget(), SIGNAL(toggled(bool)),
-		     this, SLOT(resultFile(bool)));
-    QObject::connect(gl2-> itemAtPosition(2,1)->widget(), SIGNAL(toggled(bool)),
-		     this, SLOT(xmlFile(bool)));
-    QObject::connect(gl2-> itemAtPosition(3,1)->widget(), SIGNAL(toggled(bool)),
-		     this, SLOT(fpeChecked(bool)));
-    QObject::connect(gl2-> itemAtPosition(4,1)->widget(), SIGNAL(toggled(bool)),
-		     this, SLOT(printBackTraceChecked(bool)));
+    QObject::connect(dbb,&QDialogButtonBox::accepted,
+		     this,&MTestStudyOptionsDialog::accept);
+    QObject::connect(dbb,&QDialogButtonBox::rejected,
+		     this,&MTestStudyOptionsDialog::reject);
+    QObject::connect(vlv,static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::activated),
+		     this,&MTestStudyOptionsDialog::verboseLevelChanged);
+    QObject::connect(qobject_cast<QCheckBox*>(gl2->itemAtPosition(1,1)->widget()),&QCheckBox::toggled,
+		     this,&MTestStudyOptionsDialog::resultFile);
+    QObject::connect(qobject_cast<QCheckBox*>(gl2->itemAtPosition(2,1)->widget()),&QCheckBox::toggled,
+		     this,&MTestStudyOptionsDialog::xmlFile);
+    QObject::connect(qobject_cast<QCheckBox*>(gl2->itemAtPosition(3,1)->widget()),&QCheckBox::toggled,
+		     this,&MTestStudyOptionsDialog::fpeChecked);
+    QObject::connect(qobject_cast<QCheckBox*>(gl2->itemAtPosition(4,1)->widget()),&QCheckBox::toggled,
+		     this,&MTestStudyOptionsDialog::printBackTraceChecked);
     vl->addLayout(gl1);
     vl->addWidget(ao);
     vl->addLayout(hl);
     this->setLayout(vl);
   }
 
-  void MTestStudyOptionsDialog::verboseLevelChanged(const QString& lvl)
-  {
+  void MTestStudyOptionsDialog::verboseLevelChanged(const QString& lvl){
     o.vlvl = lvl;
   }
 
-  void MTestStudyOptionsDialog::resultFile(bool b)
-  {
+  void MTestStudyOptionsDialog::resultFile(bool b){
     o.res = b;
   }
 
-  void MTestStudyOptionsDialog::xmlFile(bool b)
-  {
+  void MTestStudyOptionsDialog::xmlFile(bool b){
     o.xml = b;
   }
   
-  void MTestStudyOptionsDialog::fpeChecked(bool b)
-  {
+  void MTestStudyOptionsDialog::fpeChecked(bool b){
     o.fpe = b;
   }
   
-  void MTestStudyOptionsDialog::printBackTraceChecked(bool b)
-  {
+  void MTestStudyOptionsDialog::printBackTraceChecked(bool b){
     o.printBackTrace = b;
   }
 

@@ -21,7 +21,7 @@ namespace qemacs
       textEdit(t),
       stage(0)
   {
-    QStringList h = QEmacsTextEditQueryReplace::getHistory();
+    const auto h = QEmacsTextEditQueryReplace::getHistory();
     if(h.length()<2){
       this->setLabel(QObject::tr("query replace :"));
     } else {
@@ -54,11 +54,11 @@ namespace qemacs
       stage(2)
   {
     QEmacsTextEditReplaceFilter *rf;
-    QTextCursor tc = this->textEdit.textCursor();
+    auto tc = this->textEdit.textCursor();
     rf = new QEmacsTextEditReplaceFilter(this->qemacs,this->textEdit,
 					 *this,s1_,s2_);
-    QObject::connect(rf,SIGNAL(destroyed()),
-		     this,SLOT(userEditingFinished()));
+    QObject::connect(rf,&QEmacsTextEditReplaceFilter::destroyed,
+		     this,&QEmacsTextEditQueryReplace::userEditingFinished);
     if(!this->textEdit.setKeyPressEventFilter(rf)){
       rf->deleteLater();
     } else {
@@ -70,15 +70,14 @@ namespace qemacs
 
   QEmacsTextEditQueryReplace::~QEmacsTextEditQueryReplace() = default;
 
-  void
-  QEmacsTextEditQueryReplace::treatUserInput()
+  void QEmacsTextEditQueryReplace::treatUserInput()
   {
-    QEmacsTextEditBase& t = this->textEdit;
-    QEmacsWidget& q       = this->qemacs;
+    auto& t = this->textEdit;
+    auto& q = this->qemacs;
     if(this->stage==0){
       QString i = this->input->text();
       if(i.isEmpty()){
-	QStringList h = QEmacsTextEditQueryReplace::getHistory();
+	const auto h = QEmacsTextEditQueryReplace::getHistory();
 	if(h.length()<2){
 	  this->cancel();
 	  this->qemacs.displayInformativeMessage(QObject::tr("empty entry"));
@@ -100,8 +99,8 @@ namespace qemacs
 	return;
       }
     } else if(this->stage==1){
-      QString i1 = this->s1;
-      QString i2 = this->input->text();
+      const auto i1 = this->s1;
+      const auto i2 = this->input->text();
       QEmacsTextEditQueryReplace::addToHistory(i2);
       this->qemacs.removeUserInput(this);
       this->qemacs.setUserInput(new QEmacsTextEditQueryReplace(t,q,i1,i2));

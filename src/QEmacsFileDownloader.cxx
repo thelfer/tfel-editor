@@ -6,13 +6,11 @@ namespace qemacs
   QEmacsFileDownloader::QEmacsFileDownloader(QUrl url, QObject *p)
     : QObject(p)
   {
-    connect(&m_WebCtrl, SIGNAL(finished(QNetworkReply*)),
-	    SLOT(fileDownloaded(QNetworkReply*)));
+    connect(&m_WebCtrl,&QNetworkAccessManager::finished,
+	    this,&QEmacsFileDownloader::fileDownloaded);
     QNetworkRequest request(url);
     m_WebCtrl.get(request);
   }
-
-  QEmacsFileDownloader::~QEmacsFileDownloader() = default;
 
   void QEmacsFileDownloader::fileDownloaded(QNetworkReply* pReply)
   {
@@ -26,5 +24,7 @@ namespace qemacs
   {
     return m_DownloadedData;
   }
+
+  QEmacsFileDownloader::~QEmacsFileDownloader() = default;
 
 } // end of namespace qemacs
