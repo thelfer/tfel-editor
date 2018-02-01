@@ -146,12 +146,32 @@ namespace qemacs
 	"ACOS" , "MEPL"};
   } // end of buildKeysList
 
-  const QStringList&
-  CastemMajorMode::getKeysList()
+  const QStringList& CastemMajorMode::getKeysList()
   {
     static QStringList keys(buildKeysList());
     return keys;
   } // end of getKeysList
+
+  struct CastemMajorModeRessourceLoader
+  {
+    CastemMajorModeRessourceLoader()
+      : l(getLoader())
+    {}
+  private:
+    struct Loader
+    {
+      Loader()
+      {
+	Q_INIT_RESOURCE(CastemModeResources);
+      }
+    };
+    static Loader& getLoader()
+    {
+      static Loader l;
+      return l;
+    }
+    Loader l;
+  };
   
   CastemMajorMode::CastemMajorMode(QEmacsWidget& w,
 				   QEmacsBuffer& b,
@@ -351,24 +371,26 @@ namespace qemacs
 
   } // end of CastemMajorMode::displayHelp
 
-  void CastemMajorMode::openWebHelp(const QString& w2)
-  {
+  void CastemMajorMode::openWebHelp(const QString& w2){
     QDesktopServices::openUrl(QUrl("http://www-cast3m.cea.fr/index.php?page=notices&notice="+w2.toLower()));
   } // end of CastemMajorMode::openWebHelp
 
-  int CastemMajorMode::getMinimalCompletionLength()
-  {
+  int CastemMajorMode::getMinimalCompletionLength(){
     return 2;
   } // end of CastemMajorMode::getMinimalCompletionLength
 
   void CastemMajorMode::format()
   {} // end of CastemMajorMode::format
 
-  QString CastemMajorMode::getCommentSyntax()
-  {
+  QString CastemMajorMode::getCommentSyntax(){
     return "*";
   } // end of CastemMajorMode::getCommentSyntax
 
+  QIcon CastemMajorMode::getIcon() const{
+    static QIcon i(":/Cast3MIcon.png");
+    return i;
+  } // end of CastemMajorMode::getIcon()
+  
   CastemMajorMode::~CastemMajorMode()
   {
     delete this->ha1;

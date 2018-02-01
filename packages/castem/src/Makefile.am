@@ -6,6 +6,10 @@ AM_CPPFLAGS = -I$(top_srcdir)/packages/castem/include \
 packagesdir = @prefix@/share/qemacs/packages
 packages_LTLIBRARIES = libCastemQEmacsMode.la
 
+CASTEMMODERESOURCES=images/IconeCast3M_jaune.png
+CastemModeResources.cxx : CastemModeResources.qrc $(CASTEMMODERESOURCES)
+	@QT_RCC@ -name CastemModeResources @srcdir@/CastemModeResources.qrc -o CastemModeResources.cxx
+
 libCastemQEmacsMode_la_SOURCES        = CastemMajorMode.cxx         \
 					CastemSyntaxHighlighter.cxx
 
@@ -17,4 +21,6 @@ clean-local:
 moc_%.cxx : @top_srcdir@/packages/castem/include/QEmacs/%.hxx
 	@QT_MOC@ $< -o $@	
 
-EXTRA_DIST=CMakeLists.txt
+EXTRA_DIST=CastemModeResources.qrc \
+	   $(CASTEMMODERESOURCES)  \
+	   CMakeLists.txt

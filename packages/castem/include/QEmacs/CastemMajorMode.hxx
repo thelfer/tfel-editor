@@ -70,30 +70,26 @@ namespace qemacs
 
     QString getCommentSyntax() override;
 
+    QIcon getIcon() const override;
+    
     ~CastemMajorMode() override;
 
   protected slots:
 
-    virtual void
-    actionTriggered(QAction *);
+    virtual void actionTriggered(QAction *);
 
   protected:
 
-    static QStringList
-    buildKeysList();
+    static QStringList buildKeysList();
 
-    virtual void
-    displayHelp(const QString&,
-		const QString&);
+    virtual void displayHelp(const QString&,
+			     const QString&);
 
-    virtual void
-    openWebHelp(const QString&);
+    virtual void openWebHelp(const QString&);
 
-    virtual void
-    sendToCastem(const QString&);
+    virtual void sendToCastem(const QString&);
 
-    virtual void
-    startCastem();
+    virtual void startCastem();
 
     // completer
     QCompleter* c;
