@@ -304,14 +304,8 @@ namespace qemacs {
     tc.insertText(in.readAll());
     tc.setPosition(cpos);
     if(keepEmptyLine) {
-      // tc.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor,2);
-      // tc.removeSelectedText();
-      // const auto ppos = tc.position();
-      // tc.movePosition(QTextCursor::StartOfLine,QTextCursor::KeepAnchor);
-      // const auto spaces = tc.selectedText();
-      // tc.setPosition(ppos);
-      // tc.insertText("\n"+spaces);
-      // tc.setPosition(ppos);
+      tc.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor);
+      tc.removeSelectedText();
     } else {
       // skip the first spaces
       tc.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
