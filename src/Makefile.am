@@ -48,8 +48,6 @@ libTFELQEmacs_la_SOURCES = QEmacsResources.cxx                   \
 			   CSyntaxHighlighterBase.cxx            \
 			   CSyntaxHighlighter.cxx                \
 			   CMajorModeBase.cxx                    \
-			   Token.cxx                             \
-			   CxxTokenizer.cxx                      \
 			   CxxMajorMode.cxx                      \
 			   CxxSyntaxHighlighter.cxx              \
 			   ProcessOutputFrame.cxx                \
@@ -85,7 +83,8 @@ nodist_libTFELQEmacs_la_SOURCES = moc_QEmacsWidget.cxx                      \
 libTFELQEmacs_la_CPPFLAGS = $(AM_CPPFLAGS) -DTFELQEmacs_EXPORTS
 libTFELQEmacs_la_LIBADD   = @QT_LIBS@            \
 			    -L@TFELHOME@/lib     \
-			    -lTFELSystem
+			    -lTFELSystem         \
+			    -lTFELUtilities
 if QEMACS_EXTERNAL_HUNSPELL
 libTFELQEmacs_la_LIBADD += $(hunspell_LIBS)
 endif

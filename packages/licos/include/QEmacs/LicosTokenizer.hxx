@@ -9,8 +9,7 @@
 #define LIB_QEMACS_LICOSTOKENIZER_HXX 
 
 #include<QVector>
-
-#include"QEmacs/CxxTokenizer.hxx"
+#include"TFEL/Utilities/CxxTokenizer.hxx"
 
 namespace qemacs
 {
@@ -19,7 +18,7 @@ namespace qemacs
    * a tokenizer for licos input file
    */
   struct LicosTokenizer
-    : public CxxTokenizer
+    : public tfel::utilities::CxxTokenizer
   {
     enum State {
       STANDARD,
@@ -33,36 +32,30 @@ namespace qemacs
      * \brief analyse the string given
      * all previous tokens are erased
      * \param[in] s : string to be parsed
-     * \param[in] l : line number
      */ 
-    void parseString(const QString&,
-		     const unsigned short = 0u) override;
+    void parseString(const QString&);
 
     /*!
      * \return the curret state
      */
-    State
-    getState() const;
+    State getState() const;
 
     /*!
      * \return the beginning of currently opened arrays
      */
-    QVector<unsigned short>
-    getBeginningOfArrays() const;
+    QVector<unsigned short> getBeginningOfArrays() const;
 
     /*!
      * \return the error message
      */
-    virtual QString
-    getErrorMessage();
+    virtual QString getErrorMessage();
 
     /*!
      * \param[in] e : error message
      */
-    virtual void
-    setFailedState(const QString&);
+    virtual void setFailedState(const QString&);
 
-    void reset() override;
+    virtual void reset();
 
   protected:
 

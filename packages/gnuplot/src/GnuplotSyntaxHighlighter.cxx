@@ -12,9 +12,7 @@ namespace qemacs{
   GnuplotSyntaxHighlighter::GnuplotSyntaxHighlighter(QTextDocument *p)
     : CSyntaxHighlighterBase(p)
   {
-    QStringList keys;
-    keys << "set"     << "plot"   << "splot";
-    foreach(const QString& key,keys){
+    for(const std::string& key : {"set","plot","splot"}){
       HighlightingRule rule;
       rule.key     = key;
       rule.format  = this->keyFormat;

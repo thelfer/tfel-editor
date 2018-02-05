@@ -11,21 +11,15 @@
 namespace qemacs
 {
 
-  static QStringList
+  static std::vector<std::string>
   PipeTestSyntaxHighlighter_buildGetPipeTestKeys()
   {
-    mtest::PipeTestParser p;
-    auto keys = QStringList{};
-    for(const auto& k : p.getKeyWordsList()){
-      keys.append(QString::fromStdString(k));
-    }
-    return keys;
+    return mtest::PipeTestParser().getKeyWordsList();
   } // end of PipeTestSyntaxHighlighter_buildGetPipeTestKeys()
   
-  QStringList&
-  PipeTestSyntaxHighlighter::getPipeTestKeys()
+  const std::vector<std::string>& PipeTestSyntaxHighlighter::getPipeTestKeys()
   {
-    static QStringList keys(PipeTestSyntaxHighlighter_buildGetPipeTestKeys());
+    static auto keys = PipeTestSyntaxHighlighter_buildGetPipeTestKeys();
     return keys;
   } // end of PipeTestSyntaxHighlighter::getPipeTestKeys
 
@@ -34,8 +28,7 @@ namespace qemacs
   {
     this->cCharAsString = true;
     this->mtestKeyFormat.setForeground(Qt::blue);
-    QStringList keys;
-    foreach (const QString &k,PipeTestSyntaxHighlighter::getPipeTestKeys()){
+    for(const std::string &k : PipeTestSyntaxHighlighter::getPipeTestKeys()){
       HighlightingRule rule;
       rule.key     = k;
       rule.format  = this->mtestKeyFormat;
@@ -43,10 +36,10 @@ namespace qemacs
     }
   }
 
-  QStringList
+  const std::vector<std::string>&
   PipeTestSyntaxHighlighter::getKeyWordsList() const
   {
-    static QStringList keys(PipeTestSyntaxHighlighter_buildGetPipeTestKeys());
+    static auto keys = PipeTestSyntaxHighlighter_buildGetPipeTestKeys();
     return keys;
   } // end of PipeTestSyntaxHighlighter::getKeyWordsList
 

@@ -21,6 +21,7 @@ qemacs_package(MFrontQEmacsMode
 target_link_libraries(MFrontQEmacsMode
   TFELQEmacs
   TFELMFront
+    TFELUtilities
   Qt5::Core
   Qt5::Widgets
   )

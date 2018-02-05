@@ -23,7 +23,11 @@ namespace qemacs
 				       QEmacsTextEditBase& t)
     : MTestMajorMode(w,b,t)
   {
-    this->c = new QCompleter(this->getKeyWordsList(),&t);
+    QStringList keys;
+    for(const auto& k : this->getKeyWordsList()){
+      keys << QString::fromStdString(k);
+    }
+    this->c = new QCompleter(keys,&t);
     this->c->setWidget(&t);
     this->c->setCaseSensitivity(Qt::CaseInsensitive);
     this->c->setCompletionMode(QCompleter::PopupCompletion);
@@ -48,7 +52,8 @@ namespace qemacs
     new PipeTestSyntaxHighlighter(d);
   } // end of PipeTestMajorMode::setSyntaxHighlighter
 
-  QStringList PipeTestMajorMode::getKeyWordsList() const{
+  const std::vector<std::string>&
+  PipeTestMajorMode::getKeyWordsList() const{
     return PipeTestSyntaxHighlighter::getPipeTestKeys();
   }
 

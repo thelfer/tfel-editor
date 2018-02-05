@@ -352,8 +352,8 @@ namespace qemacs
   
   void QEmacsTextEditBase::setMajorMode()
   {
-    QEmacsMajorModeFactory& fm = QEmacsMajorModeFactory::getQEmacsMajorModeFactory();
-    QEmacsMajorMode * m = fm.getQEmacsMajorModeForFile(QFileInfo(this->getFileName()).fileName(),
+    auto& fm = QEmacsMajorModeFactory::getQEmacsMajorModeFactory();
+    auto * m = fm.getQEmacsMajorModeForFile(QFileInfo(this->getFileName()).fileName(),
 						       this->qemacs,
 						       this->buffer,*this);
     this->setMajorMode(m);

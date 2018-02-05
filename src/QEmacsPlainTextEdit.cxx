@@ -14,6 +14,7 @@
 #include<QtCore/QSettings>
 #include<QtCore/QTextCodec>
 #include<QtCore/QTextStream>
+#include<QtCore/QStandardPaths>
 #include<QtCore/QStringListModel>
 #include<QtWidgets/QHBoxLayout>
 #include<QtWidgets/QMessageBox>
@@ -368,8 +369,9 @@ namespace qemacs
   {
     // reading the template file associated with the file
     QFileInfo i(f);
-    QString ext = i.completeSuffix();
-    QFile t_file("/home/th202608/.templates/TEMPLATE."+ext+".tpl");
+    const auto ext = i.completeSuffix();
+    const auto homePath = QStandardPaths::standardLocations(QStandardPaths::HomeLocation)[0];
+    QFile t_file(homePath+"/.templates/TEMPLATE."+ext+".tpl");
     if (!t_file.open(QIODevice::ReadOnly | QIODevice::Text)){
       return;
     }

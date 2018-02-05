@@ -9,7 +9,8 @@ packages_LTLIBRARIES = libMFrontQEmacsMode.la
 libMFrontQEmacsMode_la_SOURCES = MFrontMajorMode.cxx         \
 				 MFrontSyntaxHighlighter.cxx
 libMFrontQEmacsMode_la_LIBADD  = -L@TFELHOME@/lib      \
-			         -lTFELMFront
+			         -lTFELUtilities       \
+				 -lTFELMFront
 
 nodist_libMFrontQEmacsMode_la_SOURCES = moc_MFrontMajorMode.cxx         \
 				        moc_MFrontSyntaxHighlighter.cxx

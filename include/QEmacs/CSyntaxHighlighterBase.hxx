@@ -31,8 +31,7 @@ namespace qemacs
 
   public:
 
-    virtual void
-    highlightBlock(const QString &) override;
+    virtual void highlightBlock(const QString &) override;
 
   protected:
 
@@ -41,7 +40,7 @@ namespace qemacs
      */
     struct HighlightingRule
     {
-      QString         key;
+      std::string     key;
       QTextCharFormat format;
     }; // end of struct HighlightingRule
 

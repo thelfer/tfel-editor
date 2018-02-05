@@ -96,26 +96,22 @@ namespace qemacs
     this->emitNewTreatedFile(this->e->getCompleteFileName());
   }
 
-  int
-  QEmacsBuffer::getId() const
+  int QEmacsBuffer::getId() const
   {
     return this->id;
   } // end of QEmacsBuffer::getId
 
-  void
-  QEmacsBuffer::emitNewTreatedFile(const QString& f)
+  void QEmacsBuffer::emitNewTreatedFile(const QString& f)
   {
     emit newTreatedFile(f);
   } // end of QEmacsBuffer::emitNewTreatedFile
 
-  QString
-  QEmacsBuffer::getBufferRawName() const
+  QString QEmacsBuffer::getBufferRawName() const
   {
     return this->e->getFileName();
   } // end of QEmacsBuffer::setBufferName
 
-  QString
-  QEmacsBuffer::getBufferName() const
+  QString QEmacsBuffer::getBufferName() const
   {
     QString s = this->getBufferNameSuffix();
     QString f = QFileInfo(this->getBufferRawName()).fileName();
@@ -123,16 +119,14 @@ namespace qemacs
       return f+" <"+s+">";
     }
     return f;
-  } // end of QEmacsBuffer::setBufferName
+  } // end of QEmacsBuffer::getBufferName
 
-  QString
-  QEmacsBuffer::getBufferNameSuffix() const
+  QString QEmacsBuffer::getBufferNameSuffix() const
   {
     return this->bufferNameSuffix;
   } // end of QEmacsBuffer::setBufferName
     
-  void
-  QEmacsBuffer::focusInEvent(QFocusEvent *)
+  void QEmacsBuffer::focusInEvent(QFocusEvent *)
   {
     if(!this->e->hasFocus()){
       this->e->setFocus();

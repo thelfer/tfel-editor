@@ -5,11 +5,12 @@
  * \brief 30 juin 2012
  */
 
-#include<stdexcept>
+#include <stdexcept>
 
-#include"MFront/DSLFactory.hxx"
-#include"MFront/AbstractDSL.hxx"
-#include"QEmacs/MFrontSyntaxHighlighter.hxx"
+#include "MFront/AbstractDSL.hxx"
+#include "MFront/DSLFactory.hxx"
+#include "MFront/SupportedTypes.hxx"
+#include "QEmacs/MFrontSyntaxHighlighter.hxx"
 
 namespace qemacs
 {
@@ -18,15 +19,11 @@ namespace qemacs
 						   const QString& n)
     : CxxSyntaxHighlighter(p)
   {
-    QStringList keys;
+    std::vector<std::string> keys;
     try{
       auto& f = mfront::DSLFactory::getDSLFactory();
       std::shared_ptr<mfront::AbstractDSL> dsl{f.createNewParser(n.toStdString())};
-      std::vector<std::string> mkeys;
-      dsl->getKeywordsList(mkeys);
-      for(const auto& k:mkeys){
-	keys.append(QString::fromStdString(k));
-      }
+      dsl->getKeywordsList(keys);
     } catch(std::exception&){
       return;
     }
@@ -37,7 +34,12 @@ namespace qemacs
       rule.format  = this->mfrontKeyFormat;
       this->highlightingRules.push_front(rule);
     }
-  }
+    for(const auto& st : mfront::SupportedTypes::getTypeFlags()){
+      HighlightingRule rule;
+      rule.key     = st.first;
+      rule.format  = this->keyFormat;
+      this->highlightingRules.push_front(rule);
+    }
+  } // end of MFrontSyntaxHighlighter::MFrontSyntaxHighlighter
 
 } // end of namespace qemacs
-

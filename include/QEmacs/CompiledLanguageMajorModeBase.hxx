@@ -31,15 +31,13 @@ namespace qemacs
 				  QEmacsBuffer&,
 				  QEmacsTextEditBase&);
 
-    virtual ~CompiledLanguageMajorModeBase();
+    ~CompiledLanguageMajorModeBase() override;
 
   protected:
 
-    virtual QString
-    getLanguageName() const = 0;
+    virtual QString getLanguageName() const = 0;
     
-    virtual QString
-    getDefaultCompilationCommand() const;
+    virtual QString getDefaultCompilationCommand() const;
     
     void runCompilation();
 

@@ -244,7 +244,7 @@ namespace qemacs
       return;
     }
     if((ctrl)&&(k==Qt::Key_Y)){
-      const QStringList& ring = this->qemacs.getKillRing();
+      const auto& ring = this->qemacs.getKillRing();
       if(!ring.isEmpty()){
 	this->yank = true;
 	this->pring = ring.size()-1;
@@ -583,18 +583,16 @@ namespace qemacs
     void complete() override
     {
       auto p = this->text();
-#ifdef Q_OS_UNIX
       if(p.startsWith("~/")){
-	QString homePath = QDir::home().absolutePath();
+	auto homePath = QDir::home().absolutePath();
 	if(!homePath.endsWith(QDir::separator())){
 	  homePath += QDir::separator();
 	}
 	p.replace(0,2,homePath);
 	QLineEdit::setText(p);
       }
-#endif
       bool b;
-      QString c = this->findCompletion(b);
+      const auto c = this->findCompletion(b);
       if(c.isEmpty()){
 	return;
       }
@@ -611,9 +609,8 @@ namespace qemacs
       return d;
     }
 
-    virtual void
-    setText(const QString& c,
-	    const bool b)
+    virtual void setText(const QString& c,
+			 const bool b)
     {
       if(b){
 	QFileInfo f(c);

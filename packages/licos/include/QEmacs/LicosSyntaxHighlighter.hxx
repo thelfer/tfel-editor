@@ -8,6 +8,8 @@
 #ifndef LIB_QEMACS_LICOSSYNTAXHIGHLIGHTER_HXX
 #define LIB_QEMACS_LICOSSYNTAXHIGHLIGHTER_HXX 
 
+#include<string>
+#include<vector>
 #include"QEmacs/CSyntaxHighlighterBase.hxx"
 
 namespace qemacs
@@ -33,11 +35,9 @@ namespace qemacs
 
   public:
 
-    static const QStringList&
-    getKeys();
+    static const std::vector<std::string>& getKeys();
 
-    static const QStringList&
-    getBlocks();
+    static const std::vector<std::string>& getBlocks();
 
     /*!
      * \param[in] t : text document to be highlighted
@@ -48,11 +48,9 @@ namespace qemacs
 
   protected:
 
-    static QStringList
-    buildKeysList();
+    static std::vector<std::string> buildKeysList();
 
-    static QStringList
-    buildBlocksList();
+    static std::vector<std::string> buildBlocksList();
 
     QVector<QRegExp> importExprs;
 

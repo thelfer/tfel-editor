@@ -24,8 +24,7 @@ namespace qemacs
     Q_OBJECT
   public:
     //! \return the list of keys
-    static QStringList&
-    getPipeTestKeys();
+    static const std::vector<std::string>& getPipeTestKeys();
     /*!
      * \param[in] t : text document to be highlighted
      */
@@ -34,7 +33,7 @@ namespace qemacs
     virtual ~PipeTestSyntaxHighlighter();
   protected:
     //! \return the list of keys
-    virtual QStringList getKeyWordsList() const;
+    virtual const std::vector<std::string>& getKeyWordsList() const;
     // format used for syntax highlighting
     QTextCharFormat mtestKeyFormat;
   }; // end of struct PipeTestSyntaxHighlighter

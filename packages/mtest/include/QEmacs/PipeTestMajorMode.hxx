@@ -38,7 +38,7 @@ namespace qemacs
     ~PipeTestMajorMode() override;
   protected:
     //! return the list of MTest keywords
-    QStringList getKeyWordsList() const override;
+    const std::vector<std::string>& getKeyWordsList() const override;
     //! return the scheme name
     QString getScheme() const override;
     // completer

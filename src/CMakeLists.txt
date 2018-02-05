@@ -49,13 +49,12 @@ qemacs_library(TFELQEmacs
   QEmacsTextEditReplaceFilter.cxx
   QEmacsMajorModeFactory.cxx
   GrepOutputMajorMode.cxx
-  Token.cxx
-  CxxTokenizer.cxx
   ${QEmacsResources_RCC}
   ${TFELQEmacs_SOURCES})
 
 target_link_libraries(TFELQEmacs
   TFELSystem
+  TFELUtilities
   TFELException
   Qt5::Core
   Qt5::Widgets

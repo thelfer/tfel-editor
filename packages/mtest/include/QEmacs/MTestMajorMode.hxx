@@ -66,8 +66,7 @@ namespace qemacs
     insertKeyword(QAction *);
   protected:
     //! \brief return the list of MTest keywords
-    virtual QStringList
-    getKeyWordsList() const;
+    virtual const std::vector<std::string>& getKeyWordsList() const;
     //! \brief return the scheme name
     virtual QString getScheme() const;
     //! \brief completer

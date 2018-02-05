@@ -21,11 +21,12 @@ namespace qemacs
     : QEmacsPlainTextEdit(w,b),
       process(new QProcess(this))
   {
+    using QProcessFinished = void (QProcess::*)(int,QProcess::ExitStatus);
     QEmacsPlainTextEdit::setReadOnly(true); 
     this->process->setProcessChannelMode(QProcess::MergedChannels);
     QObject::connect(this->process,&QProcess::readyReadStandardOutput,
 		     this,&ProcessOutputFrame::displayProcessOutput);
-    QObject::connect(this->process,static_cast<void (QProcess::*)(int,QProcess::ExitStatus)>(&QProcess::finished),
+    QObject::connect(this->process,static_cast<QProcessFinished>(&QProcess::finished),
 		     this,&ProcessOutputFrame::processFinished);
   }
 
@@ -54,8 +55,7 @@ namespace qemacs
     }
   } // end of ProcessOutputFrame::processFinished
 
-  QProcess&
-  ProcessOutputFrame::getProcess()
+  QProcess& ProcessOutputFrame::getProcess()
   {
     return *(this->process);
   } // end of ProcessOutputFrame::getProcess
@@ -67,7 +67,7 @@ namespace qemacs
       if(!this->process->waitForFinished()){
 	this->process->kill();
       }
-  }
+    }
   } // end of ProcessOutputFrame::~ProcessOutputFrame()
 
 } // end of namespace qemacs

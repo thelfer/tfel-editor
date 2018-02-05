@@ -24,29 +24,22 @@ class QWebEngineView;
 namespace qemacs
 {
 
-  void
-  setFontSizeAndContentsMargins(QWidget *const);
+  void setFontSizeAndContentsMargins(QWidget *const);
 
-  void
-  setQLabelFontSizeAndMargins(QLabel*const);
+  void setQLabelFontSizeAndMargins(QLabel*const);
     
-  void
-  setQAbstractScrollAreaInLayout(QHBoxLayout * const,
-				 QAbstractScrollArea *const);
+  void setQAbstractScrollAreaInLayout(QHBoxLayout * const,
+				      QAbstractScrollArea *const);
 
-  void
-  setQWebEngineViewInLayout(QHBoxLayout * const,
-		      QWebEngineView *const);
+  void setQWebEngineViewInLayout(QHBoxLayout * const,
+				 QWebEngineView *const);
 
-  QString
-  commonPart(const QString&,
-	     const QString&);
+  QString commonPart(const QString&,
+		     const QString&);
 
-  QString
-  commonPart(const QStringList&);
-
-  QEMACS_VISIBILITY_EXPORT QString
-  fileNameRegExp();
+  QString commonPart(const QStringList&);
+  
+  QEMACS_VISIBILITY_EXPORT QString fileNameRegExp();
 
 } // end of namespace qemacs
 

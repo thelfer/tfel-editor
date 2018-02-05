@@ -108,14 +108,19 @@ namespace qemacs
 
     void comment() override;
 
+    /*!
+     * \brief report a message
+     * \param[in] m: message
+     */
+    virtual void report(const QString&);
+    
     virtual QString getCommentSyntax();
 
     ~QEmacsMajorModeBase() override;
 
   protected:
 
-    int
-    positionInCurrentBlock(const QTextCursor&) const;
+    int positionInCurrentBlock(const QTextCursor&) const;
 
     /*!
      * \return recursively search the given file in the given
@@ -125,11 +130,10 @@ namespace qemacs
      * \param[in] m : max depth
      * \param[in] s : current depth
      */
-    QStringList
-    findFiles(const QString&,
-	      const QString&,
-	      const int m = 10,
-	      const int s = 0);
+    QStringList findFiles(const QString&,
+			  const QString&,
+			  const int = 10,
+			  const int = 0);
 
     /*!
      * indent the line under the given text cursor by i spaces. This
@@ -137,9 +141,8 @@ namespace qemacs
      * \param[in] tc : text cursor
      * \param[in] i  : indentation
      */
-    void
-    doIndentLine(const QTextCursor&,
-		 const int) const;
+    void doIndentLine(const QTextCursor&,
+		      const int) const;
 
     /*!
      * an helper function which returns the beginning b and the end e
@@ -150,21 +153,18 @@ namespace qemacs
      * \param[out] e  : end of the selection
      * \param[in]  tc : text cursor
      */
-    void
-    beginAndEndOfSelection(QTextCursor&,
-			   QTextCursor&,
-			   const QTextCursor&) const;
+    void beginAndEndOfSelection(QTextCursor&,
+				QTextCursor&,
+				const QTextCursor&) const;
 
     /*!
      * an helper function which returns the beginning and the end of
      * the current paragragraph
      */
-    void
-    findBeginningAndEndOfTheParagraph(QTextCursor&,
-				      QTextCursor&) const;
+    void findBeginningAndEndOfTheParagraph(QTextCursor&,
+					   QTextCursor&) const;
 
-    QVector<QString>
-    getSelectedLines(const QTextCursor&) const;
+    QVector<QString> getSelectedLines(const QTextCursor&) const;
 
     QEmacsWidget& qemacs;
 

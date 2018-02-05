@@ -1,68 +1,88 @@
-/*! 
+/*!
  * \file  CSyntaxHighlighterBase.cxx
  * \brief
  * \author Helfer Thomas
  * \brief 30 juin 2012
  */
 
-#include<stdexcept>
+#include <stdexcept>
+#include <QtCore/QDebug>
+#include "QEmacs/CSyntaxHighlighterBase.hxx"
+#include "TFEL/Utilities/CxxTokenizer.hxx"
 
-#include<QtCore/QDebug>
+namespace qemacs {
 
-#include"QEmacs/CxxTokenizer.hxx"
-#include"QEmacs/CSyntaxHighlighterBase.hxx"
-
-namespace qemacs
-{
-  
   CSyntaxHighlighterBase::CSyntaxHighlighterBase(QTextDocument *p)
-    : QSyntaxHighlighter(p),
-      cCharAsString(false)
-  {
+      : QSyntaxHighlighter(p), cCharAsString(false) {
+    this->preprocessorFormat.setForeground(Qt::darkMagenta);
+    this->preprocessorFormat.setFontWeight(QFont::Bold);
     this->preprocessorFormat.setForeground(Qt::darkMagenta);
     this->keyFormat.setForeground(Qt::darkMagenta);
+    this->keyFormat.setFontWeight(QFont::Bold);
     this->numberFormat.setForeground(Qt::darkRed);
     this->quotationFormat.setForeground(Qt::darkGreen);
     this->commentFormat.setForeground(Qt::red);
   }
 
-  void
-  CSyntaxHighlighterBase::highlightBlock(const QString &text)
-  {
-    CxxTokenizer t;
-    CxxTokenizer::const_iterator p;
-    CxxTokenizer::const_iterator pe;
-    t.treatCharAsString(this->cCharAsString);
-    t.setCCommentOpened(this->previousBlockState()==1);
-    try{
-      t.parseString(text);
-    } catch(std::exception&){}
-    for(p=t.begin();p!=t.end();++p){
+  void CSyntaxHighlighterBase::highlightBlock(const QString &text) {
+    using tfel::utilities::CxxTokenizer;
+    using tfel::utilities::Token;
+    if (this->previousBlockState() == -2) {
+      this->setCurrentBlockState(-2);
+      return;
+    }
+    CxxTokenizer tokenizer;
+    tokenizer.treatCharAsString(this->cCharAsString);
+    tokenizer.keepCommentBoundaries(true);
+    tokenizer.setCStyleCommentOpened(this->previousBlockState() == 1);
+    try {
+      tokenizer.parseString(text.toStdString());
+    } catch (std::exception &e) {
+      this->setCurrentBlockState(-2);
+      return;
+    }
+    for (auto pt = tokenizer.begin(); pt != tokenizer.end(); ++pt) {
       QTextCharFormat f;
       bool b = false;
-      if((p->flag==Token::String)||
-	 (p->flag==Token::Char)){
-	f = this->quotationFormat;
-	b = true;
-      } else if(p->flag==Token::Number){
-	f = this->numberFormat;
-	b = true;
-      } else if (p->flag==Token::Comment){
-	f = this->commentFormat;
-	b = true;
+      if ((pt->flag == Token::String) || (pt->flag == Token::Char)) {
+        f = this->quotationFormat;
+        b = true;
+      } else if (pt->flag == Token::Preprocessor) {
+        f = this->preprocessorFormat;
+        b = true;
+      } else if (pt->flag == Token::Number) {
+        f = this->numberFormat;
+        b = true;
+      } else if (tfel::utilities::isComment(*pt)) {
+        f = this->commentFormat;
+        b = true;
       } else {
-	foreach (const HighlightingRule &rule, highlightingRules){
-	  if(rule.key==p->value){
-	    f = rule.format;
-	    b = true;
-	  }
-	}
+        // standard C++ keywords
+        for (const auto &r : this->highlightingRules) {
+          if (r.key == pt->value) {
+            f = r.format;
+            b = true;
+          }
+        }
       }
-      if(b){
-	this->setFormat(p->pos,p->value.size(),f);
+      if (b) { this->setFormat(pt->offset, pt->value.size(), f); }
+    }
+    // special cases
+    if ((tokenizer.size() > 3) && (tokenizer[0].value == "#")
+        && (tokenizer[1].flag == Token::Preprocessor)
+        && (tokenizer[1].value == "include") && (!tokenizer[2].value.empty())) {
+      const auto &t = tokenizer[2];
+      if (t.value.front() == '<') {
+        auto pt = tokenizer.begin();
+        std::advance(pt, 2);
+        while (pt != tokenizer.end()) {
+          this->setFormat(pt->offset, pt->value.size(), this->quotationFormat);
+          if (pt->value == ">") { break; }
+          ++pt;
+        }
       }
     }
-    if(t.isCCommentOpened()){
+    if (tokenizer.isCStyleCommentOpened()) {
       this->setCurrentBlockState(1);
     } else {
       this->setCurrentBlockState(0);
@@ -70,4 +90,3 @@ namespace qemacs
   }
 
 } // end of namespace qemacs
-

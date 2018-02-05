@@ -45,39 +45,31 @@ namespace qemacs
       textEdit(t)
   {} // end of QEmacsMajorModeBase::QEmacsMajorModeBase
 
-  QEmacsMajorModeBase::~QEmacsMajorModeBase() = default;
-
-  QCompleter*
-  QEmacsMajorModeBase::getCompleter()
+  QCompleter* QEmacsMajorModeBase::getCompleter()
   {
     return nullptr;
   } // end of QEmacsMajorModeBase::getCompleter
 
-  QString
-  QEmacsMajorModeBase::getCompletionPrefix(){
+  QString QEmacsMajorModeBase::getCompletionPrefix(){
     return this->textEdit.getCurrentWord();
   }
   
-  void
-  QEmacsMajorModeBase::completeContextMenu(QMenu *const,
-					   const QTextCursor&)
+  void QEmacsMajorModeBase::completeContextMenu(QMenu *const,
+						const QTextCursor&)
   {} // end of QEmacsMajorModeBase::completeContextMenu()
 
-  QMenu*
-  QEmacsMajorModeBase::getSpecificMenu()
+  QMenu* QEmacsMajorModeBase::getSpecificMenu()
   {
     return nullptr;
   } // end of QEmacsMajorModeBase::getSpecificMenu
 
-  QIcon
-  QEmacsMajorModeBase::getIcon() const
+  QIcon QEmacsMajorModeBase::getIcon() const
   {
     return QIcon();
   } // end of QEmacsMajorModeBase::getIcon
  
-  void
-  QEmacsMajorModeBase::completeCurrentWord(QEmacsTextEditBase& t,
-					   const QString& w)
+  void QEmacsMajorModeBase::completeCurrentWord(QEmacsTextEditBase& t,
+						const QString& w)
   {
     QCompleter *c = this->getCompleter();
     if(c==nullptr){
@@ -95,14 +87,12 @@ namespace qemacs
     t.setTextCursor(tc);
   }
 
-  bool
-  QEmacsMajorModeBase::keyPressEvent(QKeyEvent * const)
+  bool QEmacsMajorModeBase::keyPressEvent(QKeyEvent * const)
   {
     return false;
   } // end of QEmacsMajorModeBase::keyPressEvent
 
-  bool
-  QEmacsMajorModeBase::mousePressEvent(QMouseEvent * const)
+  bool QEmacsMajorModeBase::mousePressEvent(QMouseEvent * const)
   {
     return false;
   } // end of QEmacsMajorModeBase::mousePressEvent
@@ -411,5 +401,11 @@ namespace qemacs
     }
     return r;
   }
+
+  void QEmacsMajorModeBase::report(const QString& m){
+    this->qemacs.displayInformativeMessage(m);
+  }
   
+  QEmacsMajorModeBase::~QEmacsMajorModeBase() = default;
+
 } // end of namespace qemacs

@@ -18,33 +18,33 @@ namespace qemacs
     : state(LicosTokenizer::STANDARD)
   {
     this->treatCharAsString(true);
+    this->keepCommentBoundaries(true);
   }
 
-  void
-  LicosTokenizer::parseString(const QString& s,
-			      const unsigned short l)
+  void LicosTokenizer::parseString(const QString& s)
   {
-    using namespace std;
-    const_iterator p;
-    const_iterator pe;
+    using tfel::utilities::Token;
+    using tfel::utilities::CxxTokenizer;
     if(this->getState()==FAILED){
       return;
     }
     try{
-      CxxTokenizer::parseString(s.trimmed(),l);
-    } catch(exception& e){
-      this->fileTokens.clear();
+      const auto b = this->isCStyleCommentOpened();
+      this->clear();
+      this->setCStyleCommentOpened(b);
+      CxxTokenizer::parseString(s.trimmed().toStdString());
+    } catch(std::exception& e){
+      this->tokens.clear();
       this->state = FAILED;
       this->error = e.what();
     }
     if(this->state!=FAILED){
-      p=this->begin();
-      pe=this->end();
-      while(p!=pe){
+      auto p=this->begin();
+      while(p!=this->end()){
 	if(p->flag==Token::Standard){
 	  if(p->value=="{"){
 	    this->state = ARRAYOPENED;
-	    this->apos << p->pos;
+	    this->apos << p->offset;
 	  } else if(p->value=="}"){
 	    if(this->apos.empty()){
 	      this->state = FAILED;
@@ -63,8 +63,7 @@ namespace qemacs
     }
   }
 
-  LicosTokenizer::State
-  LicosTokenizer::getState() const
+  LicosTokenizer::State LicosTokenizer::getState() const
   {
     return this->state;
   }
@@ -75,22 +74,19 @@ namespace qemacs
     return this->apos;
   }
 
-  QString
-  LicosTokenizer::getErrorMessage()
+  QString LicosTokenizer::getErrorMessage()
   {
     return this->error;
   }
 
-  void
-  LicosTokenizer::reset()
+  void LicosTokenizer::reset()
   {
     this->state = STANDARD;
     this->apos.clear();
     this->error.clear();
   } // end of LicosTokenizer::reset
 
-  void
-  LicosTokenizer::setFailedState(const QString& e)
+  void LicosTokenizer::setFailedState(const QString& e)
   {
     this->state = FAILED;
     this->error = e;

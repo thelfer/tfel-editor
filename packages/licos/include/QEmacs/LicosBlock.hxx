@@ -12,7 +12,7 @@
 #include<QtCore/QStringList>
 #include<QtCore/QSharedPointer>
 
-#include"QEmacs/CxxTokenizer.hxx"
+#include"TFEL/Utilities/CxxTokenizer.hxx"
 
 namespace qemacs
 {
@@ -22,7 +22,10 @@ namespace qemacs
    */
   struct LicosBlock
   {
-
+    //! a simple alias
+    using CxxTokenizer = tfel::utilities::CxxTokenizer;
+    //! a simple alias
+    using Token = tfel::utilities::Token;
     /*!
      * return the name of the block
      */

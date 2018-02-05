@@ -28,19 +28,16 @@ namespace qemacs
     explicit PythonSyntaxHighlighter(QTextDocument *p)
       : CSyntaxHighlighterBase(p)
     {
-      QStringList keys;
-      keys << "and"     << "del"    << "from"
-	   << "not"     << "while"  << "as"  
-	   << "elif"    << "global" << "or" 
-	   << "with"    << "assert" << "else"
-	   << "if"      << "pass"   << "yield"
-	   << "break"   << "except" << "import"
-	   << "print"   << "class"  << "exec"
-	   << "in"      << "raise"  << "continue"
-	   << "finally" << "is"     << "return"
-	   << "def"     << "for"    << "lambda"
-	   << "try";
-      foreach(const QString& key,keys){
+      for(const auto key : {"and","del","from",
+	    "not","while","as",
+	    "elif","global","or",
+	    "with","assert","else",
+	    "if","pass","yield",
+	    "break","except","import",
+	    "print","class","exec",
+	    "in","raise","continue",
+	    "finally","is","return",
+	    "def","for","lambda","try"}){
 	HighlightingRule rule;
 	rule.key     = key;
 	rule.format  = this->keyFormat;

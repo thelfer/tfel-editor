@@ -27,7 +27,11 @@ namespace qemacs
 				 QEmacsTextEditBase& t)
     : CxxMajorMode(w,b,t)
   {
-    this->c = new QCompleter(this->getKeyWordsList(),&t);
+    QStringList keys;
+    for(const auto& k : this->getKeyWordsList()){
+      keys << QString::fromStdString(k);
+    }
+    this->c = new QCompleter(keys,&t);
     this->c->setWidget(&t);
     this->c->setCaseSensitivity(Qt::CaseInsensitive);
     this->c->setCompletionMode(QCompleter::PopupCompletion);
@@ -76,8 +80,9 @@ namespace qemacs
     auto keys = this->getKeyWordsList();
     std::sort(keys.begin(),keys.end());
     for(const auto& k : keys){
-      auto * ka = new QAction(k,this);
-      ka->setData(k);
+      const auto qk = QString::fromStdString(k);
+      auto * ka = new QAction(qk,this);
+      ka->setData(qk);
       km->addAction(ka);
     }
     QObject::connect(km,&QMenu::triggered,
@@ -103,7 +108,7 @@ namespace qemacs
   void MTestMajorMode::completeContextMenu(QMenu *const m,
 					   const QTextCursor& tc)
   {
-    auto keys = this->getKeyWordsList();
+    const auto& keys = this->getKeyWordsList();
     QEmacsMajorModeBase::completeContextMenu(m,tc);
     QTextCursor b(tc);
     b.movePosition(QTextCursor::StartOfBlock,
@@ -113,7 +118,7 @@ namespace qemacs
     QRegExp r("^(@\\w+)");
     if(r.indexIn(l)>=0){
       const auto k = r.cap(1);
-      if(keys.indexOf(k)!=-1){
+      if(std::find(keys.begin(),keys.end(),k.toStdString())!=keys.end()){
 	delete this->ha;
 	this->ha=new QAction(QObject::tr("Help on %1").arg(k),this);
 	this->ha->setData(k);
@@ -130,7 +135,8 @@ namespace qemacs
     }
   }
 
-  QStringList MTestMajorMode::getKeyWordsList() const{
+  const std::vector<std::string>&
+  MTestMajorMode::getKeyWordsList() const{
     return MTestSyntaxHighlighter::getMTestKeys();
   }
 

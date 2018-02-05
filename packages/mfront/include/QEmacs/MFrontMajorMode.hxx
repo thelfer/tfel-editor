@@ -34,9 +34,11 @@ namespace qemacs
     QString getName() const override;
 
     QString getDescription() const override;
-    
+
     void setSyntaxHighlighter(QTextDocument *const) override;
 
+    QMenu* getSpecificMenu() override;
+    
     void completeContextMenu(QMenu *const,
 			     const QTextCursor&) override;
     
@@ -51,17 +53,14 @@ namespace qemacs
   protected slots:
     //! method called periodically to refresh the syntax highlighter
     //! and the completer
-    virtual void
-    updateSyntaxHighlighterAndCompleter();
+    virtual void updateSyntaxHighlighterAndCompleter();
     //! method called when the Help menu is called
-    virtual void
-    actionTriggered(QAction *);
+    virtual void actionTriggered(QAction *);
   protected:
     //! \return the name of the DSL
-    virtual QString getDSLName() const;
+    virtual QString getDSLName();
     //! return the list of MTest keywords
-    virtual QStringList
-    getKeyWordsList() const;
+    virtual QStringList getKeyWordsList();
     /*!
      * \brief a timer to refresh syntax highlighting
      * This is mandatory since the @DSL can change with the user inputs

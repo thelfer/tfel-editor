@@ -115,6 +115,7 @@ namespace qemacs
     this->addBlock("MechanicalBehaviour",
 		   QStringList() << "MaterialProperty"
 		   << "StateVariable"
+		   << "IntegrationScheme"
 		   << "InternalStateVariable"
 		   << "HandleThermalExpansionComputation");
   }
@@ -382,35 +383,30 @@ namespace qemacs
     this->addKeys(getParameterKeys());
   }
 
-  void
-  Block::treatParameters(const QStringList&)
+  void Block::treatParameters(const QStringList&)
   {} // end of Block::treatParameters
 
-  void
-  Block::treatArguments(const CxxTokenizer::const_iterator p,
-			const CxxTokenizer::const_iterator pe)
+  void Block::treatArguments(const CxxTokenizer::const_iterator p,
+			     const CxxTokenizer::const_iterator pe)
   {
     if(p!=pe){
       if(p->flag==Token::Standard){
-	this->end = "EndOf" + p->value;
+	this->end = "EndOf" +QString::fromStdString(p->value);
       }
     }
   } // end of Block::treatArguments
 
-  QString
-  Block::blockEnd() const
+  QString Block::blockEnd() const
   {
     return this->end;
   }
 
-  bool
-  Block::isSubBlock(const QString& b) const
+  bool Block::isSubBlock(const QString& b) const
   {
     return b=="Block";
   }
 
-  QSharedPointer<LicosBlock>
-  Block::getSubBlock(const QString& b) const
+  QSharedPointer<LicosBlock> Block::getSubBlock(const QString& b) const
   {
     using namespace std;
     if(b!="Block"){

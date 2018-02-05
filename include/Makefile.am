@@ -33,8 +33,6 @@ nobase_include_HEADERS = QEmacs/Config.hxx                            \
 			 QEmacs/CSyntaxHighlighter.hxx                \
 			 QEmacs/CompiledLanguageMajorModeBase.hxx     \
 			 QEmacs/CMajorModeBase.hxx                    \
-			 QEmacs/Token.hxx                             \
-			 QEmacs/CxxTokenizer.hxx                      \
 			 QEmacs/CxxMajorMode.hxx                      \
 			 QEmacs/CxxSyntaxHighlighter.hxx              \
 			 QEmacs/ProcessOutputFrame.hxx                \

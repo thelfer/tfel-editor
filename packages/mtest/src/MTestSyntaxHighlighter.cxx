@@ -11,21 +11,15 @@
 namespace qemacs
 {
 
-  static QStringList
+  static std::vector<std::string>
   MTestSyntaxHighlighter_buildGetMTestKeys()
   {
-    mtest::MTestParser p;
-    auto keys = QStringList{};
-    for(const auto& k : p.getKeyWordsList()){
-      keys.append(QString::fromStdString(k));
-    }
-    return keys;
+    return mtest::MTestParser().getKeyWordsList();
   } // end of MTestSyntaxHighlighter_buildGetMTestKeys()
   
-  QStringList&
-  MTestSyntaxHighlighter::getMTestKeys()
+  const std::vector<std::string>& MTestSyntaxHighlighter::getMTestKeys()
   {
-    static QStringList keys(MTestSyntaxHighlighter_buildGetMTestKeys());
+    static const auto keys = MTestSyntaxHighlighter_buildGetMTestKeys();
     return keys;
   } // end of MTestSyntaxHighlighter::getMTestKeys
 
@@ -34,8 +28,7 @@ namespace qemacs
   {
     this->cCharAsString = true;
     this->mtestKeyFormat.setForeground(Qt::blue);
-    QStringList keys;
-    foreach (const QString &k,MTestSyntaxHighlighter::getMTestKeys()){
+    for(const std::string &k : MTestSyntaxHighlighter::getMTestKeys()){
       HighlightingRule rule;
       rule.key     = k;
       rule.format  = this->mtestKeyFormat;
@@ -43,10 +36,10 @@ namespace qemacs
     }
   }
 
-  QStringList
+  const std::vector<std::string>&
   MTestSyntaxHighlighter::getKeyWordsList() const
   {
-    static QStringList keys(MTestSyntaxHighlighter_buildGetMTestKeys());
+    static auto keys = MTestSyntaxHighlighter_buildGetMTestKeys();
     return keys;
   } // end of MTestSyntaxHighlighter::getKeyWordsList
 

@@ -17,6 +17,7 @@
 #include<QtWidgets/QMessageBox>
 #include<QtGui/QDesktopServices>
 
+#include"TFEL/Raise.hxx"
 #include"TFEL/System/ExternalLibraryManager.hxx"
 
 #include"QEmacs/Utilities.hxx"
@@ -47,8 +48,11 @@ namespace qemacs
       : QEmacsLineEdit(QObject::tr("insert block :"),p),
 	textEdit(t)
     {
-      const auto n = LicosSyntaxHighlighter::getBlocks();
-      auto * c = new QCompleter(n,&p);
+      QStringList blocks;
+      for(const auto& b: LicosSyntaxHighlighter::getBlocks()){
+	blocks << QString::fromStdString(b);
+      }
+      auto * c = new QCompleter(blocks,&p);
       c->setWidget(this->input);
       c->setCompletionMode(QCompleter::InlineCompletion);
       this->setInputHistorySettingAddress("licos/insertblock/history");
@@ -123,14 +127,13 @@ namespace qemacs
     return false;
   }
 
-  QString
-  LicosMajorMode::getLicosFile(const QString& f)
+  QString LicosMajorMode::getLicosFile(const QString& f)
   {
     using namespace std;
     if(f.isEmpty()){
       return "";
     }
-    const char * userFiles = nullptr;
+    const char *userFiles = nullptr;
     const QString lpath = this->getLicosPath();
     QString r;
     QString d = QFileInfo(this->textEdit.getCompleteFileName()).dir().absolutePath();
@@ -234,16 +237,12 @@ namespace qemacs
       : l(getLoader())
     {}
   private:
-    struct Loader
-    {
-      Loader()
-      {
+    struct Loader{
+      Loader(){
 	Q_INIT_RESOURCE(LicosModeResources);
       }
     };
-    static Loader&
-    getLoader()
-    {
+    static Loader& getLoader(){
       static Loader l;
       return l;
     }
@@ -262,11 +261,13 @@ namespace qemacs
       l10doca(nullptr),l11doca(nullptr),
       idoca(nullptr),mdoca(nullptr)
   {
-    auto keys    = LicosSyntaxHighlighter::getKeys();
-    const auto blocks = LicosSyntaxHighlighter::getBlocks();
-    foreach (const QString &bl,blocks) {
-      keys.append(bl);
-      keys.append("EndOf"+bl);
+    QStringList keys;
+    for(const auto& k : LicosSyntaxHighlighter::getKeys()){
+      keys << QString::fromStdString(k);
+    }
+    for(const auto& bl : LicosSyntaxHighlighter::getBlocks()){
+      const auto bln = QString::fromStdString(bl);
+      keys << bln << "EndOf"+bln;
     }
     this->c = new QCompleter(keys,&t);
     this->c->setWidget(&t);
@@ -311,8 +312,9 @@ namespace qemacs
 					   const QString& w)
   {
     QEmacsMajorModeBase::completeCurrentWord(t,w);
-    QStringList pblocks = LicosSyntaxHighlighter::getBlocks();
-    if(pblocks.contains(w)){
+    const auto& pblocks = LicosSyntaxHighlighter::getBlocks();
+    if(std::find(pblocks.begin(),pblocks.end(),
+		 w.toStdString())!=pblocks.end()){
       QTextCursor tc = t.textCursor();
       int p = tc.position();
       tc.movePosition(QTextCursor::EndOfBlock);
@@ -527,7 +529,7 @@ namespace qemacs
   {
     QString n = this->textEdit.getCompleteFileName();
     if(n.isEmpty()){
-      this->qemacs.displayInformativeMessage(QObject::tr("no file name"));
+      this->report(QObject::tr("LicosMajorMode::startLicos: no file name"));
       return;
     }
     LicosStudyOptions o;
@@ -543,8 +545,7 @@ namespace qemacs
     this->buffer.addSlave(QObject::tr("Licos Output"),s);
   } // end of LicosMajorMode::runLicos
 
-  void LicosMajorMode::studyFinished(bool s,
-				     QString e)
+  void LicosMajorMode::studyFinished(bool s,QString e)
   {
     if(s){
       QMessageBox::information(&(this->textEdit),
@@ -572,14 +573,12 @@ namespace qemacs
       }
       if(!file.isEmpty()){
 	this->qemacs.openFile(file);
-	QEmacsPlainTextEdit& t = this->qemacs.getCurrentBuffer().getMainFrame();
-	t.gotoLine(line);
+	this->qemacs.getCurrentBuffer().getMainFrame().gotoLine(line);
       }
     }
   } // end of LicosMajorMode::studyFinished
 
-  QMenu*
-  LicosMajorMode::getSpecificMenu()
+  QMenu* LicosMajorMode::getSpecificMenu()
   {
     QWidget *t = qobject_cast<QWidget *>(this->parent());
     if(t==nullptr){
@@ -642,15 +641,13 @@ namespace qemacs
     QDesktopServices::openUrl(QUrl::fromLocalFile(a->data().toString()));
   } // end of LicosMajorMode::openDocumentation
 
-  QIcon
-  LicosMajorMode::getIcon() const
+  QIcon LicosMajorMode::getIcon() const
   {
     static QIcon i(":/LicosIcon.png");
     return i;
   } // end of LicosMajorMode::getIcon()
 
-  void
-  LicosMajorMode::actionTriggered(QAction *a)
+  void LicosMajorMode::actionTriggered(QAction *a)
   {
     if(a==nullptr){
       return;
@@ -1132,8 +1129,7 @@ namespace qemacs
     return false;
   } // end of LicosMajorMode::mousePressEvent
 
-  bool
-  LicosMajorMode::keyPressEvent(QKeyEvent * const e)
+  bool LicosMajorMode::keyPressEvent(QKeyEvent * const e)
   {
     const int k                   = e->key();
     const Qt::KeyboardModifiers m = e->modifiers(); 
@@ -1169,7 +1165,7 @@ namespace qemacs
 	  pi = tokenizer.getBeginningOfArrays().back()+i+1;
 	  ao = true;
 	} else {
-	  if(tokenizer.isCCommentOpened()){
+	  if(tokenizer.isCStyleCommentOpened()){
 	    pi += 1;
 	    pf = true;
 	  }
@@ -1177,11 +1173,11 @@ namespace qemacs
 	tokenizer.parseString(line);
 	tokenizer.stripComments();
 	if(!ao){
-	  LicosTokenizer::const_iterator p  = tokenizer.begin();
-	  LicosTokenizer::const_iterator pe = tokenizer.end();
-	  if(p!=tokenizer.end()){
-	    QString w = p->value;
-	    LicosBlock& b = *(blocks.back());
+	  auto p  = tokenizer.begin();
+	  const auto pe = tokenizer.end();
+	  if(p!=pe){
+	    const auto w = QString::fromStdString(p->value);
+	    auto& b = *(blocks.back());
 	    if(w==b.blockEnd()){
 	      if(w!="EndOfMain"){
 		blocks.pop_back();
@@ -1198,18 +1194,18 @@ namespace qemacs
 		  QStringList args;
 		  ++p;
 		  while(p->value!=">"){
+		    const auto cvalue = QString::fromStdString(p->value);
 		    LicosTokenizer::checkNotEndOfLine("indent",p,pe);
 		    if(!LicosTokenizer::isValidIdentifier(p->value)){
 		      bool convert;
-		      p->value.toInt(&convert);
+		      cvalue.toInt(&convert);
 		      if(!convert){
-			QString msg("LicosMajorMode::getIndentationIncrement : ");
-			msg += "invalid argument '"+p->value+"').\n";
-			msg += "Error at line '"+QString::number(lineNumber)+"'";
-			throw(runtime_error(msg.toStdString()));
+			tfel::raise("LicosMajorMode::getIndentationIncrement: "
+				    "invalid argument '"+p->value+"').\n"
+				    "Error at line '"+std::to_string(lineNumber)+"'");
 		      }
 		    }
-		    args << p->value;
+		    args << cvalue;
 		    ++p;
 		    LicosTokenizer::checkNotEndOfLine("indent",p,pe);
 		    if(p->value!=">"){
@@ -1364,9 +1360,9 @@ namespace qemacs
     this->textEdit.setTextCursor(b);
   } // end of LicosMajorMode::indentRegion
 
-  void
-  LicosMajorMode::comment()
+  void LicosMajorMode::comment()
   {
+    using tfel::utilities::Token;
     QTextCursor tc = this->textEdit.textCursor();
     if(tc.hasSelection()){
       QTextCursor b;
@@ -1397,23 +1393,23 @@ namespace qemacs
 	return;
       }
       LicosTokenizer::TokensContainer stokens; // selected tokens
-      if(!tokenizer.isCCommentOpened()){
+      if(!tokenizer.isCStyleCommentOpened()){
 	QVector<QString> lines = this->getSelectedLines(tc);
 	unsigned short lNumber = 0u;
 	uncomment = true;
 	if(lines.isEmpty()){
 	  uncomment = false;
 	}
-	foreach(const QString& line,lines){
-	  tokenizer.parseString(line,lNumber);
+	for(const QString& line : lines){
+	  tokenizer.parseString(line);
 	  if(tokenizer.getState()==LicosTokenizer::FAILED){
 	    this->qemacs.displayInformativeMessage(QObject::tr("parsing failed"));
 	    return;
 	  } 
-	  LicosTokenizer::const_iterator p  = tokenizer.begin();
-	  LicosTokenizer::const_iterator pe = tokenizer.end();
+	  auto p  = tokenizer.begin();
+	  const auto pe = tokenizer.end();
 	  if(p==pe){
-	    stokens.push_back(Token(lNumber,0,"/**/",Token::Comment));
+	    stokens.push_back(Token("/**/",lNumber,0,Token::Comment));
 	  }
 	  while((p!=pe)&&(uncomment)){
 	    if(p->flag!=Token::Comment){
@@ -1429,22 +1425,22 @@ namespace qemacs
       b = btmp;
       if(uncomment){
 	// uncomment
-	LicosTokenizer::TokensContainer::const_iterator p  = stokens.begin();
-	LicosTokenizer::TokensContainer::const_iterator pe = stokens.end();
+	auto p  = stokens.begin();
+	const auto pe = stokens.end();
 	tc.beginEditBlock();
 	tc.removeSelectedText();
 	while(p!=pe){
 	  if(p==pe){
 	    return;
 	  }
-	  const QString& w = p->value;
+	  const auto& w = QString::fromStdString(p->value);
 	  if(p!=stokens.begin()){
-	    LicosTokenizer::TokensContainer::const_iterator p2 = p;
+	    auto p2 = p;
 	    --p2;
 	    if(p2->line!=p->line){
 	      tc.insertText("\n");
 	    } else {
-	      int s = p->pos-p2->pos-p2->value.size();
+	      int s = p->offset-p2->offset-p2->value.size();
 	      if(s>0){
 		tc.insertText(QString(s,' '));
 	      }
@@ -1509,11 +1505,11 @@ namespace qemacs
 	tokenizer.parseString(l.mid(0,tc.position()-bl.position()));
       }
       if(tokenizer.getState()!=LicosTokenizer::FAILED){
-	if(tokenizer.isCCommentOpened()){
+	if(tokenizer.isCStyleCommentOpened()){
 	  return;
 	}
 	if(tokenizer.begin()!=tokenizer.end()){
-	  const Token& t = tokenizer.back();
+	  const auto& t = *(tokenizer.end());
 	  if(t.flag==Token::Comment){
 	    return;
 	  }
@@ -1558,12 +1554,12 @@ namespace qemacs
 					       .arg(tokenizer.getErrorMessage()));
 	return;
       } 
-      if(tokenizer.isCCommentOpened()){
+      if(tokenizer.isCStyleCommentOpened()){
 	this->textEdit.setTextCursor(tc);
 	return;
       }
       if(tokenizer.begin()!=tokenizer.end()){
-	const Token& t = tokenizer.back();
+	const Token& t = *(tokenizer.end());
 	if(t.flag==Token::Comment){
 	  this->textEdit.setTextCursor(tc);
 	  return;
@@ -1582,8 +1578,7 @@ namespace qemacs
     }
   } // end of LicosMajorMode::comment
 
-  void
-  LicosMajorMode::format()
+  void LicosMajorMode::format()
   {} // end of LicosMajorMode::format
 
   static StandardQEmacsMajorModeProxy<LicosMajorMode> proxy("licos",QVector<QRegExp>()
