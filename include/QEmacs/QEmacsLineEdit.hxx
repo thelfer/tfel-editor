@@ -17,16 +17,14 @@
 
 namespace qemacs {
 
-  class QEmacsWidget;
+  // forward declaration
+  struct QEmacsWidget;
+  // forward declaration
+  struct QEmacsBuffer;
+  // forward declaration
+  struct QEmacsTextEdit;
 
-  class QEmacsBuffer;
-
-  class QEmacsTextEdit;
-
-  class QEMACS_VISIBILITY_EXPORT QEmacsLineEdit : public QWidget {
-    Q_OBJECT
-
-   public:
+  struct QEMACS_VISIBILITY_EXPORT QEmacsLineEdit : public QWidget {
     /*!
      * \param[in] l : label
      * \param[in] p : parent
@@ -153,6 +151,8 @@ namespace qemacs {
     QString inputHistorySettingAddress;
     bool isUserEditingFinished;
 
+   private:
+    Q_OBJECT
   };  // end of QEmacsLineEdit
 
   /*!

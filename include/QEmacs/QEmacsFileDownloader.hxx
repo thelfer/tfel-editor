@@ -18,14 +18,9 @@
 namespace qemacs
 {
 
-  class QEMACS_VISIBILITY_EXPORT QEmacsFileDownloader
+  struct QEMACS_VISIBILITY_EXPORT QEmacsFileDownloader
     : public QObject
   {
-
-    Q_OBJECT
-
-    public:
-
     explicit QEmacsFileDownloader(QUrl,
 				  QObject * = nullptr);
 
@@ -47,6 +42,7 @@ namespace qemacs
 
     QByteArray m_DownloadedData;
 
+    Q_OBJECT
   };
 
 } // end of namespace qemacs

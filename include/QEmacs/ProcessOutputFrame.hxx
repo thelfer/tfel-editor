@@ -2,7 +2,7 @@
  * \file  ProcessOutputFrame.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 01 août 2012
+ * \date   01/08/2012
  */
 
 #ifndef LIB_QEMACS_PROCESSOUTPUTFRAME_HXX
@@ -26,8 +26,7 @@ namespace qemacs
      * \param[in] w : the qemacs widget
      * \param[in] b : the buffer
      */
-    ProcessOutputFrame(QEmacsWidget&,
-		       QEmacsBuffer&);
+    ProcessOutputFrame(QEmacsWidget&, QEmacsBuffer&);
     /*!
      * This method is reimplemented so that this frame can't be
      * writtable     
@@ -38,18 +37,16 @@ namespace qemacs
      */
     QProcess& getProcess();
 
-    //! destructor
+   //! destructor
     ~ProcessOutputFrame() override;
 
-  protected slots:
+   protected slots:
 
-    virtual void
-    displayProcessOutput();
+    virtual void displayProcessOutput();
 
-    virtual void
-    processFinished(int,QProcess::ExitStatus);
+    virtual void processFinished(int, QProcess::ExitStatus);
 
-  protected:
+   protected:
 
     //! the underlying process
     QProcess *process;

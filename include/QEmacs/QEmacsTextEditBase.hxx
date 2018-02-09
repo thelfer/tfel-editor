@@ -2,7 +2,7 @@
  * \file  QEmacsTextEditBase.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 19 août 2012
+ * \brief 19 aoÃ»t 2012
  */
 
 #ifndef LIB_QEMACS_QEMACSTEXTEDITBASE_HXX
@@ -18,13 +18,12 @@
 #include "QEmacs/QEmacsTextEditKeyPressEventFilter.hxx"
 
 namespace qemacs {
-  //! forward declaration
+
+  // forward declaration
   struct QEmacsWidget;
-
-  //! forward declaration
+  // forward declaration
   struct QEmacsBuffer;
-
-  //! forward declaration
+  // forward declaration
   struct QEmacsMajorMode;
 
   struct QEMACS_VISIBILITY_EXPORT QEmacsTextEditBase : public QWidget {
@@ -114,7 +113,7 @@ namespace qemacs {
       void treatUserInput() override;
 
      protected:
-      friend class QEmacsTextEditBase;
+      friend struct QEmacsTextEditBase;
 
       SaveInput(QEmacsWidget &, QEmacsTextEditBase &);
 
@@ -311,7 +310,7 @@ namespace qemacs {
     bool ctrlc;
 
    private:
-    friend class QEmacsBuffer;
+    friend struct QEmacsBuffer;
 
     virtual void setMainFrame(const bool);
 

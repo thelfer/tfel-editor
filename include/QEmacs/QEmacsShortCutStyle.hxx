@@ -14,12 +14,9 @@
 namespace qemacs
 {
 
-  class QEMACS_VISIBILITY_EXPORT QEmacsShortCutStyle
+  struct QEMACS_VISIBILITY_EXPORT QEmacsShortCutStyle
     : public QObject
   {
-    
-    Q_OBJECT
-
   signals:
 
     void shortCutStyleChanged();
@@ -50,6 +47,8 @@ namespace qemacs
     operator=(const QEmacsShortCutStyle&);
 
     ShortCutStyle style;
+
+    Q_OBJECT
 
   }; // end of struct QEmacsShortCutStyle
 

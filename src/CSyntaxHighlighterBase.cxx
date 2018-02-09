@@ -36,7 +36,7 @@ namespace qemacs {
     tokenizer.setCStyleCommentOpened(this->previousBlockState() == 1);
     try {
       tokenizer.parseString(text.toStdString());
-    } catch (std::exception &e) {
+    } catch (std::exception &) {
       this->setCurrentBlockState(-2);
       return;
     }

@@ -14,22 +14,11 @@
 namespace qemacs
 {
 
-  class QEmacsTextEditBase;
-  
-  /*!
-   * major mode
-   */
-  class QEMACS_VISIBILITY_EXPORT CxxMajorMode
-    : public CMajorModeBase
-  {
+  struct QEmacsTextEditBase;
 
-    Q_OBJECT
-
-  public:
-
-    CxxMajorMode(QEmacsWidget&,
-		 QEmacsBuffer&,
-		 QEmacsTextEditBase&);
+  //! major mode dedicated to the C++ language
+  struct QEMACS_VISIBILITY_EXPORT CxxMajorMode : public CMajorModeBase {
+    CxxMajorMode(QEmacsWidget &, QEmacsBuffer &, QEmacsTextEditBase &);
 
     QString getName() const override;
 
@@ -42,13 +31,15 @@ namespace qemacs
     bool keyPressEvent(QKeyEvent * const) override;
 
     void setSyntaxHighlighter(QTextDocument *const) override;
-
+    //! destructor
     ~CxxMajorMode() override;
 
-  protected:
+   protected:
 
     QString getLanguageName() const override;
 
+   private:
+    Q_OBJECT
   }; // end of struct CxxMajorMode
 
 } // end of namespace qemacs

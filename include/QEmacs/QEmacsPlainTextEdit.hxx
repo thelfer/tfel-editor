@@ -2,7 +2,7 @@
  * \file  QEmacsPlainTextEdit.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 19 août 2012
+ * \brief 19/08/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSPLAINTEXTEDIT_HXX
@@ -16,23 +16,15 @@
 namespace qemacs
 {
 
-  class QEMACS_VISIBILITY_EXPORT QEmacsPlainTextEdit
-    : public QEmacsTextEditBase
-  {
+  //! \brief main widget used to edit text
+  struct QEMACS_VISIBILITY_EXPORT QEmacsPlainTextEdit
+      : public QEmacsTextEditBase {
+    QEmacsPlainTextEdit(QEmacsWidget&, QEmacsBuffer&);
 
-    Q_OBJECT
-
-  public:
-
-    QEmacsPlainTextEdit(QEmacsWidget&,
-			QEmacsBuffer&);
-
-    QEmacsPlainTextEdit(const QString&,
-			QEmacsWidget&,
-			QEmacsBuffer&);
+    QEmacsPlainTextEdit(const QString&, QEmacsWidget&, QEmacsBuffer&);
 
     virtual void print(QPrinter *const);
-      
+    //! destructor
     ~QEmacsPlainTextEdit() override;
 
   public slots:
@@ -81,8 +73,8 @@ namespace qemacs
     bool isReadOnly() override;
 
     bool find(const QString&,
-	      QTextDocument::FindFlags = nullptr) override;
-      
+              QTextDocument::FindFlags = nullptr) override;
+
     QTextCursor textCursor() const override;
       
     QTextCursor cursorForPosition(const QPoint&) const override;
@@ -90,9 +82,10 @@ namespace qemacs
     QRect cursorRect(const QTextCursor&) const override;
       
     QRect cursorRect() const override;
-      
-    void setExtraSelections(const QList<QTextEdit::ExtraSelection>&) override;
-      
+
+    void setExtraSelections(
+        const QList<QTextEdit::ExtraSelection>&) override;
+
     QList<QTextEdit::ExtraSelection> extraSelections() const override;
       
     bool isUndoRedoEnabled() const override;
@@ -104,6 +97,9 @@ namespace qemacs
     void readTemplateFile(const QString&);
 
     QPlainTextEdit *e;
+
+   private:
+    Q_OBJECT
 
   }; // end of struct QEmacsPlainTextEdit
 

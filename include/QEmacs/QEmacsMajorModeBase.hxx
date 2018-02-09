@@ -1,28 +1,27 @@
-/*! 
+/*!
  * \file  QEmacsMajorModeBase.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 04 juil. 2012
+ * \date   04/07/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSMAJORMODEBASE_HXX
-#define LIB_QEMACS_QEMACSMAJORMODEBASE_HXX 
+#define LIB_QEMACS_QEMACSMAJORMODEBASE_HXX
 
-#include<QtCore/QMap>
-#include<QtCore/QString>
+#include <QtCore/QMap>
+#include <QtCore/QString>
 
-#include"QEmacs/Config.hxx"
-#include"QEmacs/QEmacsMajorMode.hxx"
+#include "QEmacs/Config.hxx"
+#include "QEmacs/QEmacsMajorMode.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
-  //! forward declaration
+  // forward declaration
   struct QEmacsWidget;
-  //! forward declaration
+  // forward declaration
   struct QEmacsBuffer;
   /*!
-   * a helper class to build major modes
+   * \brief a helper class to build major modes
    */
   struct QEMACS_VISIBILITY_EXPORT QEmacsMajorModeBase
       : public QEmacsMajorMode {
@@ -31,8 +30,10 @@ namespace qemacs
     void update() override;
 
    public:
-    QEmacsMajorModeBase(QEmacsWidget&, QEmacsBuffer&,
-                        QEmacsTextEditBase&, QWidget * const);
+    QEmacsMajorModeBase(QEmacsWidget&,
+                        QEmacsBuffer&,
+                        QEmacsTextEditBase&,
+                        QWidget* const);
 
     /*!
      * default implementation of the getCompleter method
@@ -65,15 +66,15 @@ namespace qemacs
      * This method is called before any treatment by QEmacsTextEditBase
      * and allows the mode to override default shortcuts
      */
-    bool keyPressEvent(QKeyEvent * const) override;
+    bool keyPressEvent(QKeyEvent* const) override;
     /*!
      * This method is called before any treatment by QEmacsTextEditBase
      * and allows the mode to override default behaviour
      */
-    bool mousePressEvent(QMouseEvent * const) override;
+    bool mousePressEvent(QMouseEvent* const) override;
     /*!
-     * treat "Ctrl-k1 Mod-k2" shortcuts not handled by QEmacsTextEditBase
-     * where k1 is either Qt::Key_X or Qt::Key_C.
+     * treat "Ctrl-k1 Mod-k2" shortcuts not handled by
+     * QEmacsTextEditBase where k1 is either Qt::Key_X or Qt::Key_C.
      * \param[in] k1 : first  key
      * \param[in] m  : second key modifier
      * \param[in] k2 : second key
@@ -91,11 +92,11 @@ namespace qemacs
     void completeContextMenu(QMenu* const, const QTextCursor&) override;
     /*!
      * indent the current line
-     */    
+     */
     void indentLine(const QTextCursor&) override;
     /*!
      * indent selected region
-     */    
+     */
     void indentRegion(const QTextCursor&) override;
 
     void setSpellCheckLanguage(const QString&) override;
@@ -107,13 +108,12 @@ namespace qemacs
      * \param[in] m: message
      */
     virtual void report(const QString&);
-    
+
     virtual QString getCommentSyntax();
     //! destructor
     ~QEmacsMajorModeBase() override;
 
-  protected:
-
+   protected:
     int positionInCurrentBlock(const QTextCursor&) const;
     /*!
      * \return recursively search the given file in the given
@@ -123,8 +123,10 @@ namespace qemacs
      * \param[in] m : max depth
      * \param[in] s : current depth
      */
-    QStringList findFiles(const QString&, const QString&,
-                          const int = 10, const int = 0);
+    QStringList findFiles(const QString&,
+                          const QString&,
+                          const int = 10,
+                          const int = 0);
     /*!
      * indent the line under the given text cursor by i spaces. This
      * ensure the cursor remains correctly positionned.
@@ -142,15 +144,15 @@ namespace qemacs
      * \param[in]  tc : text cursor
      */
     void beginAndEndOfSelection(QTextCursor&,
-				QTextCursor&,
-				const QTextCursor&) const;
+                                QTextCursor&,
+                                const QTextCursor&) const;
 
     /*!
      * an helper function which returns the beginning and the end of
      * the current paragragraph
      */
     void findBeginningAndEndOfTheParagraph(QTextCursor&,
-					   QTextCursor&) const;
+                                           QTextCursor&) const;
 
     QVector<QString> getSelectedLines(const QTextCursor&) const;
 
@@ -163,10 +165,8 @@ namespace qemacs
    private:
     Q_OBJECT
 
-  }; // end of struct CppMajorMode
+  };  // end of struct CppMajorMode
 
-} // end of namespace qemacs
-
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_QEMACSMAJORMODEBASE_HXX */
-

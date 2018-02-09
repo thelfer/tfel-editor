@@ -1,8 +1,8 @@
 /*! 
- * \file  QEmacsTextEditQueryReplace.hxx
+ * \file   include/QEmacs/QEmacsTextEditQueryReplace.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 06 août 2012
+ * \date   06/08/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSTEXTEDITQUERYREPLACE_HXX
@@ -12,17 +12,16 @@
 
 namespace qemacs{
 
-  class QEmacsWidget;
-
-  class QEmacsTextEdit;
+  // forward declaration
+  struct QEmacsWidget;
+  // forward declaration
+  struct QEmacsTextEdit;
 
   struct QEmacsTextEditQueryReplace
     : public QEmacsLineEdit
   {
-
-    QEmacsTextEditQueryReplace(QEmacsTextEditBase&,
-			       QEmacsWidget&);
-
+    QEmacsTextEditQueryReplace(QEmacsTextEditBase&, QEmacsWidget&);
+    //! desctructor
     ~QEmacsTextEditQueryReplace() override;
 
   protected:
@@ -32,13 +31,13 @@ namespace qemacs{
     static void addToHistory(const QString&);
 
     QEmacsTextEditQueryReplace(QEmacsTextEditBase&,
-			       QEmacsWidget&,
-			       const QString&);
+                               QEmacsWidget&,
+                               const QString&);
 
     QEmacsTextEditQueryReplace(QEmacsTextEditBase&,
-			       QEmacsWidget&,
-			       const QString&,
-			       const QString&);
+                               QEmacsWidget&,
+                               const QString&,
+                               const QString&);
 
     void treatUserInput() override;
 

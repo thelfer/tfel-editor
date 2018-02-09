@@ -18,33 +18,30 @@
 namespace qemacs
 {
 
-    template<typename T>
-    StandardQEmacsMajorModeProxy<T>::StandardQEmacsMajorModeProxy(const QString& n,
-								  const QVector<QRegExp>& e,
-								  const bool b)
-      : name(n),
-	rexp(e)
-    {
-      if(b){
-	QEmacsMajorModeFactory& f = QEmacsMajorModeFactory::getQEmacsMajorModeFactory();
-	f.addQEmacsMajorMode(std::shared_ptr<QEmacsMajorModeProxy>(new StandardQEmacsMajorModeProxy(n,e,false)),e);
-      }
-    } // end of StandardQEmacsMajorModeProxy<T>::StandardQEmacsMajorModeProxy
+  template <typename T>
+  StandardQEmacsMajorModeProxy<T>::StandardQEmacsMajorModeProxy(
+      const QString& n, const QVector<QRegExp>& e, const bool b)
+      : name(n), rexp(e) {
+    if (b) {
+      QEmacsMajorModeFactory& f =
+          QEmacsMajorModeFactory::getQEmacsMajorModeFactory();
+      f.addQEmacsMajorMode(
+          std::shared_ptr<QEmacsMajorModeProxy>(
+              new StandardQEmacsMajorModeProxy(n, e, false)),
+          e);
+    }
+  }  // end of
+     // StandardQEmacsMajorModeProxy<T>::StandardQEmacsMajorModeProxy
 
-    template<typename T>
-    QString
-    StandardQEmacsMajorModeProxy<T>::getName() const
-    {
-      return this->name;
-    } // end of StandardQEmacsMajorModeProxy<T>::getName() const
+  template <typename T>
+  QString StandardQEmacsMajorModeProxy<T>::getName() const {
+    return this->name;
+  }  // end of StandardQEmacsMajorModeProxy<T>::getName() const
 
-    template<typename T>
-    QEmacsMajorMode *
-    StandardQEmacsMajorModeProxy<T>::getQEmacsMajorMode(QEmacsWidget& w,
-							QEmacsBuffer& b,
-							QEmacsTextEditBase& t) const
-    {
-      return new T(w,b,t);
+  template <typename T>
+  QEmacsMajorMode* StandardQEmacsMajorModeProxy<T>::getQEmacsMajorMode(
+      QEmacsWidget& w, QEmacsBuffer& b, QEmacsTextEditBase& t) const {
+    return new T(w, b, t);
     } // end of StandardQEmacsMajorModeProxy<T>::getQEmacsMajorMode
 
     template<typename T>

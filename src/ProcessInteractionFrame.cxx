@@ -7,12 +7,14 @@
 
 #include"QEmacs/ProcessInteractionFrame.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
   ProcessInteractionFrame::ProcessInteractionFrame(QEmacsWidget& w,
                                                    QEmacsBuffer& b)
-      : ProcessOutputFrame(w, b) {
-  }  // end of ProcessInteractionFrame::ProcessInteractionFrame
+      : ProcessOutputFrame(w, b) {}
+  // end of ProcessInteractionFrame::ProcessInteractionFrame
+
+  ProcessInteractionFrame::~ProcessInteractionFrame() {
+  }  // end of ProcessInteractionFrame::~ProcessInteractionFrame
 
 } // end of namespace qemacs

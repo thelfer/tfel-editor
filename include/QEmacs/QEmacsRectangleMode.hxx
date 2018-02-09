@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  QEmacsRectangleMode.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,36 +6,26 @@
  */
 
 #ifndef LIB_QEMACS_QEMACSRECTANGLEMODE_HXX
-#define LIB_QEMACS_QEMACSRECTANGLEMODE_HXX 
+#define LIB_QEMACS_QEMACSRECTANGLEMODE_HXX
 
-#include<QEmacs/QEmacsLineEdit.hxx>
+#include "QEmacs/QEmacsLineEdit.hxx"
 
-namespace qemacs
-{
-  
-  class QEmacsTextEditBase;
+namespace qemacs {
+
+  struct QEmacsTextEditBase;
 
   /*!
-   * 
+   *
    */
-  struct QEmacsRectangleMode
-    : public QEmacsLineEdit
-  {
+  struct QEmacsRectangleMode : public QEmacsLineEdit {
+    QEmacsRectangleMode(QEmacsTextEditBase&, QEmacsWidget&);
 
-    QEmacsRectangleMode(QEmacsTextEditBase&,
-			QEmacsWidget&);
+    virtual bool isBlocking() const override;
 
-    virtual bool
-    isBlocking() const override;
+    //! \brief method called when processing is finished
+    virtual void treatUserInput() override;
 
-    /*!
-     * processing is finished
-     */
-    virtual void
-    treatUserInput() override;
-
-  protected:
-
+   protected:
     static QVector<QString> killedRectangle;
 
     struct RectangleModeLineEdit;
@@ -46,9 +36,8 @@ namespace qemacs
 
     QEmacsTextEditBase& textEdit;
 
-  }; // end of struct QEmacsRectangleMode
+  };  // end of struct QEmacsRectangleMode
 
-} // end of namespace qemacs
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_QEMACSRECTANGLEMODE_HXX */
-

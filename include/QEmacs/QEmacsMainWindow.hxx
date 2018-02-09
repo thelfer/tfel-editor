@@ -15,14 +15,9 @@
 namespace qemacs
 {
   
-  class QEmacsMainWindow
+  struct QEmacsMainWindow
     : public QMainWindow
   {
-
-    Q_OBJECT
-
-  public:
-
     QEmacsMainWindow(const QStringList& = QStringList(),
 		     QWidget * const = nullptr);
 
@@ -130,6 +125,9 @@ namespace qemacs
     QMenu *om;
     QMenu *bm;
     QMenu *hm;
+
+  private:
+    Q_OBJECT
 
   }; // end of class QEmacsMainWindow
   

@@ -1,108 +1,98 @@
-/*! 
+/*!
  * \file  QEmacsTextEditSearch.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 02 août 2012
+ * \brief 02/08/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSTEXTEDITSEARCH_HXX
-#define LIB_QEMACS_QEMACSTEXTEDITSEARCH_HXX 
+#define LIB_QEMACS_QEMACSTEXTEDITSEARCH_HXX
 
-#include<QtGui/QTextCursor>
-#include<QtGui/QTextDocument>
+#include <QtGui/QTextCursor>
+#include <QtGui/QTextDocument>
 
-#include"QEmacs/QEmacsLineEdit.hxx"
-#include"QEmacs/QEmacsTextEditKeyPressEventFilter.hxx"
+#include "QEmacs/QEmacsLineEdit.hxx"
+#include "QEmacs/QEmacsTextEditKeyPressEventFilter.hxx"
 
-namespace qemacs{
+namespace qemacs {
 
-  class QEmacsWidget;
-
-  class QEmacsTextEdit;
-
-  class QEmacsTextEditSearch;
+  // forward declaration
+  struct QEmacsWidget;
+  // forward declaration
+  struct QEmacsTextEdit;
+  // forward declaration
+  struct QEmacsTextEditSearch;
 
   /*!
-   * A key press event filter which forward the user
+   * \brief a key press event filter which forward the user
    */
-  class QEMACS_VISIBILITY_EXPORT QEmacsTextEditSearchFilter
-    : public QEmacsTextEditKeyPressEventFilter
-  {
-    
-    Q_OBJECT
-    
-  public:
-    
+  struct QEMACS_VISIBILITY_EXPORT QEmacsTextEditSearchFilter
+      : public QEmacsTextEditKeyPressEventFilter {
+    /*!
+     * \brief constructor
+     */
     QEmacsTextEditSearchFilter(QEmacsTextEditBase&,
-			       QEmacsTextEditSearch&);
-    
+                               QEmacsTextEditSearch&);
+
     bool isOk() const override;
 
-    bool filterKeyPressEvent(QKeyEvent * const) override;
-    
+    bool filterKeyPressEvent(QKeyEvent* const) override;
+    //! destructor
     ~QEmacsTextEditSearchFilter() override;
-		   
-  public slots:
-    
+
+   public slots:
+
     void lineEditDestroyed();
-    
-  protected:
-    
+
+   protected:
     QEmacsTextEditBase& textEdit;
-    
+
     QEmacsTextEditSearch& s;
-    
-  }; // end of QEmacsTextEditSearchFilter
-
-  class QEMACS_VISIBILITY_EXPORT QEmacsTextEditSearch
-    : public QEmacsLineEdit
-  {
-
+   private:
     Q_OBJECT
 
-  public:
-    
+  };  // end of QEmacsTextEditSearchFilter
+
+  struct QEMACS_VISIBILITY_EXPORT QEmacsTextEditSearch
+      : public QEmacsLineEdit {
+
     QEmacsTextEditSearch(QEmacsTextEditBase&,
-			 QEmacsWidget&,
-			 const QTextDocument::FindFlags = nullptr);
+                         QEmacsWidget&,
+                         const QTextDocument::FindFlags = nullptr);
 
-    virtual void
-    findNext();
+    virtual void findNext();
 
-    virtual void
-    setFlag(const QTextDocument::FindFlags);
+    virtual void setFlag(const QTextDocument::FindFlags);
 
-    virtual QTextDocument::FindFlags
-    getFlag() const;
-
+    virtual QTextDocument::FindFlags getFlag() const;
+    //! destructor
     ~QEmacsTextEditSearch() override;
 
-  protected slots:
+   protected slots:
 
-    virtual void
-    search(const QString&);
+    virtual void search(const QString&);
 
-  public slots:
+   public slots:
 
-    virtual void
-    searchFilterDestroyed();
+    virtual void searchFilterDestroyed();
 
-  protected:
-
+   protected:
     void treatUserInput() override;
-    
+
     QEmacsTextEditBase& textEdit;
 
-    QEmacsTextEditSearchFilter *sf;
+    QEmacsTextEditSearchFilter* sf;
 
     //! position of the cursor at the beginning of the search
     QTextCursor cursor;
 
     QTextDocument::FindFlags flag;
 
-  }; // end of struct QEmacsTextEditSearch
+   private:
+    Q_OBJECT
 
-} // end of namespace qemacs
+  };  // end of struct QEmacsTextEditSearch
+
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_QEMACSTEXTEDITSEARCH_HXX */
-

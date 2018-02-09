@@ -2,7 +2,7 @@
  * \file  QEmacsTextBrowser.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 19 août 2012
+ * \date   19/08/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSTEXTBROWSEREDIT_HXX
@@ -11,19 +11,11 @@
 #include<QtWidgets/QTextBrowser>
 #include"QEmacs/QEmacsTextEditBase.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
-  class QEMACS_VISIBILITY_EXPORT QEmacsTextBrowser
-    : public QEmacsTextEditBase
-  {
-
-    Q_OBJECT
-
-  public:
-
-    QEmacsTextBrowser(QEmacsWidget&,
-		      QEmacsBuffer&);
+  struct QEMACS_VISIBILITY_EXPORT QEmacsTextBrowser
+      : public QEmacsTextEditBase {
+    QEmacsTextBrowser(QEmacsWidget&, QEmacsBuffer&);
 
     QEmacsTextBrowser(const QString&,
 		      QEmacsWidget&,
@@ -98,6 +90,9 @@ namespace qemacs
   protected:
 
     QTextBrowser *e;
+
+   private:
+    Q_OBJECT
 
   }; // end of struct QEmacsTextBrowser
 

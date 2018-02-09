@@ -20,7 +20,7 @@ namespace qemacs {
   struct QEmacsTextEditBase;
 
   /*!
-   * base class for major mode
+   * \brief abstract interface for all major modes
    */
   struct QEMACS_VISIBILITY_EXPORT QEmacsMajorMode : public QObject {
     /*!
@@ -98,13 +98,9 @@ namespace qemacs {
     virtual bool handleShortCut(const int,
                                 const Qt::KeyboardModifiers,
                                 const int) = 0;
-    /*!
-     * indent the current line
-     */
+    //! \brief indent the current line
     virtual void indentLine(const QTextCursor&) = 0;
-    /*!
-     * indent selected region
-     */
+    //! \brief indent selected region
     virtual void indentRegion(const QTextCursor&) = 0;
 
     virtual void setSpellCheckLanguage(const QString&) = 0;

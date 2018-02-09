@@ -1,51 +1,48 @@
-/*! 
+/*!
  * \file  QEmacsTextEditReplaceFilter.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 06 août 2012
+ * \date   06/08/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSTEXTEDITREPLACEFILTER_HXX
-#define LIB_QEMACS_QEMACSTEXTEDITREPLACEFILTER_HXX 
+#define LIB_QEMACS_QEMACSTEXTEDITREPLACEFILTER_HXX
 
-#include"QEmacs/QEmacsTextEditKeyPressEventFilter.hxx"
+#include "QEmacs/QEmacsTextEditKeyPressEventFilter.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
-  class QEmacsWidget;
-
-  class QEmacsTextEdit;
-
+  // forward declaration
+  struct QEmacsWidget;
+  // forward declaration
+  struct QEmacsTextEdit;
+  // forward declaration
   struct QEmacsTextEditQueryReplace;
 
-
   /*!
-   * A key press event filter which forward the user
+   * \brief a key press event filter which forward the user
    */
   struct QEmacsTextEditReplaceFilter
-    : public QEmacsTextEditKeyPressEventFilter
-  {
+      : public QEmacsTextEditKeyPressEventFilter {
     QEmacsTextEditReplaceFilter(QEmacsWidget&,
-				QEmacsTextEditBase&,
-				QEmacsTextEditQueryReplace&,
-				const QString&,
-				const QString&);
-    
+                                QEmacsTextEditBase&,
+                                QEmacsTextEditQueryReplace&,
+                                const QString&,
+                                const QString&);
+
     bool isOk() const override;
 
-    bool filterKeyPressEvent(QKeyEvent * const) override;
-
+    bool filterKeyPressEvent(QKeyEvent* const) override;
+    //! destructor
     ~QEmacsTextEditReplaceFilter() override;
 
-  protected:
-
+   protected:
     bool findNext();
 
-    QEmacsWidget&   qemacs;
-    
+    QEmacsWidget& qemacs;
+
     QEmacsTextEditBase& textEdit;
-    
+
     QEmacsTextEditQueryReplace& qr;
 
     QTextCursor bc;
@@ -53,18 +50,17 @@ namespace qemacs
     QTextCursor ec;
 
     const QString s1;
-    
+
     const QString s2;
-    
+
     int nb;
-    
+
     bool hasSelection;
 
     bool bOK;
 
-  }; // end of QEmacsTextEditReplaceFilter
+  };  // end of QEmacsTextEditReplaceFilter
 
-} // end of namespace qemacs
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_QEMACSTEXTEDITREPLACEFILTER_HXX */
-

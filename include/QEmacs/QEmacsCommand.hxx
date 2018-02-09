@@ -2,7 +2,7 @@
  * \file  QEmacsCommand.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 02 août 2012
+ * \brief 02/08/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSCOMMAND_HXX
@@ -11,39 +11,27 @@
 #include<QtCore/QObject>
 #include"QEmacs/Config.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
   //! forward declaration
-  class QEmacsWidget;
+  struct QEmacsWidget;
 
-  /*!
-   * Abstract class for all commands
-   */
-  class QEMACS_VISIBILITY_EXPORT QEmacsCommand
-    : public QObject
-  {
-
-    Q_OBJECT
-
-  public:
-
+  //! \brief abstract class for all qemacs commands
+  struct QEMACS_VISIBILITY_EXPORT QEmacsCommand : public QObject {
+    /*!
+     * \brief constructor
+     * \param[in] p: parent widget
+     */
     QEmacsCommand(QEmacsWidget&);
-
-    /*!
-     * execute the command
-     */
-    virtual void
-    execute() = 0;
-
-    /*!
-     * destructor
-     */
+    //! execute the command
+    virtual void execute() = 0;
+    //! destructor
     virtual ~QEmacsCommand();
 
+   private:
+    Q_OBJECT
   }; // end of class QEmacsCommand
 
 } // end of namespace qemacs
 
 #endif /* LIB_QEMACS_QEMACSCOMMAND_HXX */
-

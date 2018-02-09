@@ -2,7 +2,7 @@
  * \file  CSyntaxHighlighter.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 30 juin 2012
+ * \date   30/06/2012
  */
 
 #ifndef LIB_QEMACS_CSYNTAXHIGHLIGHTER_HXX
@@ -10,25 +10,22 @@
 
 #include"QEmacs/CSyntaxHighlighterBase.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
   /*!
-   * a syntaxt highlighter for C-based languages
+   * \brief a syntaxt highlighter for C-based languages
    */
-  class QEMACS_VISIBILITY_EXPORT CSyntaxHighlighter
-    : public CSyntaxHighlighterBase
-  {
-
-    Q_OBJECT
-
-  public:
-
+  struct QEMACS_VISIBILITY_EXPORT CSyntaxHighlighter
+      : public CSyntaxHighlighterBase {
     /*!
      * \param[in] t : text document to be highlighted
      */
     CSyntaxHighlighter(QTextDocument *const);
+    //! destructor
+    ~CSyntaxHighlighter();
 
+   private:
+    Q_OBJECT
   }; // end of struct CSyntaxHighlighter
   
 } // end of namespace qemacs

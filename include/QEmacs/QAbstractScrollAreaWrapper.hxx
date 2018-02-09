@@ -14,13 +14,9 @@
 namespace qemacs
 {
 
-  class QEMACS_VISIBILITY_EXPORT QAbstractScrollAreaWrapper
+  struct QEMACS_VISIBILITY_EXPORT QAbstractScrollAreaWrapper
     : public QWidget
   {
-    Q_OBJECT
-
-  public:
-
     QAbstractScrollAreaWrapper(QAbstractScrollArea *,
 			       QWidget *);
 
@@ -34,6 +30,8 @@ namespace qemacs
 
     QAbstractScrollArea * const wrappedObject;
 
+  private:
+    Q_OBJECT
   };
 
 } // end of namespace qemacs

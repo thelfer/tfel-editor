@@ -30,10 +30,14 @@ namespace qemacs {
   struct QEmacsPlainTextEdit;
 
   /*!
-   * class in charge of managing one buffer
+   * \brief class in charge of managing one buffer.
+   *
+   * A buffer is made of:
+   * - a main widget (most of the time an instance of
+   *   `QEmacsPlainTextEdit`)
+   * - slaves of that main widget
    */
   struct QEMACS_VISIBILITY_EXPORT QEmacsBuffer : public QWidget {
-
     QEmacsBuffer(const int, QEmacsWidget &);
 
     QEmacsBuffer(const QString &, const int, QEmacsWidget &);

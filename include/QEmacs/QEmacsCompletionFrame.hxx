@@ -1,8 +1,8 @@
 /*! 
- * \file  QEmacsCompletionFrame.hxx
+ * \file   include/QEmacs/QEmacsCompletionFrame.hxx
  * \brief
- * \author Helfer Thomas
- * \brief 17 août 2012
+ * \author Thomas Helfer
+ * \date   17/08/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSCOMPLETIONFRAME_HXX
@@ -11,17 +11,12 @@
 #include<QtCore/QString>
 #include<QtGui/QTextEdit>
 
-namespace qemacs
-{
+namespace qemacs {
 
   /*!
    * 
    */
-  struct QEmacsCompletionFrame
-    : public QTextEdit
-  {
-
-  };
+  struct QEmacsCompletionFrame : public QTextEdit {};
 
 } // end of namespace qemacs
 

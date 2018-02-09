@@ -15,7 +15,8 @@
 namespace qemacs
 {
 
-  class QEmacsTextEditBase;
+  // forward declaration
+  struct QEmacsTextEditBase;
 
   /*!
    * An abstract class using by QEmacsTextEditBase to filter key press

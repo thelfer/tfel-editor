@@ -2,7 +2,7 @@
  * \file  QEmacsTextEdit.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 19 août 2012
+ * \brief 19/08/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSTEXTEDIT_HXX
@@ -14,21 +14,12 @@
 namespace qemacs
 {
 
-  class QEMACS_VISIBILITY_EXPORT QEmacsTextEdit
-    : public QEmacsTextEditBase
-  {
+  struct QEMACS_VISIBILITY_EXPORT QEmacsTextEdit
+      : public QEmacsTextEditBase {
+    QEmacsTextEdit(QEmacsWidget&, QEmacsBuffer&);
 
-    Q_OBJECT
-
-  public:
-
-    QEmacsTextEdit(QEmacsWidget&,
-		   QEmacsBuffer&);
-
-    QEmacsTextEdit(const QString&,
-			QEmacsWidget&,
-			QEmacsBuffer&);
-      
+    QEmacsTextEdit(const QString&, QEmacsWidget&, QEmacsBuffer&);
+    //! destructor
     ~QEmacsTextEdit() override;
 
   public slots:
@@ -99,6 +90,8 @@ namespace qemacs
 
     QTextEdit *e;
 
+   private:
+    Q_OBJECT
   }; // end of struct QEmacsTextEdit
 
 } // end of namespace qemacs
