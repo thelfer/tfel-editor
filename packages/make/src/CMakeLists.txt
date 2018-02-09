@@ -8,6 +8,7 @@ link_directories("${TFEL_LIBRARY_PATH}")
 
 qt_sources(MakefileQEmacsMode_SOURCES
   "${PROJECT_SOURCE_DIR}/packages/make/include/QEmacs"
+  MakefileSyntaxHighlighter
   MakefileMajorMode)
 
 qemacs_package(MakefileQEmacsMode

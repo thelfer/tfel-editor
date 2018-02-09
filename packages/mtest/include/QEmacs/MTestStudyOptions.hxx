@@ -57,8 +57,7 @@ namespace qemacs
      * \param[in] options : options to be modified
      * \param[in] p       : parent
      */
-    MTestStudyOptionsDialog(MTestStudyOptions&,
-			    QWidget * const);
+    MTestStudyOptionsDialog(MTestStudyOptions &, QWidget *const);
   protected slots:
     void verboseLevelChanged(const QString&);
     void resultFile(bool);

@@ -83,7 +83,6 @@ namespace qemacs {
             stokens.push_back(Token("/**/", lNumber, 0, Token::Comment));
           }
           while((p != pe) && (uncomment)) {
-            qDebug() << "parsing: " << QString::fromStdString(p->value);
             if(p->flag != Token::Comment) {
               uncomment = false;
             } else {
@@ -228,7 +227,8 @@ namespace qemacs {
                               const QTextCursor& e,
                               const QTextCursor& c) {
     static QRegExp rcursor("(\\d+)");
-    QTemporaryFile tmp(QFileInfo(this->textEdit.getFileName()).fileName());
+    const auto cf = this->textEdit.getFileName();
+    QTemporaryFile tmp(cf);
     const auto keepEmptyLine = [&b, &e, &c] {
       if(!((c == b) && (c == e))) {
         return false;
@@ -242,15 +242,24 @@ namespace qemacs {
     tc.beginEditBlock();
     if(keepEmptyLine) {
       tc.insertText(";");
-      tc.movePosition(QTextCursor::PreviousCharacter, QTextCursor::MoveAnchor);
+      tc.movePosition(QTextCursor::PreviousCharacter,
+                      QTextCursor::MoveAnchor);
     }
     auto undo = [&tc, keepEmptyLine] {
-      if(keepEmptyLine) {
-        tc.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor);
-        tc.removeSelectedText();
-      }
       tc.endEditBlock();
-    };
+      if(keepEmptyLine) {
+        tc.document()->undo();
+      }
+    }; // end of undo
+    auto skip = [&tc](const int cpos) {
+      // skip the first spaces
+      tc.movePosition(QTextCursor::StartOfLine,
+                      QTextCursor::MoveAnchor);
+      tc.movePosition(QTextCursor::NextWord, QTextCursor::MoveAnchor);
+      if (tc.position() < cpos) {
+        tc.setPosition(cpos);
+      }
+    }; // end of skip
     if(!tmp.open()) {
       this->qemacs.displayInformativeMessage(
           QObject::tr("can't open temporary file"));
@@ -268,16 +277,17 @@ namespace qemacs {
     }
     tmp2.close();
     QProcess cformat;
+    cformat.setWorkingDirectory(QFileInfo(cf).canonicalPath());
     const auto ln = b.blockNumber();
     const auto lb = QString::number(ln + 1);
     const auto le = QString::number(e.blockNumber() + 1);
     cformat.start("clang-format",
-                  QStringList() << "-assume-filename=cxx"
-                                << ("-lines=" + lb + ':' + le)
-                                << ("-style=file")
-                                << ("-cursor=" + QString::number(tc.position()))
-                                << tmp.fileName());
-    if(!cformat.waitForStarted()) {
+                  QStringList()
+                      << "-assume-filename=cxx"
+                      << ("-lines=" + lb + ':' + le) << ("-style=file")
+                      << ("-cursor=" + QString::number(tc.position()))
+                      << tmp.fileName());
+    if (!cformat.waitForStarted()) {
       this->qemacs.displayInformativeMessage(
           QObject::tr("call to 'clang-format' failed"));
       undo();
@@ -303,16 +313,14 @@ namespace qemacs {
     tc.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
     tc.insertText(in.readAll());
     tc.setPosition(cpos);
-    if(keepEmptyLine) {
-      tc.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor);
-      tc.removeSelectedText();
-    } else {
-      // skip the first spaces
+    if (keepEmptyLine) {
       tc.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
-      tc.movePosition(QTextCursor::NextWord, QTextCursor::MoveAnchor);
-      if(tc.position() < cpos) {
-        tc.setPosition(cpos);
-      }
+      tc.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
+      const auto s = tc.selectedText();
+      tc.removeSelectedText();
+      tc.insertText(s.mid(0,s.indexOf(';')));
+    } else {
+      skip(cpos);
     }
     tc.endEditBlock();
     this->textEdit.setTextCursor(tc);

@@ -13,7 +13,8 @@
 namespace qemacs {
 
   CSyntaxHighlighterBase::CSyntaxHighlighterBase(QTextDocument *p)
-      : QSyntaxHighlighter(p), cCharAsString(false) {
+      : QSyntaxHighlighter(p) {
+    this->options.bKeepCommentBoundaries= true;
     this->preprocessorFormat.setForeground(Qt::darkMagenta);
     this->preprocessorFormat.setFontWeight(QFont::Bold);
     this->preprocessorFormat.setForeground(Qt::darkMagenta);
@@ -31,9 +32,7 @@ namespace qemacs {
       this->setCurrentBlockState(-2);
       return;
     }
-    CxxTokenizer tokenizer;
-    tokenizer.treatCharAsString(this->cCharAsString);
-    tokenizer.keepCommentBoundaries(true);
+    CxxTokenizer tokenizer(this->options);
     tokenizer.setCStyleCommentOpened(this->previousBlockState() == 1);
     try {
       tokenizer.parseString(text.toStdString());

@@ -5,6 +5,7 @@
  * \brief 03 août 2012
  */
 
+#include <QtCore/QDebug>
 #include <QtCore/QDir>
 #include <QtCore/QRegExp>
 
@@ -132,14 +133,21 @@ namespace qemacs {
           return false;
         }
         auto *d = static_cast<CompilationOutputUserData *>(ud);
-        const auto wd = po->getProcess().workingDirectory();
-        if (!wd.isEmpty()) {
-          this->qemacs.openFile(wd + QDir::separator() + d->file);
-        } else {
-          this->qemacs.openFile(d->file);
+        auto b = c;
+        b.movePosition(QTextCursor::StartOfLine,
+                       QTextCursor::MoveAnchor);
+        const auto pos = c.position()-b.position();
+        if (pos < d->file.size()) {
+          const auto wd = po->getProcess().workingDirectory();
+          if (!wd.isEmpty()) {
+            this->qemacs.openFile(wd + QDir::separator() + d->file);
+          } else {
+            this->qemacs.openFile(d->file);
+          }
+          auto &t = this->qemacs.getCurrentBuffer().getMainFrame();
+          t.gotoPosition(d->line,d->column);
+          return true;
         }
-        auto &t = this->qemacs.getCurrentBuffer().getMainFrame();
-        t.gotoLine(d->line);
       }
       return false;
     }
@@ -162,7 +170,7 @@ namespace qemacs {
         auto *d = static_cast<CompilationOutputUserData *>(ud);
         this->qemacs.openFile(d->file);
         auto &t = this->qemacs.getCurrentBuffer().getMainFrame();
-        t.gotoLine(d->line);
+        t.gotoPosition(d->line, d->column);
         return true;
       }
       return false;

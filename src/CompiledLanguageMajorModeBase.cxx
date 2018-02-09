@@ -23,25 +23,23 @@ namespace qemacs
   {} // end of CompiledLanguageMajorModeBase::CompiledLanguageMajorModeBase
 
   QString
-  CompiledLanguageMajorModeBase::getDefaultCompilationCommand() const
-  {
+  CompiledLanguageMajorModeBase::getDefaultCompilationCommand() const {
     return "make";
   } // end of CompiledLanguageMajorModeBase::getDefaultCompilationCommand
 
-  void
-  CompiledLanguageMajorModeBase::runCompilation()
-  {
+  void CompiledLanguageMajorModeBase::runCompilation() {
     // choosing the default command
     QString d;
     QSettings s;
-    QStringList ch = s.value(this->getLanguageName()+"/compilation/history").toStringList();
+    auto ch = s.value(this->getLanguageName() + "/compilation/history")
+                  .toStringList();
     if(ch.isEmpty()){
       d = this->getDefaultCompilationCommand();
     } else {
       d = ch.back();
     }
-    QEmacsLineEdit * l = new QEmacsShellProcessLineEdit("compilation command :",d,
-							"gcc output",this->qemacs);
+    auto* l = new QEmacsShellProcessLineEdit(
+        "compilation command :", d, "compilation output", this->qemacs);
     l->setInputHistorySettingAddress(this->getLanguageName()+"/compilation/history");
     this->qemacs.setUserInput(l);
   } // end of CompiledLanguageMajorModeBase::runCompilation

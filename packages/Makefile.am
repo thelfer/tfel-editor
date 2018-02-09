@@ -1,5 +1,7 @@
-SUBDIRS = castem licos latex make mfront python \
+SUBDIRS = castem licos latex markdown \
+	  make mfront python          \
 	  gnuplot mtest
+
 if QEMACS_TPLOT
 SUBDIRS +=  tplot
 endif

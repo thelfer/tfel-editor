@@ -15,7 +15,8 @@ qt_add_resources(CastemQEmacsResources_RCC
 qemacs_package(CastemQEmacsMode
   ${CastemQEmacsMode_SOURCES}
   ${CastemQEmacsResources_RCC}
-  CastemSyntaxHighlighter.cxx)
+  CastemSyntaxHighlighter.cxx
+  CastemOutputMajorMode.cxx)
 target_link_libraries(CastemQEmacsMode
   TFELQEmacs
   Qt5::Core

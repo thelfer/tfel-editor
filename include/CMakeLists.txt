@@ -36,5 +36,6 @@ install_header(QEmacs CMajorModeBase.hxx)
 install_header(QEmacs CxxMajorMode.hxx)
 install_header(QEmacs CxxSyntaxHighlighter.hxx)
 install_header(QEmacs ProcessOutputFrame.hxx)
+install_header(QEmacs ProcessOutputMajorModeBase.hxx)
 install_header(QEmacs ProcessInteractionFrame.hxx)
 

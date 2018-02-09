@@ -1,6 +1,6 @@
 macro(qemacs_project qemacs_version_major qemacs_version_minor)
-  project("tfel-plot")
-  set(PACKAGE_NAME "tfel-plot")
+  project("qemacs")
+  set(PACKAGE_NAME "qemacs")
   set(VERSION "${qemacs_version_major}.${qemacs_version_minor}")
   # the version number.
   set(QEMACS_VERSION_MAJOR "${qemacs_version_major}")

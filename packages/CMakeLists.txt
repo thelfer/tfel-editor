@@ -1,6 +1,7 @@
 add_subdirectory(castem)
 add_subdirectory(gnuplot)
 add_subdirectory(latex)
+add_subdirectory(markdown)
 add_subdirectory(licos)
 add_subdirectory(make)
 add_subdirectory(mfront)

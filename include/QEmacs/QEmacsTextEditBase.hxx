@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  QEmacsTextEditBase.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,144 +6,120 @@
  */
 
 #ifndef LIB_QEMACS_QEMACSTEXTEDITBASE_HXX
-#define LIB_QEMACS_QEMACSTEXTEDITBASE_HXX 
+#define LIB_QEMACS_QEMACSTEXTEDITBASE_HXX
 
-#include<QtCore/QMap>
-#include<QtCore/QString>
-#include<QtCore/QStringList>
-#include<QtGui/QTextCursor>
-#include<QtWidgets/QWidget>
-#include<QtWidgets/QTextEdit>
-#include"QEmacs/QEmacsLineEdit.hxx"
-#include"QEmacs/QEmacsTextEditKeyPressEventFilter.hxx"
+#include <QtCore/QMap>
+#include <QtCore/QString>
+#include <QtCore/QStringList>
+#include <QtGui/QTextCursor>
+#include <QtWidgets/QWidget>
+#include <QtWidgets/QTextEdit>
+#include "QEmacs/QEmacsLineEdit.hxx"
+#include "QEmacs/QEmacsTextEditKeyPressEventFilter.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
   //! forward declaration
-  class QEmacsWidget;
-
-  //! forward declaration
-  class QEmacsBuffer;
+  struct QEmacsWidget;
 
   //! forward declaration
-  class QEmacsMajorMode;
+  struct QEmacsBuffer;
 
-  class QEMACS_VISIBILITY_EXPORT QEmacsTextEditBase
-    : public QWidget
-  {
+  //! forward declaration
+  struct QEmacsMajorMode;
 
-    Q_OBJECT
+  struct QEMACS_VISIBILITY_EXPORT QEmacsTextEditBase : public QWidget {
+   signals:
 
-  signals:
-
-    void fileNameChanged(const QString&);
+    void fileNameChanged(const QString &);
 
     void majorModeChanged();
 
+    void specificMenuChanged();
+
     void cursorPositionChanged();
 
-  public slots:
+   public slots:
 
-    virtual void
-    clear() = 0;
+    virtual void clear() = 0;
 
-    virtual void
-    undo() = 0;
+    virtual void undo() = 0;
 
-    virtual void
-    redo() = 0;
+    virtual void redo() = 0;
 
-    virtual void
-    cut() = 0;
+    virtual void cut() = 0;
 
-    virtual void
-    copy() = 0;
+    virtual void copy() = 0;
 
-    virtual void
-    paste() = 0;
+    virtual void paste() = 0;
 
-    virtual void
-    selectAll() = 0;
+    virtual void selectAll() = 0;
 
-    virtual void
-    setHtml(const QString&) = 0;
+    virtual void setHtml(const QString &) = 0;
 
-    virtual void
-    insertHtml(const QString&) = 0;
+    virtual void insertHtml(const QString &) = 0;
 
-    virtual void
-    appendHtml(const QString&) = 0;
+    virtual void appendHtml(const QString &) = 0;
 
-    virtual void
-    setPlainText(const QString&) = 0;
+    virtual void setPlainText(const QString &) = 0;
 
-    virtual void
-    insertPlainText(const QString&) = 0;
+    virtual void insertPlainText(const QString &) = 0;
 
-    virtual void
-    appendPlainText(const QString&) = 0;
-    
-    virtual void
-    setReadOnly(const bool) = 0;
+    virtual void appendPlainText(const QString &) = 0;
 
-    virtual void
-    setTextInteractionFlags(Qt::TextInteractionFlags) = 0;
+    virtual void setReadOnly(const bool) = 0;
 
-    virtual void
-    setTextCursor(const QTextCursor&) = 0;
+    virtual void setTextInteractionFlags(Qt::TextInteractionFlags) = 0;
 
-    virtual void
-    setUndoRedoEnabled(const bool) = 0;
+    virtual void setTextCursor(const QTextCursor &) = 0;
 
-    virtual void
-    setFont(const QFont&);
+    virtual void setUndoRedoEnabled(const bool) = 0;
 
+    virtual void setFont(const QFont &);
     /*!
      * \param[in] n : mode name
      */
-    virtual void setMajorMode(const QString&);
+    virtual void setMajorMode(const QString &);
 
     virtual void setMajorMode();
 
     virtual void setMajorMode(QEmacsMajorMode *const);
-    
-    virtual void setFileName(const QString&);
+
+    virtual void setFileName(const QString &);
 
     virtual void writeFile();
 
-    virtual void writeFile(const QString&);
+    virtual void writeFile(const QString &);
 
     virtual void save();
 
-    virtual void gotoLine(int);
-    
-    virtual void insertCompletion(const QString&);
+    virtual void gotoLine(const int);
+    /*!
+     * \brief
+     * \param[in] l: line number
+     * \param[in] c: column number
+     */
+    virtual void gotoPosition(const int,const int);
+
+    virtual void insertCompletion(const QString &);
 
     virtual void setMoveMode(QTextCursor::MoveMode);
 
-  public:
-
+   public:
     /*!
      * A QEmacsLineEdit asking the user whether to save
      */
-    struct SaveInput
-      : public QEmacsYesOrNoUserInput
-    {
-
+    struct SaveInput : public QEmacsYesOrNoUserInput {
       bool isBlocking() const override;
 
       void treatUserInput() override;
 
-    protected:
-
+     protected:
       friend class QEmacsTextEditBase;
 
-      SaveInput(QEmacsWidget&,
-		QEmacsTextEditBase&);
+      SaveInput(QEmacsWidget &, QEmacsTextEditBase &);
 
-
-      QEmacsTextEditBase& textEdit;
-    }; // end of struct SaveInput
+      QEmacsTextEditBase &textEdit;
+    };  // end of struct SaveInput
 
     /*!
      * "kill other buffer and write file" user input
@@ -160,9 +136,8 @@ namespace qemacs
      */
     struct WriteFile;
 
-    QEmacsTextEditBase(QEmacsWidget&,
-		       QEmacsBuffer&);
-    
+    QEmacsTextEditBase(QEmacsWidget &, QEmacsBuffer &);
+
     ~QEmacsTextEditBase() override;
 
     /*!
@@ -173,14 +148,14 @@ namespace qemacs
      */
     void mouseMoveEvent(QMouseEvent *) override;
 
-    virtual QAbstractScrollArea* widget() = 0;
+    virtual QAbstractScrollArea *widget() = 0;
 
     /*!
      * \return true if the buffer is a main frame
      */
     virtual bool isMainFrame() const;
 
-    virtual void setSpellCheckLanguage(const QString&);
+    virtual void setSpellCheckLanguage(const QString &);
 
     /*!
      * \return true if the buffer is not a main frame
@@ -193,7 +168,7 @@ namespace qemacs
 
     virtual QString getCompleteFileName() const;
 
-    virtual SaveInput* getSaveInput();
+    virtual SaveInput *getSaveInput();
 
     /*!
      * \return the word under cursor
@@ -204,75 +179,74 @@ namespace qemacs
 
     virtual bool hasMajorMode() const;
 
-    virtual const QEmacsMajorMode& getMajorMode() const;
+    virtual const QEmacsMajorMode &getMajorMode() const;
 
-    virtual QVector<QMenu*> getSpecificMenus();
+    virtual QVector<QMenu *> getSpecificMenus();
 
     virtual QIcon getIcon() const;
 
-    virtual bool setKeyPressEventFilter(QEmacsTextEditKeyPressEventFilter * const);
+    virtual bool setKeyPressEventFilter(
+        QEmacsTextEditKeyPressEventFilter *const);
 
     virtual void removeKeyPressEventFilter();
 
-    virtual QTextDocument* document() const = 0;
-    
-    virtual void moveCursor(QTextCursor::MoveOperation,
-			    QTextCursor::MoveMode = QTextCursor::MoveAnchor) = 0;
+    virtual QTextDocument *document() const = 0;
+
+    virtual void moveCursor(
+        QTextCursor::MoveOperation,
+        QTextCursor::MoveMode = QTextCursor::MoveAnchor) = 0;
 
     virtual bool isReadOnly() = 0;
-    
-    virtual bool find(const QString&,
-		      QTextDocument::FindFlags = nullptr) = 0;
+
+    virtual bool find(const QString &,
+                      QTextDocument::FindFlags = nullptr) = 0;
 
     virtual QTextCursor textCursor() const = 0;
-    
+
     virtual QTextCursor cursorForPosition(const QPoint &pos) const = 0;
 
     virtual QRect cursorRect(const QTextCursor &cursor) const = 0;
 
     virtual QRect cursorRect() const = 0;
 
-    virtual void setExtraSelections(const QList<QTextEdit::ExtraSelection> &) = 0;
+    virtual void setExtraSelections(
+        const QList<QTextEdit::ExtraSelection> &) = 0;
 
-    virtual QList<QTextEdit::ExtraSelection> extraSelections() const = 0;
+    virtual QList<QTextEdit::ExtraSelection> extraSelections()
+        const = 0;
 
     virtual bool isUndoRedoEnabled() const = 0;
 
-  protected slots:
-    
+   protected slots:
+
     virtual void highlightCurrentLine();
 
     virtual void keyPressEventFilterDestroyed();
 
     virtual void emitCursorPositionChanged();
 
-  protected:
-
+   protected:
     /*!
      * a qemacs user input which asks
      * the user where he wants to go
      */
-    struct GotoLine
-      : public QEmacsLineEdit
-    {
-      GotoLine(QEmacsTextEditBase&,
-	       QEmacsWidget&);
-      
+    struct GotoLine : public QEmacsLineEdit {
+      GotoLine(QEmacsTextEditBase &, QEmacsWidget &);
+
       ~GotoLine() override;
-      
-    protected:
-      
+
+     protected:
       void treatUserInput() override;
 
-      QEmacsTextEditBase& textEdit;
-	
-    }; // end of struct GotoLine
+      QEmacsTextEditBase &textEdit;
 
-    static QString getModifier(const QKeyEvent&);
+    };  // end of struct GotoLine
+
+    static QString getModifier(const QKeyEvent &);
 
     bool event(QEvent *) override;
 
-    bool eventFilter(QObject *,QEvent *) override;
+    bool eventFilter(QObject *, QEvent *) override;
 
     void keyPressEvent(QKeyEvent *) override;
 
@@ -284,32 +258,32 @@ namespace qemacs
 
     virtual bool handleMousePressEvent(QMouseEvent *);
 
-    virtual void initialize(QAbstractScrollArea * const);
+    virtual void initialize(QAbstractScrollArea *const);
 
-    virtual void addToKillRing(const QString&);
+    virtual void addToKillRing(const QString &);
 
     virtual void createContextMenuActions();
 
     virtual void deleteContextMenuActions();
 
     //! reference to the widget
-    QEmacsWidget& qemacs;
+    QEmacsWidget &qemacs;
 
-    QEmacsBuffer& buffer;
+    QEmacsBuffer &buffer;
 
     //! major mode
     QEmacsMajorMode *mode;
 
     //! key press filter
-    QEmacsTextEditKeyPressEventFilter *filter;    
+    QEmacsTextEditKeyPressEventFilter *filter;
 
     QTextCursor::MoveMode moveMode;
- 
+
     /*!
      * save the previous positions of the cursor for Ctrl-P/Ctrl-N
      * moves
      */
-    QMap<int,int> positions;
+    QMap<int, int> positions;
 
     QString fileName;
 
@@ -328,7 +302,7 @@ namespace qemacs
     // select all action
     QAction *sa;
 
-    int  pring;  //<! position if the ring
+    int pring;  //<! position if the ring
 
     bool yank;
 
@@ -336,20 +310,19 @@ namespace qemacs
 
     bool ctrlc;
 
-  private:
-
+   private:
     friend class QEmacsBuffer;
-    
-    virtual void
-    setMainFrame(const bool);
+
+    virtual void setMainFrame(const bool);
 
     bool mainFrame;
 
     bool keyProcessing;
 
-  }; // end of struct QEmacsTextEditBase
+    Q_OBJECT
 
-} // end of namespace qemacs
+  };  // end of struct QEmacsTextEditBase
+
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_QEMACSTEXTEDITBASE_HXX */
-

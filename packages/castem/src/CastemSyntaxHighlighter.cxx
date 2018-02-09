@@ -32,10 +32,8 @@ namespace qemacs
       this->highlightingRules.append(rule);
     }
   } // end of CastemSyntaxHighlighter
-  
-  void
-  CastemSyntaxHighlighter::highlightBlock(const QString &text)
-  {
+
+  void CastemSyntaxHighlighter::highlightBlock(const QString &text) {
     if(text.isEmpty()){
       return;
     }

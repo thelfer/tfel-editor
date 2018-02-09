@@ -20,13 +20,8 @@ namespace qemacs
    * \brief an helper class to display the output of a QProcess
    * within a read-only QEmacsTextEdit
    */
-  class QEMACS_VISIBILITY_EXPORT ProcessOutputFrame
-    : public QEmacsPlainTextEdit
-  {
-    Q_OBJECT
-
-  public:
-
+  struct QEMACS_VISIBILITY_EXPORT ProcessOutputFrame
+      : public QEmacsPlainTextEdit {
     /*!
      * \param[in] w : the qemacs widget
      * \param[in] b : the buffer
@@ -58,6 +53,9 @@ namespace qemacs
 
     //! the underlying process
     QProcess *process;
+
+   private:
+    Q_OBJECT
 
   }; // end of ProcessOutputFrame
 

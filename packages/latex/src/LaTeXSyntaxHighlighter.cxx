@@ -5,11 +5,11 @@
  * \brief 03 juil. 2012
  */
 
-#include<QtCore/QDebug>
-#include<QtCore/QRegExp>
+#include <QtCore/QDebug>
+#include <QtCore/QRegExp>
 
-#include"QEmacs/LaTeXMajorMode.hxx"
-#include"QEmacs/LaTeXSyntaxHighlighter.hxx"
+#include "QEmacs/LaTeXMajorMode.hxx"
+#include "QEmacs/LaTeXSyntaxHighlighter.hxx"
 
 namespace qemacs
 {

@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  QEmacsBuffer.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,73 +6,61 @@
  */
 
 #ifndef LIB_QEMACS_QEMACSBUFFER_HXX
-#define LIB_QEMACS_QEMACSBUFFER_HXX 
+#define LIB_QEMACS_QEMACSBUFFER_HXX
 
-#include<QtCore/QMap>
-#include<QtCore/QVector>
-#include<QtCore/QString>
-#include<QtCore/QStringList>
-#include<QtWidgets/QMenu>
-#include<QtWidgets/QLabel>
-#include<QtWidgets/QWidget>
-#include<QtWidgets/QTabWidget>
-#include<QtWidgets/QHBoxLayout>
-#include<QtWidgets/QAbstractScrollArea>
-#include"QEmacs/Config.hxx"
+#include <QtCore/QMap>
+#include <QtCore/QVector>
+#include <QtCore/QString>
+#include <QtCore/QStringList>
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QSplitter>
+#include <QtWidgets/QWidget>
+#include <QtWidgets/QTabWidget>
+#include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QAbstractScrollArea>
+#include "QEmacs/Config.hxx"
 
-namespace qemacs
-{
-
-  //! forward declaration
-  class QEmacsWidget;
+namespace qemacs {
 
   //! forward declaration
-  class QEmacsPlainTextEdit;
+  struct QEmacsWidget;
+
+  //! forward declaration
+  struct QEmacsPlainTextEdit;
 
   /*!
    * class in charge of managing one buffer
    */
-  class QEMACS_VISIBILITY_EXPORT QEmacsBuffer
-    : public QWidget
-  {
-      
-    Q_OBJECT
+  struct QEMACS_VISIBILITY_EXPORT QEmacsBuffer : public QWidget {
 
-  public:
+    QEmacsBuffer(const int, QEmacsWidget &);
 
-    QEmacsBuffer(const int,
-		 QEmacsWidget&);
-
-    QEmacsBuffer(const QString&,
-		 const int,
-		 QEmacsWidget&);
+    QEmacsBuffer(const QString &, const int, QEmacsWidget &);
 
     virtual int getId() const;
-    
+
     virtual QString getBufferName() const;
 
     virtual QString getBufferNameSuffix() const;
 
     virtual QString getBufferRawName() const;
 
-    virtual QEmacsPlainTextEdit& getMainFrame();
+    virtual QEmacsPlainTextEdit &getMainFrame();
 
-    virtual QVector<QMenu*> getSpecificMenus();
+    virtual QVector<QMenu *> getSpecificMenus();
 
     virtual QIcon getIcon() const;
 
-    int getSlaveIndex(QWidget * const p) const;
+    int getSlaveIndex(QWidget *const p) const;
 
-    virtual QWidget * addSlave(const QString&,
-			       QWidget *const);
+    virtual QWidget *addSlave(const QString &, QWidget *const);
 
     virtual QString getSlaveName(QWidget *const) const;
 
-    virtual void setSlaveName(QWidget *const,
-			      const QString &);
+    virtual void setSlaveName(QWidget *const, const QString &);
 
-    virtual void setSlaveIcon(QWidget *const,
-			      const QIcon&);
+    virtual void setSlaveIcon(QWidget *const, const QIcon &);
 
     virtual void removeSlave(QWidget *const);
 
@@ -83,10 +71,12 @@ namespace qemacs
     virtual bool areSlavesVisible() const;
 
     virtual bool isOkToClose() const;
-			     
-  public slots:
+
+   public slots:
 
     virtual void showSlaves();
+
+    virtual void showSlaves(const Qt::Orientation);
 
     virtual void hideSlaves();
 
@@ -95,22 +85,26 @@ namespace qemacs
     virtual void focusMainFrame();
 
     virtual void closeCurrentSlave();
-    
-  signals:
 
+    virtual void updateMenu();
+
+   signals:
+
+    //! signal launched when the menu of the buffer shall be updated
+    void updatedMenu();
     /*!
      * \param[out] b : reference to this
      * \param[out] o : old name
      * \param[out] n : new name
      */
     void bufferNameChanged(QEmacsBuffer *,
-			   const QString&,
-			   const QString&);
+                           const QString &,
+                           const QString &);
 
-    void newTreatedFile(const QString&);
+    void newTreatedFile(const QString &);
 
-  protected slots:
-    
+   protected slots:
+
     void focusInEvent(QFocusEvent *) override;
 
     virtual void updatePosition();
@@ -123,16 +117,17 @@ namespace qemacs
 
     virtual void closeSlave(int);
 
-    virtual void emitNewTreatedFile(const QString&);
+    virtual void emitNewTreatedFile(const QString &);
 
-  protected:
-
+   protected:
     struct SlaveTabWidget;
 
     void initialize();
 
-    QEmacsWidget& qemacs;
-    
+    QEmacsWidget &qemacs;
+
+    //! widget handling the main buffer and its slaves
+    QSplitter *splitter;
     //! slave widgets
     SlaveTabWidget *slaves;
 
@@ -160,9 +155,11 @@ namespace qemacs
     //! buffer id
     const int id;
 
-  }; // end of QEmacsBuffer
+   private:
+    Q_OBJECT
 
-} // end of namespace qemacs
+  };  // end of QEmacsBuffer
+
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_QEMACSBUFFER_HXX */
-

@@ -30,8 +30,10 @@ namespace qemacs{
     : public CSyntaxHighlighterBase
   {
     GnuplotSyntaxHighlighter(QTextDocument *);
-  };
+    void highlightBlock(const QString &) override;
+    ~GnuplotSyntaxHighlighter() override;
+  }; // end of struct GnuplotSyntaxHighlighter
   
-}
+} // end of namespace qemacs
 
 #endif /* LIB_QEMACS_GNUPLOTSYNTAXHIGLIGHTER_HXX_ */

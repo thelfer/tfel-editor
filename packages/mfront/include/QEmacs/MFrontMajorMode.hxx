@@ -26,10 +26,7 @@ namespace qemacs
     Q_OBJECT
 
   public:
-
-    MFrontMajorMode(QEmacsWidget&,
-		    QEmacsBuffer&,
-		    QEmacsTextEditBase&);
+    MFrontMajorMode(QEmacsWidget &, QEmacsBuffer &, QEmacsTextEditBase &);
 
     QString getName() const override;
 
@@ -38,14 +35,17 @@ namespace qemacs
     void setSyntaxHighlighter(QTextDocument *const) override;
 
     QMenu* getSpecificMenu() override;
-    
-    void completeContextMenu(QMenu *const,
-			     const QTextCursor&) override;
-    
+
+    void completeContextMenu(QMenu *const, const QTextCursor &) override;
+
     QCompleter* getCompleter() override;
 
     QString getCompletionPrefix() override;
-    
+
+    QString getLanguageName() const override;
+
+    QString getDefaultCompilationCommand() const override;
+
     QIcon getIcon() const override;
     //! destructor    
     ~MFrontMajorMode() override;
@@ -56,6 +56,10 @@ namespace qemacs
     virtual void updateSyntaxHighlighterAndCompleter();
     //! method called when the Help menu is called
     virtual void actionTriggered(QAction *);
+    //! slot called to prepare a MFront analysis
+    virtual void runMFront();
+    //! slot called to start a new MFront analysis
+    virtual void startMFront();
   protected:
     //! \return the name of the DSL
     virtual QString getDSLName();
@@ -66,6 +70,8 @@ namespace qemacs
      * This is mandatory since the @DSL can change with the user inputs
      */
     QTimer *rt = nullptr;
+    //! action associated with the runMFront method
+    QAction *rm = nullptr;
     //! completer
     QCompleter* c = nullptr;
     //! help action

@@ -26,7 +26,7 @@ namespace qemacs
   PipeTestSyntaxHighlighter::PipeTestSyntaxHighlighter(QTextDocument *p)
     : CxxSyntaxHighlighter(p)
   {
-    this->cCharAsString = true;
+    this->options.charAsString = true;
     this->mtestKeyFormat.setForeground(Qt::blue);
     for(const std::string &k : PipeTestSyntaxHighlighter::getPipeTestKeys()){
       HighlightingRule rule;

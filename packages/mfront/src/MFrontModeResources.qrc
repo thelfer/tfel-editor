@@ -1,5 +1,5 @@
  <!DOCTYPE RCC><RCC version="1.0">
  <qresource>
- <file alias="MFrontIcon.png">images/MFrontIcon.png</file>
+ <file alias="mfront/MFrontIcon.png">images/MFrontIcon.png</file>
  </qresource>
  </RCC>

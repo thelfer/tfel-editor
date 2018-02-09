@@ -32,10 +32,7 @@ namespace qemacs
     Q_OBJECT
 
   public:
-
-    LaTeXMajorMode(QEmacsWidget&,
-		   QEmacsBuffer&,
-		   QEmacsTextEditBase&);
+    LaTeXMajorMode(QEmacsWidget &, QEmacsBuffer &, QEmacsTextEditBase &);
 
     QString getName() const override;
 
@@ -128,11 +125,9 @@ namespace qemacs
      * \param[out] di : indentation increment of the given line 
      * \param[out] b  : true if the increment shall be used for the current line 
      */
-    virtual void getLineIndentation(const QTextCursor&,
-				    int&,
-				    int&,
-				    bool&) const;
-    
+    virtual void
+    getLineIndentation(const QTextCursor &, int &, int &, bool &) const;
+
     /*!
      * \return the indentation increment of the current line
      * \param[in] line : line 

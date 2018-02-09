@@ -26,7 +26,7 @@ namespace qemacs
   MTestSyntaxHighlighter::MTestSyntaxHighlighter(QTextDocument *p)
     : CxxSyntaxHighlighter(p)
   {
-    this->cCharAsString = true;
+    this->options.charAsString = true;
     this->mtestKeyFormat.setForeground(Qt::blue);
     for(const std::string &k : MTestSyntaxHighlighter::getMTestKeys()){
       HighlightingRule rule;

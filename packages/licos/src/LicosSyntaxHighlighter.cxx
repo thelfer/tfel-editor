@@ -19,7 +19,10 @@ namespace qemacs
   LicosSyntaxHighlighter::LicosSyntaxHighlighter(QTextDocument *p)
     : CSyntaxHighlighterBase(p)
   {
-    this->cCharAsString = true;
+    // parsing options
+    this->options.charAsString = true;
+    this->options.bKeepCommentBoundaries = true;
+    // highlighting
     this->keyFormat.setForeground(Qt::blue);
     this->optFormat.setForeground(Qt::darkCyan);
     this->importFormat = this->quotationFormat;
@@ -55,9 +58,7 @@ namespace qemacs
   {
     using tfel::utilities::CxxTokenizer;
     using tfel::utilities::Token;
-    CxxTokenizer t;
-    t.treatCharAsString(this->cCharAsString);
-    t.keepCommentBoundaries(true);
+    CxxTokenizer t(this->options);
     t.setCStyleCommentOpened(this->previousBlockState()==1);
     try{
       t.parseString(text.toStdString());

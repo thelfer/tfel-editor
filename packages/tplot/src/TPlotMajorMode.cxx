@@ -28,15 +28,12 @@ namespace qemacs
     TPlotSyntaxHighlighter(QTextDocument *p)
       : GnuplotSyntaxHighlighter(p)
     {
-      QStringList keys;
-      keys << "set"     << "plot"   << "splot";
-      foreach(const QString& key,keys){
-	HighlightingRule rule;
-	rule.key     = key;
-	rule.format  = this->keyFormat;
-	highlightingRules.push_front(rule);
+      for (const auto &k : {"import"}) {
+        HighlightingRule rule;
+        rule.key = k;
+        rule.format = this->keyFormat;
+        highlightingRules.push_front(rule);
       }
-      this->cCharAsString = true;
     } // end of TPlotSyntaxHighlighter
 
   }; // end of struct TPlotSyntaxHighlighter
@@ -54,44 +51,45 @@ namespace qemacs
       : QEmacsMajorModeBase(w,b,t,&t)
     {}
 
-    QString getName() const
+    QString getName() const override
     {
       return "tplot";
     } // end of LicosMajorMode
 
-    QString getDescription() const
+    QString getDescription() const override
     {
       return "major mode dedicated to tplot";
     } // end of getDescription
 
-    void setSyntaxHighlighter(QTextDocument* d)
+    void setSyntaxHighlighter(QTextDocument* d) override
     {
       new TPlotSyntaxHighlighter(d);
     } // end of setSyntaxHighlighter
 
-    bool mousePressEvent(QMouseEvent *)
+    bool mousePressEvent(QMouseEvent *) override
     {
       return false;
     }
 
-    bool keyPressEvent(QKeyEvent *)
+    bool keyPressEvent(QKeyEvent *) override
     {
+      
       return false;
     }
 
-    void format()
+    void format() override
     {}
 
-    void comment()
+    void comment() override
     {}
 
-    ~TPlotMajorMode()
-    {}
+    ~TPlotMajorMode() override = default;
 
   }; // end of TPlotMajorMode
-  
-  static StandardQEmacsMajorModeProxy<TPlotMajorMode> proxy("tplot",QVector<QRegExp>() 
-							    << QRegExp("^[\\w-\\.0-9_]+\\.tplot"));
+
+  static StandardQEmacsMajorModeProxy<TPlotMajorMode>
+  proxy("TPlot",
+	QVector<QRegExp>() << QRegExp("^[\\w-0-9_\\.]+\\.tplot"));
 
 } // end of namespace qemacs
 

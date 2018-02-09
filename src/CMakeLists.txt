@@ -32,6 +32,7 @@ qt_sources(TFELQEmacs_SOURCES
   CxxMajorMode
   CxxSyntaxHighlighter
   ProcessOutputFrame
+  ProcessOutputMajorModeBase
   QAbstractScrollAreaWrapper
   QWebEngineViewWrapper
   ProcessInteractionFrame)
@@ -49,6 +50,7 @@ qemacs_library(TFELQEmacs
   QEmacsTextEditReplaceFilter.cxx
   QEmacsMajorModeFactory.cxx
   GrepOutputMajorMode.cxx
+  CompilationOutputMajorMode.cxx
   ${QEmacsResources_RCC}
   ${TFELQEmacs_SOURCES})
 

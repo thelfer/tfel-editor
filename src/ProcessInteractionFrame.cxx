@@ -11,8 +11,8 @@ namespace qemacs
 {
 
   ProcessInteractionFrame::ProcessInteractionFrame(QEmacsWidget& w,
-						   QEmacsBuffer& b)
-    : ProcessOutputFrame(w,b)
-  {} // end of ProcessInteractionFrame::ProcessInteractionFrame
+                                                   QEmacsBuffer& b)
+      : ProcessOutputFrame(w, b) {
+  }  // end of ProcessInteractionFrame::ProcessInteractionFrame
 
 } // end of namespace qemacs

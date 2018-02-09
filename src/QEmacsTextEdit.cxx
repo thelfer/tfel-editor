@@ -19,11 +19,8 @@
 namespace qemacs
 {
 
-  QEmacsTextEdit::QEmacsTextEdit(QEmacsWidget& g,
-					   QEmacsBuffer& b)
-    : QEmacsTextEditBase(g,b),
-      e(new QTextEdit(this))
-  {
+  QEmacsTextEdit::QEmacsTextEdit(QEmacsWidget& g, QEmacsBuffer& b)
+      : QEmacsTextEditBase(g, b), e(new QTextEdit(this)) {
     this->initialize(this->e);
     auto *hl  = new QHBoxLayout;
     setQAbstractScrollAreaInLayout(hl,this->e);
@@ -33,11 +30,9 @@ namespace qemacs
   } // end of QEmacsTextEdit::QEmacsTextEdit()
 
   QEmacsTextEdit::QEmacsTextEdit(const QString& f,
-					   QEmacsWidget& g,
-					   QEmacsBuffer& b)
-    : QEmacsTextEditBase(g,b),
-      e(new QTextEdit(this))
-  {
+                                 QEmacsWidget& g,
+                                 QEmacsBuffer& b)
+      : QEmacsTextEditBase(g, b), e(new QTextEdit(this)) {
     this->initialize(this->e);
     auto *hl  = new QHBoxLayout;
     setQAbstractScrollAreaInLayout(hl,this->e);
@@ -47,9 +42,9 @@ namespace qemacs
     QFile file(f);
     if(file.exists()){
       if (!file.open(QIODevice::ReadOnly | QIODevice::Text)){
-	QMessageBox::critical(this,tr("QEmacs::openFile"),
-			      tr("opening file '%1' failed").arg(f));
-	return;
+        QMessageBox::critical(this, tr("QEmacs::openFile"),
+                              tr("opening file '%1' failed").arg(f));
+        return;
       }
       QTextStream in(&file);
       QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -62,186 +57,117 @@ namespace qemacs
     this->setFileName(f);
   } // end of QEmacsTextEdit::QEmacsTextEdit()
 
-  QAbstractScrollArea *
-  QEmacsTextEdit::widget()
-  {
-    return this->e;
-  }
+  QAbstractScrollArea* QEmacsTextEdit::widget() { return this->e; }
 
-  void
-  QEmacsTextEdit::undo()
-  {
+  void QEmacsTextEdit::undo() {
     this->e->undo();
   } // end of QEmacsTextEdit::undo
 
-  void
-  QEmacsTextEdit::redo()
-  {
+  void QEmacsTextEdit::redo() {
     this->e->redo();
   } // end of QEmacsTextEdit::redo
 
-  void
-  QEmacsTextEdit::cut()
-  {
-    this->e->cut();
-  }
+  void QEmacsTextEdit::cut() { this->e->cut(); }
 
-  void
-  QEmacsTextEdit::paste()
-  {
-    this->e->paste();
-  }
-  
-  void
-  QEmacsTextEdit::selectAll()
-  {
-    this->e->selectAll();
-  }
-  
-  void
-  QEmacsTextEdit::copy()
-  {
-    this->e->copy();
-  }
+  void QEmacsTextEdit::paste() { this->e->paste(); }
 
-  void
-  QEmacsTextEdit::clear()
-  {
-    this->e->clear();
-  }
+  void QEmacsTextEdit::selectAll() { this->e->selectAll(); }
 
-  bool
-  QEmacsTextEdit::isReadOnly()
-  {
-    return this->e->isReadOnly();
-  }
-  
-  void
-  QEmacsTextEdit::appendPlainText(const QString& t)
-  {
+  void QEmacsTextEdit::copy() { this->e->copy(); }
+
+  void QEmacsTextEdit::clear() { this->e->clear(); }
+
+  bool QEmacsTextEdit::isReadOnly() { return this->e->isReadOnly(); }
+
+  void QEmacsTextEdit::appendPlainText(const QString& t) {
     QTextCursor tc = this->e->textCursor();
     tc.movePosition(QTextCursor::End,
 		    QTextCursor::MoveAnchor);
     tc.insertText(t);
   }
 
-  void
-  QEmacsTextEdit::insertPlainText(const QString& t)
-  {
+  void QEmacsTextEdit::insertPlainText(const QString& t) {
     return this->e->insertPlainText(t);
   }
 
-  void
-  QEmacsTextEdit::setPlainText(const QString& t)
-  {
+  void QEmacsTextEdit::setPlainText(const QString& t) {
     return this->e->setPlainText(t);
   }
 
-  void
-  QEmacsTextEdit::appendHtml(const QString& t)
-  {
+  void QEmacsTextEdit::appendHtml(const QString& t) {
     QTextCursor tc = this->e->textCursor();
     tc.movePosition(QTextCursor::End,
 		    QTextCursor::MoveAnchor);
     tc.insertHtml(t);
   }
 
-  void
-  QEmacsTextEdit::insertHtml(const QString& t)
-  {
+  void QEmacsTextEdit::insertHtml(const QString& t) {
     return this->e->textCursor().insertHtml(t);
   }
 
-  void
-  QEmacsTextEdit::setHtml(const QString& t)
-  {
+  void QEmacsTextEdit::setHtml(const QString& t) {
     this->clear();
     this->insertHtml(t);
   }
 
-  QTextCursor
-  QEmacsTextEdit::cursorForPosition(const QPoint& p) const
-  {
+  QTextCursor QEmacsTextEdit::cursorForPosition(const QPoint& p) const {
     return this->e->cursorForPosition(p);
   }
 
-  QRect
-  QEmacsTextEdit::cursorRect(const QTextCursor& tc) const
-  {
+  QRect QEmacsTextEdit::cursorRect(const QTextCursor& tc) const {
     return this->e->cursorRect(tc);
   }
-  
-  void
-  QEmacsTextEdit::setUndoRedoEnabled(bool b)
-  {
+
+  void QEmacsTextEdit::setUndoRedoEnabled(bool b) {
     return this->e->setUndoRedoEnabled(b);
   }
 
-  void
-  QEmacsTextEdit::setReadOnly(bool b)
-  {
+  void QEmacsTextEdit::setReadOnly(bool b) {
     return this->e->setReadOnly(b);
   }
-  
-  void
-  QEmacsTextEdit::moveCursor(QTextCursor::MoveOperation mo,
-				  QTextCursor::MoveMode mm)
-  {
+
+  void QEmacsTextEdit::moveCursor(QTextCursor::MoveOperation mo,
+                                  QTextCursor::MoveMode mm) {
     return this->e->moveCursor(mo,mm);
   }
-  
-  QTextDocument*
-  QEmacsTextEdit::document() const
-  {
+
+  QTextDocument* QEmacsTextEdit::document() const {
     return this->e->document();
   } // end of QEmacsTextEdit::document
 
-  void
-  QEmacsTextEdit::setExtraSelections(const QList<QTextEdit::ExtraSelection>& l)
-  {
+  void QEmacsTextEdit::setExtraSelections(
+      const QList<QTextEdit::ExtraSelection>& l) {
     return this->e->setExtraSelections(l);
   }
-  
-  QTextCursor
-  QEmacsTextEdit::textCursor() const
-  {
+
+  QTextCursor QEmacsTextEdit::textCursor() const {
     return this->e->textCursor();
   }
 
-  QList<QTextEdit::ExtraSelection>
-  QEmacsTextEdit::extraSelections() const
-  {
+  QList<QTextEdit::ExtraSelection> QEmacsTextEdit::extraSelections()
+      const {
     return this->e->extraSelections();
   } // end of QEmacsTextEdit::extraSelections
 
-  QRect
-  QEmacsTextEdit::cursorRect() const
-  {
+  QRect QEmacsTextEdit::cursorRect() const {
     return this->e->cursorRect();
   }
 
-  bool
-  QEmacsTextEdit::find(const QString& t,
-			    QTextDocument::FindFlags f)
-  {
+  bool QEmacsTextEdit::find(const QString& t,
+                            QTextDocument::FindFlags f) {
     return this->e->find(t,f);
   }
 
-  bool
-  QEmacsTextEdit::isUndoRedoEnabled() const
-  {
+  bool QEmacsTextEdit::isUndoRedoEnabled() const {
     return this->e->isUndoRedoEnabled();
   }
-  
-  void
-  QEmacsTextEdit::setTextCursor(const QTextCursor& tc)
-  {
+
+  void QEmacsTextEdit::setTextCursor(const QTextCursor& tc) {
     return this->e->setTextCursor(tc);
   }
 
-  void
-  QEmacsTextEdit::setTextInteractionFlags(Qt::TextInteractionFlags f)
-  {
+  void QEmacsTextEdit::setTextInteractionFlags(
+      Qt::TextInteractionFlags f) {
     this->e->setTextInteractionFlags(f);
   }
 

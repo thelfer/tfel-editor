@@ -9,20 +9,22 @@
 #define LIB_QEMACS_PROCESSOUTPUTMAJORMODEBASE_HXX
 
 #include <QtCore/QProcess>
+#include "QEmacs/Config.hxx"
 #include "QEmacs/QEmacsMajorModeBase.hxx"
 
 namespace qemacs {
 
   /*!
-   * \brief A base class for major mode associated with external process
+   * \brief a base class for major mode associated with external process
    * output.
    */
-  struct ProcessOutputMajorModeBase : QEmacsMajorModeBase {
+  struct QEMACS_VISIBILITY_EXPORT ProcessOutputMajorModeBase
+      : QEmacsMajorModeBase {
     //! constructor
     ProcessOutputMajorModeBase(QEmacsWidget&,
-			       QEmacsBuffer&,
-			       QEmacsTextEditBase&,
-			       QWidget* const);
+                               QEmacsBuffer&,
+                               QEmacsTextEditBase&,
+                               QWidget* const);
     /*!
      * \brief method called when the process is finished
      * \param[in] s: exit status
@@ -31,9 +33,10 @@ namespace qemacs {
     virtual void processFinished(int, QProcess::ExitStatus) = 0;
     //! destructor
     ~ProcessOutputMajorModeBase() override;
-  private:
+
+   private:
     Q_OBJECT
-  }; // end of struct ProcessOutputMajorModeBase
+  };  // end of struct ProcessOutputMajorModeBase
 
 }  // end of namespace qemacs
 

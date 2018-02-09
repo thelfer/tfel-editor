@@ -19,13 +19,11 @@
 namespace qemacs
 {
 
-  LicosOutputFrame::LicosOutputFrame(QEmacsWidget& w,
-				     QEmacsBuffer& b,
-				     const QString& f,
-				     const LicosStudyOptions& options)
-    : QWidget(&w),
-      textEdit(new QEmacsPlainTextEdit(w,b))
-  {
+  LicosOutputFrame::LicosOutputFrame(QEmacsWidget &w,
+                                     QEmacsBuffer &b,
+                                     const QString &f,
+                                     const LicosStudyOptions &options)
+      : QWidget(&w), textEdit(new QEmacsPlainTextEdit(w, b)) {
     auto *hl = new QHBoxLayout;
     auto *vl = new QVBoxLayout;
     hl->addWidget(this->textEdit);
@@ -39,12 +37,12 @@ namespace qemacs
     vl->addWidget(pbar);
     this->setLayout(vl);
     this->licos = new LicosStudyThread(f,options,QStringList(),this);
-    QObject::connect(this->licos,&LicosStudyThread::newProcessOutput,
-		     this,&LicosOutputFrame::displayProcessOutput);
-    QObject::connect(this->licos,&LicosStudyThread::newPeriod,
-		     this,&LicosOutputFrame::newPeriod);
-    QObject::connect(this->licos,&LicosStudyThread::finished,
-		     this,&LicosOutputFrame::studyFinished);
+    QObject::connect(this->licos, &LicosStudyThread::newProcessOutput, this,
+                     &LicosOutputFrame::displayProcessOutput);
+    QObject::connect(this->licos, &LicosStudyThread::newPeriod, this,
+                     &LicosOutputFrame::newPeriod);
+    QObject::connect(this->licos, &LicosStudyThread::finished, this,
+                     &LicosOutputFrame::studyFinished);
     this->licos->start();
   } // end of LicosOutputFrame::LicosOutputFrame
 

@@ -44,6 +44,10 @@ namespace qemacs
 
     ~MakefileMajorMode() override;
 
+  private:
+
+    virtual void runCompilation();
+    
   }; // end of struct MakefileMajorMode
   
 } // end of namespace qemacs

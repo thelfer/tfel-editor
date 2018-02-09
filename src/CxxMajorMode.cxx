@@ -7,10 +7,11 @@
 
 #include<QtCore/QDebug>
 
-#include"QEmacs/CxxMajorMode.hxx"
-#include"QEmacs/CxxSyntaxHighlighter.hxx"
+#include"QEmacs/Utilities.hxx"
 #include"QEmacs/QEmacsTextEditBase.hxx"
 #include"QEmacs/QEmacsMajorModeFactory.hxx"
+#include"QEmacs/CxxSyntaxHighlighter.hxx"
+#include"QEmacs/CxxMajorMode.hxx"
 
 namespace qemacs
 {
@@ -51,13 +52,15 @@ namespace qemacs
 
   static StandardQEmacsMajorModeProxy<CxxMajorMode>
       proxy("C++",
-            QVector<QRegExp>() << QRegExp("^[\\w-]+\\.cxx$")
-                               << QRegExp("^[\\w-]+\\.hxx$")
-                               << QRegExp("^[\\w-]+\\.ixx$")
-                               << QRegExp("^[\\w-]+\\.cpp$")
-                               << QRegExp("^[\\w-]+\\.hpp$")
-                               << QRegExp("^[\\w-]+\\.ipp$")
-                               << QRegExp("^[\\w-]+\\.CC$")
-                               << QRegExp("^[\\w-]+\\.hh$"));
+            QVector<QRegExp>() << QRegExp(fileNameRegExp()+"\\.cxx$")
+                               << QRegExp(fileNameRegExp()+"\\.hxx$")
+                               << QRegExp(fileNameRegExp()+"\\.ixx$")
+                               << QRegExp(fileNameRegExp()+"\\.cpp$")
+                               << QRegExp(fileNameRegExp()+"\\.hpp$")
+                               << QRegExp(fileNameRegExp()+"\\.ipp$")
+                               << QRegExp(fileNameRegExp()+"\\.CC$")
+                               << QRegExp(fileNameRegExp()+"\\.hh$")
+                               << QRegExp(fileNameRegExp()+"\\.c$")
+                               << QRegExp(fileNameRegExp()+"\\.h$"));
 
 } // end of namespace qemacs

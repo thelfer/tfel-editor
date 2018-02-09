@@ -18,26 +18,21 @@ namespace qemacs
 {
 
   //! forward declaration
-  class QEmacsWidget;
-
+  struct QEmacsWidget;
   //! forward declaration
-  class QEmacsBuffer;
-
+  struct QEmacsBuffer;
   /*!
    * a helper class to build major modes
    */
-  class QEMACS_VISIBILITY_EXPORT QEmacsMajorModeBase
-    : public QEmacsMajorMode
-  {
+  struct QEMACS_VISIBILITY_EXPORT QEmacsMajorModeBase
+      : public QEmacsMajorMode {
+   public slots:
 
-    Q_OBJECT
+    void update() override;
 
-  public:
-
-    QEmacsMajorModeBase(QEmacsWidget&,
-			QEmacsBuffer&,
-			QEmacsTextEditBase&,
-			QWidget *const);
+   public:
+    QEmacsMajorModeBase(QEmacsWidget&, QEmacsBuffer&,
+                        QEmacsTextEditBase&, QWidget * const);
 
     /*!
      * default implementation of the getCompleter method
@@ -55,9 +50,9 @@ namespace qemacs
     int getMinimalCompletionLength() override;
 
     void completeCurrentWord(QEmacsTextEditBase&,
-			     const QString&) override;
+                             const QString&) override;
     /*!
-     * default implementation of the getSpecificMenu method
+     * \brief default implementation of the getSpecificMenu method
      * \return a NULL pointer
      */
     QMenu* getSpecificMenu() override;
@@ -85,16 +80,15 @@ namespace qemacs
      * \return true if the short cut is handled by this mode
      */
     bool handleShortCut(const int,
-			const Qt::KeyboardModifiers,
-			const int) override;
+                        const Qt::KeyboardModifiers,
+                        const int) override;
     /*!
      * complete the context menu actions
      * \param[in] m : complete the context menu
      * \param[in] c : text cursor at the position where the menu will
      * appear
      */
-    void completeContextMenu(QMenu * const,
-			     const QTextCursor&) override;
+    void completeContextMenu(QMenu* const, const QTextCursor&) override;
     /*!
      * indent the current line
      */    
@@ -115,13 +109,12 @@ namespace qemacs
     virtual void report(const QString&);
     
     virtual QString getCommentSyntax();
-
+    //! destructor
     ~QEmacsMajorModeBase() override;
 
   protected:
 
     int positionInCurrentBlock(const QTextCursor&) const;
-
     /*!
      * \return recursively search the given file in the given
      * directory
@@ -130,20 +123,15 @@ namespace qemacs
      * \param[in] m : max depth
      * \param[in] s : current depth
      */
-    QStringList findFiles(const QString&,
-			  const QString&,
-			  const int = 10,
-			  const int = 0);
-
+    QStringList findFiles(const QString&, const QString&,
+                          const int = 10, const int = 0);
     /*!
      * indent the line under the given text cursor by i spaces. This
      * ensure the cursor remains correctly positionned.
      * \param[in] tc : text cursor
      * \param[in] i  : indentation
      */
-    void doIndentLine(const QTextCursor&,
-		      const int) const;
-
+    void doIndentLine(const QTextCursor&, const int) const;
     /*!
      * an helper function which returns the beginning b and the end e
      * of the selection of the cursor tc. This function guarantees
@@ -171,6 +159,9 @@ namespace qemacs
     QEmacsBuffer& buffer;
 
     QEmacsTextEditBase& textEdit;
+
+   private:
+    Q_OBJECT
 
   }; // end of struct CppMajorMode
 

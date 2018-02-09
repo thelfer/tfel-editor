@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  QEmacsLineEdit.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,78 +6,62 @@
  */
 
 #ifndef LIB_QEMACS_QEMACSLINEEDIT_HXX
-#define LIB_QEMACS_QEMACSLINEEDIT_HXX 
+#define LIB_QEMACS_QEMACSLINEEDIT_HXX
 
-#include<QtCore/QPointer>
-#include<QtWidgets/QLabel>
-#include<QtWidgets/QLineEdit>
-#include<QtWidgets/QHBoxLayout>
-#include<QtWidgets/QVBoxLayout>
-#include"QEmacs/Config.hxx"
+#include <QtCore/QPointer>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QVBoxLayout>
+#include "QEmacs/Config.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
   class QEmacsWidget;
 
   class QEmacsBuffer;
 
   class QEmacsTextEdit;
-  
-  class QEMACS_VISIBILITY_EXPORT QEmacsLineEdit
-    : public QWidget
-  {
+
+  class QEMACS_VISIBILITY_EXPORT QEmacsLineEdit : public QWidget {
     Q_OBJECT
 
-  public:
-
+   public:
     /*!
      * \param[in] l : label
      * \param[in] p : parent
      * \param[in] b : if true, set the default custom line edit
      */
-    QEmacsLineEdit(const QString&,
-		   QEmacsWidget& p,
-		   const bool = true);
+    QEmacsLineEdit(const QString &, QEmacsWidget &p, const bool = true);
 
-    virtual void
-    setFocus();
-    
-    virtual void
-    setInputHistorySettingAddress(const QString&);
+    virtual void setFocus();
 
-    virtual void
-    setInputHistory(const QStringList&);
+    virtual void setInputHistorySettingAddress(const QString &);
+
+    virtual void setInputHistory(const QStringList &);
 
     void keyPressEvent(QKeyEvent *) override;
 
-    virtual void
-    setLabel(const QString&);
+    virtual void setLabel(const QString &);
 
-    virtual bool
-    isBlocking() const;
-    
+    virtual bool isBlocking() const;
+
     ~QEmacsLineEdit() override;
 
-  public slots:
+   public slots:
 
-    virtual void
-    userEditingFinished();
-    
+    virtual void userEditingFinished();
+
     /*!
      * cancel editing
      */
-    virtual void
-    cancel();
+    virtual void cancel();
 
-    virtual void
-    showCompletions(const QString&,
-		    const QStringList&);
+    virtual void showCompletions(const QString &, const QStringList &);
 
-    virtual void
-    hideCompletions();
-    
-  signals:
+    virtual void hideCompletions();
+
+   signals:
 
     void finished(QEmacsLineEdit *);
 
@@ -87,33 +71,25 @@ namespace qemacs
 
     void textEdited(const QString &);
 
-  protected slots:
-    
+   protected slots:
+
     /*!
      * processing is finished
      */
-    virtual void
-    treatUserInput() = 0;
+    virtual void treatUserInput() = 0;
 
-    virtual void
-    inputTextChanged(const QString &);
+    virtual void inputTextChanged(const QString &);
 
-    virtual void
-    inputTextEdited(const QString &);
+    virtual void inputTextEdited(const QString &);
 
-  protected:
-
-    struct CustomLineEdit
-      : public QLineEdit
-    {
-
-      CustomLineEdit(QEmacsWidget&,
-		     QEmacsLineEdit&);
+   protected:
+    struct CustomLineEdit : public QLineEdit {
+      CustomLineEdit(QEmacsWidget &, QEmacsLineEdit &);
 
       bool event(QEvent *) override;
-      
-      virtual void setInputHistory(const QStringList&);
-      
+
+      virtual void setInputHistory(const QStringList &);
+
       virtual QStringList getInputHistory() const;
 
       void keyPressEvent(QKeyEvent *) override;
@@ -121,17 +97,13 @@ namespace qemacs
       /*!
        * \param[in] b : if true, call the QLineEdit::setCompleter
        */
-      virtual void
-      setCompleter(QCompleter * const,
-		   const bool);
-      
-      virtual QCompleter*
-      completer() const;
+      virtual void setCompleter(QCompleter *const, const bool);
+
+      virtual QCompleter *completer() const;
 
       ~CustomLineEdit() override;
 
-    protected:
-
+     protected:
       /*!
        * treat "Ctrl-k1 Mod-k2"
        * where k1 is either Qt::Key_X or Qt::Key_C.
@@ -140,28 +112,24 @@ namespace qemacs
        * \param[in] k2 : second key
        * \return true if the short cut is handled by this mode
        */
-      virtual void
-      handleShortCut(const int,
-		     const Qt::KeyboardModifiers,
-		     const int);
+      virtual void handleShortCut(const int,
+                                  const Qt::KeyboardModifiers,
+                                  const int);
 
-      virtual void
-      complete();
+      virtual void complete();
 
       /*!
        * \return a completion for the given input. An empty string is
        * returned if no completion is available.
        * \param[out] b : set to true if only one completion is avaiable
        */
-      virtual QString
-      findCompletion(bool&);
+      virtual QString findCompletion(bool &);
 
-      virtual QString
-      extractBaseForCompletion(const QString&);
+      virtual QString extractBaseForCompletion(const QString &);
 
-      QEmacsWidget& qemacs;
-      QEmacsLineEdit& lineEdit;
-      QCompleter* c_;
+      QEmacsWidget &qemacs;
+      QEmacsLineEdit &lineEdit;
+      QCompleter *c_;
       bool completerHandledByQLineEdit;
       QStringList inputHistory;
       int pring;
@@ -170,115 +138,102 @@ namespace qemacs
       bool yank;
       int pHistory;
       bool hMove;
-
     };
 
     void setLineEdit(CustomLineEdit *const);
 
-    QEmacsWidget& qemacs;
-    QEmacsBuffer& buffer;
-    QVBoxLayout    *vl;
-    QHBoxLayout    *hl;
-    QLabel         *label;
+    QEmacsWidget &qemacs;
+    QEmacsBuffer &buffer;
+    QVBoxLayout *vl;
+    QHBoxLayout *hl;
+    QLabel *label;
     CustomLineEdit *input;
     QPointer<QEmacsTextEdit> completions;
     QWidget *scompletions;
     QString inputHistorySettingAddress;
     bool isUserEditingFinished;
 
-  }; // end of QEmacsLineEdit
+  };  // end of QEmacsLineEdit
 
   /*!
    * An helper class asking the user to type y (yes) or n (no)
    */
-  struct QEmacsYesOrNoUserInput
-    : public QEmacsLineEdit
-  {
-    QEmacsYesOrNoUserInput(const QString&,
-			   QEmacsWidget& p);
+  struct QEMACS_VISIBILITY_EXPORT QEmacsYesOrNoUserInput
+      : public QEmacsLineEdit {
+    QEmacsYesOrNoUserInput(const QString &, QEmacsWidget &p);
 
-  protected:
-
+   protected:
     struct YesOrNoLineEdit;
 
-  }; // end of struct QEmacsYesOrNoUserInput
+  };  // end of struct QEmacsYesOrNoUserInput
 
   /*!
    * An helper class asking the user for a file path
    */
-  struct QEmacsFilePathUserInput
-    : public QEmacsLineEdit
-  {
-    QEmacsFilePathUserInput(const QString&,
-			    QEmacsWidget&);
+  struct QEMACS_VISIBILITY_EXPORT QEmacsFilePathUserInput
+      : public QEmacsLineEdit {
+    QEmacsFilePathUserInput(const QString &, QEmacsWidget &);
 
-  protected:
-
+   protected:
     struct FilePathLineEdit;
 
-  }; // end of struct QEmacsYesOrNoUserInput
+  };  // end of struct QEmacsYesOrNoUserInput
 
   /*!
    * An helper class asking the user for a command and displaying the
    * results in a ProcessOutputFrame created as a slave of the current
    * buffer
    */
-  struct QEmacsProcessLineEdit
-    : public QEmacsLineEdit
-  {
+  struct QEMACS_VISIBILITY_EXPORT QEmacsProcessLineEdit
+      : public QEmacsLineEdit {
     /*!
      * \param[in] l : label
      * \param[in] c : command guess
      * \param[in] m : mode used to display the results
-     * \param[in] p : parent     
+     * \param[in] p : parent
      */
-    QEmacsProcessLineEdit(const QString&,
-			  const QString&,
-			  const QString&,
-			  QEmacsWidget&);
-
+    QEmacsProcessLineEdit(const QString &,
+                          const QString &,
+                          const QString &,
+                          QEmacsWidget &);
+    //! destructor
     ~QEmacsProcessLineEdit() override;
 
-  protected:
-
+   protected:
     void treatUserInput() override;
 
-    virtual void run(const QString&,
-		     const QString&,
-		     const QStringList&);
-
+    virtual void run(const QString &,
+                     const QString &,
+                     const QStringList &);
+    //! major mode for the process output frame
     const QString mode;
-
-  }; // end of QEmacsProcessLineEdit
+  };  // end of QEmacsProcessLineEdit
 
   /*!
    * An helper class asking the user for a shell command and
    * displaying the results in a ProcessOutputFrame created as a slave
    * of the current buffer
    */
-  struct QEmacsShellProcessLineEdit
-    : public QEmacsProcessLineEdit
-  {
+  struct QEMACS_VISIBILITY_EXPORT QEmacsShellProcessLineEdit
+      : public QEmacsProcessLineEdit {
     /*!
      * \param[in] l : label
      * \param[in] c : command guess
      * \param[in] m : mode used to display the results
-     * \param[in] p : parent     
+     * \param[in] p : parent
      */
-    QEmacsShellProcessLineEdit(const QString&,
-			       const QString&,
-			       const QString&,
-			       QEmacsWidget&);
-
+    QEmacsShellProcessLineEdit(const QString &,
+                               const QString &,
+                               const QString &,
+                               QEmacsWidget &);
+    //! destructor
     ~QEmacsShellProcessLineEdit() override;
 
-  protected:
-
+   protected:
     void treatUserInput() override;
 
-  }; // end of QEmacsShellProcessLineEdit
+  };  // end of QEmacsShellProcessLineEdit
 
-} // end of namespace qemacs
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_QEMACSLINEEDIT_HXX */
-

@@ -19,16 +19,14 @@ namespace qemacs
     : QEmacsCommand(p)
   {} // end of QEmacsGrepCommand::QEmacsGrepCommand
   
-  void
-  QEmacsGrepCommand::execute()
+  void QEmacsGrepCommand::execute()
   {
     auto *p = qobject_cast<QEmacsWidget *>(this->parent());
     if(p==nullptr){
       return;
     }
-    QEmacsLineEdit * l = new QEmacsShellProcessLineEdit("grep command :",
-							"grep -nH -e ",
-							"grep output",*p);
+    auto *l = new QEmacsShellProcessLineEdit(
+        "grep command :", "grep -nH -e ", "grep output", *p);
     l->setInputHistorySettingAddress("command/grep/history");
     p->setUserInput(l);
   } // end of QEmacsGrepCommand::execute

@@ -14,48 +14,44 @@
 #include<QtGui/QTextDocument>
 #include<QtGui/QSyntaxHighlighter>
 
+#include"TFEL/Utilities/CxxTokenizerOptions.hxx"
 #include"QEmacs/Config.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
+/*!
+*base class for language based on C
+*(such as C/C++/mfront/licos)
+*/
+class QEMACS_VISIBILITY_EXPORT CSyntaxHighlighterBase
+    : public QSyntaxHighlighter {
+
+  Q_OBJECT
+
+public:
+  virtual void highlightBlock(const QString &) override;
+
+protected:
   /*!
-   * base class for language based on C
-   * (such as C/C++/mfront/licos)
+   * a simple wrapper around the highligthing rule
    */
-  class QEMACS_VISIBILITY_EXPORT CSyntaxHighlighterBase
-    : public QSyntaxHighlighter
-  {
+  struct HighlightingRule {
+    std::string key;
+    QTextCharFormat format;
+  }; // end of struct HighlightingRule
 
-    Q_OBJECT
+  CSyntaxHighlighterBase(QTextDocument *const);
 
-  public:
+  //! list of highlighting rules
+  QVector<HighlightingRule> highlightingRules;
 
-    virtual void highlightBlock(const QString &) override;
+  QTextCharFormat keyFormat;
+  QTextCharFormat numberFormat;
+  QTextCharFormat commentFormat;
+  QTextCharFormat quotationFormat;
+  QTextCharFormat preprocessorFormat;
 
-  protected:
-
-    /*!
-     * a simple wrapper around the highligthing rule
-     */
-    struct HighlightingRule
-    {
-      std::string     key;
-      QTextCharFormat format;
-    }; // end of struct HighlightingRule
-
-    CSyntaxHighlighterBase(QTextDocument *const);
-
-    //! list of highlighting rules
-    QVector<HighlightingRule> highlightingRules;
-
-    QTextCharFormat keyFormat;
-    QTextCharFormat numberFormat;
-    QTextCharFormat commentFormat;
-    QTextCharFormat quotationFormat;
-    QTextCharFormat preprocessorFormat;
-
-    bool cCharAsString;
+  tfel::utilities::CxxTokenizerOptions options;
 
   }; // end of struct CSyntaxHighlighter
   

@@ -203,6 +203,9 @@ AC_CONFIG_FILES([Makefile
 		 packages/latex/Makefile
 		 packages/latex/src/Makefile
 		 packages/latex/include/Makefile
+		 packages/markdown/Makefile
+		 packages/markdown/src/Makefile
+		 packages/markdown/include/Makefile
 		 packages/mfront/Makefile
 		 packages/mfront/src/Makefile
 		 packages/mfront/include/Makefile
