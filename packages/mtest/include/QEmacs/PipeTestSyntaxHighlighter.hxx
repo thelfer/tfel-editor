@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  PipeTestSyntaxHighlighter.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,39 +6,35 @@
  */
 
 #ifndef LIB_QEMACS_PIPETESTSYNTAXHIGHLIGHTER_HXX
-#define LIB_QEMACS_PIPETESTSYNTAXHIGHLIGHTER_HXX 
+#define LIB_QEMACS_PIPETESTSYNTAXHIGHLIGHTER_HXX
 
-#include<QtCore/QStringList>
+#include <QtCore/QStringList>
 
-#include"QEmacs/CxxSyntaxHighlighter.hxx"
+#include "QEmacs/CxxSyntaxHighlighter.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
-  /*!
-   * a syntaxt highlighter for the PipeTest code generator
-   */
-  class PipeTestSyntaxHighlighter
-    : public CxxSyntaxHighlighter
-  {
-    Q_OBJECT
-  public:
+  //! \brief a syntax highlighter for MTest' input files (pipe scheme)
+  struct PipeTestSyntaxHighlighter : public CxxSyntaxHighlighter {
     //! \return the list of keys
     static const std::vector<std::string>& getPipeTestKeys();
     /*!
      * \param[in] t : text document to be highlighted
      */
-    PipeTestSyntaxHighlighter(QTextDocument *const);
+    PipeTestSyntaxHighlighter(QTextDocument* const);
     //! \brief destructor
-    virtual ~PipeTestSyntaxHighlighter();
-  protected:
+    ~PipeTestSyntaxHighlighter() override;
+
+   protected:
     //! \return the list of keys
     virtual const std::vector<std::string>& getKeyWordsList() const;
     // format used for syntax highlighting
     QTextCharFormat mtestKeyFormat;
-  }; // end of struct PipeTestSyntaxHighlighter
-  
-} // end of namespace qemacs
+
+   private:
+    Q_OBJECT
+  };  // end of struct PipeTestSyntaxHighlighter
+
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_PIPETESTSYNTAXHIGHLIGHTER_H */
-

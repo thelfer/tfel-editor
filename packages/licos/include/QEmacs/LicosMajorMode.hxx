@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  LicosMajorMode.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,43 +6,33 @@
  */
 
 #ifndef LIB_QEMACS_LICOSMAJORMODE_HXX
-#define LIB_QEMACS_LICOSMAJORMODE_HXX 
+#define LIB_QEMACS_LICOSMAJORMODE_HXX
 
-#include<QtCore/QVector>
+#include <QtCore/QVector>
 
-#include"QEmacs/QEmacsMajorModeBase.hxx"
+#include "QEmacs/QEmacsMajorModeBase.hxx"
 
-namespace qemacs
-{
-  
-  class QEmacsTextEditBase;
+namespace qemacs {
 
+  // forward declaration
+  struct QEmacsTextEditBase;
+  // forward declaration
   struct LicosTokenizer;
-
+  // forward declaration
   struct LicosBlock;
 
-  /*!
-   * major mode
-   */
-  class LicosMajorMode
-    : public QEmacsMajorModeBase
-  {
+  //! major mode for Licos input files
+  struct LicosMajorMode : public QEmacsMajorModeBase {
+    static const QStringList &getLicosExtensionsSuffix();
 
-    Q_OBJECT
-
-  public:
-
-    static const QStringList&
-    getLicosExtensionsSuffix();
-
-    LicosMajorMode(QEmacsWidget&,
-		   QEmacsBuffer&,
-		   QEmacsTextEditBase&);
+    LicosMajorMode(QEmacsWidget &,
+                   QEmacsBuffer &,
+                   QEmacsTextEditBase &);
 
     QString getName() const override;
 
     QString getDescription() const override;
-    
+
     void setSyntaxHighlighter(QTextDocument *const) override;
 
     /*!
@@ -52,21 +42,22 @@ namespace qemacs
      * appear
      */
     void completeContextMenu(QMenu *const,
-			     const QTextCursor&) override;
+                             const QTextCursor &) override;
 
-    QCompleter* getCompleter() override;
+    QCompleter *getCompleter() override;
 
-    void completeCurrentWord(QEmacsTextEditBase&,
-			     const QString&) override;
+    void completeCurrentWord(QEmacsTextEditBase &,
+                             const QString &) override;
 
-    QMenu* getSpecificMenu() override;
+    QMenu *getSpecificMenu() override;
 
-    bool keyPressEvent(QKeyEvent * const) override;
+    bool keyPressEvent(QKeyEvent *const) override;
 
-    bool mousePressEvent(QMouseEvent * const) override;
+    bool mousePressEvent(QMouseEvent *const) override;
 
     /*!
-     * treat "Ctrl-k1 Mod-k2" shortcuts not handled by QEmacsTextEditBase
+     * treat "Ctrl-k1 Mod-k2" shortcuts not handled by
+     * QEmacsTextEditBase
      * where k1 is either Qt::Key_X or Qt::Key_C.
      * \param[in] k1 : first  key
      * \param[in] m  : second key modifier
@@ -74,18 +65,18 @@ namespace qemacs
      * \return true if the short cut is handled by this mode
      */
     bool handleShortCut(const int,
-			const Qt::KeyboardModifiers,
-			const int) override;
+                        const Qt::KeyboardModifiers,
+                        const int) override;
 
     /*!
      * indent the current line
-     */    
-    void indentLine(const QTextCursor&) override;
+     */
+    void indentLine(const QTextCursor &) override;
 
     /*!
      * indent selected region
-     */    
-    void indentRegion(const QTextCursor&) override;
+     */
+    void indentRegion(const QTextCursor &) override;
 
     QIcon getIcon() const override;
 
@@ -95,81 +86,62 @@ namespace qemacs
 
     ~LicosMajorMode() override;
 
-  protected slots:
+   protected slots:
 
-    virtual void
-    dryrunLicos();
+    virtual void dryrunLicos();
 
-    virtual void
-    showMaterialWizard();
+    virtual void showMaterialWizard();
 
-    virtual void
-    showThermalBehaviourWizard();
+    virtual void showThermalBehaviourWizard();
 
-    virtual void
-    showMechanicalBehaviourWizard();
+    virtual void showMechanicalBehaviourWizard();
 
-    virtual void
-    runLicos();
+    virtual void runLicos();
 
-    virtual void
-    startLicos();
+    virtual void startLicos();
 
-    virtual void
-    studyFinished(bool,QString);
+    virtual void studyFinished(bool, QString);
 
-    virtual void
-    actionTriggered(QAction *);
+    virtual void actionTriggered(QAction *);
 
-    virtual void
-    openDocumentation(QAction *);
+    virtual void openDocumentation(QAction *);
 
-    virtual void 
-    addMaterialProperties();
+    virtual void addMaterialProperties();
 
-  protected:
-
+   protected:
     struct LicosInsertBlock;
 
-    static QStringList
-    buildLicosExtensionsSuffix();
+    static QStringList buildLicosExtensionsSuffix();
 
     /*!
      * check if the given file exists and is readable
-     * \param[in] r : the file absolute path 
+     * \param[in] r : the file absolute path
      * \param[in] f : the file to be checked
      * \return true if the file is exists and is readable
      */
-    virtual bool
-    checkFile(QString&,
-	      const QString&);
+    virtual bool checkFile(QString &, const QString &);
 
     /*!
      * search a file using the LICOS_USER_FILES environment variable
      * \return an empty string if nothing was found
      */
-    virtual QString
-    getLicosFile(const QString&);
+    virtual QString getLicosFile(const QString &);
 
     /*!
      * search a file using the given path
      * \return an empty string if nothing was found
      */
-    QString
-    getFileInPath(const QString&,
-		  const QString&);
+    QString getFileInPath(const QString &, const QString &);
 
-    int
-    getLineIndentation(QVector<QSharedPointer<LicosBlock> >&,
-		       LicosTokenizer&,
-		       const QTextCursor&) const;
+    int getLineIndentation(QVector<QSharedPointer<LicosBlock>> &,
+                           LicosTokenizer &,
+                           const QTextCursor &) const;
 
-    int
-    getIndentationIncrement(QVector<QSharedPointer<LicosBlock> >&,
-			    LicosTokenizer&,
-			    int&,
-			    const QString&,
-			    const unsigned short) const;
+    int getIndentationIncrement(QVector<QSharedPointer<LicosBlock>> &,
+                                LicosTokenizer &,
+                                int &,
+                                const QString &,
+                                const unsigned short) const;
 
     /*!
      * \return the file name under the given cursor. An empty string
@@ -177,63 +149,49 @@ namespace qemacs
      * \param[in] tc : text cursor
      * \param[in] e  : extension tested
      */
-    QString
-    getFileNameUnderCursor(const QTextCursor&,
-			   const QString&);
+    QString getFileNameUnderCursor(const QTextCursor &,
+                                   const QString &);
 
-    
     /*!
      * \return the file name under the given cursor. An empty string
      * if no suitable file name is found.
      * \param[in] tc : text cursor
      * \param[in] e  : valid extensions
      */
-    QString
-    getFileNameUnderCursor(const QTextCursor&,
-			   const QStringList&);
+    QString getFileNameUnderCursor(const QTextCursor &,
+                                   const QStringList &);
 
     /*!
      * look if the QTextCursor points to a licos extension file.
      * If so, import the file in a new buffer
      */
-    bool
-    import(const QTextCursor&);
+    bool import(const QTextCursor &);
 
     /*!
      * look if the qtextcursor points to a library
      * \return the library name
      */
-    QString
-    libraryNameUnderCursor(const QTextCursor&);
+    QString libraryNameUnderCursor(const QTextCursor &);
 
-    virtual void
-    createActions();
+    virtual void createActions();
 
-    virtual void
-    createSearchActions();    
+    virtual void createSearchActions();
 
-    virtual void
-    createAnalyseUsingMFMAction(const QString&);
+    virtual void createAnalyseUsingMFMAction(const QString &);
 
-    virtual void
-    search(const QString&,
-	   const QString&,
-	   const QString&);
+    virtual void search(const QString &,
+                        const QString &,
+                        const QString &);
 
-    virtual QString
-    getLicosPath() const;
+    virtual QString getLicosPath() const;
 
-    virtual QString
-    getMFrontMaterialsPath() const;
+    virtual QString getMFrontMaterialsPath() const;
 
-    virtual QString
-    getLicosStudiesPath() const;
+    virtual QString getLicosStudiesPath() const;
 
-    virtual void
-    analyseUsingMFM(const QString&);
+    virtual void analyseUsingMFM(const QString &);
 
-    virtual void
-    openMFrontSource(const QString&);
+    virtual void openMFrontSource(const QString &);
 
     QCompleter *c;
 
@@ -285,18 +243,20 @@ namespace qemacs
     //  Licos+MFrontMaterials+LicosStudies
     QAction *msia;
 
-    QAction * ddoca;
-    QAction * udoca;
-    QAction * tdoca;
-    QAction * l10doca;
-    QAction * l11doca;
-    QAction * idoca;
-    QAction * mdoca;
+    QAction *ddoca;
+    QAction *udoca;
+    QAction *tdoca;
+    QAction *l10doca;
+    QAction *l11doca;
+    QAction *idoca;
+    QAction *mdoca;
     QVector<QAction *> tudoca;
 
-  }; // end of struct LicosMajorMode
+   private:
+    Q_OBJECT
 
-} // end of namespace qemacs
+  };  // end of struct LicosMajorMode
+
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_LICOSMAJORMODE_H */
-

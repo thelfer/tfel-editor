@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  MakefileMajorMode.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,35 +6,27 @@
  */
 
 #ifndef LIB_QEMACS_MAKEFILEMAJORMODE_HXX
-#define LIB_QEMACS_MAKEFILEMAJORMODE_HXX 
+#define LIB_QEMACS_MAKEFILEMAJORMODE_HXX
 
-#include"QEmacs/QEmacsMajorModeBase.hxx"
+#include "QEmacs/QEmacsMajorModeBase.hxx"
 
-namespace qemacs
-{
-  
-  class MakefileMajorMode
-    : public QEmacsMajorModeBase
-  {
-    
-    Q_OBJECT
+namespace qemacs {
 
-  public:
-
-    MakefileMajorMode(QEmacsWidget&,
-		      QEmacsBuffer&,
-		      QEmacsTextEditBase&);
+  //! \brief a major mode for editing Makefile's
+  struct MakefileMajorMode : public QEmacsMajorModeBase {
+    MakefileMajorMode(QEmacsWidget &,
+                      QEmacsBuffer &,
+                      QEmacsTextEditBase &);
 
     QString getName() const override;
 
     QString getDescription() const override;
-    
     /*!
      * This method is called before any treatment by
      * QEmacsTextEditBase and allows the mode to override default
      * shortcuts
      */
-    bool keyPressEvent(QKeyEvent * const) override;
+    bool keyPressEvent(QKeyEvent *const) override;
 
     void setSyntaxHighlighter(QTextDocument *const) override;
 
@@ -44,13 +36,12 @@ namespace qemacs
 
     ~MakefileMajorMode() override;
 
-  private:
-
+   private:
     virtual void runCompilation();
-    
-  }; // end of struct MakefileMajorMode
-  
-} // end of namespace qemacs
+
+    Q_OBJECT
+  };  // end of struct MakefileMajorMode
+
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_MAKEFILEMAJORMODE_H */
-

@@ -42,4 +42,6 @@ namespace qemacs
     }
   } // end of MFrontSyntaxHighlighter::MFrontSyntaxHighlighter
 
+  MFrontSyntaxHighlighter::~MFrontSyntaxHighlighter() = default;
+
 } // end of namespace qemacs

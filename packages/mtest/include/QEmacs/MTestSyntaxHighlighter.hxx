@@ -12,17 +12,10 @@
 
 #include"QEmacs/CxxSyntaxHighlighter.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
-  /*!
-   * a syntaxt highlighter for the MTest code generator
-   */
-  class MTestSyntaxHighlighter
-    : public CxxSyntaxHighlighter
-  {
-    Q_OBJECT
-  public:
+  //! \brief a syntax highlighter for MTest' input files
+  struct MTestSyntaxHighlighter : public CxxSyntaxHighlighter {
     //! \return the list of keys
     static const std::vector<std::string>& getMTestKeys();
     /*!
@@ -30,12 +23,16 @@ namespace qemacs
      */
     MTestSyntaxHighlighter(QTextDocument *const);
     //! \brief destructor
-    virtual ~MTestSyntaxHighlighter();
-  protected:
+    ~MTestSyntaxHighlighter() override;
+
+   protected:
     //! \return the list of keys
     virtual const std::vector<std::string>& getKeyWordsList() const;
     // format used for syntax highlighting
     QTextCharFormat mtestKeyFormat;
+
+   private:
+    Q_OBJECT
   }; // end of struct MTestSyntaxHighlighter
   
 } // end of namespace qemacs

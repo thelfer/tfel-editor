@@ -75,11 +75,7 @@ namespace qemacs
   /*!
    * a set passed to the xlicos-client
    */
-  class LicosStudyOptionsDialog
-    : public QDialog
-  {
-    Q_OBJECT
-  public:
+  struct LicosStudyOptionsDialog : public QDialog {
     /*!
      * \param[in] options : options to be modified
      * \param[in] p       : parent
@@ -95,6 +91,9 @@ namespace qemacs
     void debugModeChecked(bool);
   protected:
     LicosStudyOptions& o;
+
+   private:
+    Q_OBJECT
   };
 
 } // end of namespace qemacs

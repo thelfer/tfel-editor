@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  MarkdownMajorMode.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,27 +6,21 @@
  */
 
 #ifndef LIB_QEMACS_MFRONTMAJORMODE_HXX
-#define LIB_QEMACS_MFRONTMAJORMODE_HXX 
+#define LIB_QEMACS_MFRONTMAJORMODE_HXX
 
-#include<QEmacs/SpellChecker.hxx>
-#include"QEmacs/CompiledLanguageMajorModeBase.hxx"
+#include <QEmacs/SpellChecker.hxx>
+#include "QEmacs/CompiledLanguageMajorModeBase.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
-  class QEmacsTextEditBase;
-  
-  /*!
-   * major mode
-   */
-  class MarkdownMajorMode
-    : public CompiledLanguageMajorModeBase
-  {
+  // forward declaration
+  struct QEmacsTextEditBase;
 
-    Q_OBJECT
-
-  public:
-    MarkdownMajorMode(QEmacsWidget &, QEmacsBuffer &, QEmacsTextEditBase &);
+  //! \brief major mode for editing Markdown documents
+  struct MarkdownMajorMode : public CompiledLanguageMajorModeBase {
+    MarkdownMajorMode(QEmacsWidget &,
+                      QEmacsBuffer &,
+                      QEmacsTextEditBase &);
 
     QString getName() const override;
 
@@ -34,11 +28,12 @@ namespace qemacs
 
     void setSyntaxHighlighter(QTextDocument *const) override;
 
-    QMenu* getSpecificMenu() override;
+    QMenu *getSpecificMenu() override;
 
-    void completeContextMenu(QMenu *const, const QTextCursor &) override;
+    void completeContextMenu(QMenu *const,
+                             const QTextCursor &) override;
 
-    QCompleter* getCompleter() override;
+    QCompleter *getCompleter() override;
 
     QString getCompletionPrefix() override;
 
@@ -50,26 +45,29 @@ namespace qemacs
 
     QIcon getIcon() const override;
 
-    SpellChecker& getSpellChecker();
+    SpellChecker &getSpellChecker();
 
-    //! destructor    
+    //! destructor
     ~MarkdownMajorMode() override;
 
-  protected slots:
+   protected slots:
     //! method called when the Help menu is called
     virtual void actionTriggered(QAction *);
     //! slot called to prepare a Markdown analysis
     virtual void runPandoc();
     //! slot called to start a new Markdown analysis
     virtual void startPandoc();
-  protected:
+
+   protected:
     //! action associated with the runMarkdown method
     QAction *rm = nullptr;
     //! checking
     SpellChecker spellChecker;
-  }; // end of struct MarkdownMajorMode
 
-} // end of namespace qemacs
+   private:
+    Q_OBJECT
+  };  // end of struct MarkdownMajorMode
+
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_MFRONTMAJORMODE_H */
-

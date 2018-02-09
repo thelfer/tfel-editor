@@ -15,23 +15,18 @@
 
 namespace qemacs
 {
-  
-  class QEmacsTextEditBase;
 
-  class ProcessOutputFrame;
+  //! forward declaration
+  struct QEmacsTextEditBase;
+  //! forward declaration
+  struct ProcessOutputFrame;
+  //! forward declaration
+  struct LaTeXSyntaxHighlighter;
 
-  class LaTeXSyntaxHighlighter;
-
-  /*!
-   * major mode
-   */
-  class LaTeXMajorMode
+  //! \brief major mode for editing LaTeX documents
+  struct LaTeXMajorMode
     : public QEmacsMajorModeBase
   {
-
-    Q_OBJECT
-
-  public:
     LaTeXMajorMode(QEmacsWidget &, QEmacsBuffer &, QEmacsTextEditBase &);
 
     QString getName() const override;
@@ -154,6 +149,9 @@ namespace qemacs
     int emwp;
 
     QPointer<ProcessOutputFrame> po;
+
+   private:
+    Q_OBJECT
 
   }; // end of struct LaTeXMajorMode
 

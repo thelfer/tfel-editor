@@ -11,22 +11,16 @@
 #include<QtCore/QTimer>
 #include"QEmacs/CxxMajorMode.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
-  class QEmacsTextEditBase;
-  
-  /*!
-   * major mode
-   */
-  class MFrontMajorMode
-    : public CxxMajorMode
-  {
+  //! forward declaration
+  struct QEmacsTextEditBase;
 
-    Q_OBJECT
-
-  public:
-    MFrontMajorMode(QEmacsWidget &, QEmacsBuffer &, QEmacsTextEditBase &);
+  //! \brief a major mode for editing `MFront` input files
+  struct MFrontMajorMode : public CxxMajorMode {
+    MFrontMajorMode(QEmacsWidget &,
+                    QEmacsBuffer &,
+                    QEmacsTextEditBase &);
 
     QString getName() const override;
 
@@ -76,6 +70,9 @@ namespace qemacs
     QCompleter* c = nullptr;
     //! help action
     QAction *ha = nullptr;
+
+   private:
+    Q_OBJECT
   }; // end of struct MFrontMajorMode
 
 } // end of namespace qemacs

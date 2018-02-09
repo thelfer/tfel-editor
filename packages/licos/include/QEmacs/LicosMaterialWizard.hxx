@@ -13,11 +13,9 @@
 namespace qemacs{
 
   // forward declaration
-  class QEmacsTextEditBase;
-
+  struct QEmacsTextEditBase;
   // forward declaration
   struct LicosThermalBehaviourWizard;
-
   // foward declaration
   struct LicosMechanicalBehaviourWizard;
 

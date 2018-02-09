@@ -13,28 +13,21 @@
 namespace qemacs
 {
 
-  /*!
-   * a syntaxt highlighter for the MFront code generator
-   */
-  class MFrontSyntaxHighlighter
-    : public CxxSyntaxHighlighter
-  {
-
-    Q_OBJECT
-
-  public:
-
+  //! a syntax highlighter for the MFront code generator
+  struct MFrontSyntaxHighlighter : public CxxSyntaxHighlighter {
     /*!
      * \param[in] t : text document to be highlighted
      * \param[in] n : dsl name 
      */
-    MFrontSyntaxHighlighter(QTextDocument *const,
-			    const QString&);
-    
-  protected:
+    MFrontSyntaxHighlighter(QTextDocument *const, const QString &);
+    //! destructor
+    ~MFrontSyntaxHighlighter();
 
+   protected:
     QTextCharFormat mfrontKeyFormat;
 
+   private:
+    Q_OBJECT
   }; // end of struct MFrontSyntaxHighlighter
   
 } // end of namespace qemacs

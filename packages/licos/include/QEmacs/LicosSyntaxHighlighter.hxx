@@ -1,8 +1,8 @@
 /*! 
  * \file  LicosSyntaxHighlighter.hxx
  * \brief
- * \author Helfer Thomas
- * \brief 30 juin 2012
+ * \author Thomas Helfer
+ * \date   30/06/2012
  */
 
 #ifndef LIB_QEMACS_LICOSSYNTAXHIGHLIGHTER_HXX
@@ -24,16 +24,8 @@ namespace qemacs
     int pos;
   }; // end of   struct LicosData
 
-  /*!
-   * a syntaxt highlighter for C-based languages
-   */
-  class LicosSyntaxHighlighter
-    : public CSyntaxHighlighterBase
-  {
-
-    Q_OBJECT
-
-  public:
+  //! \brief a syntaxt highlighter for Licos input files
+  struct LicosSyntaxHighlighter : public CSyntaxHighlighterBase {
 
     static const std::vector<std::string>& getKeys();
 
@@ -56,7 +48,10 @@ namespace qemacs
 
     QTextCharFormat optFormat;
     QTextCharFormat importFormat;
-    
+
+   private:
+    Q_OBJECT
+
   }; // end of struct LicosSyntaxHighlighter
   
 } // end of namespace qemacs

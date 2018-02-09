@@ -1,8 +1,8 @@
 /*! 
  * \file  LaTeXSyntaxHighlighter.hxx
  * \brief
- * \author Helfer Thomas
- * \brief 30 juin 2012
+ * \author Thomas Helfer
+ * \date   30/06/2012
  */
 
 #ifndef LIB_QEMACS_LATEXSYNTAXHIGHLIGHTER_HXX
@@ -10,22 +10,15 @@
 
 #include<QtGui/QSyntaxHighlighter>
 
-namespace qemacs
-{
+namespace qemacs {
 
-  class LaTeXMajorMode;
+  // forward declaration
+  struct LaTeXMajorMode;
 
   /*!
    * a syntaxt highlighter for LaTeX
    */
-  class LaTeXSyntaxHighlighter
-    : public QSyntaxHighlighter
-  {
-
-    Q_OBJECT
-
-  public:
-
+  struct LaTeXSyntaxHighlighter : public QSyntaxHighlighter {
     /*!
      * a simple wrapper around the highligthing rule
      */
@@ -69,7 +62,10 @@ namespace qemacs
     LaTeXMajorMode& mode;
 
     QTextCharFormat commentFormat;
-    
+
+   private:
+    Q_OBJECT
+
   }; // end of struct LaTeXSyntaxHighlighter
   
 } // end of namespace qemacs

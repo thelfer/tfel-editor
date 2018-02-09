@@ -10,14 +10,10 @@
 
 #include<QtWidgets/QDialog>
 
-namespace qemacs
-{
+namespace qemacs {
 
-  /*!
-   * a set of options passed to the mtest
-   */
-  struct MTestStudyOptions
-  {
+  //! \brief a set of options passed to the mtest
+  struct MTestStudyOptions {
     /*!
      * default constructor
      */
@@ -45,27 +41,25 @@ namespace qemacs
     bool printBackTrace = false;
   };
 
-  /*!
-   * a set passed to the xmtest-client
-   */
-  class MTestStudyOptionsDialog
-    : public QDialog
-  {
-    Q_OBJECT
-  public:
+  //! \brief a dialog used to choose the options passed to `MTest`
+  struct MTestStudyOptionsDialog : public QDialog {
     /*!
      * \param[in] options : options to be modified
      * \param[in] p       : parent
      */
     MTestStudyOptionsDialog(MTestStudyOptions &, QWidget *const);
-  protected slots:
+   protected slots:
     void verboseLevelChanged(const QString&);
     void resultFile(bool);
     void xmlFile(bool);
     void fpeChecked(bool);
     void printBackTraceChecked(bool);
-  protected:
+
+   protected:
     MTestStudyOptions& o;
+
+   private:
+    Q_OBJECT
   };
 
 } // end of namespace qemacs

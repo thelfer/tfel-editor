@@ -13,11 +13,9 @@
 namespace qemacs{
 
   //! foward declaration
-  class QEmacsTextEditBase;
+  struct QEmacsTextEditBase;
 
-  /*!
-   * a wizard to introduce a new material
-   */
+  //! a wizard to introduce a new thermal material
   struct LicosThermalBehaviourWizard
     : public QWizard
   {

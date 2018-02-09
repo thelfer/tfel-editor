@@ -11,33 +11,27 @@
 #include<QtWidgets/QProgressBar>
 #include"QEmacs/LicosStudyOptions.hxx"
 
-namespace qemacs
-{
-  
-  class QEmacsWidget;
+namespace qemacs {
 
-  class QEmacsBuffer;
-
-  class QEmacsPlainTextEdit;
-
-  class LicosStudyThread;
+  // forward declaration
+  struct QEmacsWidget;
+  // forward declaration
+  struct QEmacsBuffer;
+  // forward declaration
+  struct QEmacsPlainTextEdit;
+  // forward declaration
+  struct LicosStudyThread;
 
   /*!
    * Frame displaying the licos output
    */
-  class LicosOutputFrame
-    : public QWidget
-  {
-     Q_OBJECT
+  struct LicosOutputFrame : public QWidget {
+    LicosOutputFrame(QEmacsWidget &w,
+                     QEmacsBuffer &b,
+                     const QString &,
+                     const LicosStudyOptions &);
 
-  public:
-
-    LicosOutputFrame(QEmacsWidget& w,
-		     QEmacsBuffer& b,
-		     const QString&,
-		     const LicosStudyOptions&);
-
-  protected:
+   protected:
 
     void closeEvent(QCloseEvent *) override;
 
@@ -59,6 +53,7 @@ namespace qemacs
     QProgressBar        *pbar;
     LicosStudyThread    *licos;
 
+    Q_OBJECT
   }; // end of struct LicosOutputFrame
 
 } // end of namespace qemacs

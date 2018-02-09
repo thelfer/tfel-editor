@@ -18,13 +18,7 @@ namespace qemacs
 
   struct QEmacsTextEditBase;
 
-  class LicosInsertMaterialPropertyDialog
-    : public QDialog
-  {
-
-    Q_OBJECT
-
-  public:
+  struct LicosInsertMaterialPropertyDialog : public QDialog {
 
     LicosInsertMaterialPropertyDialog(QEmacsTextEditBase&);
 
@@ -37,6 +31,7 @@ namespace qemacs
 
     QEmacsTextEditBase& textEdit;
 
+    Q_OBJECT
   }; // end of struct LicosInsertMaterialPropertyDialog
 
 } // end of namespace qemacs

@@ -71,13 +71,7 @@ namespace qemacs
 
   }; // end of struct MaterialPropertyModel
 
-  class MaterialPropertySelector
-    : public QWidget
-  {
-
-    Q_OBJECT
-    
-  public:
+  struct MaterialPropertySelector : public QWidget {
     
     MaterialPropertySelector(QWidget * const = nullptr);
 
@@ -109,7 +103,9 @@ namespace qemacs
     QLabel    *l;
     QLineEdit *lf;
 
-  }; // end of class MaterialPropertySelector
+    Q_OBJECT
+
+  };  // end of struct MaterialPropertySelector
 
 } // end of namespace qemacs
 

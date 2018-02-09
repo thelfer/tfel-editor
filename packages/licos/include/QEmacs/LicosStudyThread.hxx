@@ -18,23 +18,19 @@
 
 #include"QEmacs/LicosStudyOptions.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
-  class LicosStudy;
-
-  class LicosOutputFrame;
+  // forward declaration
+  struct LicosStudy;
+  // forward declaration
+  struct LicosOutputFrame;
 
   /*!
    * each studyThread is associated to a specific thread
    */
-  class LicosStudyThread
-    : public QThread
-  {
-    
-    Q_OBJECT
+  struct LicosStudyThread : public QThread {
 
-    friend class LicosOutputFrame;
+    friend struct LicosOutputFrame;
 
     /*!
      * \param [in] f : input file
@@ -42,11 +38,10 @@ namespace qemacs
      * \param [in] a : command line arguments
      * \param [in] p : parent (qt sense)
      */
-    LicosStudyThread(const QString&,
-		     const LicosStudyOptions&,
-		     const QStringList&,
-		     LicosOutputFrame * const);
-    
+    LicosStudyThread(const QString &,
+                     const LicosStudyOptions &,
+                     const QStringList &,
+                     LicosOutputFrame *const);
     /*!
      * run the study
      */
@@ -60,8 +55,7 @@ namespace qemacs
     /*!
      * return the error messsage if the study failed
      */
-    QString
-    getErrorMessage() const;
+    QString getErrorMessage() const;
 
     ~LicosStudyThread() override;
 			
@@ -96,6 +90,8 @@ namespace qemacs
     LicosStudy *study;
 
     bool success;
+
+    Q_OBJECT
 
   }; // end of LicosStudyThread
 

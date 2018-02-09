@@ -10,23 +10,13 @@
 
 #include"QEmacs/MTestMajorMode.hxx"
 
-namespace qemacs
-{
-  
-  /*!
-   * major mode
-   */
-  class PipeTestMajorMode
-    : public MTestMajorMode
-  {
+namespace qemacs {
 
-    Q_OBJECT
-
-  public:
-
+  //! \brief major mode for editing MTest' input files (pipe scheme)
+  struct PipeTestMajorMode : public MTestMajorMode {
     PipeTestMajorMode(QEmacsWidget&,
-		      QEmacsBuffer&,
-		      QEmacsTextEditBase&);
+                      QEmacsBuffer&,
+                      QEmacsTextEditBase&);
 
     QString getName() const override;
 
@@ -36,13 +26,17 @@ namespace qemacs
     QCompleter* getCompleter() override;
     //! destructor
     ~PipeTestMajorMode() override;
-  protected:
+
+   protected:
     //! return the list of MTest keywords
     const std::vector<std::string>& getKeyWordsList() const override;
     //! return the scheme name
     QString getScheme() const override;
     // completer
     QCompleter* c;
+
+   private:
+    Q_OBJECT
   }; // end of struct MTestMajorMode
 
 } // end of namespace qemacs

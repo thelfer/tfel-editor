@@ -23,42 +23,25 @@ namespace qemacs
   /*!
    * each study is associated to a specific thread
    */
-  class LicosStudy
-    : public QObject
-  {
-    
-    Q_OBJECT
-
-  public:
-
+  struct LicosStudy : public QObject {
     /*!
      * \param [in] f : input file
      * \param [in] o : options
      * \param [in] a : command line arguments
      */
-    LicosStudy(const QString&,
-	       const LicosStudyOptions&,
-	       const QStringList&);
-
-    /*!
-     * run the study
-     */
+    LicosStudy(const QString &,
+               const LicosStudyOptions &,
+               const QStringList &);
+    //! run the study
     void run();
-
-    /*!
-     * return true if the study success
-     */
+    //! \return true if the study success
     bool succeed() const;
+    //! \return the error messsage if the study failed
+    QString getErrorMessage() const;
 
-    /*!
-     * return the error messsage if the study failed
-     */
-    QString
-    getErrorMessage() const;
+    ~LicosStudy() override;
 
-    ~LicosStudy();
-
-  public slots:
+   public slots:
 
     void stopComputations();
 
@@ -127,11 +110,12 @@ namespace qemacs
 
     volatile bool success;
 
+    Q_OBJECT
+
   }; // end of LicosStudy
 
-  template<>
-  QString
-  LicosStudy::receive<QString>();
+  template <>
+  QString LicosStudy::receive<QString>();
 
 } // end of namespace qemacs
 

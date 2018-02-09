@@ -19,25 +19,19 @@ namespace qemacs
 {
 
   // forward declaration
-  class QEmacsTextEditBase;
-  
-  class ImportBehaviour
-    : public QWizard
-  {
+  struct QEmacsTextEditBase;
 
-    Q_OBJECT
-    
-  public:
-    
+  struct ImportBehaviour : public QWizard {
+
     ImportBehaviour(QEmacsTextEditBase&);
     //! \return the hypothesis selected
     QString getHypothesis() const;
     //! \return a Behaviour build on the information provided by the user
     std::shared_ptr<mtest::Behaviour> getBehaviour() const;
     //! destructor
-    ~ImportBehaviour();
-  protected:
+    ~ImportBehaviour() override;
 
+   protected:
     struct SelectHypothesisPage;
     struct SelectBehaviourPage;
     struct MaterialPropertyPage;
@@ -45,16 +39,12 @@ namespace qemacs
     SelectHypothesisPage *sh;
     SelectBehaviourPage  *sb;
     MaterialPropertyPage *mp;
-    
+
+   private:
+    Q_OBJECT    
   }; // end of struct ImportBehaviour
 
-  class ImportBehaviour::SelectHypothesisPage
-    : public QWizardPage
-  {
-
-    Q_OBJECT
-
-  public:
+  struct ImportBehaviour::SelectHypothesisPage : public QWizardPage {
     /*!
      * \brief constructor
      * \param[in] w: reference to the calling wizard;
@@ -64,15 +54,10 @@ namespace qemacs
   private:
     //! the calling wizard
     ImportBehaviour& wizard;
-  };
-  
-  class ImportBehaviour::SelectBehaviourPage
-    : public QWizardPage
-  {
-
     Q_OBJECT
+  };
 
-  public:
+  struct ImportBehaviour::SelectBehaviourPage : public QWizardPage {
     
     SelectBehaviourPage(ImportBehaviour&);
 
@@ -99,16 +84,10 @@ namespace qemacs
     QPushButton *slb;
     //! the calling wizard
     ImportBehaviour& wizard;
+    Q_OBJECT
   };
 
-  class ImportBehaviour::MaterialPropertyPage
-    : public QWizardPage
-  {
-
-    Q_OBJECT
-
-  public:
-    
+  struct ImportBehaviour::MaterialPropertyPage : public QWizardPage {
     MaterialPropertyPage(ImportBehaviour&);
 
     int nextId() const override;
@@ -116,8 +95,9 @@ namespace qemacs
   private:
     //! the calling wizard
     ImportBehaviour& wizard;
-  }; // end of ImportBehaviour::MaterialPropertyPage
-  
+    Q_OBJECT
+  };  // end of ImportBehaviour::MaterialPropertyPage
+
 } // end of namespace qemacs
 
 #endif /* LIB_QEMACS_MTEST_IMPORTBEHAVIOUR_HXX */
