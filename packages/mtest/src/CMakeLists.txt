@@ -21,6 +21,7 @@ qemacs_package(MTestQEmacsMode
 target_link_libraries(MTestQEmacsMode
   TFELQEmacs
   TFELMTest
+  TFELMaterial
   TFELSystem
   Qt5::Core
   Qt5::Widgets

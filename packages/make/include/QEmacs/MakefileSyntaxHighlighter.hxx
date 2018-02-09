@@ -1,8 +1,8 @@
-/*! 
- * \file  MakefileSyntaxHighlighter.hxx
+/*!
+ * \file   MakefileSyntaxHighlighter.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 03 juil. 2012
+ * \date   03/07/2012
  */
 
 #ifndef LIB_QEMACS_MAKEFILESYNTAXHIGHLIGHTER_HXX
@@ -17,13 +17,12 @@
 #include"TFEL/Utilities/CxxTokenizerOptions.hxx"
 #include"QEmacs/Config.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
   /*!
    * \brief syntax highlighter class for Makefile files
    */
-  struct QEMACS_VISIBILITY_EXPORT MakefileSyntaxHighlighter
+  struct MakefileSyntaxHighlighter
       : public QSyntaxHighlighter {
    /*!
     * \brief constructor

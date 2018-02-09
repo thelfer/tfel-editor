@@ -24,7 +24,7 @@ namespace qemacs
   void LicosTokenizer::parseString(const QString& s)
   {
     using tfel::utilities::Token;
-    using tfel::utilities::CxxTokenizer;
+    using CxxTokenizer = tfel::utilities::CxxTokenizer;
     if(this->getState()==FAILED){
       return;
     }
