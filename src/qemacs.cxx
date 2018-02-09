@@ -31,7 +31,11 @@ static void loadExternalPackages()
   for(const auto& p : paths){
     QDir d(p); 
     if(d.exists()){
+#ifdef _WIN32
+      const auto libs = d.entryList(QStringList("*.dll"),QDir::Files);
+#else
       const auto libs = d.entryList(QStringList("*.so"),QDir::Files);
+#endif /* WIN32 */
       for(const auto& rl : libs){
 	const auto l = (p+QDir::separator()+rl).toStdString();
 	try{

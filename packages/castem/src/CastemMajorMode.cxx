@@ -1,8 +1,8 @@
 /*!
  * \file  CastemMajorMode.cxx
  * \brief
- * \author Helfer Thomas
- * \brief 05 août 2012
+ * \author Thomas Helfer
+ * \date   05/09/2012
  */
 
 #include <QtCore/QDir>
@@ -343,7 +343,11 @@ namespace qemacs {
       } else {
         p.setWorkingDirectory(QDir::current().absolutePath());
       }
+#ifdef _WIN32
+      p.start("castem17.bat", QStringList());
+#else
       p.start("castem2014_PLEIADES", QStringList());
+#endif
       p.waitForStarted();
       this->buffer.addSlave("* castem *", this->co);
       //       QObject::connect(this->co, &QWidget::closed(), this,
