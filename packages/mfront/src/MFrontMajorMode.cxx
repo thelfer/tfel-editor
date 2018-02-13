@@ -2,7 +2,7 @@
  * \file  MFrontMajorMode.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 07 août 2012
+ * \date   07/08/2012
  */
 
 #include <stdexcept>

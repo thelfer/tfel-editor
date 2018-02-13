@@ -2,7 +2,7 @@
  * \file  QEmacsTextEditBase.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 19 août 2012
+ * \brief 19/08/2012
  */
 
 #include <QtCore/QFileInfo>
@@ -39,33 +39,26 @@ namespace qemacs {
                                          QEmacsBuffer& b)
       : QWidget(&g),
         qemacs(g),
-        buffer(b),
-        mode(nullptr),
-        filter(nullptr),
-        moveMode(QTextCursor::MoveAnchor),
-        yank(false),
-        ctrlx(false),
-        ctrlc(false),
-        mainFrame(false),
-        keyProcessing(false) {
+        buffer(b){
     auto& dm = QEmacsHunspellDictionariesManager::
         getQEmacsHunspellDictionariesManager();
     this->spellCheckLanguage = dm.getDefaultSpellCheckLanguage();
   }  // end of QEmacsTextEditBase::QEmacsTextEditBase
 
-  void QEmacsTextEditBase::mouseMoveEvent(QMouseEvent*) {}
+  void QEmacsTextEditBase::mouseMoveEvent(QMouseEvent*) {
+  }  // end of QEmacsTextEditBase::mouseMoveEvent
 
   void QEmacsTextEditBase::setFocus() {
     auto w = this->widget();
     if (w != nullptr) {
       w->setFocus();
     }
-  }
+  } // end of QEmacsTextEditBase::setFocus
 
   void QEmacsTextEditBase::setFont(const QFont& f) {
     auto* e = this->widget();
     e->setFont(f);
-  }
+  } // end of QEmacsTextEditBase::setFont
 
   void QEmacsTextEditBase::initialize(QAbstractScrollArea* const e) {
     this->ua = nullptr;
@@ -350,12 +343,18 @@ namespace qemacs {
       delete this->mode;
       this->mode = nullptr;
     }
-    this->qemacs.displayInformativeMessage(
-        QObject::tr("setting major mode '%1'").arg(m->getName()));
-    this->mode = m;
-    this->mode->setSpellCheckLanguage(this->spellCheckLanguage);
-    this->mode->setSyntaxHighlighter(this->document());
-    emit majorModeChanged();
+    if (this->allowMajorModeChange) {
+      this->qemacs.displayInformativeMessage(
+          QObject::tr("setting major mode '%1'").arg(m->getName()));
+      this->mode = m;
+      this->mode->setSpellCheckLanguage(this->spellCheckLanguage);
+      this->mode->setSyntaxHighlighter(this->document());
+      emit majorModeChanged();
+    } else {
+      this->qemacs.displayInformativeMessage(
+          QObject::tr("setting major mode '%1' is not allowed")
+              .arg(m->getName()));
+    }
   }  // end of QEmacsTextEditBase::setMajorMode
 
   void QEmacsTextEditBase::deleteContextMenuActions() {
@@ -433,9 +432,9 @@ namespace qemacs {
     auto tc2 = tc;
     tc2.select(QTextCursor::LineUnderCursor);
     const auto mpos = tc2.selectedText().size();
-    if (c > 1) {
+    if (c >= 1) {
       tc.movePosition(QTextCursor::NextCharacter, this->moveMode,
-                      std::min(c-1, mpos));
+                      std::min(c - 1, mpos));
     } else {
       tc.movePosition(QTextCursor::EndOfLine, this->moveMode);
       tc.movePosition(QTextCursor::NextCharacter, this->moveMode,
@@ -499,14 +498,14 @@ namespace qemacs {
       return QIcon();
     }
     return this->mode->getIcon();
-  }
+  } // end of QEmacsTextEditBase::getIcon
 
   void QEmacsTextEditBase::insertCompletion(const QString& completion) {
     if (this->mode == nullptr) {
       return;
     }
     this->mode->completeCurrentWord(*this, completion);
-  }
+  } // end of QEmacsTextEditBase::insertCompletion
 
   void QEmacsTextEditBase::removeKeyPressEventFilter() {
     if (this->filter != nullptr) {
@@ -540,7 +539,7 @@ namespace qemacs {
         this->filter, &QEmacsTextEditKeyPressEventFilter::destroyed,
         this, &QEmacsTextEditBase::keyPressEventFilterDestroyed);
     return true;
-  }
+  } // end of QEmacsTextEditBase::setKeyPressEventFilter
 
   void QEmacsTextEditBase::setFileName(const QString& f) {
     QFileInfo fi(f);
@@ -559,9 +558,17 @@ namespace qemacs {
     return this->fileName;
   }  // end of QEmacsTextEditBase::getCompleteFileName
 
+  QString QEmacsTextEditBase::getDirectory() const {
+    QFileInfo fn(this->fileName);
+    if (fn.isDir()) {
+      return fn.absolutePath();
+    }
+    return fn.dir().absolutePath();
+  }  // end of QEmacsTextEditBase::getDirectory
+
   QEmacsTextEditBase::SaveInput* QEmacsTextEditBase::getSaveInput() {
     return new SaveInput(this->qemacs, *this);
-  }
+  } // end of QEmacsTextEditBase::getSaveInput
 
   void QEmacsTextEditBase::save() {
     if (!this->document()->isModified()) {
@@ -653,8 +660,7 @@ namespace qemacs {
   }  // end of QEmacsTextEditBase::keyPressEvent
 
   bool QEmacsTextEditBase::handleKeyPressEvent(QKeyEvent* e) {
-    QEmacsShortCutStyle& s =
-        QEmacsShortCutStyle::getQEmacsShortCutStyle();
+    auto& s = QEmacsShortCutStyle::getQEmacsShortCutStyle();
     if (s.getStyle() == QEmacsShortCutStyle::QT) {
       return this->handleKeyPressEventWithQtShortCuts(e);
     }
@@ -684,14 +690,14 @@ namespace qemacs {
         }
       }
     }
-    QWidget* w = this->widget();
+    auto* w = this->widget();
     w->removeEventFilter(this);
     QCoreApplication::sendEvent(w, e);
     w->installEventFilter(this);
     if ((completer == nullptr) || (this->mode == nullptr)) {
       return true;
     }
-    QTextCursor tc = this->textCursor();
+    auto tc = this->textCursor();
     int pc = tc.position();
     tc.movePosition(QTextCursor::Left);
     tc.movePosition(QTextCursor::EndOfWord);
@@ -743,9 +749,9 @@ namespace qemacs {
 
   bool QEmacsTextEditBase::handleKeyPressEventWithEmacsShortCuts(
       QKeyEvent* e) {
-    const int k = e->key();
-    const Qt::KeyboardModifiers m = e->modifiers();
-    QTextCursor c = this->textCursor();
+    const auto k = e->key();
+    const auto m = e->modifiers();
+    auto c = this->textCursor();
     if (this->filter != nullptr) {
       if (this->filter->filterKeyPressEvent(e)) {
         return true;
@@ -857,8 +863,7 @@ namespace qemacs {
       } else {
         this->qemacs.displayInformativeMessage(
             QObject::tr("unknown shortcut : Ctr-X - %1-%2")
-                .arg(modifier)
-                .arg(e->text()));
+                .arg(modifier,e->text()));
       }
       return true;
     }
@@ -877,8 +882,7 @@ namespace qemacs {
       } else {
         this->qemacs.displayInformativeMessage(
             QObject::tr("unknown shortcut : Ctr-C - %1-%2")
-                .arg(modifier)
-                .arg(e->text()));
+                .arg(modifier, e->text()));
       }
       return true;
     }
@@ -983,7 +987,7 @@ namespace qemacs {
       return true;
     } else if ((m == Qt::ControlModifier) && (k == Qt::Key_V)) {
       QKeyEvent nev(QEvent::None, Qt::Key_PageDown, Qt::NoModifier);
-      QWidget* w = this->widget();
+      auto* w = this->widget();
       w->removeEventFilter(this);
       QCoreApplication::sendEvent(w, &nev);
       w->installEventFilter(this);
@@ -1402,7 +1406,7 @@ namespace qemacs {
 
   void QEmacsTextEditBase::setMoveMode(QTextCursor::MoveMode m) {
     this->moveMode = m;
-  }
+  } // end of QEmacsTextEditBase::setMoveMode
 
   QEmacsTextEditBase::~QEmacsTextEditBase() {
     if (this->filter != nullptr) {

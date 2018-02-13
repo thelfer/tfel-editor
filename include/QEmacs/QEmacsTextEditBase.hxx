@@ -2,7 +2,7 @@
  * \file  QEmacsTextEditBase.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 19 aoÃ»t 2012
+ * \date   19/08/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSTEXTEDITBASE_HXX
@@ -97,7 +97,7 @@ namespace qemacs {
      * \param[in] l: line number
      * \param[in] c: column number
      */
-    virtual void gotoPosition(const int,const int);
+    virtual void gotoPosition(const int, const int);
 
     virtual void insertCompletion(const QString &);
 
@@ -166,6 +166,12 @@ namespace qemacs {
     virtual QString getFileName() const;
 
     virtual QString getCompleteFileName() const;
+
+    /*!
+     * \return the absolute path to the directory containing the
+     * document being treated.
+     */
+    virtual QString getDirectory() const;
 
     virtual SaveInput *getSaveInput();
 
@@ -271,13 +277,12 @@ namespace qemacs {
     QEmacsBuffer &buffer;
 
     //! major mode
-    QEmacsMajorMode *mode;
+    QEmacsMajorMode *mode = nullptr;
 
     //! key press filter
-    QEmacsTextEditKeyPressEventFilter *filter;
+    QEmacsTextEditKeyPressEventFilter *filter = nullptr;
 
-    QTextCursor::MoveMode moveMode;
-
+    QTextCursor::MoveMode moveMode = QTextCursor::MoveAnchor;
     /*!
      * save the previous positions of the cursor for Ctrl-P/Ctrl-N
      * moves
@@ -289,34 +294,36 @@ namespace qemacs {
     QString spellCheckLanguage;
 
     // undo action
-    QAction *ua;
+    QAction *ua = nullptr;
     // redo action
-    QAction *ra;
+    QAction *ra = nullptr;
     // cut action
-    QAction *ca;
+    QAction *ca = nullptr;
     // copy action
-    QAction *coa;
+    QAction *coa = nullptr;
     // paste action
-    QAction *pa;
+    QAction *pa = nullptr;
     // select all action
-    QAction *sa;
+    QAction *sa = nullptr;
 
     int pring;  //<! position if the ring
 
-    bool yank;
+    bool yank = false;
 
-    bool ctrlx;
+    bool ctrlx = false;
 
-    bool ctrlc;
+    bool ctrlc = false;
+
+    bool allowMajorModeChange = true;
 
    private:
     friend struct QEmacsBuffer;
 
     virtual void setMainFrame(const bool);
 
-    bool mainFrame;
+    bool mainFrame = false;
 
-    bool keyProcessing;
+    bool keyProcessing = false;
 
     Q_OBJECT
 

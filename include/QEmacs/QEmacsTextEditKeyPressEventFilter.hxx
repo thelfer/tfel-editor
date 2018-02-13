@@ -1,19 +1,18 @@
-/*! 
+/*!
  * \file  QEmacsTextEditKeyPressEventFilter.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 02 août 2012
+ * \date   02/08/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSTEXTEDITKEYPRESSEVENTFILTER_HXX
-#define LIB_QEMACS_QEMACSTEXTEDITKEYPRESSEVENTFILTER_HXX 
+#define LIB_QEMACS_QEMACSTEXTEDITKEYPRESSEVENTFILTER_HXX
 
-#include<QtCore/QObject>
-#include<QtGui/QKeyEvent>
-#include"QEmacs/Config.hxx"
+#include <QtCore/QObject>
+#include <QtGui/QKeyEvent>
+#include "QEmacs/Config.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
   // forward declaration
   struct QEmacsTextEditBase;
@@ -25,29 +24,24 @@ namespace qemacs
    * A filter is called on standard key (the only modifier accepted is
    * the Shift key)
    */
-  class QEMACS_VISIBILITY_EXPORT QEmacsTextEditKeyPressEventFilter
-    : public QObject
-  {
-
-    Q_OBJECT
-
-  public:
-
+  struct QEMACS_VISIBILITY_EXPORT QEmacsTextEditKeyPressEventFilter
+      : public QObject {
     QEmacsTextEditKeyPressEventFilter(QEmacsTextEditBase&);
 
-    virtual bool filterKeyPressEvent(QKeyEvent * const) = 0;
+    virtual bool filterKeyPressEvent(QKeyEvent* const) = 0;
 
     /*!
      * return true if this object can be set : if something goes wrong
      * in the constructor, this must be reported through this method
      */
     virtual bool isOk() const = 0;
-
+    //! destructor
     ~QEmacsTextEditKeyPressEventFilter() override;
 
-  }; // end of QEmacsTextEditKeyPressEventFilter
+   private:
+    Q_OBJECT
+  };  // end of QEmacsTextEditKeyPressEventFilter
 
-} // end of namespace qemacs
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_QEMACSTEXTEDITKEYPRESSEVENTFILTER_HXX */
-

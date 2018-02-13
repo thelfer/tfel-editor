@@ -2,7 +2,7 @@
  * \file  QEmacsMajorMode.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 28 juin 2012
+ * \date   28/06/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSMAJORMODE_HXX
@@ -19,12 +19,10 @@ namespace qemacs {
   // forward declaration
   struct QEmacsTextEditBase;
 
-  /*!
-   * \brief abstract interface for all major modes
-   */
+  //! \brief abstract interface for all major modes
   struct QEMACS_VISIBILITY_EXPORT QEmacsMajorMode : public QObject {
     /*!
-     *  \brief constructor
+     * \brief constructor
      * \param[in] p: parent widget
      */
     QEmacsMajorMode(QWidget* const);

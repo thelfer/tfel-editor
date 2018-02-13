@@ -2,7 +2,7 @@
  * \file  MarkdownSyntaxHighlighter.Markdown
  * \brief
  * \author Helfer Thomas
- * \brief 30 juin 2012
+ * \date   30/06/2012
  */
 
 #include <tuple>
@@ -23,6 +23,7 @@ namespace qemacs {
     this->options.treatPreprocessorDirectives = false;
     this->options.allowStrayBackSlash = true;
     this->options.allowStrayHashCharacter = true;
+    this->options.treatNumbers = false;
     this->options.treatStrings = false;
     this->options.treatComments = false;
     this->options.graveAccentAsSeparator = true;

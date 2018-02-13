@@ -35,7 +35,8 @@ qt_sources(TFELQEmacs_SOURCES
   ProcessOutputMajorModeBase
   QAbstractScrollAreaWrapper
   QWebEngineViewWrapper
-  ProcessInteractionFrame)
+  ProcessInteractionFrame
+  DirectoryMajorMode)
 
 qemacs_library(TFELQEmacs
   ${CMAKE_CURRENT_BINARY_DIR}/QEmacsBuildInformation.cxx

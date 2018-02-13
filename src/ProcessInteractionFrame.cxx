@@ -2,7 +2,7 @@
  * \file  ProcessInteractionFrame.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 24 oct. 2012
+ * \date   24/10/2012
  */
 
 #include"QEmacs/ProcessInteractionFrame.hxx"

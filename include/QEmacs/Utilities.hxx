@@ -2,7 +2,7 @@
  * \file  Utilities.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 01 août 2012
+ * \date   01/08/2012
  */
 
 #ifndef LIB_QEMACS_UTILITIES_HXX

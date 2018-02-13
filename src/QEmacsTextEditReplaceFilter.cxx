@@ -2,7 +2,7 @@
  * \file  QEmacsTextEditReplaceFilter.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 06 août 2012
+ * \date   06/08/2012
  */
 
 #include<QtCore/QDebug>

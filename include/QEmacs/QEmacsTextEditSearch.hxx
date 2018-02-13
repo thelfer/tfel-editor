@@ -2,7 +2,7 @@
  * \file  QEmacsTextEditSearch.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 02/08/2012
+ * \date   02/08/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSTEXTEDITSEARCH_HXX

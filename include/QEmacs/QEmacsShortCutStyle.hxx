@@ -2,7 +2,7 @@
  * \file  QEmacsShortCutStyle.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 01 oct. 2012
+ * \date   01/10/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSSHORTCUTSTYLE_HXX
@@ -11,13 +11,10 @@
 #include<QtCore/QObject>
 #include"QEmacs/Config.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
-  struct QEMACS_VISIBILITY_EXPORT QEmacsShortCutStyle
-    : public QObject
-  {
-  signals:
+  struct QEMACS_VISIBILITY_EXPORT QEmacsShortCutStyle : public QObject {
+   signals:
 
     void shortCutStyleChanged();
 

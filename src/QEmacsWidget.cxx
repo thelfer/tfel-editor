@@ -2,7 +2,7 @@
  * \file   QEmacsWidget.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 26 juin 2012
+ * \date   26/06/2012
  */
 
 #include <QtCore/QFile>
@@ -224,7 +224,7 @@ namespace qemacs {
     if (f.isEmpty()) {
       return;
     }
-    QEmacsBuffer* b = this->createNewBuffer(f);
+    auto* b = this->createNewBuffer(f);
     if (this->buffers->indexOf(b) == -1) {
       this->buffers->addWidget(b);
       emit bufferAdded();
@@ -232,16 +232,9 @@ namespace qemacs {
     this->setCurrentBuffer(b);
   }  // end of QEmacs::openFile(const QString&)
 
-  void QEmacsWidget::createEmptyBuffer() {
-    QEmacsBuffer* b = this->createNewBuffer();
-    this->buffers->addWidget(b);
-    this->setCurrentBuffer(b);
-    emit bufferAdded();
-  }  // end of QEmacs::createEmptyBuffer()
-
   void QEmacsWidget::openFile() {
-    QEmacsBuffer& b = this->getCurrentBuffer();
-    QEmacsPlainTextEdit& t = b.getMainFrame();
+    auto& b = this->getCurrentBuffer();
+    auto& t = b.getMainFrame();
     QFileInfo fn(t.getCompleteFileName());
     QDir d(fn.dir());
     QString path;
@@ -250,10 +243,17 @@ namespace qemacs {
     } else {
       path = QDir::current().absolutePath();
     }
-    QEmacsLineEdit* l = new QEmacsWidget::OpenFile(*this, path);
+    auto* l = new QEmacsWidget::OpenFile(*this, path);
     l->setInputHistorySettingAddress("recent files");
     this->setUserInput(l);
   }  // end of QEmacs::openFile()
+
+  void QEmacsWidget::createEmptyBuffer() {
+    QEmacsBuffer* b = this->createNewBuffer();
+    this->buffers->addWidget(b);
+    this->setCurrentBuffer(b);
+    emit bufferAdded();
+  }  // end of QEmacs::createEmptyBuffer()
 
   QEmacsBuffer* QEmacsWidget::createNewBuffer(const QString& f) {
     QEmacsBuffer* b;
@@ -330,27 +330,30 @@ namespace qemacs {
   }  // end of QEmacsWidget::saveAllBuffers()
 
   bool QEmacsWidget::isOkToClose() {
-    QStringList unsaved;
-    for (int i = 0; i != this->buffers->count(); ++i) {
-      auto* b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
-      if (b == nullptr) {
-        continue;
-      }
-      if(!b->isOkToClose()){
-        const auto n = b->getBufferName();
-        if (n.isEmpty()) {
-          unsaved << "<unamed>";
-        } else {
-          unsaved << n;
+    const auto unsaved = [this] {
+      QStringList bl;
+      for (int i = 0; i != this->buffers->count(); ++i) {
+        auto* b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
+        if (b == nullptr) {
+          continue;
+        }
+        if (!b->isOkToClose()) {
+          const auto n = b->getBufferName();
+          if (n.isEmpty()) {
+            bl << "<unamed>";
+          } else {
+            bl << n;
+          }
         }
       }
-    }
+      return bl;
+    }();
     if (!unsaved.empty()) {
       auto msg = QObject::tr(
           "At least one buffer has "
           "been modified.\n");
-      int i=0;
-      for(const auto& f : unsaved){
+      int i = 0;
+      for (const auto& f : unsaved) {
         msg += "- " + f + "\n";
         if (i > 5) {
           break;
@@ -360,7 +363,7 @@ namespace qemacs {
       msg += QObject::tr("Do you want to save your changes?");
       const auto ret = QMessageBox::warning(
           this, QObject::tr("QEmacs"), msg, QMessageBox::SaveAll |
-                                                 QMessageBox::Discard |
+                                                QMessageBox::Discard |
                                                 QMessageBox::Cancel);
       if (ret == QMessageBox::Cancel) {
         return false;
@@ -683,7 +686,7 @@ namespace qemacs {
   }  // end of QEmacsWidget::launchCommand
 
   void QEmacsWidget::launchCommand(const QString& c) {
-    auto& f  = QEmacsCommandFactory::getQEmacsCommandFactory();
+    auto& f = QEmacsCommandFactory::getQEmacsCommandFactory();
     auto* qc = f.getQEmacsCommand(c, *this);
     if (qc == nullptr) {
       this->displayInformativeMessage(

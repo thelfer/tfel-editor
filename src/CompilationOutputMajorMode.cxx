@@ -1,8 +1,8 @@
 /*!
- * \file  CompilationOutputOutputMajorMode.cxx
+ * \file  CompilationOutputMajorMode.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 03 août 2012
+ * \date   03/08/2012
  */
 
 #include <QtCore/QDebug>
@@ -28,15 +28,18 @@ namespace qemacs {
     ~CompilationOutputUserData() override = default;
   };  // end of CompilationOutputUserData
 
-  struct CompilationOutputOutputSyntaxHighlighter
+  struct CompilationOutputSyntaxHighlighter
       : public QSyntaxHighlighter {
-    explicit CompilationOutputOutputSyntaxHighlighter(QTextDocument *p)
+    explicit CompilationOutputSyntaxHighlighter(QTextDocument *p)
         : QSyntaxHighlighter(p) {
       this->error.setForeground(Qt::red);
+      this->error.setUnderlineStyle(QTextCharFormat::SingleUnderline);
       this->warning.setForeground(Qt::darkGreen);
+      this->warning.setUnderlineStyle(QTextCharFormat::SingleUnderline);
       this->note.setForeground(Qt::blue);
+      this->note.setUnderlineStyle(QTextCharFormat::SingleUnderline);
       this->number.setForeground(Qt::darkBlue);
-    }  // end of CompilationOutputOutputSyntaxHighlighter
+    }  // end of CompilationOutputSyntaxHighlighter
 
     void highlightBlock(const QString &l) override {
       static auto e = [] {
@@ -87,7 +90,7 @@ namespace qemacs {
       if (apply(n, this->note)) {
         return;
       }
-    };
+    }
 
    protected:
     QTextCharFormat error;
@@ -95,17 +98,19 @@ namespace qemacs {
     QTextCharFormat note;
     QTextCharFormat number;
 
-  };  // end of struct CompilationOutputOutputSyntaxHighlighter
+  };  // end of struct CompilationOutputSyntaxHighlighter
 
   /*!
-   * A major mode to display the results of the CompilationOutputOutput
-   * unix command
+   * \brief a major mode to display the results of the a compilation
+   * process.
    */
-  struct CompilationOutputOutputMajorMode : public ProcessOutputMajorModeBase {
-    CompilationOutputOutputMajorMode(QEmacsWidget &w,
-                                     QEmacsBuffer &b,
-                                     QEmacsTextEditBase &t)
-        : ProcessOutputMajorModeBase(w, b, t, &t) {}
+  struct CompilationOutputMajorMode : public ProcessOutputMajorModeBase {
+    CompilationOutputMajorMode(QEmacsWidget &w,
+                               QEmacsBuffer &b,
+                               QEmacsTextEditBase &t)
+        : ProcessOutputMajorModeBase(w, b, t, &t) {
+      this->textEdit.setReadOnly(true);
+    }  // end of CompilationOutputMajorMode
 
     QString getName() const override {
       return "compilation-output";
@@ -117,7 +122,7 @@ namespace qemacs {
     }  // end of getDescription
 
     void setSyntaxHighlighter(QTextDocument *d) override {
-      new CompilationOutputOutputSyntaxHighlighter(d);
+      new CompilationOutputSyntaxHighlighter(d);
     }  // end of setSyntaxHighlighter
 
     bool mousePressEvent(QMouseEvent *e) override {
@@ -138,47 +143,43 @@ namespace qemacs {
                        QTextCursor::MoveAnchor);
         const auto pos = c.position()-b.position();
         if (pos < d->file.size()) {
-          const auto wd = po->getProcess().workingDirectory();
-          if (!wd.isEmpty()) {
-            this->qemacs.openFile(wd + QDir::separator() + d->file);
-          } else {
-            this->qemacs.openFile(d->file);
-          }
+          this->qemacs.openFile(d->file);
           auto &t = this->qemacs.getCurrentBuffer().getMainFrame();
           t.gotoPosition(d->line,d->column);
           return true;
         }
       }
       return false;
-    }
+    }  // end of mousePressEvent
 
     bool keyPressEvent(QKeyEvent *e) override {
       if (((e->modifiers() == Qt::AltModifier) &&
            (e->key() == Qt::Key_M)) ||
           ((e->modifiers() == Qt::NoModifier) &&
            (e->key() == Qt::Key_Return))) {
-        auto *po =
-            qobject_cast<ProcessOutputFrame *>(&(this->textEdit));
-        if (po == nullptr) {
-          return false;
-        }
         auto c = this->textEdit.textCursor();
         auto *ud = c.block().userData();
         if (ud == nullptr) {
           return false;
         }
         auto *d = static_cast<CompilationOutputUserData *>(ud);
-        this->qemacs.openFile(d->file);
-        auto &t = this->qemacs.getCurrentBuffer().getMainFrame();
-        t.gotoPosition(d->line, d->column);
-        return true;
+        auto b = c;
+        b.movePosition(QTextCursor::StartOfLine,
+                       QTextCursor::MoveAnchor);
+        const auto pos = c.position()-b.position();
+        if(pos<d->file.size()){
+          this->qemacs.openFile(d->file);
+          auto &t = this->qemacs.getCurrentBuffer().getMainFrame();
+          t.gotoPosition(d->line, d->column);
+          return true;
+        }
       }
       return false;
-    }
+    } // end of keyPressEvent
 
-    void format() override {}
+    void format() override {}  // end of format
 
-    void comment() override {}
+    void comment() override {}  // end of comment
 
     void processFinished(int s, QProcess::ExitStatus) override {
       if (s == 0) {
@@ -198,11 +199,11 @@ namespace qemacs {
       };
     } // end of processFinished
 
-    ~CompilationOutputOutputMajorMode() override = default;
+    ~CompilationOutputMajorMode() override = default;
 
-  };  // end of CompilationOutputOutputMajorMode
+  };  // end of CompilationOutputMajorMode
 
-  static StandardQEmacsMajorModeProxy<CompilationOutputOutputMajorMode>
-      proxy("compilation output");
+  static StandardQEmacsMajorModeProxy<CompilationOutputMajorMode> proxy(
+      "compilation-output");
 
 }  // end of namespace qemacs

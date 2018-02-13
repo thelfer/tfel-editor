@@ -1,71 +1,51 @@
-/*! 
+/*!
  * \file  QEmacsBuildInformation.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 28 sept. 2012
+ * \date   28/09/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSBUILDINFORMATION_HXX
-#define LIB_QEMACS_QEMACSBUILDINFORMATION_HXX 
+#define LIB_QEMACS_QEMACSBUILDINFORMATION_HXX
 
-#include<QtCore/QString>
-#include"QEmacs/Config.hxx"
+#include <QtCore/QString>
+#include "QEmacs/Config.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
+  struct QEMACS_VISIBILITY_EXPORT QEmacsBuildInformation {
+    static const char* getInstallationDirectory();
 
-  struct QEMACS_VISIBILITY_EXPORT QEmacsBuildInformation
-  {
-    
-    static const char *
-    getInstallationDirectory();
+    static const char* getDataDirectory();
 
-    static const char *
-    getDataDirectory();
+    static const char* getVersionName();
 
-    static const char *
-    getVersionName();
+    static const char* getVersionNumber();
 
-    static const char *
-    getVersionNumber();
+    static const char* getVersionIdentifier();
 
-    static const char *
-    getVersionIdentifier();
+    static const char* getBugReportAdress();
 
-    static const char *
-    getBugReportAdress();
+    static const char* getCompilerName();
 
-    static const char *
-    getCompilerName();
+    static const char* getBuildOs();
 
-    static const char *
-    getBuildOs();
+    static const char* getBuildCpu();
 
-    static const char *
-    getBuildCpu();
+    static const char* getHostOs();
 
-    static const char *
-    getHostOs();
+    static const char* getHostCpu();
 
-    static const char *
-    getHostCpu();
+    static const char* getTargetOs();
 
-    static const char *
-    getTargetOs();
+    static const char* getTargetCpu();
 
-    static const char *
-    getTargetCpu();
+    static const char* getSVNRevision();
 
-    static const char *
-    getSVNRevision();
+    static QString getHeader(const QString& = "");
 
-    static QString
-    getHeader(const QString& = "");
+  };  // end of struct BuildInformation
 
-  }; // end of struct BuildInformation
-
-} // end of namespace qemacs
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_QEMACSBUILDINFORMATION_HXX */
-

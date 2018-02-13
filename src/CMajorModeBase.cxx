@@ -2,7 +2,7 @@
  * \file  CMajorModeBase.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 26 août 2012
+ * \date   26/08/2012
  */
 
 #include <QtCore/QDebug>

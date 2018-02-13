@@ -2,7 +2,7 @@
  * \file  CastemSyntaxHighlighter.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 05 août 2012
+ * \date   05/08/2012
  */
 
 #include"QEmacs/CastemMajorMode.hxx"

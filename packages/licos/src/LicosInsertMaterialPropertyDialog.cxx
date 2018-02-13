@@ -2,7 +2,7 @@
  * \file  LicosInsertMaterialPropertyDialog.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 17 déc. 2012
+ * \date   17/12/2012
  */
 
 #include<QtGui/QTextBlock>

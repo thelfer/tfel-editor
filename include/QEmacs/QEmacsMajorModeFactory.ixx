@@ -2,11 +2,11 @@
  * \file  QEmacsMajorModeFactory.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 30 juin 2012
+ * \date   30/06/2012
  */
 
-#ifndef LIB_QEMACS_QEMACSMAJORMODEFACTORY_IXX_
-#define LIB_QEMACS_QEMACSMAJORMODEFACTORY_IXX_ 
+#ifndef LIB_QEMACS_QEMACSMAJORMODEFACTORY_IXX
+#define LIB_QEMACS_QEMACSMAJORMODEFACTORY_IXX
 
 #include<QtCore/QMap>
 
@@ -42,12 +42,13 @@ namespace qemacs
   QEmacsMajorMode* StandardQEmacsMajorModeProxy<T>::getQEmacsMajorMode(
       QEmacsWidget& w, QEmacsBuffer& b, QEmacsTextEditBase& t) const {
     return new T(w, b, t);
-    } // end of StandardQEmacsMajorModeProxy<T>::getQEmacsMajorMode
+  }  // end of StandardQEmacsMajorModeProxy<T>::getQEmacsMajorMode
 
-    template<typename T>
-    StandardQEmacsMajorModeProxy<T>::~StandardQEmacsMajorModeProxy()
-    {} // end of StandardQEmacsMajorModeProxy::~StandardQEmacsMajorModeProxy
+  template <typename T>
+  StandardQEmacsMajorModeProxy<T>::~StandardQEmacsMajorModeProxy() {
+  }  // end of
+     // StandardQEmacsMajorModeProxy::~StandardQEmacsMajorModeProxy
 
 } // end of namespace qemacs
 
-#endif /* LIB_QEMACS_QEMACSMAJORMODEFACTORY_IXX_ */
+#endif /* LIB_QEMACS_QEMACSMAJORMODEFACTORY_IXX */

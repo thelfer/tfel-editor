@@ -2,7 +2,7 @@
  * \file  PythonMajorMode.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 26 sept. 2012
+ * \brief  26/09/2012
  */
 
 #include<QtCore/QDir>
@@ -28,20 +28,18 @@ namespace qemacs
     explicit PythonSyntaxHighlighter(QTextDocument *p)
       : CSyntaxHighlighterBase(p)
     {
-      for(const auto key : {"and","del","from",
-	    "not","while","as",
-	    "elif","global","or",
-	    "with","assert","else",
-	    "if","pass","yield",
-	    "break","except","import",
-	    "print","class","exec",
-	    "in","raise","continue",
-	    "finally","is","return",
-	    "def","for","lambda","try"}){
-	HighlightingRule rule;
-	rule.key     = key;
-	rule.format  = this->keyFormat;
-	highlightingRules.push_front(rule);
+      for (const auto key :
+           {"and",    "del",    "from",   "not",      "while",
+            "as",     "elif",   "global", "or",       "with",
+            "assert", "else",   "if",     "pass",     "yield",
+            "break",  "except", "import", "print",    "class",
+            "exec",   "in",     "raise",  "continue", "finally",
+            "is",     "return", "def",    "for",      "lambda",
+            "try"}) {
+        HighlightingRule rule;
+        rule.key = key;
+        rule.format = this->keyFormat;
+        highlightingRules.push_back(rule);
       }
     } // end of PythonSyntaxHighlighter
 

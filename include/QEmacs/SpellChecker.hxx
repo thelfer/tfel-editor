@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  SpellChecker.hxx
  * \brief
  * \author Helfer Thomas
@@ -8,13 +8,17 @@
 /*
   Copyright (c) 2011, Volker Götz
   All rights reserved.
-  
+
   Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions are met:
-  1. Redistributions of source code must retain the above copyright notice, this
+  modification, are permitted provided that the following conditions are
+  met:
+  1. Redistributions of source code must retain the above copyright
+  notice, this
   list of conditions and the following disclaimer.
-  2. Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
+  2. Redistributions in binary form must reproduce the above copyright
+  notice,
+  this list of conditions and the following disclaimer in the
+  documentation
   and/or other materials provided with the distribution.
 
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -31,45 +35,39 @@
 */
 
 #ifndef LIB_QEMACS_SPELLCHECKER_HXX
-#define LIB_QEMACS_SPELLCHECKER_HXX 
+#define LIB_QEMACS_SPELLCHECKER_HXX
 
-#include<utility>
+#include <utility>
 
 #include <QtCore/QString>
 #include <QtCore/QVector>
 
-#include"QEmacs/Config.hxx"
+#include "QEmacs/Config.hxx"
 
 class Hunspell;
 class QSyntaxHighlighter;
 
-namespace qemacs
-{
+namespace qemacs {
 
-  struct QEMACS_VISIBILITY_EXPORT SpellChecker
-  {
-
+  struct QEMACS_VISIBILITY_EXPORT SpellChecker {
     SpellChecker();
 
     ~SpellChecker();
 
-    bool spell(const QString&);
+    bool spell(const QString &);
 
-    QVector<std::pair<int,int> >
-    spellLine(const QString&);
-    
-    QStringList suggest(const QString&);
+    QVector<std::pair<int, int>> spellLine(const QString &);
 
-    void ignoreWord(const QString&);
+    QStringList suggest(const QString &);
 
-    void
-    setSpellCheckLanguage(const QString& l);
-    
-    void addToUserWordlist(const QString&);
+    void ignoreWord(const QString &);
 
-  private:
+    void setSpellCheckLanguage(const QString &l);
 
-    void put_word(const QString&);
+    void addToUserWordlist(const QString &);
+
+   private:
+    void put_word(const QString &);
 
     Hunspell *_hunspell;
 
@@ -80,7 +78,6 @@ namespace qemacs
     QTextCodec *_codec;
   };
 
-} // end of namespace qemacs
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_SPELLCHECKER_HXX */
-

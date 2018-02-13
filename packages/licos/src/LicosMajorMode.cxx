@@ -2,7 +2,7 @@
  * \file  LicosMajorMode.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 03 juil. 2012
+ * \date   03/07/2012
  */
 
 #include <stdexcept>

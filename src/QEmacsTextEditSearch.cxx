@@ -2,7 +2,7 @@
  * \file  QEmacsTextEditSearch.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 02 août 2012
+ * \date   02/08/2012
  */
 
 #include<QtCore/QDebug>

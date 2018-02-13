@@ -2,7 +2,7 @@
  * \file  MarkdownMajorMode.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 03 juil. 2012
+ * \date   03/07/2012
  */
 
 #ifndef LIB_QEMACS_MFRONTMAJORMODE_HXX
@@ -43,6 +43,8 @@ namespace qemacs {
 
     void format() override;
 
+    bool keyPressEvent(QKeyEvent *const) override;
+    
     QIcon getIcon() const override;
 
     SpellChecker &getSpellChecker();

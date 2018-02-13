@@ -2,7 +2,7 @@
  * \file  MFrontSyntaxHighlighter.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 30 juin 2012
+ * \date   30/07/2012
  */
 
 #ifndef LIB_QEMACS_MFRONTSYNTAXHIGHLIGHTER_HXX

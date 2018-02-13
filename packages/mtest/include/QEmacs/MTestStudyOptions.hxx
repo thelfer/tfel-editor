@@ -2,7 +2,7 @@
  * \file  MTestStudyOptions.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 04 juin 2012
+ * \dat    04/06/2012
  */
 
 #ifndef LIB_QEMACS_MTESTSTUDYOPTIONS_HXX

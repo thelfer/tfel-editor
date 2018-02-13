@@ -2,7 +2,7 @@
  * \file  QEmacsHunspellDictionariesManager.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 03 oct. 2012
+ * \date   03/10/2012
  */
 
 #ifndef LIB_HUNSPELL_QEMACSDICTIONARIESMANAGER_HXX

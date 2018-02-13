@@ -2,7 +2,7 @@
  * \file  LicosMaterialWizard.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 27 sept. 2012
+ * \date   27/09/2012
  */
 
 #include<QtCore/QDebug>

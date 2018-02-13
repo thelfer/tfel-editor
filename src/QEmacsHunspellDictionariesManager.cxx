@@ -2,7 +2,7 @@
  * \file  QEmacsHunspellDictionariesManager.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 03 oct. 2012
+ * \date   03/10/2012
  */
 
 #include<QtCore/QDebug>
@@ -66,26 +66,23 @@ namespace qemacs
 #endif
   } // end of QEmacsHunspellDictionariesManager::searchDictionariesInDefaultLocations
 
-  void
-  QEmacsHunspellDictionariesManager::searchDictionaries(const QString& n)
-  {
+  void QEmacsHunspellDictionariesManager::searchDictionaries(
+      const QString& n) {
     QDir d(n);
     if(!d.exists()){
       return;
     }
-    QStringList files;
-    files = d.entryList(QStringList("*.dic"),
-			QDir::Files);
-    QStringList::const_iterator p;
-    for(p=files.begin();p!=files.end();++p){
-      QFileInfo f(n+QDir::separator()+*p);
-      QString lang(f.baseName());
-      if(!f.isReadable()){
-	continue;
+    const auto files =
+        d.entryList(QStringList("*.dic"), QDir::Files);
+    for(const auto& f : files){
+      QFileInfo fi(n+QDir::separator()+f);
+      QString lang(fi.baseName());
+      if(!fi.isReadable()){
+        continue;
       }
-      QFileInfo af(n+QDir::separator()+f.baseName()+".aff");
-      if((!af.exists())||(!af.isReadable())){
-	continue;
+      QFileInfo af(n+QDir::separator()+fi.baseName()+".aff");
+      if ((!af.exists()) || (!af.isReadable())) {
+        continue;
       }
       this->dictionaries[lang] = n;
     }

@@ -37,7 +37,7 @@ main(int argc, char** argv)
     }
 
     Hunspell *pMS = new Hunspell(argv[1], argv[2]);
-    TextParser * p = new TextParser("qwertzuiopasdfghjklyxcvbnmÈ·˙ı˚Û¸ˆÌQWERTZUIOPASDFGHJKLYXCVBNMÕ…¡’⁄÷‹”€");
+    TextParser * p = new TextParser("qwertzuiopasdfghjklyxcvbnm√©√°√∫√µ√ª√≥√º√∂√≠QWERTZUIOPASDFGHJKLYXCVBNM√ç√â√Å√ï√ö√ñ√ú√ì√õ");
     
     char buf[MAXLNLEN];
     char * next;

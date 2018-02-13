@@ -2,7 +2,7 @@
  * \file  QEmacsGrepCommand.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 03 août 2012
+ * \date   03/08/2012
  */
 
 #include"QEmacs/QEmacsCommand.hxx"
@@ -12,9 +12,8 @@
 
 #include"QEmacs/QEmacsGrepCommand.hxx"
 
-namespace qemacs
-{
-  
+namespace qemacs {
+
   QEmacsGrepCommand::QEmacsGrepCommand(QEmacsWidget& p)
     : QEmacsCommand(p)
   {} // end of QEmacsGrepCommand::QEmacsGrepCommand
@@ -26,7 +25,7 @@ namespace qemacs
       return;
     }
     auto *l = new QEmacsShellProcessLineEdit(
-        "grep command :", "grep -nH -e ", "grep output", *p);
+        "grep command :", "grep -nH -e ", "grep-output", *p);
     l->setInputHistorySettingAddress("command/grep/history");
     p->setUserInput(l);
   } // end of QEmacsGrepCommand::execute

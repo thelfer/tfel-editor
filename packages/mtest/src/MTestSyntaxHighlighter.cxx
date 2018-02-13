@@ -2,7 +2,7 @@
  * \file  MTestSyntaxHighlighter.MTest
  * \brief
  * \author Helfer Thomas
- * \brief 30 juin 2012
+ * \date   30/06/2012
  */
 
 #include"MTest/MTestParser.hxx"
@@ -32,7 +32,7 @@ namespace qemacs
       HighlightingRule rule;
       rule.key     = k;
       rule.format  = this->mtestKeyFormat;
-      this->highlightingRules.push_front(rule);
+      this->highlightingRules.push_back(rule);
     }
   }
 

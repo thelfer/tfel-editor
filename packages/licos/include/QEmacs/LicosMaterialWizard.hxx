@@ -2,7 +2,7 @@
  * \file  LicosMaterialWizard.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 27 sept. 2012
+ * \date   27/09/2012
  */
 
 #ifndef LIB_QEMACS_LICOSMATERIALWIZARD_HXX

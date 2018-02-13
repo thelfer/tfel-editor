@@ -2,7 +2,7 @@
  * \file  LaTeXMajorMode.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 18 août 2012
+ * \date   18/08/2012
  */
 
 #include <QtCore/QDebug>
@@ -211,7 +211,7 @@ namespace qemacs {
     } else {
       p.setWorkingDirectory(QDir::current().absolutePath());
     }
-    po->setMajorMode("latex output");
+    po->setMajorMode("latex-output");
     QStringList args;
     args << "-file-line-error"
          << "-interaction=nonstopmode"

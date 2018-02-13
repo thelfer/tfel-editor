@@ -1,8 +1,8 @@
 /*! 
  * \file  QEmacsGrepCommand.hxx
  * \brief
- * \author Helfer Thomas
- * \brief 03 août 2012
+ * \author Thomas Helfer
+ * \date   03/08/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSGREPCOMMAND_HXX

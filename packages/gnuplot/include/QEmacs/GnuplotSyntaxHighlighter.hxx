@@ -1,8 +1,8 @@
 /*!
  * \file   GnuplotSyntaxHiglighter.hxx
  * \brief    
- * \author THOMAS HELFER
- * \date   23 janv. 2016
+ * \author Thomas Helfer
+ * \date   23/01/2016
  */
 
 #ifndef LIB_QEMACS_GNUPLOTSYNTAXHIGLIGHTER_HXX_

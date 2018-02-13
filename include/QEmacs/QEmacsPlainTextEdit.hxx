@@ -2,7 +2,7 @@
  * \file  QEmacsPlainTextEdit.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 19/08/2012
+ * \date   19/08/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSPLAINTEXTEDIT_HXX

@@ -2,7 +2,7 @@
  * \file  CMajorModeBase.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 05 sept. 2012
+ * \date   05/09/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSFILEDOWNLOADER_HXX
@@ -15,14 +15,12 @@
 #include<QtNetwork/QNetworkReply>
 #include<QEmacs/Config.hxx>
 
-namespace qemacs
-{
+namespace qemacs {
 
   struct QEMACS_VISIBILITY_EXPORT QEmacsFileDownloader
     : public QObject
   {
-    explicit QEmacsFileDownloader(QUrl,
-				  QObject * = nullptr);
+    explicit QEmacsFileDownloader(QUrl, QObject* = nullptr);
 
     virtual ~QEmacsFileDownloader();
 

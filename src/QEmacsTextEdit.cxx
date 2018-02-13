@@ -2,7 +2,7 @@
  * \file  QEmacsTextEdit.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 19 août 2012
+ * \date   19/08/2012
  */
 
 #include<QtCore/QDir>
@@ -16,8 +16,7 @@
 #include"QEmacs/Utilities.hxx"
 #include"QEmacs/QEmacsTextEdit.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
   QEmacsTextEdit::QEmacsTextEdit(QEmacsWidget& g, QEmacsBuffer& b)
       : QEmacsTextEditBase(g, b), e(new QTextEdit(this)) {

@@ -327,16 +327,14 @@ namespace qemacs {
     if (this->co == nullptr) {
       this->co =
           new ProcessInteractionFrame(this->qemacs, this->buffer);
-      this->co->setMajorMode("castem output");
+      this->co->setMajorMode("castem-output");
       if (this->co == nullptr) {
         return;
       }
       this->co->setAttribute( Qt::WA_DeleteOnClose );
       QObject::connect(this->co, &QObject::destroyed, this,
                        [this] { this->co = nullptr; });
-      QFileInfo fn(this->textEdit.getCompleteFileName());
-      QDir d(fn.dir());
-
+      QDir d(this->textEdit.getDirectory());
       auto& p = co->getProcess();
       if (d.exists()) {
         p.setWorkingDirectory(d.absolutePath());

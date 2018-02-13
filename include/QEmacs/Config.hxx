@@ -2,7 +2,7 @@
  * \file   QEmacs/Config.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 21 juin 2013
+ * \date   21/06/2013
  */
 
 #ifndef LIB_QEMACS_CONFIG_HXX
@@ -25,4 +25,3 @@
 #endif
 
 #endif /* LIB_QEMACS_CONFIG_HXX */
-

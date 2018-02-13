@@ -16,7 +16,7 @@ namespace qemacs{
       HighlightingRule rule;
       rule.key     = key;
       rule.format  = this->keyFormat;
-      highlightingRules.push_front(rule);
+      highlightingRules.push_back(rule);
     }
     this->options.charAsString = true;
     this->options.treatComments = false;

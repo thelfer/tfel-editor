@@ -2,7 +2,7 @@
  * \file  QEmacsLineEdit.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 05 juil. 2012
+ * \date   05/07/2012
  */
 
 #include <QtCore/QDebug>
@@ -583,7 +583,7 @@ namespace qemacs {
 
     QString extractBaseForCompletion(const QString& c) override {
       QFileInfo f(c);
-      QString d = f.dir().absolutePath();
+      auto d = f.dir().absolutePath();
       if (!d.endsWith(QDir::separator())) {
         d += QDir::separator();
       }
@@ -653,8 +653,7 @@ namespace qemacs {
     auto& b = this->qemacs.getCurrentBuffer();
     auto& t = b.getMainFrame();
     auto* po = new ProcessOutputFrame(this->qemacs, b);
-    QFileInfo fn(t.getCompleteFileName());
-    QDir d(fn.dir());
+    QDir d(t.getDirectory());
     auto& p = po->getProcess();
     if (d.exists()) {
       p.setWorkingDirectory(d.absolutePath());

@@ -2,7 +2,7 @@
  * \file  LicosSyntaxHighlighter.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 03 juil. 2012
+ * \brief  03/07/2012
  */
 
 #include<QtCore/QDebug>
@@ -35,15 +35,15 @@ namespace qemacs
       HighlightingRule rule;
       rule.key     = k;
       rule.format  = this->keyFormat;
-      highlightingRules.append(rule);
+      highlightingRules.push_back(rule);
     }
     for(const std::string &k : blocks) {
       HighlightingRule rule;
       rule.format  = this->keyFormat;
       rule.key     = k;
-      highlightingRules.append(rule);
+      highlightingRules.push_back(rule);
       rule.key      = "EndOf"+k;
-      highlightingRules.append(rule);
+      highlightingRules.push_back(rule);
     }
     // override C highligthing rules for links to other files
     const auto exts = LicosMajorMode::getLicosExtensionsSuffix();

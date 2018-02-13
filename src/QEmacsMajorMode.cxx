@@ -2,7 +2,7 @@
  * \file  QEmacsMajorMode.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 30 juin 2012
+ * \date   30/06/2012
  */
 
 #include<QtWidgets/QWidget>

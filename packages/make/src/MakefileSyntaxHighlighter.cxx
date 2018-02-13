@@ -29,7 +29,10 @@ namespace qemacs {
   }  // end of MakefileSyntaxHighlighter::MakefileSyntaxHighlighter
 
   void MakefileSyntaxHighlighter::highlightBlock(const QString &l) {
-    if(l.isEmpty()){
+    auto format = [this](const tfel::utilities::Token& t) {
+      this->setFormat(t.offset, t.value.size(), this->targetFormat);
+    };
+    if (l.isEmpty()) {
       return;
     }
     if (l[0] == '#') {
@@ -48,9 +51,12 @@ namespace qemacs {
     //     for (const auto& t : tokens) {
     //       qDebug() << QString::fromStdString(t.value);
     //     }
-    if ((tokens.size() > 2) && (tokens[1].value == ":")) {
-      const auto& t = tokens[0];
-      this->setFormat(t.offset, t.value.size(), this->targetFormat);
+    if ((tokens.size() > 1) && (tokens[1].value == ":")) {
+      format(tokens[0]);
+    } else if ((tokens.size() > 2) && (tokens[0].value == ".") &&
+               (tokens[2].value == ":")) {
+      format(tokens[0]);
+      format(tokens[1]);
     }
   } // end of MakefileSyntaxHighlighter::highlightBlock
 

@@ -2,7 +2,7 @@
  * \file  TPlotMajorMode.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 26 sept. 2012
+ * \date   26/09/2012
  */
 
 #include<QtCore/QDir>
@@ -32,7 +32,7 @@ namespace qemacs
         HighlightingRule rule;
         rule.key = k;
         rule.format = this->keyFormat;
-        highlightingRules.push_front(rule);
+        highlightingRules.push_back(rule);
       }
     } // end of TPlotSyntaxHighlighter
 

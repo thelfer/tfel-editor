@@ -2,7 +2,7 @@
  * \file  CastemOutputMajorMode.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 03 août 2012
+ * \date   03/08/2012
  */
 
 #include <QtCore/QDebug>
@@ -83,6 +83,6 @@ namespace qemacs {
   };  // end of CastemOutputMajorMode
 
   static StandardQEmacsMajorModeProxy<CastemOutputMajorMode> proxy(
-      "castem output");
+      "castem-output");
 
 }  // end of namespace qemacs

@@ -2,7 +2,7 @@
  * \file   ImportBehaviour.hxx
  * \brief    
  * \author THOMAS HELFER
- * \date   02 mai 2017
+ * \date   02/05/2017
  */
 
 #ifndef LIB_QEMACS_MTEST_IMPORTBEHAVIOUR_HXX

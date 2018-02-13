@@ -2,7 +2,7 @@
  * \file  CompiledLanguageMajorModeBase.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 26 août 2012
+ * \date   26/08/2012
  */
 
 #ifndef LIB_QEMACS_COMPILEDLANGUAGEMAJORMODEBASE_HXX
@@ -11,25 +11,19 @@
 #include"QEmacs/Config.hxx"
 #include"QEmacs/QEmacsMajorModeBase.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
-  class ProcessOutputFrame;
+  // forward declaration
+  struct ProcessOutputFrame;
 
   /*!
    * base class for all compiled language
    */
-  class QEMACS_VISIBILITY_EXPORT CompiledLanguageMajorModeBase
-    : public QEmacsMajorModeBase
-  {
-
-    Q_OBJECT
-
-  public:
-
-    CompiledLanguageMajorModeBase(QEmacsWidget&,
-				  QEmacsBuffer&,
-				  QEmacsTextEditBase&);
+  struct QEMACS_VISIBILITY_EXPORT CompiledLanguageMajorModeBase
+      : public QEmacsMajorModeBase {
+    CompiledLanguageMajorModeBase(QEmacsWidget &,
+                                  QEmacsBuffer &,
+                                  QEmacsTextEditBase &);
 
     ~CompiledLanguageMajorModeBase() override;
 
@@ -42,7 +36,10 @@ namespace qemacs
     void runCompilation();
 
     ProcessOutputFrame *po;
-    
+
+   private:
+    Q_OBJECT
+
   }; // end of struct CompiledLanguageMajorModeBase
 
 } // end of namespace qemacs

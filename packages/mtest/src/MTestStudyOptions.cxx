@@ -2,7 +2,7 @@
  * \file  MTestStudyOptions.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 04 juin 2012
+ * \date   04/06/2012
  */
 
 #include<QtWidgets/QLabel>

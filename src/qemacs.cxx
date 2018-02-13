@@ -2,7 +2,7 @@
  * \file  qemacs.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 27 juin 2012
+ * \date   27/06/2012
  */
 
 #include<cstdlib>

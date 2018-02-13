@@ -2,7 +2,7 @@
  * \file  GnuplotMajorMode.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 26 sept. 2012
+ * \date   26/09/2012
  */
 
 #include<QtCore/QDir>

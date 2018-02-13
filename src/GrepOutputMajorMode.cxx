@@ -2,7 +2,7 @@
  * \file  GrepOutputMajorMode.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 03 août 2012
+ * \date   03/08/2012
  */
 
 #include <QtCore/QDir>
@@ -134,15 +134,21 @@ namespace qemacs {
           return false;
         }
         auto *d = static_cast<GrepUserData *>(ud);
-        const auto wd = po->getProcess().workingDirectory();
-        if (!wd.isEmpty()) {
-          this->qemacs.openFile(wd + QDir::separator() + d->file);
-        } else {
-          this->qemacs.openFile(d->file);
+        auto b = c;
+        b.movePosition(QTextCursor::StartOfLine,
+                       QTextCursor::MoveAnchor);
+        const auto pos = c.position()-b.position();
+        if(pos<d->file.size()){
+          const auto wd = po->getProcess().workingDirectory();
+          if (!wd.isEmpty()) {
+            this->qemacs.openFile(wd + QDir::separator() + d->file);
+          } else {
+            this->qemacs.openFile(d->file);
+          }
+          auto &t = this->qemacs.getCurrentBuffer().getMainFrame();
+          t.gotoLine(d->line);
+          return true;
         }
-        auto &t = this->qemacs.getCurrentBuffer().getMainFrame();
-        t.gotoLine(d->line);
-        return true;
       }
       return false;
     }
@@ -156,6 +162,6 @@ namespace qemacs {
   };  // end of GrepOutputMajorMode
 
   static StandardQEmacsMajorModeProxy<GrepOutputMajorMode> proxy(
-      "grep output");
+      "grep-output");
 
 }  // end of namespace qemacs

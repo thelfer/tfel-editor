@@ -2,7 +2,7 @@
  * \file  CxxMajorMode.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 03 juil. 2012
+ * \date   03/08/2012
  */
 
 #ifndef LIB_QEMACS_CXXMAJORMODE_HXX
@@ -11,9 +11,9 @@
 #include"QEmacs/Config.hxx"
 #include"QEmacs/CMajorModeBase.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
+  // forward declaration
   struct QEmacsTextEditBase;
 
   //! major mode dedicated to the C++ language

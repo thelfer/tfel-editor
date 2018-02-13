@@ -2,7 +2,7 @@
  * \file  LicosStudy.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 20 mai 2012
+ * \date   20/06/2012
  */
 
 #ifndef LIB_QEMACS_LICOSSTUDY_HXX

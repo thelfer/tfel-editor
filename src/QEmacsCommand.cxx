@@ -2,14 +2,13 @@
  * \file  QEmacsCommand.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 02 août 2012
+ * \date   02/08/2012
  */
 
 #include"QEmacs/QEmacsWidget.hxx"
 #include"QEmacs/QEmacsCommand.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
   QEmacsCommand::QEmacsCommand(QEmacsWidget& t)
     : QObject(&t)

@@ -2,7 +2,7 @@
  * \file  MTestMajorMode.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 03 juil. 2012
+ * \date   03/08/2012
  */
 
 #ifndef LIB_QEMACS_MTESTMAJORMODE_HXX

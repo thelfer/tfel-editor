@@ -2,15 +2,14 @@
  * \file  CSyntaxHighlighterBase.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 03 juil. 2012
+ * \date   03/07/2012
  */
 
 #ifndef LIB_QEMACS_CSYNTAXHIGHLIGHTERBASE_HXX
 #define LIB_QEMACS_CSYNTAXHIGHLIGHTERBASE_HXX 
 
+#include<vector>
 #include<QtCore/QString>
-#include<QtCore/QVector>
-
 #include<QtGui/QTextDocument>
 #include<QtGui/QSyntaxHighlighter>
 
@@ -40,7 +39,7 @@ namespace qemacs {
     CSyntaxHighlighterBase(QTextDocument *const);
 
     //! list of highlighting rules
-    QVector<HighlightingRule> highlightingRules;
+    std::vector<HighlightingRule> highlightingRules;
 
     QTextCharFormat keyFormat;
     QTextCharFormat numberFormat;

@@ -2,7 +2,7 @@
  * \file  MFrontMajorMode.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 03 juil. 2012
+ * \date   03/07/2012
  */
 
 #ifndef LIB_QEMACS_MFRONTMAJORMODE_HXX

@@ -2,7 +2,7 @@
  * \file  QEmacsMajorModeBase.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 04 juil. 2012
+ * \date   04/08/2012
  */
 
 #include <QtCore/QDebug>
@@ -264,7 +264,7 @@ namespace qemacs {
           while((li < l.size()) && (l[li].isSpace())) {
             ++li;
           }
-          if(l.mid(li).startsWith(cs)) {
+          if(l.midRef(li).startsWith(cs)) {
             b.clearSelection();
             b.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor,
                            li + cs.size());

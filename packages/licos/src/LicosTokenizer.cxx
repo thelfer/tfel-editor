@@ -2,7 +2,7 @@
  * \file  LicosTokenizer.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 18 sept. 2012
+ * \date   18/09/2012
  */
 
 #include<stdexcept>

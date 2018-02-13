@@ -2,7 +2,7 @@
  * \file  MaterialPropertySelector.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 14 déc. 2012
+ * \date   14/12/2012
  */
 
 #ifndef LIB_MATERIALPROPERTYSELECTOR_HXX

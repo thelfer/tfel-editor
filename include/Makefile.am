@@ -37,7 +37,8 @@ nobase_include_HEADERS = QEmacs/Config.hxx                            \
 			 QEmacs/CxxSyntaxHighlighter.hxx              \
 			 QEmacs/ProcessOutputFrame.hxx                \
 			 QEmacs/ProcessOutputMajorModeBase.hxx        \
-			 QEmacs/ProcessInteractionFrame.hxx
+			 QEmacs/ProcessInteractionFrame.hxx           \
+			 QEmacs/DirectoryMajorMode.hxx
 
 nobase_noinst_HEADERS = QEmacs/utf8/doc/ReleaseNotes \
 			QEmacs/utf8/doc/utf8cpp.html \

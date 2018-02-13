@@ -2,7 +2,7 @@
  * \file  QWebEngineViewWrapper.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 07 déc. 2012
+ * \date   07/12/2012
  */
 
 #ifndef LIB_QWEBENGINEVIEWWRAPPER_HXX

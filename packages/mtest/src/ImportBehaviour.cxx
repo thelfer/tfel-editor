@@ -2,7 +2,7 @@
  * \file   ImportBehaviour.cxx
  * \brief    
  * \author THOMAS HELFER
- * \date   02 mai 2017
+ * \date   02/06/2017
  */
 
 #include<QtCore/QDebug>

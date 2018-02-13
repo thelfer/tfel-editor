@@ -2,7 +2,7 @@
  * \file  QAbstractScrollAreaWrapper.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 07 déc. 2012
+ * \date   07/12/2012
  */
 
 #include<QtWidgets/QHBoxLayout>

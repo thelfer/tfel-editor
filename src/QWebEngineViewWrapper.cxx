@@ -2,15 +2,14 @@
  * \file  QWebEngineViewWrapper.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 07 déc. 2012
+ * \date   07/12/2012
  */
 
 #include<QtWidgets/QHBoxLayout>
 #include"QEmacs/Utilities.hxx"
 #include"QEmacs/QWebEngineViewWrapper.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
   QWebEngineViewWrapper::QWebEngineViewWrapper(QWebEngineView *s,
 				   QWidget *p)

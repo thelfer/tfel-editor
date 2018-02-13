@@ -2,7 +2,7 @@
  * \file  LicosInsertMaterialPropertiesDialog.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 17 déc. 2012
+ * \date   17/12/2012
  */
 
 #ifndef LIB_LICOSINSERTMATERIALPROPERTIESDIALOG_HXX

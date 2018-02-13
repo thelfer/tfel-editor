@@ -2,7 +2,7 @@
  * \file  ProcessInteractionFrame.hxx
  * \brief
  * \author Helfer Thomas
- * \date 01/08/2012
+ * \date   01/08/2012
  */
 
 #ifndef LIB_QEMACS_PROCESSINTERACTIONFRAME_HXX

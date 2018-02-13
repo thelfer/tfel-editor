@@ -2,19 +2,18 @@
  * \file  LaTeXMajorMode.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 18 août 2012
+ * \date   18/08/2012
  */
 
-#ifndef _LIB_QEMACS_LATEXMAJORMODE_H_
-#define _LIB_QEMACS_LATEXMAJORMODE_H_ 
+#ifndef LIB_QEMACS_LATEXMAJORMODE_HXX
+#define LIB_QEMACS_LATEXMAJORMODE_HXX
 
 #include<QtCore/QPointer>
 
 #include<QEmacs/SpellChecker.hxx>
 #include"QEmacs/QEmacsMajorModeBase.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
   //! forward declaration
   struct QEmacsTextEditBase;
@@ -157,5 +156,5 @@ namespace qemacs
 
 } // end of namespace qemacs
 
-#endif /* _LIB_QEMACS_LATEXMAJORMODE_H */
+#endif /* LIB_QEMACS_LATEXMAJORMODE_HXX */
 

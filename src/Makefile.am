@@ -2,7 +2,7 @@ if QEMACS_PRIVATE_HUNSPELL
 SUBDIRS = hunspell-1.3.2
 endif
 
-AM_CPPFLAGS = -I$(top_srcdir)/include              \
+AM_CPPFLAGS = -I$(top_srcdir)/include          \
 	      @QT_CXXFLAGS@                        \
 	      `@TFELCONFIG@ --includes --cppflags`
 if QEMACS_EXTERNAL_HUNSPELL
@@ -17,7 +17,7 @@ localedir = $(datadir)/locale
 AM_CPPFLAGS += -DLOCALEDIR=\"$(localedir)\"
 
 lib_LTLIBRARIES = libTFELQEmacs.la
-libTFELQEmacs_la_SOURCES = QEmacsResources.cxx                   \
+libTFELQEmacs_la_SOURCES = QEmacsResources.cxx       \
 			   QEmacsFileDownloader.cxx              \
 			   QEmacsBuildInformation.cxx            \
 			   QEmacsShortCutStyle.cxx               \
@@ -55,14 +55,15 @@ libTFELQEmacs_la_SOURCES = QEmacsResources.cxx                   \
 			   CompilationOutputMajorMode.cxx        \
 			   QAbstractScrollAreaWrapper.cxx        \
 			   QWebEngineViewWrapper.cxx             \
-			   ProcessInteractionFrame.cxx
+			   ProcessInteractionFrame.cxx           \
+			   DirectoryMajorMode.cxx
 
-nodist_libTFELQEmacs_la_SOURCES = moc_QEmacsWidget.cxx                      \
+nodist_libTFELQEmacs_la_SOURCES = moc_QEmacsWidget.cxx      \
 			   	  moc_QEmacsShortCutStyle.cxx               \
 			   	  moc_QEmacsCommand.cxx                     \
 			   	  moc_QEmacsLineEdit.cxx                    \
 				  moc_QEmacsBuffer.cxx                      \
-			          moc_QEmacsTextEditSearch.cxx              \
+			      moc_QEmacsTextEditSearch.cxx              \
 				  moc_QEmacsTextEditKeyPressEventFilter.cxx \
 				  moc_QEmacsTextEditBase.cxx                \
 				  moc_QEmacsPlainTextEdit.cxx               \
@@ -81,7 +82,8 @@ nodist_libTFELQEmacs_la_SOURCES = moc_QEmacsWidget.cxx                      \
 			   	  moc_QAbstractScrollAreaWrapper.cxx        \
 			   	  moc_QWebEngineViewWrapper.cxx             \
 			   	  moc_QEmacsFileDownloader.cxx              \
-				  moc_ProcessInteractionFrame.cxx
+				  moc_ProcessInteractionFrame.cxx           \
+				  moc_DirectoryMajorMode.cxx
 
 libTFELQEmacs_la_CPPFLAGS = $(AM_CPPFLAGS) -DTFELQEmacs_EXPORTS
 libTFELQEmacs_la_LIBADD   = @QT_LIBS@            \

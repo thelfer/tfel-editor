@@ -2,7 +2,7 @@
  * \file  MakefileMajorMode.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 26 août 2012
+ * \date   26/08/2012
  */
 
 #ifndef LIB_QEMACS_MAKEFILEMAJORMODE_HXX

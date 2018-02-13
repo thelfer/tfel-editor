@@ -2,7 +2,7 @@
  * \file  QEmacsWidget.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 27 juin 2012
+ * \date   27/06/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSWIDGET_HXX
@@ -60,6 +60,13 @@ namespace qemacs {
 
     virtual void launchCommand(const QString &);
 
+    virtual const QStringList &getKillRing() const;
+
+    virtual void addToKillRing(const QString &);
+
+    virtual bool hasUserInput() const;
+
+    //! destructor
     ~QEmacsWidget() override;
 
    public slots:
@@ -93,10 +100,6 @@ namespace qemacs {
 
     virtual void displayInformativeMessage(const QString &m);
 
-    virtual const QStringList &getKillRing() const;
-
-    virtual void addToKillRing(const QString &);
-
     /*!
      * set an user input
      * \param[in] l : the line edit
@@ -104,8 +107,6 @@ namespace qemacs {
     virtual void setUserInput(QEmacsLineEdit *const);
 
     virtual QEmacsBuffer *getBufferVisitingFile(const QString &);
-
-    virtual bool hasUserInput() const;
 
     virtual void focusUserInput();
 

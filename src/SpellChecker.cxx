@@ -2,7 +2,7 @@
  * \file  SpellChecker.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 02 oct. 2012
+ * \date   02/10/2012
  */
 
 /*

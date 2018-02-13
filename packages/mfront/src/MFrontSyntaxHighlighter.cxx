@@ -2,7 +2,7 @@
  * \file  MFrontSyntaxHighlighter.MFront
  * \brief
  * \author Helfer Thomas
- * \brief 30 juin 2012
+ * \date   30/06/2012
  */
 
 #include <stdexcept>
@@ -32,13 +32,13 @@ namespace qemacs
       HighlightingRule rule;
       rule.key     = k;
       rule.format  = this->mfrontKeyFormat;
-      this->highlightingRules.push_front(rule);
+      this->highlightingRules.push_back(rule);
     }
     for(const auto& st : mfront::SupportedTypes::getTypeFlags()){
       HighlightingRule rule;
       rule.key     = st.first;
       rule.format  = this->keyFormat;
-      this->highlightingRules.push_front(rule);
+      this->highlightingRules.push_back(rule);
     }
   } // end of MFrontSyntaxHighlighter::MFrontSyntaxHighlighter
 

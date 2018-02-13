@@ -2,7 +2,7 @@
  * \file  QEmacsMainWindow.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 27 juin 2012
+ * \date   27/06/2012
  */
 
 #include <QtCore/QDebug>
@@ -56,11 +56,11 @@ namespace qemacs {
         e->openFile(fn);
       }
     }
-  }
+  } // end of QEmacsMainWindow::QEmacsMainWindow
 
   void QEmacsMainWindow::addToRecentFiles(const QString &f) {
     QSettings s;
-    QStringList rf = s.value("recent files").toStringList();
+    auto rf = s.value("recent files").toStringList();
     int p = 0;
     // remove previous appearance of the file
     p = rf.indexOf(f);
@@ -82,7 +82,7 @@ namespace qemacs {
       rf.pop_front();
     }
     s.setValue("recent files", rf);
-  }
+  } // end of QEmacsMainWindow::addToRecentFiles
 
   void QEmacsMainWindow::closeEvent(QCloseEvent *ev) {
     auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
@@ -97,7 +97,7 @@ namespace qemacs {
         ev->ignore();
       }
     }
-  }  // end of QEmacsMainWindow::close()
+  }  // end of QEmacsMainWindow::close
 
   void QEmacsMainWindow::openFile() {
     auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
@@ -238,10 +238,9 @@ namespace qemacs {
     this->changeSpellCheckLanguageActions.clear();
     if (!dicts.isEmpty()) {
       QMenu *d = this->om->addMenu(QObject::tr("Dictionaries"));
-      QStringList::const_iterator pd;
-      for (pd = dicts.begin(); pd != dicts.end(); ++pd) {
-        QAction *a = d->addAction(*pd);
-        a->setData(*pd);
+      for (const auto di : dicts) {
+        auto *a = d->addAction(di);
+        a->setData(di);
         this->changeSpellCheckLanguageActions.push_back(a);
       }
       QObject::connect(
@@ -316,12 +315,13 @@ namespace qemacs {
     auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     QSettings settings;
     this->menuBar()->clear();
+    //    this->menuBar()->setFocusPolicy(Qt::NoFocus);
     // this->menuBar()->setStyleSheet("background: rgba(0,0,0,100%)");
     this->fm = this->menuBar()->addMenu(tr("File"));
     this->fm->addAction(this->na);
     this->fm->addAction(this->oa);
     if (settings.contains("recent files")) {
-      QStringList files = settings.value("recent files").toStringList();
+      const auto files = settings.value("recent files").toStringList();
       auto *rfm =
           this->fm->addMenu(QIcon::fromTheme("document-open-recent"),
                             QObject::tr("&Recent Files"));
@@ -350,10 +350,8 @@ namespace qemacs {
     this->updateBuffersMenu();
     QObject::connect(this->bm, &QMenu::triggered, this,
                      &QEmacsMainWindow::bufferMenuActionTriggered);
-    QVector<QMenu *> m = e->getCurrentBufferSpecificMenus();
-    QVector<QMenu *>::const_iterator p;
-    for (p = m.begin(); p != m.end(); ++p) {
-      this->menuBar()->addMenu(*p);
+    for (const auto& m : e->getCurrentBufferSpecificMenus()) {
+      this->menuBar()->addMenu(m);
     }
     // options
     this->om = this->menuBar()->addMenu(tr("Options"));
@@ -372,7 +370,7 @@ namespace qemacs {
       return;
     }
     for (int i = s - 1; (i >= 0) && (n != 5); --i, ++n) {
-      const QString &f = files[i];
+      const auto&f = files.at(i);
       QFileInfo fi(f);
       if ((fi.exists()) && (fi.isFile()) && (fi.isReadable())) {
         auto *rf = m->addAction(fi.fileName());
@@ -399,7 +397,7 @@ namespace qemacs {
   void QEmacsMainWindow::cut() {
     auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if (e != nullptr) {
-      QEmacsPlainTextEdit &t = e->getCurrentBuffer().getMainFrame();
+      auto& t = e->getCurrentBuffer().getMainFrame();
       t.cut();
     }
   }  // end of QEmacsMainWindow::cut
@@ -407,7 +405,7 @@ namespace qemacs {
   void QEmacsMainWindow::undo() {
     auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if (e != nullptr) {
-      QEmacsPlainTextEdit &t = e->getCurrentBuffer().getMainFrame();
+      auto& t = e->getCurrentBuffer().getMainFrame();
       t.undo();
     }
   }  // end of QEmacsMainWindow::undo
@@ -415,7 +413,7 @@ namespace qemacs {
   void QEmacsMainWindow::redo() {
     auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if (e != nullptr) {
-      QEmacsPlainTextEdit &t = e->getCurrentBuffer().getMainFrame();
+      auto& t = e->getCurrentBuffer().getMainFrame();
       t.redo();
     }
   }  // end of QEmacsMainWindow::redo
@@ -423,7 +421,7 @@ namespace qemacs {
   void QEmacsMainWindow::selectAll() {
     auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if (e != nullptr) {
-      QEmacsPlainTextEdit &t = e->getCurrentBuffer().getMainFrame();
+      auto& t = e->getCurrentBuffer().getMainFrame();
       t.selectAll();
     }
   }  // end of QEmacsMainWindow::selectAll
@@ -431,7 +429,7 @@ namespace qemacs {
   void QEmacsMainWindow::copy() {
     auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if (e != nullptr) {
-      QEmacsPlainTextEdit &t = e->getCurrentBuffer().getMainFrame();
+      auto& t = e->getCurrentBuffer().getMainFrame();
       t.copy();
     }
   }  // end of QEmacsMainWindow::copy
@@ -439,7 +437,7 @@ namespace qemacs {
   void QEmacsMainWindow::paste() {
     auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if (e != nullptr) {
-      QEmacsPlainTextEdit &t = e->getCurrentBuffer().getMainFrame();
+      auto& t = e->getCurrentBuffer().getMainFrame();
       t.paste();
     }
   }  // end of QEmacsMainWindow::paste
@@ -450,7 +448,7 @@ namespace qemacs {
       QPrinter printer;
       QPrintDialog printDialog(&printer, this);
       if (printDialog.exec() == QDialog::Accepted) {
-        QEmacsPlainTextEdit &t = e->getCurrentBuffer().getMainFrame();
+        auto& t = e->getCurrentBuffer().getMainFrame();
         t.print(&printer);
       }
     }

@@ -2,7 +2,7 @@
  * \file  QEmacsShortCutStyle.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 01 oct. 2012
+ * \date   01/10/2012
  */
 
 #include<QtCore/QSettings>

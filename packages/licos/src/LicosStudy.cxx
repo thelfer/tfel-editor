@@ -2,7 +2,7 @@
  * \file  LicosStudy.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 20 mai 2012
+ * \brief 20/05/2012
  */
 
 #include<QtCore/QDir>

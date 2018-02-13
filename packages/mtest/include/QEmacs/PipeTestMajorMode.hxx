@@ -2,11 +2,11 @@
  * \file   PipeTestMajorMode.hxx
  * \brief    
  * \author THOMAS HELFER
- * \date   20 janv. 2016
+ * \date   20/01/2016
  */
 
-#ifndef LIB_QEMACS_PIPETESTMAJORMODE_HXX_
-#define LIB_QEMACS_PIPETESTMAJORMODE_HXX_
+#ifndef LIB_QEMACS_PIPETESTMAJORMODE_HXX
+#define LIB_QEMACS_PIPETESTMAJORMODE_HXX
 
 #include"QEmacs/MTestMajorMode.hxx"
 

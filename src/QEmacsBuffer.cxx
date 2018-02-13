@@ -2,7 +2,7 @@
  * \file  QEmacsBuffer.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 27 juin 2012
+ * \date   27/06/2012
  */
 
 #include <QtCore/QDebug>
@@ -267,7 +267,6 @@ namespace qemacs {
   }
 
   void QEmacsBuffer::updateBufferInformations() {
-    QString i;
     const auto &s = this->getBufferNameSuffix();
     if (s.isEmpty()) {
       this->bni->setText("<b>" + this->getBufferName() + "</b>");

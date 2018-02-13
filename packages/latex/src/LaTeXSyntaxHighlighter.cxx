@@ -2,7 +2,7 @@
  * \file  LaTeXSyntaxHighlighter.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 03 juil. 2012
+ * \date   03/08/2012
  */
 
 #include <QtCore/QDebug>

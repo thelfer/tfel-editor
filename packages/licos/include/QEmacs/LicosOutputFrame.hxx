@@ -2,7 +2,7 @@
  * \file  LicosOutputFrame.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 01 août 2012
+ * \date   01/08/2012
  */
 
 #ifndef LIB_LICOSOUTPUTFRAME_HXX

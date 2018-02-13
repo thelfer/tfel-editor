@@ -2,7 +2,7 @@
  * \file  QEmacsMajorModeChangeCommand.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 03 août 2012
+ * \date   03/08/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSMAJORMODECHANGECOMMAND_HXX

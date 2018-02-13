@@ -2,7 +2,7 @@
  * \file  MakefileMajorMode.cxx
  * \brief
  * \author Helfer Thomas
- * \brief 26 août 2012
+ * \date   26/08/2012
  */
 
 #include<QtCore/QSettings>
@@ -47,8 +47,7 @@ namespace qemacs
     new MakefileSyntaxHighlighter(d);
   } // end of MakefileMajorMode::setSyntaxHighlighter
 
-  void MakefileMajorMode::format()
-  {}
+  void MakefileMajorMode::format() {}
 
   void MakefileMajorMode::runCompilation() {
     QSettings s;
@@ -60,7 +59,7 @@ namespace qemacs
       return ch.back();
     }();
     auto* l = new QEmacsShellProcessLineEdit(
-        "compilation command :", d, "compilation output", this->qemacs);
+        "compilation command :", d, "compilation-output", this->qemacs);
     l->setInputHistorySettingAddress("make/compilation/history");
     this->qemacs.setUserInput(l);
   } // end of MakefileMajorMode::runCompilation

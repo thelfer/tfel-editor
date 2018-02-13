@@ -2,7 +2,7 @@
  * \file  LicosMainBlock.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 17 sept. 2012
+ * \date   17/09/2012
  */
 
 #ifndef LIB_QEMACS_LICOSMAINBLOCK_HXX

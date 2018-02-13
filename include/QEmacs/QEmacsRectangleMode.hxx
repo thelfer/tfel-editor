@@ -2,7 +2,7 @@
  * \file  QEmacsRectangleMode.hxx
  * \brief
  * \author Helfer Thomas
- * \brief 30 sept. 2012
+ * \date   30/09/2012
  */
 
 #ifndef LIB_QEMACS_QEMACSRECTANGLEMODE_HXX
