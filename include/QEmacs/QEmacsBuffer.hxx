@@ -27,6 +27,9 @@ namespace qemacs {
   struct QEmacsWidget;
 
   //! forward declaration
+  struct SecondaryTaskManager;
+
+  //! forward declaration
   struct QEmacsPlainTextEdit;
 
   /*!
@@ -35,7 +38,9 @@ namespace qemacs {
    * A buffer is made of:
    * - a main widget (most of the time an instance of
    *   `QEmacsPlainTextEdit`)
-   * - slaves of that main widget
+   * - SecondaryTasks of that main widget
+   *
+   *  \note: a SecondaryTask can be shared between several buffers.
    */
   struct QEMACS_VISIBILITY_EXPORT QEmacsBuffer : public QWidget {
     QEmacsBuffer(const int, QEmacsWidget &);
@@ -51,44 +56,53 @@ namespace qemacs {
     virtual QString getBufferRawName() const;
 
     virtual QEmacsPlainTextEdit &getMainFrame();
+    //! \return the current SecondaryTask if any, nullptr otherwise
+    virtual QWidget *getCurrentSecondaryTask();
+    /*!
+     * \return the title of the current SecondaryTask if any,
+     * an empty string otherwise
+     */
+    virtual QString getCurrentSecondaryTaskTitle() const;
 
     virtual QVector<QMenu *> getSpecificMenus();
 
     virtual QIcon getIcon() const;
 
-    int getSlaveIndex(QWidget *const p) const;
+    int getSecondaryTaskIndex(QWidget *const p) const;
 
-    virtual QWidget *addSlave(const QString &, QWidget *const);
+    virtual void refreshSecondaryTaskTabWidget();
 
-    virtual QString getSlaveName(QWidget *const) const;
+    virtual QWidget *addSecondaryTask(const QString &, QWidget *const);
 
-    virtual void setSlaveName(QWidget *const, const QString &);
+    virtual QString getSecondaryTaskName(QWidget *const) const;
 
-    virtual void setSlaveIcon(QWidget *const, const QIcon &);
+    virtual void setSecondaryTaskName(QWidget *const, const QString &);
 
-    virtual void removeSlave(QWidget *const);
+    virtual void setSecondaryTaskIcon(QWidget *const, const QIcon &);
 
-    virtual void hideSlave(QWidget *const);
+    virtual void removeSecondaryTask(QWidget *const);
 
-    virtual bool hasSlaves() const;
+    virtual void hideSecondaryTask(QWidget *const);
 
-    virtual bool areSlavesVisible() const;
+    virtual bool hasSecondaryTasks() const;
+
+    virtual bool areSecondaryTasksVisible() const;
 
     virtual bool isOkToClose() const;
 
    public slots:
 
-    virtual void showSlaves();
+    virtual void showSecondaryTasks();
 
-    virtual void showSlaves(const Qt::Orientation);
+    virtual void showSecondaryTasks(const Qt::Orientation);
 
-    virtual void hideSlaves();
+    virtual void hideSecondaryTasks();
 
-    virtual void focusCurrentSlave();
+    virtual void focusCurrentSecondaryTask();
 
     virtual void focusMainFrame();
 
-    virtual void closeCurrentSlave();
+    virtual void closeCurrentSecondaryTask();
 
     virtual void updateMenu();
 
@@ -119,28 +133,26 @@ namespace qemacs {
 
     virtual void updateBufferName();
 
-    virtual void closeSlave(int);
+    virtual void closeSecondaryTask(int);
 
     virtual void emitNewTreatedFile(const QString &);
 
    protected:
-    struct SlaveTabWidget;
+    struct SecondaryTaskTabWidget;
 
     void initialize();
 
     QEmacsWidget &qemacs;
 
-    //! widget handling the main buffer and its slaves
+    //! widget handling the main buffer and its SecondaryTasks
     QSplitter *splitter;
-    //! slave widgets
-    SlaveTabWidget *slaves;
-
+    //! SecondaryTask widgets
+    SecondaryTaskTabWidget *stw;
+    //! main widget
     QEmacsPlainTextEdit *e;
-
     // timer to update the date
     QTimer *timer;
-
-    // display information about the current buffer
+    //! display information about the current buffer
     QHBoxLayout *info;
     //! buffer name
     QLabel *bni;
@@ -161,6 +173,8 @@ namespace qemacs {
 
    private:
     Q_OBJECT
+
+    friend struct SecondaryTaskManager;
 
   };  // end of QEmacsBuffer
 

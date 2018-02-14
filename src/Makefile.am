@@ -18,6 +18,8 @@ AM_CPPFLAGS += -DLOCALEDIR=\"$(localedir)\"
 
 lib_LTLIBRARIES = libTFELQEmacs.la
 libTFELQEmacs_la_SOURCES = QEmacsResources.cxx       \
+			   SecondaryTask.cxx                     \
+			   SecondaryTaskManager.cxx              \
 			   QEmacsFileDownloader.cxx              \
 			   QEmacsBuildInformation.cxx            \
 			   QEmacsShortCutStyle.cxx               \

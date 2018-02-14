@@ -117,14 +117,23 @@ namespace qemacs {
     // The first member of the pair value is:
     // - -1: if the line can't be the start of a paragraph
     //       (preamble, header, empty line)
-    // -  0: the line is the start of a list
+    // -  0: the line is the start of a list or the start of a footnote.
     // -  1: the line can be the start of a paragraph
     // The second member gives the indentation of the line.
     auto startsParagraph = [](QTextCursor tc) -> std::pair<int, int> {
+      static auto f = [] {  // detect footnotes
+        QRegExp r("^\\s*\\[\\^\\d+\\]:");
+        r.setMinimal(true);
+        return r;
+      }();
+      static auto el = [] {  // enumerated list
+        QRegExp r("^\\s*\\d+\\.\\s+");
+        r.setMinimal(true);
+        return r;
+      }();
       tc.movePosition(QTextCursor::StartOfBlock,
                       QTextCursor::MoveAnchor);
-      tc.movePosition(QTextCursor::EndOfBlock,
-                      QTextCursor::KeepAnchor);
+      tc.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
       const auto l = tc.selectedText();
       if (l.startsWith('%') || l.startsWith('#')) {
         // header or preamble
@@ -134,15 +143,29 @@ namespace qemacs {
       for (const auto &c : l) {
         if (c.isSpace()) {
           ++indent;
-        } else if (c == '-') {
+        } else if ((c == '-') || (c == '*') || (c == '+')) {
           return {0, indent};
+        } else if (c.isDigit()) {
+          const auto index = el.indexIn(l);
+          if (index == 0) {
+            return {0, indent};
+          } else {
+            return {1, 0};
+          }
+        } else if (c == '[') {
+          const auto index = f.indexIn(l);
+          if (index == 0) {
+            return {0, indent};
+          } else {
+            return {1, 0};
+          }
         } else {
           return {1, 0};
         }
       }
       return {-1, 0};
     };  // end of startsParagraph
-    if (((m == Qt::NoModifier) && (k == Qt::Key_Alt)) ||
+    if (((m == Qt::NoModifier) && (k == Qt::Key_Tab)) ||
         ((m == Qt::AltModifier) && (k == Qt::Key_Q))) {
       // cut paragraph to 72 columns
       auto tc = this->textEdit.textCursor();
@@ -176,7 +199,8 @@ namespace qemacs {
         }
       }
       // now b points to the beginning of the paragraph
-      b.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
+      b.movePosition(QTextCursor::StartOfBlock,
+                     QTextCursor::MoveAnchor);
       auto e = tc;
       e.movePosition(QTextCursor::EndOfBlock);
       while (!e.atEnd()) {
@@ -196,7 +220,8 @@ namespace qemacs {
       tc = b;
       // gather selected lines in one string
       auto p = QString();
-      b.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
+      b.movePosition(QTextCursor::StartOfBlock,
+                     QTextCursor::MoveAnchor);
       b.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
       p += b.selectedText().trimmed();
       b.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor);
@@ -204,10 +229,12 @@ namespace qemacs {
       while (b <= e) {
         b.movePosition(QTextCursor::StartOfBlock,
                        QTextCursor::MoveAnchor);
-        b.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+        b.movePosition(QTextCursor::EndOfBlock,
+                       QTextCursor::KeepAnchor);
         p += ' ' + b.selectedText().trimmed();
         b.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor);
-        b.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
+        b.movePosition(QTextCursor::EndOfBlock,
+                       QTextCursor::MoveAnchor);
         if (b.atEnd()) {
           break;
         }
@@ -215,7 +242,8 @@ namespace qemacs {
       if (e.atEnd()) {
         b.movePosition(QTextCursor::StartOfBlock,
                        QTextCursor::MoveAnchor);
-        b.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+        b.movePosition(QTextCursor::EndOfBlock,
+                       QTextCursor::KeepAnchor);
         p += ' ' + b.selectedText().trimmed();
       }
       // split the string
@@ -252,7 +280,7 @@ namespace qemacs {
         } else {
           if ((count + s + 1 > 72)) {
             tc.insertText("\n");
-            if (inList== 0) {
+            if (inList == 0) {
               count = 0;
             } else {
               tc.insertText(QString(indent + 2, ' '));
@@ -285,6 +313,7 @@ namespace qemacs {
           "compilation command :", d, "markdown-output", this->qemacs);
       l->setInputHistorySettingAddress("pandoc/compilation/history");
       this->qemacs.setUserInput(l);
+      return true;
     }
     return false;
   }  // end of MarkdownMajorMode::keyPressEvent

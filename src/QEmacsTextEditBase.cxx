@@ -785,19 +785,19 @@ namespace qemacs {
       this->ctrlx = false;
       if (m != Qt::ControlModifier) {
         if (k == Qt::Key_1) {
-          this->buffer.hideSlaves();
+          this->buffer.hideSecondaryTasks();
           return true;
         } else if (k == Qt::Key_2) {
-          this->buffer.showSlaves(Qt::Vertical);
+          this->buffer.showSecondaryTasks(Qt::Vertical);
           return true;
         } else if (k == Qt::Key_3) {
-          this->buffer.showSlaves(Qt::Horizontal);
+          this->buffer.showSecondaryTasks(Qt::Horizontal);
           return true;
         } else if (k == Qt::Key_O) {
           if (this->isMainFrame()) {
-            if (this->buffer.hasSlaves()) {
-              if (this->buffer.areSlavesVisible()) {
-                this->buffer.focusCurrentSlave();
+            if (this->buffer.hasSecondaryTasks()) {
+              if (this->buffer.areSecondaryTasksVisible()) {
+                this->buffer.focusCurrentSecondaryTask();
               } else {
                 if (this->qemacs.hasUserInput()) {
                   this->qemacs.focusUserInput();
@@ -828,7 +828,7 @@ namespace qemacs {
           if (this->isMainFrame()) {
             this->qemacs.closeCurrentBuffer();
           } else {
-            this->buffer.closeCurrentSlave();
+            this->buffer.closeCurrentSecondaryTask();
           }
           return true;
         } else if (k == Qt::Key_H) {
@@ -1400,9 +1400,9 @@ namespace qemacs {
     return this->mainFrame;
   }  // end of QEmacsTextEditBase::isMainFrame
 
-  bool QEmacsTextEditBase::isSlave() const {
+  bool QEmacsTextEditBase::isSecondaryTask() const {
     return !(this->isMainFrame());
-  }  // end of QEmacsTextEditBase::isSlave
+  }  // end of QEmacsTextEditBase::isSecondaryTask
 
   void QEmacsTextEditBase::setMoveMode(QTextCursor::MoveMode m) {
     this->moveMode = m;

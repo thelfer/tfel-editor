@@ -40,6 +40,8 @@ qt_sources(TFELQEmacs_SOURCES
 
 qemacs_library(TFELQEmacs
   ${CMAKE_CURRENT_BINARY_DIR}/QEmacsBuildInformation.cxx
+  SecondaryTask.cxx
+  SecondaryTaskManager.cxx
   Utilities.cxx
   SpellChecker.cxx
   QEmacsHunspellDictionariesManager.cxx

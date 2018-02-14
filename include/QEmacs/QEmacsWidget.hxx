@@ -66,6 +66,19 @@ namespace qemacs {
 
     virtual bool hasUserInput() const;
 
+    /*!
+     * \brief attach a secondary task to a buffer
+     * \param[in] b: buffer
+     * \param[in] w: widget
+     */
+    virtual void attachSecondaryTask(const QEmacsBuffer *, QWidget *);
+    /*!
+     * \brief detach a secondary task from a buffer
+     * \param[in] b: buffer
+     * \param[in] w: widget
+     */
+    virtual void detachSecondaryTask(const QEmacsBuffer *, QWidget *);
+
     //! destructor
     ~QEmacsWidget() override;
 
@@ -201,6 +214,9 @@ namespace qemacs {
     QStringList killRing;
     //! id of the next buffer
     int nid;
+
+    //! list of all SecondaryTasks attached to the buffers
+    std::map<QWidget*,std::vector<const QEmacsBuffer*>> secondaryTasks;
 
    private:
     Q_OBJECT

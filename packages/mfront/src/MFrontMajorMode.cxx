@@ -154,7 +154,7 @@ namespace qemacs {
     if(a == this->ha) {
       const auto k = this->ha->data().toString();
       auto nf = new ProcessOutputFrame(this->qemacs, this->buffer);
-      this->buffer.addSlave(QObject::tr("help on '%1'").arg(k), nf);
+      this->buffer.addSecondaryTask(QObject::tr("help on '%1'").arg(k), nf);
       auto &p = nf->getProcess();
       if(p.state() != QProcess::Running) {
         p.start("mfront", QStringList() << ("--help-keyword="
@@ -217,7 +217,7 @@ namespace qemacs {
     //     auto *s = new MFrontOutputFrame(this->qemacs, this->buffer, af, o);
     //     QObject::connect(s, &MFrontOutputFrame::finished, this,
     //                      &MFrontMajorMode::AnalysisFinished);
-    //     this->buffer.addSlave(QObject::tr("MFront Output"), s);
+    //     this->buffer.addSecondaryTask(QObject::tr("MFront Output"), s);
   } // end of startMFront
 
   MFrontMajorMode::~MFrontMajorMode() = default;

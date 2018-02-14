@@ -69,7 +69,7 @@ namespace qemacs {
     auto& t = this->textEdit;
     auto& q = this->qemacs;
     if (this->stage == 0) {
-      QString i = this->input->text();
+      const auto i = this->input->text();
       if (i.isEmpty()) {
         const auto h = QEmacsTextEditQueryReplace::getHistory();
         if (h.length() < 2) {
@@ -78,10 +78,9 @@ namespace qemacs {
               QObject::tr("empty entry"));
           return;
         } else {
-          int hpos = h.length() - 2;
-          QString i1 = h[hpos];
-          QString i2 = h.back();
-          QEmacsTextEditQueryReplace::addToHistory(i2);
+          const auto hpos = h.length() - 2;
+          const auto i1 = h[hpos];
+          const auto i2 = h.back();
           this->qemacs.removeUserInput(this);
           this->qemacs.setUserInput(
               new QEmacsTextEditQueryReplace(t, q, i1, i2));
@@ -109,8 +108,8 @@ namespace qemacs {
 
   void QEmacsTextEditQueryReplace::addToHistory(const QString& i) {
     QSettings settings;
-    QStringList h = settings.value("user input/query replace/history")
-                        .toStringList();
+    auto h = settings.value("user input/query replace/history")
+                 .toStringList();
     h.append(i);
     if (h.size() > 100) {
       h.pop_front();

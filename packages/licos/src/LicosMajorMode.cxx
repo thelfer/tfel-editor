@@ -497,7 +497,7 @@ namespace qemacs {
     auto *s = new LicosOutputFrame(this->qemacs, this->buffer, af, o);
     QObject::connect(s, &LicosOutputFrame::finished, this,
                      &LicosMajorMode::studyFinished);
-    this->buffer.addSlave(QObject::tr("Licos Output"), s);
+    this->buffer.addSecondaryTask(QObject::tr("Licos Output"), s);
   } // end of LicosMajorMode::runLicos
 
   void LicosMajorMode::studyFinished(bool s, QString e) {
@@ -716,7 +716,7 @@ namespace qemacs {
     QStringList args;
     args << lib;
     p.start("mfm", args);
-    b.addSlave("*mfm results for " + l + "*", po);
+    b.addSecondaryTask("*mfm results for " + l + "*", po);
   } // end of LicosMajorMode::analyseUsingMFM
 
   void LicosMajorMode::search(const QString &s,
@@ -736,7 +736,7 @@ namespace qemacs {
     args << "-c"
          << "grep -nH -e " + s + " $(find . -name \"*." + ext + "\")";
     p.start(shell, args);
-    b.addSlave("*search for " + s + "*", po);
+    b.addSecondaryTask("*search for " + s + "*", po);
   } // end of LicosMajorMode::search
 
   void LicosMajorMode::createAnalyseUsingMFMAction(const QString &l) {

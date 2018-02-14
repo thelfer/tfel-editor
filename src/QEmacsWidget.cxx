@@ -280,23 +280,40 @@ namespace qemacs {
   }  // end of QEmacsWidget::createNewBuffer
 
   void QEmacsWidget::removeBuffer(QEmacsBuffer* b) {
-    QString n = b->getBufferName();
+    const auto n = b->getBufferName();
     this->bHistory.removeAll(n);
     this->buffers->removeWidget(b);
+    // removing the buffer in the secondaryTasks
+    auto p = this->secondaryTasks.begin();
+    while(p!=this->secondaryTasks.end()){
+      const auto pbe = p->second.end();
+      auto pb = std::find(p->second.begin(),pbe,b);
+      if(pb!=pbe){
+        p->second.erase(pb);
+      }
+      if (p->second.empty()) {
+        p->first->deleteLater();
+        p = this->secondaryTasks.erase(p);
+      } else {
+        ++p;
+      }
+    }
+    // creating empty buffer is necessary
     if (this->buffers->count() == 0) {
       this->createEmptyBuffer();
     } else {
-      this->buffers->currentWidget()->setFocus();
+      auto cw = this->buffers->currentWidget();
+      cw->setFocus();
       if (!this->bHistory.isEmpty()) {
         this->changeBuffer(this->bHistory.front());
       } else {
-        auto* nb =
-            qobject_cast<QEmacsBuffer*>(this->buffers->currentWidget());
+        auto* nb = qobject_cast<QEmacsBuffer*>(cw);
         if (nb != nullptr) {
           this->setCurrentBuffer(nb);
         }
       }
     }
+    b->deleteLater();
     emit bufferRemoved();
   }  // end of QEmacsWidget::removeBuffer
 
@@ -504,10 +521,9 @@ namespace qemacs {
   QStringList QEmacsWidget::getBuffersNames() const {
     QStringList n;
     for (int i = 0; i != this->buffers->count(); ++i) {
-      QEmacsBuffer const* b =
-          qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
+      auto* b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
       if (b != nullptr) {
-        QString bn = b->getBufferName();
+        const auto bn = b->getBufferName();
         if (bn.isEmpty()) {
           n.append("* unnamed buffer *");
         } else {
@@ -622,16 +638,19 @@ namespace qemacs {
       return;
     }
     if (this->bHistory.size() >= 2) {
-      this->setUserInput(new QEmacsWidget::ChangeBuffer(
-          *this, bnames, this->bHistory[1]));
+      const auto nb = this->bHistory[1];
+      this->setUserInput(new ChangeBuffer(*this, bnames, nb));
     } else {
-      this->setUserInput(
-          new QEmacsWidget::ChangeBuffer(*this, bnames, ""));
+      this->setUserInput(new ChangeBuffer(*this, bnames, ""));
     }
   }  // end of QEmacsWidget::changeBuffer
 
   void QEmacsWidget::setCurrentBuffer(QEmacsBuffer* const b) {
+    if (b == nullptr) {
+      return;
+    }
     this->buffers->setCurrentWidget(b);
+    b->refreshSecondaryTaskTabWidget();
     b->setFocus();
     const auto n = b->getBufferName();
     this->bHistory.removeAll(n);
@@ -745,6 +764,35 @@ namespace qemacs {
       t.save();
     }
   }  // end of QEmacsWidget::closeCurrentBuffer
+
+  void QEmacsWidget::attachSecondaryTask(const QEmacsBuffer* b, QWidget* w) {
+    if (w == nullptr) {
+      return;
+    }
+    auto& bv = this->secondaryTasks[w];
+    if(std::find(bv.begin(),bv.end(),w)==bv.end()){
+      bv.push_back(b);
+    }
+  }  // end of attachSecondaryTask
+
+  void QEmacsWidget::detachSecondaryTask(const QEmacsBuffer* b, QWidget* w) {
+    if (w == nullptr) {
+      return;
+    }
+    const auto p = this->secondaryTasks.find(w);
+    if(p==this->secondaryTasks.end()){
+      return;
+    }
+    const auto pbe = p->second.end();;
+    const auto pb  = std::find(p->second.begin(), pbe, b);
+    if (pb != pbe) {
+      p->second.erase(pb);
+    }
+    if (p->second.empty()) {
+      p->first->deleteLater();
+      this->secondaryTasks.erase(p);
+    }
+  }  // end of detachSecondaryTask
 
   QEmacsWidget::~QEmacsWidget() {
     this->removeUserInputs();

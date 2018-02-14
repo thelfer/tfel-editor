@@ -1,4 +1,6 @@
 install_header(QEmacs Config.hxx)
+install_header(QEmacs SecondaryTask.hxx)
+install_header(QEmacs SecondaryTaskManager.hxx)
 install_header(QEmacs QEmacsFileDownloader.hxx)
 install_header(QEmacs QEmacsBuildInformation.hxx)
 install_header(QEmacs QEmacsShortCutStyle.hxx)

@@ -159,7 +159,7 @@ namespace qemacs {
     /*!
      * \return true if the buffer is not a main frame
      */
-    virtual bool isSlave() const;
+    virtual bool isSecondaryTask() const;
 
     virtual void setFocus();
 

@@ -36,14 +36,32 @@ namespace qemacs {
       this->error.setUnderlineStyle(QTextCharFormat::SingleUnderline);
       this->warning.setForeground(Qt::darkGreen);
       this->warning.setUnderlineStyle(QTextCharFormat::SingleUnderline);
+      this->backtrace.setForeground(Qt::darkRed);
+      this->backtrace.setUnderlineStyle(QTextCharFormat::SingleUnderline);
       this->note.setForeground(Qt::blue);
       this->note.setUnderlineStyle(QTextCharFormat::SingleUnderline);
       this->number.setForeground(Qt::darkBlue);
     }  // end of CompilationOutputSyntaxHighlighter
 
     void highlightBlock(const QString &l) override {
-      static auto e = [] {
+      static auto e1 = [] {
+        QRegExp r("^([/-\\w|\\.]+):(\\d+):(\\d+): fatal error:");
+        r.setMinimal(true);
+        return r;
+      }();
+      static auto e2 = [] {
         QRegExp r("^([/-\\w|\\.]+):(\\d+):(\\d+): error:");
+        r.setMinimal(true);
+        return r;
+      }();
+      // qt-moc error
+      static auto e3 = [] {
+        QRegExp r("^([/-\\w|\\.]+):(\\d+):(\\d+): Error:");
+        r.setMinimal(true);
+        return r;
+      }();
+      static auto b = [] {
+        QRegExp r("^([/-\\w|\\.]+):(\\d+):(\\d+):   required from here");
         r.setMinimal(true);
         return r;
       }();
@@ -81,10 +99,19 @@ namespace qemacs {
         }
         return false;
       };
-      if (apply(e, this->error)) {
+      if (apply(e1, this->error)) {
+        return;
+      }
+      if (apply(e2, this->error)) {
+        return;
+      }
+      if (apply(e3, this->error)) {
         return;
       }
       if (apply(w, this->warning)) {
+        return;
+      }
+      if (apply(b, this->backtrace)) {
         return;
       }
       if (apply(n, this->note)) {
@@ -97,6 +124,7 @@ namespace qemacs {
     QTextCharFormat warning;
     QTextCharFormat note;
     QTextCharFormat number;
+    QTextCharFormat backtrace;
 
   };  // end of struct CompilationOutputSyntaxHighlighter
 
@@ -143,9 +171,13 @@ namespace qemacs {
                        QTextCursor::MoveAnchor);
         const auto pos = c.position()-b.position();
         if (pos < d->file.size()) {
+          auto &cb = this->qemacs.getCurrentBuffer();
+          const auto self  = cb.getCurrentSecondaryTask();
+          const auto title = cb.getCurrentSecondaryTaskTitle();
           this->qemacs.openFile(d->file);
-          auto &t = this->qemacs.getCurrentBuffer().getMainFrame();
-          t.gotoPosition(d->line,d->column);
+          auto &nb = this->qemacs.getCurrentBuffer();
+          //           nb.addSecondaryTask(title,self);
+          nb.getMainFrame().gotoPosition(d->line, d->column);
           return true;
         }
       }
@@ -153,10 +185,10 @@ namespace qemacs {
     }  // end of mousePressEvent
 
     bool keyPressEvent(QKeyEvent *e) override {
-      if (((e->modifiers() == Qt::AltModifier) &&
-           (e->key() == Qt::Key_M)) ||
-          ((e->modifiers() == Qt::NoModifier) &&
-           (e->key() == Qt::Key_Return))) {
+      const auto m = e->modifiers();
+      const auto k = e->key();
+      if (((m == Qt::AltModifier) && (k == Qt::Key_M)) ||
+          ((m == Qt::NoModifier) && (k == Qt::Key_Enter))) {
         auto c = this->textEdit.textCursor();
         auto *ud = c.block().userData();
         if (ud == nullptr) {
@@ -166,11 +198,15 @@ namespace qemacs {
         auto b = c;
         b.movePosition(QTextCursor::StartOfLine,
                        QTextCursor::MoveAnchor);
-        const auto pos = c.position()-b.position();
-        if(pos<d->file.size()){
+        const auto pos = c.position() - b.position();
+        if (pos < d->file.size()) {
+          auto &cb = this->qemacs.getCurrentBuffer();
+          const auto self = cb.getCurrentSecondaryTask();
+          const auto title = cb.getCurrentSecondaryTaskTitle();
           this->qemacs.openFile(d->file);
-          auto &t = this->qemacs.getCurrentBuffer().getMainFrame();
-          t.gotoPosition(d->line, d->column);
+          auto &nb = this->qemacs.getCurrentBuffer();
+          //          nb.addSecondaryTask(title,self);
+          nb.getMainFrame().gotoPosition(d->line, d->column);
           return true;
         }
       }

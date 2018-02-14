@@ -48,9 +48,9 @@ namespace qemacs {
   void ProcessOutputFrame::processFinished(int s,
                                            QProcess::ExitStatus es) {
     if (s == 0) {
-      this->buffer.setSlaveIcon(this, QIcon(":/QEmacsSuccessIcon.png"));
+      this->buffer.setSecondaryTaskIcon(this, QIcon(":/QEmacsSuccessIcon.png"));
     } else {
-      this->buffer.setSlaveIcon(this, QIcon(":/QEmacsFailureIcon.png"));
+      this->buffer.setSecondaryTaskIcon(this, QIcon(":/QEmacsFailureIcon.png"));
     };
     auto pom = qobject_cast<ProcessOutputMajorModeBase*>(this->mode);
     if(pom!=nullptr){

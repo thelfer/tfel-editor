@@ -358,7 +358,7 @@ namespace qemacs {
   }  // end of QEmacsLineEdit::isBlocking
 
   void QEmacsLineEdit::hideCompletions() {
-    this->buffer.hideSlave(this->scompletions);
+    this->buffer.hideSecondaryTask(this->scompletions);
   }  // end of QEmacsLineEdit::hideCompletions
 
   void QEmacsLineEdit::showCompletions(const QString&,
@@ -368,7 +368,7 @@ namespace qemacs {
           new QEmacsTextEdit(this->qemacs, this->buffer);
       this->completions->setReadOnly(true);
       this->scompletions =
-          this->buffer.addSlave("*completions*", this->completions);
+          this->buffer.addSecondaryTask("*completions*", this->completions);
       QObject::connect(this, &QEmacsLineEdit::textChanged, this,
                        &QEmacsLineEdit::hideCompletions);
     }
@@ -411,7 +411,7 @@ namespace qemacs {
     table += "</table>";
     this->completions->insertHtml(table);
     this->scompletions->show();
-    this->buffer.showSlaves();
+    this->buffer.showSecondaryTasks();
   }  // end of QEmacsLineEdit::showCompletions
 
   void QEmacsLineEdit::setLabel(const QString& l) {
@@ -498,7 +498,7 @@ namespace qemacs {
   QEmacsLineEdit::~QEmacsLineEdit() {
     if ((this->completions != nullptr) &&
         (this->scompletions != nullptr)) {
-      this->buffer.removeSlave(this->scompletions);
+      this->buffer.removeSecondaryTask(this->scompletions);
     }
     emit destroyed(this);
   }  // end QEmacsLineEdit::~QEmacsLineEdit()
@@ -664,7 +664,7 @@ namespace qemacs {
       po->setMajorMode(this->mode);
     }
     p.start(c, args);
-    b.addSlave("*" + on + "* ouput", po);
+    b.addSecondaryTask("*" + on + "* ouput", po);
   }  // end of QEmacsProcessLineEdit::run
 
   QEmacsProcessLineEdit::~QEmacsProcessLineEdit() = default;

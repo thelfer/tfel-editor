@@ -347,7 +347,7 @@ namespace qemacs {
       p.start("castem2014_PLEIADES", QStringList());
 #endif
       p.waitForStarted();
-      this->buffer.addSlave("* castem *", this->co);
+      this->buffer.addSecondaryTask("* castem *", this->co);
       //       QObject::connect(this->co, &QWidget::closed(), this,
       //                        [this] { this->co == nullptr; });
     } else {
@@ -495,7 +495,7 @@ namespace qemacs {
     dir.mkdir(path);
     if (dir.exists()) {
       auto* nf = new ProcessOutputFrame(this->qemacs, this->buffer);
-      this->buffer.addSlave(QObject::tr("notice %1").arg(w), nf);
+      this->buffer.addSecondaryTask(QObject::tr("notice %1").arg(w), nf);
       auto& p = nf->getProcess();
       p.setWorkingDirectory(dir.absolutePath());
       if (p.state() != QProcess::Running) {

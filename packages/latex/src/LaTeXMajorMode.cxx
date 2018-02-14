@@ -190,10 +190,10 @@ namespace qemacs {
     }
     if (this->po == nullptr) {
       this->po = new ProcessOutputFrame(this->qemacs, this->buffer);
-      this->buffer.addSlave("*LaTeX* ouput", po);
+      this->buffer.addSecondaryTask("*LaTeX* ouput", po);
     } else {
-      this->buffer.setSlaveName(po, "*LaTeX* ouput");
-      this->buffer.setSlaveIcon(po, QIcon());
+      this->buffer.setSecondaryTaskName(po, "*LaTeX* ouput");
+      this->buffer.setSecondaryTaskIcon(po, QIcon());
     }
     po->clear();
     QFileInfo fn(m);
@@ -320,7 +320,6 @@ namespace qemacs {
           this->emwp = ap + pos;
           const QString w = l.mid(npos, pos - npos);
           if (!this->spellChecker.spell(w)) {
-            QVector<QAction*>::iterator pa;
             for (auto &pa : this->suggestions) { delete pa; }
             this->suggestions.clear();
             const auto ss = this->spellChecker.suggest(w);
