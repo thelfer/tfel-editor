@@ -42,7 +42,7 @@ namespace qemacs
 	p.setWorkingDirectory(QDir::current().absolutePath());
       }
       p.start("gnuplot",QStringList());
-      b.addSecondaryTask("* gnuplot *",go);
+      b.attachSecondaryTask("* gnuplot *",go);
     }
 
     QString getName() const override

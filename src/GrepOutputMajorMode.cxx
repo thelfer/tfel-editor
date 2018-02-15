@@ -104,14 +104,17 @@ namespace qemacs {
                        QTextCursor::MoveAnchor);
         const auto pos = c.position()-b.position();
         if(pos<d->file.size()){
+          auto &cb = this->qemacs.getCurrentBuffer();
+          const auto self = cb.getCurrentSecondaryTask();
           const auto wd = po->getProcess().workingDirectory();
           if (!wd.isEmpty()) {
             this->qemacs.openFile(wd + QDir::separator() + d->file);
           } else {
             this->qemacs.openFile(d->file);
           }
-          auto &t = this->qemacs.getCurrentBuffer().getMainFrame();
-          t.gotoLine(d->line);
+          auto &nb = this->qemacs.getCurrentBuffer();
+          nb.attachSecondaryTask(self);
+          nb.getMainFrame().gotoLine(d->line);
           return true;
         }
       }
@@ -139,15 +142,17 @@ namespace qemacs {
                        QTextCursor::MoveAnchor);
         const auto pos = c.position()-b.position();
         if(pos<d->file.size()){
+          auto &cb = this->qemacs.getCurrentBuffer();
+          const auto self = cb.getCurrentSecondaryTask();
           const auto wd = po->getProcess().workingDirectory();
           if (!wd.isEmpty()) {
             this->qemacs.openFile(wd + QDir::separator() + d->file);
           } else {
             this->qemacs.openFile(d->file);
           }
-          auto &t = this->qemacs.getCurrentBuffer().getMainFrame();
-          t.gotoLine(d->line);
-          return true;
+          auto &nb = this->qemacs.getCurrentBuffer();
+          nb.attachSecondaryTask(self);
+          nb.getMainFrame().gotoLine(d->line);
         }
       }
       return false;

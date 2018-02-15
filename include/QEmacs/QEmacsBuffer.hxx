@@ -72,15 +72,27 @@ namespace qemacs {
 
     virtual void refreshSecondaryTaskTabWidget();
 
-    virtual QWidget *addSecondaryTask(const QString &, QWidget *const);
+    /*!
+     * \brief attach a secondary task to the buffer.
+     * \param[in] t: title
+     * \param[in] w: associated widget
+     */
+    virtual QWidget *attachSecondaryTask(const QString &,
+                                         QWidget *const);
+    /*!
+     * \brief attach an existing task to the buffer
+     * \param[in] w: widget
+     */
+    virtual void attachSecondaryTask(QWidget *const);
 
-    virtual QString getSecondaryTaskName(QWidget *const) const;
+    virtual void removeSecondaryTask(QWidget *const);
 
-    virtual void setSecondaryTaskName(QWidget *const, const QString &);
+    virtual QString getSecondaryTaskTitle(QWidget *const) const;
+
+    virtual void setSecondaryTaskTitle(QWidget *const, const QString &);
 
     virtual void setSecondaryTaskIcon(QWidget *const, const QIcon &);
 
-    virtual void removeSecondaryTask(QWidget *const);
 
     virtual void hideSecondaryTask(QWidget *const);
 

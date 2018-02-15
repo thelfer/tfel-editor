@@ -319,19 +319,21 @@ namespace qemacs {
     }
   }  // end of QEmacsTextEditBase::setSpellCheckLanguage
 
-  void QEmacsTextEditBase::setMajorMode() {
+  QEmacsMajorMode* QEmacsTextEditBase::setMajorMode() {
     auto& fm = QEmacsMajorModeFactory::getQEmacsMajorModeFactory();
     auto* m = fm.getQEmacsMajorModeForFile(
         QFileInfo(this->getFileName()).fileName(), this->qemacs,
         this->buffer, *this);
     this->setMajorMode(m);
+    return m;
   }  // end of QEmacsTextEditBase::setMajorMode
 
-  void QEmacsTextEditBase::setMajorMode(const QString& n) {
+  QEmacsMajorMode* QEmacsTextEditBase::setMajorMode(const QString& n) {
     auto& fm = QEmacsMajorModeFactory::getQEmacsMajorModeFactory();
     auto* m = fm.getQEmacsMajorModeByName(n, this->qemacs, this->buffer,
                                           *this);
     this->setMajorMode(m);
+    return m;
   }  // end of QEmacsTextEditBase::setMajorMode
 
   void QEmacsTextEditBase::setMajorMode(QEmacsMajorMode* const m) {
@@ -785,13 +787,19 @@ namespace qemacs {
       this->ctrlx = false;
       if (m != Qt::ControlModifier) {
         if (k == Qt::Key_1) {
-          this->buffer.hideSecondaryTasks();
+          if(this->isMainFrame()){
+            this->buffer.hideSecondaryTasks();
+          }
           return true;
         } else if (k == Qt::Key_2) {
-          this->buffer.showSecondaryTasks(Qt::Vertical);
+          if(this->isMainFrame()){
+            this->buffer.showSecondaryTasks(Qt::Vertical);
+          }
           return true;
         } else if (k == Qt::Key_3) {
-          this->buffer.showSecondaryTasks(Qt::Horizontal);
+          if(this->isMainFrame()){
+            this->buffer.showSecondaryTasks(Qt::Horizontal);
+          }
           return true;
         } else if (k == Qt::Key_O) {
           if (this->isMainFrame()) {
@@ -812,7 +820,8 @@ namespace qemacs {
             if (this->qemacs.hasUserInput()) {
               this->qemacs.focusUserInput();
             } else {
-              this->buffer.focusMainFrame();
+              auto& b = this->qemacs.getCurrentBuffer();
+              b.focusMainFrame();
             }
           }
           return true;
@@ -828,7 +837,8 @@ namespace qemacs {
           if (this->isMainFrame()) {
             this->qemacs.closeCurrentBuffer();
           } else {
-            this->buffer.closeCurrentSecondaryTask();
+            auto& b = this->qemacs.getCurrentBuffer();
+            b.closeCurrentSecondaryTask();
           }
           return true;
         } else if (k == Qt::Key_H) {

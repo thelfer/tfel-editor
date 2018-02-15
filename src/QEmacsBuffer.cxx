@@ -5,12 +5,10 @@
  * \date   27/06/2012
  */
 
-#include <QtCore/QDebug>
-#include <QtCore/QSettings>
-
 #include <QtCore/QTime>
 #include <QtCore/QTimer>
 #include <QtCore/QFileInfo>
+#include <QtCore/QSettings>
 #include <QtWidgets/QTabBar>
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QHBoxLayout>
@@ -203,6 +201,13 @@ namespace qemacs {
                      this, &QEmacsBuffer::updateBufferInformations);
     QObject::connect(this->stw, &SecondaryTaskTabWidget::tabCloseRequested,
                      this, &QEmacsBuffer::closeSecondaryTask);
+    QObject::connect(this->stw, &SecondaryTaskTabWidget::tabCloseRequested,
+                     this, &QEmacsBuffer::closeSecondaryTask);
+    QObject::connect(this->stw, &SecondaryTaskTabWidget::currentChanged,
+                     this, [this](const int i) {
+                       this->qemacs.setCurrentSecondaryTask(
+                           this, this->stw->currentWidget());
+                     });
     this->updateBufferName();
   }
 
@@ -243,10 +248,10 @@ namespace qemacs {
   }
 
   void QEmacsBuffer::updatePosition() {
-    const QTextCursor &c = this->e->textCursor();
-    const QTextDocument &d = *(this->e->document());
-    const int cn = c.blockNumber() + 1;
-    const int bn = d.blockCount();
+    const auto &c = this->e->textCursor();
+    const auto &d = *(this->e->document());
+    const auto cn = c.blockNumber() + 1;
+    const auto bn = d.blockCount();
     if (bn > 0) {
       if (cn == bn) {
         this->rpi->setText("100%");
@@ -317,37 +322,63 @@ namespace qemacs {
     return this->stw->count() != 0;
   }
 
-  QWidget *QEmacsBuffer::addSecondaryTask(const QString &t, QWidget *const s) {
+  QWidget *QEmacsBuffer::attachSecondaryTask(const QString &t, QWidget *const s) {
     if (s == nullptr) {
       return nullptr;
     }
     auto *pw = qobject_cast<QWebEngineView *>(s);
     auto *p = qobject_cast<QAbstractScrollArea *>(s);
+    SecondaryTask st;
+    st.title = t;
+    st.current = true;
     if (pw != nullptr) {
       auto *w = new QWebEngineViewWrapper(pw, this);
-      this->qemacs.attachSecondaryTask(this,w);
-      this->stw->addTab(w, t);
-      this->stw->setCurrentWidget(w);
-      this->stw->show();
+      st.w = s;
+      this->qemacs.attachSecondaryTask(this, st);
+      if (this->isVisible()) {
+        this->stw->addTab(w, t);
+        this->stw->setCurrentWidget(w);
+        this->stw->show();
+      }
       return w;
     } else if (p != nullptr) {
       auto *w = new QAbstractScrollAreaWrapper(p, this);
-      this->qemacs.attachSecondaryTask(this,w);
-      this->stw->addTab(w, t);
-      this->stw->setCurrentWidget(w);
-      this->stw->show();
+      st.w = s;
+      this->qemacs.attachSecondaryTask(this,st);
+      if (this->isVisible()) {
+        this->stw->addTab(w, t);
+        this->stw->setCurrentWidget(w);
+        this->stw->show();
+      }
       return w;
     }
-    this->qemacs.attachSecondaryTask(this,s);
-    this->stw->addTab(s, t);
-    this->stw->setCurrentWidget(s);
-    this->stw->show();
+    st.w = s;
+    this->qemacs.attachSecondaryTask(this,st);
+    if (this->isVisible()) {
+      this->stw->addTab(s, t);
+      this->stw->setCurrentWidget(s);
+      this->stw->show();
+    }
     return s;
   }  // end of QEmacsBuffer::addSecondaryTask
 
+  void QEmacsBuffer::attachSecondaryTask(QWidget *const p) {
+    if(this->getSecondaryTaskIndex(p)!=-1){
+      return;
+    }
+    const auto& st = this->qemacs.attachSecondaryTask(this, p);
+    if(st.w!=nullptr){
+      if(this->isVisible()){
+        this->stw->addTab(st.w, st.icon, st.title);
+        this->stw->setCurrentWidget(st.w);
+        this->stw->show();
+      }
+    }
+  }  // end of QEmacsBuffer::attachSecondaryTask
+
   int QEmacsBuffer::getSecondaryTaskIndex(QWidget *const p) const {
     for (int i = 0; i != this->stw->count(); ++i) {
-      QWidget *pi = this->stw->widget(i);
+      auto *pi = this->stw->widget(i);
       if (pi == p) {
         return i;
       }
@@ -361,7 +392,7 @@ namespace qemacs {
     return -1;
   }  // end of QEmacsBuffer::getSecondaryTaskIndex
 
-  QString QEmacsBuffer::getSecondaryTaskName(QWidget *const p) const {
+  QString QEmacsBuffer::getSecondaryTaskTitle(QWidget *const p) const {
     QString n;
     const auto i = this->getSecondaryTaskIndex(p);
     if (i != -1) {
@@ -373,16 +404,37 @@ namespace qemacs {
   void QEmacsBuffer::setSecondaryTaskIcon(QWidget *const p, const QIcon &i) {
     const auto sid = this->getSecondaryTaskIndex(p);
     if (sid != -1) {
+      this->qemacs.setSecondaryTaskIcon(p,i);
       this->stw->setTabIcon(sid, i);
     }
   }
 
   void QEmacsBuffer::refreshSecondaryTaskTabWidget() {
+    this->stw->clear();
+    const auto& tasks = this->qemacs.getSecondaryTasks(this);
+    if(tasks.empty()){
+      return;
+    }
+    auto current = [&tasks] () -> QWidget* {
+      for (const auto &t : tasks) {
+        if (t.current) {
+          return t.w;
+        }
+      }
+      return nullptr;
+    }();
+    for (const auto &t : tasks) {
+      this->stw->addTab(t.w, t.icon, t.title);
+    }
+    if (current != nullptr) {
+      this->stw->setCurrentWidget(current);
+    }
   }  // end of QEmacsBuffer::refreshSecondaryTaskTabWidget
 
-  void QEmacsBuffer::setSecondaryTaskName(QWidget *const p, const QString &n) {
+  void QEmacsBuffer::setSecondaryTaskTitle(QWidget *const p, const QString &n) {
     const auto i = this->getSecondaryTaskIndex(p);
     if (i != -1) {
+      this->qemacs.setSecondaryTaskTitle(p, n);
       this->stw->setTabText(i, n);
     }
   }  // end of QEmacsBuffer::setSecondaryTaskName

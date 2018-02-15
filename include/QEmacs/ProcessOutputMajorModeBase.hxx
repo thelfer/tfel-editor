@@ -20,11 +20,26 @@ namespace qemacs {
    */
   struct QEMACS_VISIBILITY_EXPORT ProcessOutputMajorModeBase
       : QEmacsMajorModeBase {
-    //! constructor
+    /*!
+     * \brief constructor
+     * \param[in] w: widget
+     * \param[in] b: buffer
+     * \param[in] t: text edit widget
+     * \param[in] p: parent widget
+     */
     ProcessOutputMajorModeBase(QEmacsWidget&,
                                QEmacsBuffer&,
                                QEmacsTextEditBase&,
                                QWidget* const);
+    void setDirectory(const QString&);
+    void setCommand(const QString&);
+    void setArguments(const QStringList&);
+    void setMajorMode(const QString&);
+    /*!
+     * \brief handle key event
+     * \param[in] e: event
+     */
+    bool keyPressEvent(QKeyEvent* const) override;
     /*!
      * \brief method called when the process is finished
      * \param[in] s: exit status
@@ -33,6 +48,12 @@ namespace qemacs {
     virtual void processFinished(int, QProcess::ExitStatus) = 0;
     //! destructor
     ~ProcessOutputMajorModeBase() override;
+
+   protected:
+    QString directory;
+    QString command;
+    QStringList arguments;
+    QString mode;
 
    private:
     Q_OBJECT

@@ -35,7 +35,7 @@ namespace qemacs {
         [w](const SecondaryTask& t) { return t.w == w; });
   }  // end of wfind
 
-  void SecondaryTaskManager::removeBuffer(const QEmacsBuffer* const b){
+  void SecondaryTaskManager::removeBuffer(QEmacsBuffer* const b){
     const auto pb = this->m.find(b);
     if(pb==this->m.end()){
       return;
@@ -70,13 +70,13 @@ namespace qemacs {
     if (wfind(pb->second, w) == pb->second.end()) {
       return;
     }
-    for (auto& t:pb->second) {
+    for (auto& t : pb->second) {
       t.current = (t.w == w);
     }
   }  // end of SecondaryTaskManager::setCurrentSecondaryTask
 
-  void SecondaryTaskManager::setTaskTitle(QWidget* const w,
-                                          const QString& t) {
+  void SecondaryTaskManager::setSecondaryTaskTitle(QWidget* const w,
+                                                   const QString& t) {
     if(w==nullptr){
       return;
     }
@@ -91,10 +91,10 @@ namespace qemacs {
     }
     if (found) {
     }
-  }  // end of SecondaryTaskManager::setTaskTitle
+  }  // end of SecondaryTaskManager::setSecondaryTaskTitle
 
-  void SecondaryTaskManager::setTaskIcon(QWidget* const w,
-                                         const QIcon& i) {
+  void SecondaryTaskManager::setSecondaryTaskIcon(QWidget* const w,
+                                                  const QIcon& i) {
     if(w==nullptr){
       return;
     }
@@ -109,7 +109,7 @@ namespace qemacs {
     }
     if (found) {
     }
-  }  // end of SecondaryTaskManager::setTaskIcon
+  }  // end of SecondaryTaskManager::setSecondaryTaskIcon
 
   void SecondaryTaskManager::attachSecondaryTask(
       const QEmacsBuffer* const b, const SecondaryTask& t) {
@@ -117,17 +117,17 @@ namespace qemacs {
       return;
     }
     auto& v = this->m[b];
-    const auto p = wfind(v,t.w);
-    if(p==v.end()){
+    if (wfind(v, t.w) == v.end()) {
       v.push_back(t);
     }
     this->setCurrentSecondaryTask(b,t.w);
   }  // end of SecondaryTaskManager::attachSecondaryTask
 
-  void SecondaryTaskManager::attachExistingSecondaryTask(
-      const QEmacsBuffer* const b, QWidget *const w) {
+  const SecondaryTask& SecondaryTaskManager::attachSecondaryTask(
+      const QEmacsBuffer* const b, QWidget* const w) {
+    static const SecondaryTask nulltask;
     if ((w == nullptr) || (b == nullptr)) {
-      return;
+      return nulltask;
     }
     auto& v = this->m[b];
     const auto p = wfind(v,w);
@@ -139,13 +139,16 @@ namespace qemacs {
         const auto p2 = wfind(kv.second,w);
         if (p2 != kv.second.end()) {
           this->attachSecondaryTask(b,*p2);
+          return *p2;
         }
       }
       // the secondary task is not handled by any buffer, this shall not
       // append
-    } else {
-      // the widget is already associated with the buffer, so do nothing
+      return nulltask;
     }
+    // the widget is already associated with the buffer
+    this->setCurrentSecondaryTask(b,w);
+    return *p;
   }  // end of SecondaryTaskManager::attachSecondaryTask
 
   void SecondaryTaskManager::detachSecondaryTask(

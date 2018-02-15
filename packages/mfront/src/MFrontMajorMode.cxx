@@ -154,7 +154,7 @@ namespace qemacs {
     if(a == this->ha) {
       const auto k = this->ha->data().toString();
       auto nf = new ProcessOutputFrame(this->qemacs, this->buffer);
-      this->buffer.addSecondaryTask(QObject::tr("help on '%1'").arg(k), nf);
+      this->buffer.attachSecondaryTask(QObject::tr("help on '%1'").arg(k), nf);
       auto &p = nf->getProcess();
       if(p.state() != QProcess::Running) {
         p.start("mfront", QStringList() << ("--help-keyword="

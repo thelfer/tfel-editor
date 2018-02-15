@@ -39,7 +39,7 @@ namespace qemacs {
      * \brief remove the given buffer
      * \param[in] b: buffer
      */
-    virtual void removeBuffer(const QEmacsBuffer *const);
+    virtual void removeBuffer(QEmacsBuffer *const);
     /*!
      * \brief set the given task to be the current one. The
      * secondary task is identifed by the underlying widget.
@@ -53,13 +53,13 @@ namespace qemacs {
      * \param[in] w: widget
      * \param[in] t: title
      */
-    virtual void setTaskTitle(QWidget *const,const QString&);
+    virtual void setSecondaryTaskTitle(QWidget *const,const QString&);
     /*!
      * \brief set the icon of a given task.
      * \param[in] w: widget
      * \param[in] i: icon
      */
-    virtual void setTaskIcon(QWidget *const,const QIcon&);
+    virtual void setSecondaryTaskIcon(QWidget *const,const QIcon&);
     /*!
      * \brief attach a secondary task to a buffer.
      * \param[in] b: buffer
@@ -73,8 +73,8 @@ namespace qemacs {
      * \param[in] b: buffer
      * \param[in] w: widget
      */
-    virtual void attachExistingSecondaryTask(const QEmacsBuffer *const,
-                                             QWidget *const);
+    virtual const SecondaryTask &attachSecondaryTask(
+        const QEmacsBuffer *const, QWidget *const);
     /*!
      * \brief detach a secondary task from a buffer. The
      * secondary task is identifed by the underlying widget.

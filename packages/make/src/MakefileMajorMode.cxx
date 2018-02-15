@@ -12,8 +12,7 @@
 #include"QEmacs/QEmacsTextEditBase.hxx"
 #include"QEmacs/QEmacsMajorModeFactory.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
   MakefileMajorMode::MakefileMajorMode(QEmacsWidget& w,
                                        QEmacsBuffer& b,
@@ -37,7 +36,7 @@ namespace qemacs
       return true;
     }
     return false;
-  } // end of LicosMajorMode::keyPressEvent
+  } // end of MakefileMajorMode::keyPressEvent
 
   QString MakefileMajorMode::getCommentSyntax() {
     return "#";

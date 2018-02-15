@@ -190,9 +190,9 @@ namespace qemacs {
     }
     if (this->po == nullptr) {
       this->po = new ProcessOutputFrame(this->qemacs, this->buffer);
-      this->buffer.addSecondaryTask("*LaTeX* ouput", po);
+      this->buffer.attachSecondaryTask("*LaTeX* ouput", po);
     } else {
-      this->buffer.setSecondaryTaskName(po, "*LaTeX* ouput");
+      this->buffer.setSecondaryTaskTitle(po, "*LaTeX* ouput");
       this->buffer.setSecondaryTaskIcon(po, QIcon());
     }
     po->clear();

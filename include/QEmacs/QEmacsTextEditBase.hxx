@@ -77,9 +77,9 @@ namespace qemacs {
     /*!
      * \param[in] n : mode name
      */
-    virtual void setMajorMode(const QString &);
+    virtual QEmacsMajorMode* setMajorMode(const QString &);
 
-    virtual void setMajorMode();
+    virtual QEmacsMajorMode* setMajorMode();
 
     virtual void setMajorMode(QEmacsMajorMode *const);
 

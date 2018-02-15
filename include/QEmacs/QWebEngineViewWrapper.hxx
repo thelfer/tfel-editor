@@ -11,27 +11,20 @@
 #include<QtWebEngineWidgets/QWebEngineView>
 #include"QEmacs/Config.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
-  class QEMACS_VISIBILITY_EXPORT QWebEngineViewWrapper
-    : public QWidget
-  {
-    
-    Q_OBJECT
-
-  public:
-
-    QWebEngineViewWrapper(QWebEngineView *,
-			  QWidget *);
+  struct QEMACS_VISIBILITY_EXPORT QWebEngineViewWrapper
+      : public QWidget {
+    QWebEngineViewWrapper(QWebEngineView *, QWidget *);
 
     void focusInEvent(QFocusEvent *) override;
 
-  protected:
+   protected:
+    QWebEngineView *const wrappedObject;
 
-    QWebEngineView * const wrappedObject;
-
-  };
+   private:
+    Q_OBJECT
+  }; // end of QWebEngineViewWrapper
 
 } // end of namespace qemacs
 

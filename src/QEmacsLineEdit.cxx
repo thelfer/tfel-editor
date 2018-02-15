@@ -16,6 +16,7 @@
 #include "QEmacs/Utilities.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
+#include "QEmacs/ProcessOutputMajorModeBase.hxx"
 #include "QEmacs/ProcessOutputFrame.hxx"
 #include "QEmacs/QEmacsTextEdit.hxx"
 #include "QEmacs/QEmacsLineEdit.hxx"
@@ -358,60 +359,62 @@ namespace qemacs {
   }  // end of QEmacsLineEdit::isBlocking
 
   void QEmacsLineEdit::hideCompletions() {
-    this->buffer.hideSecondaryTask(this->scompletions);
+    //     this->buffer.hideSecondaryTask(this->scompletions);
   }  // end of QEmacsLineEdit::hideCompletions
 
   void QEmacsLineEdit::showCompletions(const QString&,
                                        const QStringList& cl) {
-    if (this->completions == nullptr) {
-      this->completions =
-          new QEmacsTextEdit(this->qemacs, this->buffer);
-      this->completions->setReadOnly(true);
-      this->scompletions =
-          this->buffer.addSecondaryTask("*completions*", this->completions);
-      QObject::connect(this, &QEmacsLineEdit::textChanged, this,
-                       &QEmacsLineEdit::hideCompletions);
-    }
-    this->completions->clear();
-    this->completions->insertHtml(
-        "<font color=\"blue\">Possible completions :</font>");
-    const auto d = cl.size() / 3;
-    const auto m = cl.size() % 3;
-    QString table;
-    table += "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">";
-    for (int i = 0; i != d; ++i) {
-      QString l;
-      l = "<tr>";
-      l += "<td width=\"30%\">" + cl[i * 3] + "</td>";
-      l += "<td width=\"30%\">" + cl[i * 3 + 1] + "</td>";
-      l += "<td width=\"30%\">" + cl[i * 3 + 2] + "</td>";
-      l += "</tr>";
-      table += l;
-    }
-    QString ll;
-    if (m != 0) {
-      ll = "<tr>";
-      if (m == 1) {
-        ll += "<td width=\"30%\">" + cl[d * 3] +
-              "</td>"
-              "<td width=\"30%\"></td>"
-              "<td width=\"30%\"></td>";
-      }
-      if (m == 2) {
-        ll += "<td width=\"30%\">" + cl[d * 3] +
-              "</td>"
-              "<td width=\"30%\">" +
-              cl[d * 3 + 1] +
-              "</td>"
-              "<td width=\"30%\"></td>";
-      }
-      ll += "</tr>";
-      table += ll;
-    }
-    table += "</table>";
-    this->completions->insertHtml(table);
-    this->scompletions->show();
-    this->buffer.showSecondaryTasks();
+    //     if (this->completions == nullptr) {
+    //       this->completions =
+    //           new QEmacsTextEdit(this->qemacs, this->buffer);
+    //       this->completions->setReadOnly(true);
+    //       this->scompletions =
+    //           this->buffer.attachSecondaryTask("*completions*",
+    //           this->completions);
+    //       QObject::connect(this, &QEmacsLineEdit::textChanged, this,
+    //                        &QEmacsLineEdit::hideCompletions);
+    //     }
+    //     this->completions->clear();
+    //     this->completions->insertHtml(
+    //         "<font color=\"blue\">Possible completions :</font>");
+    //     const auto d = cl.size() / 3;
+    //     const auto m = cl.size() % 3;
+    //     QString table;
+    //     table += "<table border=\"0\" cellpadding=\"0\"
+    //     cellspacing=\"0\">";
+    //     for (int i = 0; i != d; ++i) {
+    //       QString l;
+    //       l = "<tr>";
+    //       l += "<td width=\"30%\">" + cl[i * 3] + "</td>";
+    //       l += "<td width=\"30%\">" + cl[i * 3 + 1] + "</td>";
+    //       l += "<td width=\"30%\">" + cl[i * 3 + 2] + "</td>";
+    //       l += "</tr>";
+    //       table += l;
+    //     }
+    //     QString ll;
+    //     if (m != 0) {
+    //       ll = "<tr>";
+    //       if (m == 1) {
+    //         ll += "<td width=\"30%\">" + cl[d * 3] +
+    //               "</td>"
+    //               "<td width=\"30%\"></td>"
+    //               "<td width=\"30%\"></td>";
+    //       }
+    //       if (m == 2) {
+    //         ll += "<td width=\"30%\">" + cl[d * 3] +
+    //               "</td>"
+    //               "<td width=\"30%\">" +
+    //               cl[d * 3 + 1] +
+    //               "</td>"
+    //               "<td width=\"30%\"></td>";
+    //       }
+    //       ll += "</tr>";
+    //       table += ll;
+    //     }
+    //     table += "</table>";
+    //     this->completions->insertHtml(table);
+    //     this->scompletions->show();
+    //     this->buffer.showSecondaryTasks();
   }  // end of QEmacsLineEdit::showCompletions
 
   void QEmacsLineEdit::setLabel(const QString& l) {
@@ -630,13 +633,13 @@ namespace qemacs {
 
   void QEmacsProcessLineEdit::treatUserInput() {
     const QString c = this->input->text();
-    QStringList args = c.split(" ", QString::SkipEmptyParts);
+    auto args = c.split(" ", QString::SkipEmptyParts);
     if (args.empty()) {
       this->qemacs.displayInformativeMessage(
           QObject::tr("empty command"));
       return;
     }
-    const QString c0 = args.front();
+    const auto c0 = args.front();
     args.pop_front();
     this->run(c0, c0, args);
     return;
@@ -661,10 +664,16 @@ namespace qemacs {
       p.setWorkingDirectory(QDir::current().absolutePath());
     }
     if (!this->mode.isEmpty()) {
-      po->setMajorMode(this->mode);
+      auto* m = qobject_cast<ProcessOutputMajorModeBase *>(po->setMajorMode(this->mode));
+      if (m != nullptr){
+        m->setDirectory(p.workingDirectory());
+        m->setCommand(c);
+        m->setArguments(args);
+        m->setMajorMode(this->mode);
+      }
     }
     p.start(c, args);
-    b.addSecondaryTask("*" + on + "* ouput", po);
+    b.attachSecondaryTask("*" + on + "* ouput", po);
   }  // end of QEmacsProcessLineEdit::run
 
   QEmacsProcessLineEdit::~QEmacsProcessLineEdit() = default;

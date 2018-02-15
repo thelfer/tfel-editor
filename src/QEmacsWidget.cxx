@@ -249,7 +249,7 @@ namespace qemacs {
   }  // end of QEmacs::openFile()
 
   void QEmacsWidget::createEmptyBuffer() {
-    QEmacsBuffer* b = this->createNewBuffer();
+    auto* b = this->createNewBuffer();
     this->buffers->addWidget(b);
     this->setCurrentBuffer(b);
     emit bufferAdded();
@@ -279,25 +279,13 @@ namespace qemacs {
     return b;
   }  // end of QEmacsWidget::createNewBuffer
 
-  void QEmacsWidget::removeBuffer(QEmacsBuffer* b) {
+  void QEmacsWidget::removeBuffer(QEmacsBuffer* const b) {
     const auto n = b->getBufferName();
     this->bHistory.removeAll(n);
+    // removing the buffer in the secondary task manager, cleaning
+    // lonely task
+    SecondaryTaskManager::removeBuffer(b);
     this->buffers->removeWidget(b);
-    // removing the buffer in the secondaryTasks
-    auto p = this->secondaryTasks.begin();
-    while(p!=this->secondaryTasks.end()){
-      const auto pbe = p->second.end();
-      auto pb = std::find(p->second.begin(),pbe,b);
-      if(pb!=pbe){
-        p->second.erase(pb);
-      }
-      if (p->second.empty()) {
-        p->first->deleteLater();
-        p = this->secondaryTasks.erase(p);
-      } else {
-        ++p;
-      }
-    }
     // creating empty buffer is necessary
     if (this->buffers->count() == 0) {
       this->createEmptyBuffer();
@@ -764,35 +752,6 @@ namespace qemacs {
       t.save();
     }
   }  // end of QEmacsWidget::closeCurrentBuffer
-
-  void QEmacsWidget::attachSecondaryTask(const QEmacsBuffer* b, QWidget* w) {
-    if (w == nullptr) {
-      return;
-    }
-    auto& bv = this->secondaryTasks[w];
-    if(std::find(bv.begin(),bv.end(),w)==bv.end()){
-      bv.push_back(b);
-    }
-  }  // end of attachSecondaryTask
-
-  void QEmacsWidget::detachSecondaryTask(const QEmacsBuffer* b, QWidget* w) {
-    if (w == nullptr) {
-      return;
-    }
-    const auto p = this->secondaryTasks.find(w);
-    if(p==this->secondaryTasks.end()){
-      return;
-    }
-    const auto pbe = p->second.end();;
-    const auto pb  = std::find(p->second.begin(), pbe, b);
-    if (pb != pbe) {
-      p->second.erase(pb);
-    }
-    if (p->second.empty()) {
-      p->first->deleteLater();
-      this->secondaryTasks.erase(p);
-    }
-  }  // end of detachSecondaryTask
 
   QEmacsWidget::~QEmacsWidget() {
     this->removeUserInputs();

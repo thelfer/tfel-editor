@@ -56,7 +56,7 @@ namespace qemacs {
       }();
       // qt-moc error
       static auto e3 = [] {
-        QRegExp r("^([/-\\w|\\.]+):(\\d+):(\\d+): Error:");
+        QRegExp r("^([/-\\w|\\.]+):(\\d+): Error:");
         r.setMinimal(true);
         return r;
       }();
@@ -70,8 +70,14 @@ namespace qemacs {
         r.setMinimal(true);
         return r;
       }();
-      static auto n = [] {
+      static auto n1 = [] {
         QRegExp r("^([/-\\w|\\.]+):(\\d+):(\\d+): note:");
+        r.setMinimal(true);
+        return r;
+      }();
+      // qt-moc note
+      static auto n2 = [] {
+        QRegExp r("^([/-\\w|\\.]+):(\\d+): Note:");
         r.setMinimal(true);
         return r;
       }();
@@ -99,13 +105,35 @@ namespace qemacs {
         }
         return false;
       };
+      auto apply2 = [this, &l](const QRegExp &r,
+                              const QTextCharFormat &f) {
+        const auto index = r.indexIn(l);
+        if ((index == 0) && (r.captureCount() == 2)) {
+          auto *d = new CompilationOutputUserData;
+          bool b1;
+          d->file = r.cap(1);
+          d->line = r.cap(2).toInt(&b1);
+          d->column = 0;
+          if (!b1) {
+            delete d;
+            return false;
+          }
+          const auto l1 = d->file.size();
+          const auto l2 = r.cap(2).size();
+          this->setFormat(0, l1, f);
+          this->setFormat(l1 + 1, l2, this->number);
+          this->setCurrentBlockUserData(d);
+          return true;
+        }
+        return false;
+      };
       if (apply(e1, this->error)) {
         return;
       }
       if (apply(e2, this->error)) {
         return;
       }
-      if (apply(e3, this->error)) {
+      if (apply2(e3, this->error)) {
         return;
       }
       if (apply(w, this->warning)) {
@@ -114,7 +142,10 @@ namespace qemacs {
       if (apply(b, this->backtrace)) {
         return;
       }
-      if (apply(n, this->note)) {
+      if (apply(n1, this->note)) {
+        return;
+      }
+      if (apply2(n2, this->note)) {
         return;
       }
     }
@@ -173,10 +204,9 @@ namespace qemacs {
         if (pos < d->file.size()) {
           auto &cb = this->qemacs.getCurrentBuffer();
           const auto self  = cb.getCurrentSecondaryTask();
-          const auto title = cb.getCurrentSecondaryTaskTitle();
           this->qemacs.openFile(d->file);
           auto &nb = this->qemacs.getCurrentBuffer();
-          //           nb.addSecondaryTask(title,self);
+          nb.attachSecondaryTask(self);
           nb.getMainFrame().gotoPosition(d->line, d->column);
           return true;
         }
@@ -187,8 +217,8 @@ namespace qemacs {
     bool keyPressEvent(QKeyEvent *e) override {
       const auto m = e->modifiers();
       const auto k = e->key();
-      if (((m == Qt::AltModifier) && (k == Qt::Key_M)) ||
-          ((m == Qt::NoModifier) && (k == Qt::Key_Enter))) {
+      if (((m == Qt::NoModifier) && (k == Qt::Key_Enter)) ||
+          ((m == Qt::NoModifier) && (k == Qt::Key_Return))) {
         auto c = this->textEdit.textCursor();
         auto *ud = c.block().userData();
         if (ud == nullptr) {
@@ -202,15 +232,14 @@ namespace qemacs {
         if (pos < d->file.size()) {
           auto &cb = this->qemacs.getCurrentBuffer();
           const auto self = cb.getCurrentSecondaryTask();
-          const auto title = cb.getCurrentSecondaryTaskTitle();
           this->qemacs.openFile(d->file);
           auto &nb = this->qemacs.getCurrentBuffer();
-          //          nb.addSecondaryTask(title,self);
+          nb.attachSecondaryTask(self);
           nb.getMainFrame().gotoPosition(d->line, d->column);
           return true;
         }
       }
-      return false;
+      return ProcessOutputMajorModeBase::keyPressEvent(e);
     } // end of keyPressEvent
 
     void format() override {}  // end of format
