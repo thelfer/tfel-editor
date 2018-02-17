@@ -1,20 +1,20 @@
 AM_CPPFLAGS = -I$(top_srcdir)/packages/latex/include \
-	      -I$(top_srcdir)/include                \
-	      @QT_CXXFLAGS@                           \
-	      `@TFELCONFIG@ --includes --cppflags`
+	          -I$(top_srcdir)/include                \
+	          @QT_CXXFLAGS@                          \
+	          `@TFELCONFIG@ --includes --cppflags`
 
 packagesdir = @prefix@/share/qemacs/packages
 packages_LTLIBRARIES = libLaTeXQEmacsMode.la
 
-libLaTeXQEmacsMode_la_SOURCES = LaTeXMajorMode.cxx          \
-				LaTeXOutputMajorMode.cxx    \
-				LaTeXSyntaxHighlighter.cxx
+libLaTeXQEmacsMode_la_SOURCES = LaTeXMajorMode.cxx         \
+				                LaTeXOutputMajorMode.cxx   \
+				                LaTeXSyntaxHighlighter.cxx
 
 nodist_libLaTeXQEmacsMode_la_SOURCES = moc_LaTeXMajorMode.cxx         \
-				       moc_LaTeXSyntaxHighlighter.cxx \
-				       LaTeXModeResources.cxx
+				                       moc_LaTeXSyntaxHighlighter.cxx \
+				                       LaTeXModeResources.cxx
 
-LATEXMODERESOURCES=images/LaTeXIcon.svg
+LATEXMODERESOURCES=images/languages/latex.png
 
 LaTeXModeResources.cxx : LaTeXModeResources.qrc $(LATEXMODERESOURCES)
 	@QT_RCC@ -name LaTeXModeResources @srcdir@/LaTeXModeResources.qrc -o LaTeXModeResources.cxx

@@ -1,5 +1,5 @@
  <!DOCTYPE RCC><RCC version="1.0">
  <qresource>
- <file alias="LaTeXIcon.svg">images/LaTeXIcon.svg</file>
+ <file alias="qemacs/languages/latex.png">images/languages/latex.png</file>
  </qresource>
  </RCC>

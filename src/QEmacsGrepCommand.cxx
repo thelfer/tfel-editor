@@ -6,7 +6,7 @@
  */
 
 #include"QEmacs/QEmacsCommand.hxx"
-#include"QEmacs/QEmacsLineEdit.hxx"
+#include"QEmacs/QEmacsShellProcessLineEdit.hxx"
 #include"QEmacs/QEmacsWidget.hxx"
 #include"QEmacs/QEmacsCommandFactory.hxx"
 

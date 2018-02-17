@@ -6,16 +6,13 @@
  */
 
 #include <QtCore/QDebug>
-
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
-
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/QEmacsPlainTextEdit.hxx"
 #include "QEmacs/QEmacsLineEdit.hxx"
 #include "QEmacs/QEmacsMajorModeFactory.hxx"
-
 #include "QEmacs/ProcessOutputFrame.hxx"
 #include "QEmacs/LaTeXSyntaxHighlighter.hxx"
 #include "QEmacs/LaTeXMajorMode.hxx"
@@ -56,7 +53,7 @@ namespace qemacs {
         << "equation";
       //      = LaTeXSyntaxHighlighter::getPrimaryBlocks();
       // n <<  LaTeXSyntaxHighlighter::getSecondaryBlocks();
-      QCompleter* c = new QCompleter(n, &p);
+      auto* c = new QCompleter(n, &p);
       c->setWidget(this->input);
       c->setCompletionMode(QCompleter::InlineCompletion);
       this->input->setCompleter(c, false);
@@ -224,7 +221,7 @@ namespace qemacs {
   }  // end of CppMajorMode::getSpecificMenu
 
   QIcon LaTeXMajorMode::getIcon() const {
-    static QIcon i(":/LaTeXIcon.svg");
+    static QIcon i(":/qemacs/languages/latex.png");
     return i;
   }  // end of LaTeXMajorMode::getIcon()
 
@@ -238,8 +235,8 @@ namespace qemacs {
       bl.movePosition(QTextCursor::StartOfBlock,
                       QTextCursor::KeepAnchor);
       int posl = tc.position() - bl.position();
-      const QString text = tc.block().text();
-      const Rules& rules =
+      const auto text = tc.block().text();
+      const auto& rules =
           LaTeXSyntaxHighlighter::getHighlightingRules();
       // remove comments
       int pc = LaTeXSyntaxHighlighter::startOfComment(text);

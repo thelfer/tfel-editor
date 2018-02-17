@@ -165,6 +165,9 @@ namespace qemacs {
     return this->e->setTextCursor(tc);
   }
 
+  void QEmacsTextEdit::centerCursor(){
+  }  // end of QEmacsTextEdit::centerCursor
+
   void QEmacsTextEdit::setTextInteractionFlags(
       Qt::TextInteractionFlags f) {
     this->e->setTextInteractionFlags(f);

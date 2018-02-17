@@ -23,6 +23,8 @@ namespace qemacs {
     QString getName() const override;
 
     QString getDescription() const override;
+
+    QIcon getIcon() const override;
     
     /*!
      * This method is called before any treatment by QEmacsTextEditBase

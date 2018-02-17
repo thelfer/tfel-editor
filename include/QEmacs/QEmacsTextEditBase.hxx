@@ -71,6 +71,8 @@ namespace qemacs {
 
     virtual void setTextCursor(const QTextCursor &) = 0;
 
+    virtual void centerCursor() = 0;
+
     virtual void setUndoRedoEnabled(const bool) = 0;
 
     virtual void setFont(const QFont &);

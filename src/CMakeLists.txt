@@ -16,6 +16,8 @@ qt_sources(TFELQEmacs_SOURCES
   QEmacsShortCutStyle
   QEmacsCommand
   QEmacsLineEdit
+  QEmacsProcessLineEdit
+  QEmacsShellProcessLineEdit
   QEmacsBuffer
   QEmacsTextEditSearch
   QEmacsTextEditKeyPressEventFilter

@@ -309,6 +309,10 @@ namespace qemacs {
     return this->e->setTextCursor(tc);
   }
 
+  void QEmacsPlainTextEdit::centerCursor() {
+    return this->e->centerCursor();
+  }  // end of QEmacsPlainTextEdit::centerCursor
+
   void QEmacsPlainTextEdit::setTextInteractionFlags(
       Qt::TextInteractionFlags f) {
     this->e->setTextInteractionFlags(f);

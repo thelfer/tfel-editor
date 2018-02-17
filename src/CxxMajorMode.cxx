@@ -19,8 +19,7 @@ namespace qemacs
   CxxMajorMode::CxxMajorMode(QEmacsWidget &w,
                              QEmacsBuffer &b,
                              QEmacsTextEditBase &t)
-      : CMajorModeBase(w, b, t) {
-  } // end of CxxMajorMode::CxxMajorMode
+      : CMajorModeBase(w, b, t) {}  // end of CxxMajorMode::CxxMajorMode
 
   QString CxxMajorMode::getName() const {
     return "C++";
@@ -33,6 +32,10 @@ namespace qemacs
   QString CxxMajorMode::getDescription() const {
     return "major mode dedicated to the C++ language";
   } // end of CxxMajorMode::CxxMajorMode
+
+  QIcon CxxMajorMode::getIcon() const{
+    return QIcon(":/qemacs/languages/cxx.png");
+  }  // end of CxxMajorMode::getIcon
 
   bool CxxMajorMode::keyPressEvent(QKeyEvent *const e) {
     const int k = e->key();

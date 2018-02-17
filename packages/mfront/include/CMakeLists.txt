@@ -1,3 +1,3 @@
 install_header(QEmacs MFrontMajorMode.hxx)
 install_header(QEmacs MFrontSyntaxHighlighter.hxx)
-
+install_header(QEmacs MFrontOptions.hxx)

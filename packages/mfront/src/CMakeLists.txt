@@ -9,7 +9,8 @@ link_directories("${TFEL_LIBRARY_PATH}")
 qt_sources(MFrontQEmacsMode_SOURCES
   "${PROJECT_SOURCE_DIR}/packages/mfront/include/QEmacs"
   MFrontMajorMode
-  MFrontSyntaxHighlighter)
+  MFrontSyntaxHighlighter
+  MFrontOptions)
 
 qt_add_resources(MFrontQEmacsResources_RCC
   MFrontModeResources.qrc)

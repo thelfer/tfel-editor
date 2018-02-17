@@ -93,6 +93,7 @@ namespace qemacs {
 
     virtual void setSecondaryTaskIcon(QWidget *const, const QIcon &);
 
+    virtual void showSecondaryTask(QWidget *const);
 
     virtual void hideSecondaryTask(QWidget *const);
 

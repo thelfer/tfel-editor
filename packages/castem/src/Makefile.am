@@ -10,7 +10,8 @@ CASTEMMODERESOURCES=images/IconeCast3M_jaune.png
 CastemModeResources.cxx : CastemModeResources.qrc $(CASTEMMODERESOURCES)
 	@QT_RCC@ -name CastemModeResources @srcdir@/CastemModeResources.qrc -o CastemModeResources.cxx
 
-libCastemQEmacsMode_la_SOURCES        = CastemMajorMode.cxx         \
+libCastemQEmacsMode_la_SOURCES        = CastemMajorMode.cxx          \
+					CastemOutputMajorMode.cxx    \
 					CastemSyntaxHighlighter.cxx
 
 nodist_libCastemQEmacsMode_la_SOURCES = moc_CastemMajorMode.cxx

@@ -297,7 +297,7 @@ namespace qemacs {
       int id = a->data().toInt();
       e->changeBuffer(id);
     }
-  }
+  } // end of QEmacsMainWindow::bufferMenuActionTriggered
 
   void QEmacsMainWindow::useEmacsShortCuts() {
     auto &s = QEmacsShortCutStyle::getQEmacsShortCutStyle();
@@ -315,8 +315,11 @@ namespace qemacs {
     auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     QSettings settings;
     this->menuBar()->clear();
-    //    this->menuBar()->setFocusPolicy(Qt::NoFocus);
-    // this->menuBar()->setStyleSheet("background: rgba(0,0,0,100%)");
+#if QT_VERSION < QT_VERSION_CHECK(5, 8, 0)
+// https://bugreports.qt.io/browse/QTBUG-46812
+// https://codereview.qt-project.org/#/c/170352/
+//
+#endif
     this->fm = this->menuBar()->addMenu(tr("File"));
     this->fm->addAction(this->na);
     this->fm->addAction(this->oa);

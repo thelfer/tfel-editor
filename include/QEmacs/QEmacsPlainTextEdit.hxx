@@ -58,7 +58,9 @@ namespace qemacs
     void setTextInteractionFlags(Qt::TextInteractionFlags) override;
       
     void setTextCursor(const QTextCursor&) override;
-      
+
+    void centerCursor() override;
+
     void setReadOnly(bool) override;
       
     void setUndoRedoEnabled(bool) override;

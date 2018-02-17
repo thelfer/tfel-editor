@@ -5,12 +5,13 @@
  * \date   26/08/2012
  */
 
-#include<QtCore/QSettings>
-#include"QEmacs/MakefileMajorMode.hxx"
-#include"QEmacs/MakefileSyntaxHighlighter.hxx"
-#include"QEmacs/QEmacsWidget.hxx"
-#include"QEmacs/QEmacsTextEditBase.hxx"
-#include"QEmacs/QEmacsMajorModeFactory.hxx"
+#include <QtCore/QSettings>
+#include "QEmacs/QEmacsWidget.hxx"
+#include "QEmacs/QEmacsTextEditBase.hxx"
+#include "QEmacs/QEmacsShellProcessLineEdit.hxx"
+#include "QEmacs/QEmacsMajorModeFactory.hxx"
+#include "QEmacs/MakefileSyntaxHighlighter.hxx"
+#include "QEmacs/MakefileMajorMode.hxx"
 
 namespace qemacs {
 

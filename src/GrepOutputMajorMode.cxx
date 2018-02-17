@@ -7,16 +7,14 @@
 
 #include <QtCore/QDir>
 #include <QtCore/QDebug>
-
 #include <QtGui/QSyntaxHighlighter>
-
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/QEmacsTextEditBase.hxx"
 #include "QEmacs/ProcessOutputFrame.hxx"
-
 #include "QEmacs/QEmacsMajorMode.hxx"
 #include "QEmacs/QEmacsMajorModeBase.hxx"
+#include "QEmacs/ProcessOutputMajorModeBase.hxx"
 #include "QEmacs/QEmacsMajorModeFactory.hxx"
 
 namespace qemacs {
@@ -42,7 +40,7 @@ namespace qemacs {
       QRegExp expr("^([/-\\w|\\.]+):(\\d+):");
       expr.setMinimal(true);
       int index = expr.indexIn(text);
-      if ((index==0) && (expr.captureCount() == 2)) {
+      if ((index == 0) && (expr.captureCount() == 2)) {
         auto *d = new GrepUserData;
         auto n = expr.cap(2);
         bool b;
@@ -66,13 +64,17 @@ namespace qemacs {
   };  // end of struct GrepOutputSyntaxHighlighter
 
   /*!
-   * A major mode to display the results of the grepOutput unix command
+   * A major mode to display the results of the grep unix command
    */
-  struct GrepOutputMajorMode : public QEmacsMajorModeBase {
+  struct GrepOutputMajorMode : public ProcessOutputMajorModeBase{
+    /*!
+     * \brief constructor
+     */
     GrepOutputMajorMode(QEmacsWidget &w,
                         QEmacsBuffer &b,
                         QEmacsTextEditBase &t)
-        : QEmacsMajorModeBase(w, b, t, &t) {}
+        : ProcessOutputMajorModeBase(w, b, t, &t) {
+    }  // end of GrepOutputMajorMode
 
     QString getName() const override {
       return "grep-output";
@@ -93,7 +95,7 @@ namespace qemacs {
         if (po == nullptr) {
           return false;
         }
-        auto c = this->textEdit.cursorForPosition(e->pos());        
+        auto c = this->textEdit.cursorForPosition(e->pos());
         auto *ud = c.block().userData();
         if (ud == nullptr) {
           return false;
@@ -102,8 +104,8 @@ namespace qemacs {
         auto b = c;
         b.movePosition(QTextCursor::StartOfLine,
                        QTextCursor::MoveAnchor);
-        const auto pos = c.position()-b.position();
-        if(pos<d->file.size()){
+        const auto pos = c.position() - b.position();
+        if (pos < d->file.size()) {
           auto &cb = this->qemacs.getCurrentBuffer();
           const auto self = cb.getCurrentSecondaryTask();
           const auto wd = po->getProcess().workingDirectory();
@@ -118,14 +120,14 @@ namespace qemacs {
           return true;
         }
       }
-      return false;
+      return ProcessOutputMajorModeBase::mousePressEvent(e);
     }
 
     bool keyPressEvent(QKeyEvent *e) override {
-      if (((e->modifiers() == Qt::AltModifier) &&
-           (e->key() == Qt::Key_M)) ||
-          ((e->modifiers() == Qt::NoModifier) &&
-           (e->key() == Qt::Key_Return))) {
+      const auto k = e->key();
+      const auto m = e->modifiers();
+      if (((m == Qt::NoModifier) && (k == Qt::Key_Enter)) ||
+          ((m == Qt::NoModifier) && (k == Qt::Key_Return))) {
         auto *po =
             qobject_cast<ProcessOutputFrame *>(&(this->textEdit));
         if (po == nullptr) {
@@ -140,8 +142,8 @@ namespace qemacs {
         auto b = c;
         b.movePosition(QTextCursor::StartOfLine,
                        QTextCursor::MoveAnchor);
-        const auto pos = c.position()-b.position();
-        if(pos<d->file.size()){
+        const auto pos = c.position() - b.position();
+        if (pos < d->file.size()) {
           auto &cb = this->qemacs.getCurrentBuffer();
           const auto self = cb.getCurrentSecondaryTask();
           const auto wd = po->getProcess().workingDirectory();
@@ -155,8 +157,11 @@ namespace qemacs {
           nb.getMainFrame().gotoLine(d->line);
         }
       }
-      return false;
+      return ProcessOutputMajorModeBase::keyPressEvent(e);
     }
+
+    void processFinished(int, QProcess::ExitStatus) override {
+    }  // end of processFinished
 
     void format() override {}
 

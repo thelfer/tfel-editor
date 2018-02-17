@@ -39,6 +39,8 @@ namespace qemacs {
     QIcon icon;
     //! is this task the current one for the buffer
     bool current = false;
+    //! is this task the current one for the buffer
+    bool visible = true;
   };  // end of struct SecondaryTask
 
   /*!

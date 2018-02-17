@@ -106,7 +106,8 @@ namespace qemacs {
         return this->handleMousePressEvent(me);
       }
     }
-    return false;
+    // standard event processing
+    return QObject::eventFilter(o,e);
   }
 
   QString QEmacsTextEditBase::getModifier(const QKeyEvent& e) {
@@ -191,8 +192,7 @@ namespace qemacs {
         auto b = this->qemacs.getBufferVisitingFile(this->file);
         if (b != nullptr) {
           this->qemacs.removeUserInput(this);
-          QEmacsLineEdit* l;
-          l = new QEmacsTextEditBase::KillOtherBufferAndWriteFile(
+          auto* l = new QEmacsTextEditBase::KillOtherBufferAndWriteFile(
               this->qemacs, this->textEdit, *b, this->file);
           this->qemacs.setUserInput(l);
         } else {
@@ -426,6 +426,7 @@ namespace qemacs {
       c.movePosition(QTextCursor::PreviousBlock, this->moveMode, -l);
     }
     this->setTextCursor(c);
+    this->centerCursor();
   } // end QEmacsTextEditBase::gotoLine
 
   void QEmacsTextEditBase::gotoPosition(const int l, const int c) {
@@ -443,6 +444,7 @@ namespace qemacs {
                       -std::min(-c+1, mpos));
     }
     this->setTextCursor(tc);
+    this->centerCursor();
   } // end of QEmacsTextEditBase::gotoPosition
 
   QString QEmacsTextEditBase::getCurrentWord() const {
@@ -1395,6 +1397,7 @@ namespace qemacs {
             m, this->cursorForPosition(e->pos()));
       }
       m->exec(e->globalPos());
+      e->accept();
       return true;
 #endif
     }

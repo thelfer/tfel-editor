@@ -8,8 +8,7 @@
 #include <QtCore/QDebug>
 #include <QtCore/QTextCodec>
 #include <QtCore/QTextDecoder>
-
-#include "QEmacs/QEmacsBuffer.hxx"
+#include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/ProcessOutputMajorModeBase.hxx"
 #include "QEmacs/ProcessOutputFrame.hxx"
 
@@ -21,6 +20,7 @@ namespace qemacs {
     using QProcessFinished =
         void (QProcess::*)(int, QProcess::ExitStatus);
     QEmacsPlainTextEdit::setReadOnly(true);
+    QEmacsPlainTextEdit::setUndoRedoEnabled(false);
     this->process->setProcessChannelMode(QProcess::MergedChannels);
     QObject::connect(this->process, &QProcess::readyReadStandardOutput,
                      this, &ProcessOutputFrame::displayProcessOutput);
@@ -48,9 +48,9 @@ namespace qemacs {
   void ProcessOutputFrame::processFinished(int s,
                                            QProcess::ExitStatus es) {
     if (s == 0) {
-      this->buffer.setSecondaryTaskIcon(this, QIcon(":/QEmacsSuccessIcon.png"));
+      this->qemacs.setSecondaryTaskIcon(this, QIcon(":/qemacs/success.png"));
     } else {
-      this->buffer.setSecondaryTaskIcon(this, QIcon(":/QEmacsFailureIcon.png"));
+      this->qemacs.setSecondaryTaskIcon(this, QIcon(":/qemacs/failure.png"));
     };
     auto pom = qobject_cast<ProcessOutputMajorModeBase*>(this->mode);
     if(pom!=nullptr){

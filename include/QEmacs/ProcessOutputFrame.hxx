@@ -13,8 +13,7 @@
 #include"QEmacs/Config.hxx"
 #include"QEmacs/QEmacsPlainTextEdit.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
   /*!
    * \brief an helper class to display the output of a QProcess

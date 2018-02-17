@@ -14,6 +14,7 @@
 #include "TFEL/Utilities/CxxTokenizer.hxx"
 #include "QEmacs/MarkdownSyntaxHighlighter.hxx"
 #include "QEmacs/ProcessOutputFrame.hxx"
+#include "QEmacs/QEmacsShellProcessLineEdit.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/QEmacsMajorModeFactory.hxx"

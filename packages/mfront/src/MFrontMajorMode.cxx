@@ -9,6 +9,7 @@
 #include <QtCore/QDebug>
 #include <QtCore/QStringListModel>
 #include <QtCore/QTimer>
+#include <QtCore/QFileInfo>
 #include <QtWidgets/QAbstractItemView>
 #include "TFEL/Utilities/CxxTokenizer.hxx"
 #include "MFront/AbstractDSL.hxx"
@@ -20,6 +21,7 @@
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/QEmacsMajorModeFactory.hxx"
 #include "QEmacs/QEmacsTextEditBase.hxx"
+#include "QEmacs/MFrontOptions.hxx"
 #include "QEmacs/MFrontMajorMode.hxx"
 
 namespace qemacs {
@@ -210,15 +212,24 @@ namespace qemacs {
       this->report(QObject::tr("MFrontMajorMode::startMFront: no file name"));
       return;
     }
-    //     MFrontAnalysisOptions o;
-    //     MFrontAnalysisOptionsDialog od(o, &(this->textEdit));
-    //     if (od.exec() == QDialog::Rejected) { return; }
-    //     const auto &af = QFileInfo(n).absoluteFilePath();
-    //     auto *s = new MFrontOutputFrame(this->qemacs, this->buffer, af, o);
-    //     QObject::connect(s, &MFrontOutputFrame::finished, this,
-    //                      &MFrontMajorMode::AnalysisFinished);
-    //     this->buffer.addSecondaryTask(QObject::tr("MFront Output"), s);
-  } // end of startMFront
+    MFrontOptions o;
+    MFrontOptionsDialog od(o, &(this->textEdit));
+    if (od.exec() == QDialog::Rejected) {
+      return;
+    }
+    const auto& af = QFileInfo(n).absoluteFilePath();
+    auto nf = new ProcessOutputFrame(this->qemacs, this->buffer);
+    this->buffer.attachSecondaryTask(QObject::tr("MFront output"), nf);
+    auto& p = nf->getProcess();
+    auto arg = QStringList{};
+    arg << ("--verbose=" + o.vlvl);
+    if (o.debug) {
+      arg << "--debug";
+    }
+    arg << af;
+    p.start("mfront", arg);
+    p.waitForStarted();
+  }  // end of startMFront
 
   MFrontMajorMode::~MFrontMajorMode() = default;
 

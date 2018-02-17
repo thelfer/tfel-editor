@@ -46,26 +46,26 @@ namespace qemacs {
      * \param[in] b: buffer
      * \param[in] w: widget
      */
-    virtual void setCurrentSecondaryTask(const QEmacsBuffer *const,
+    virtual void setCurrentSecondaryTask(QEmacsBuffer *const,
                                          QWidget *const);
     /*!
      * \brief set the title of a given task.
      * \param[in] w: widget
      * \param[in] t: title
      */
-    virtual void setSecondaryTaskTitle(QWidget *const,const QString&);
+    virtual void setSecondaryTaskTitle(QWidget *const, const QString &);
     /*!
      * \brief set the icon of a given task.
      * \param[in] w: widget
      * \param[in] i: icon
      */
-    virtual void setSecondaryTaskIcon(QWidget *const,const QIcon&);
+    virtual void setSecondaryTaskIcon(QWidget *const, const QIcon &);
     /*!
      * \brief attach a secondary task to a buffer.
      * \param[in] b: buffer
      * \param[in] t: task
      */
-    virtual void attachSecondaryTask(const QEmacsBuffer *const,
+    virtual void attachSecondaryTask(QEmacsBuffer *const,
                                      const SecondaryTask &);
     /*!
      * \brief attach an existing secondary task to a buffer. The
@@ -74,30 +74,43 @@ namespace qemacs {
      * \param[in] w: widget
      */
     virtual const SecondaryTask &attachSecondaryTask(
-        const QEmacsBuffer *const, QWidget *const);
+        QEmacsBuffer *const, QWidget *const);
+    /*!
+     * \brief change the state of an existing secondary task for a given
+     * buffer.
+     * \param[in] b: buffer
+     * \param[in] w: widget
+     */
+    virtual void showSecondaryTask(QEmacsBuffer *const, QWidget *const);
+    /*!
+     * \brief change the state of an existing secondary task for a given
+     * buffer.
+     * \param[in] b: buffer
+     * \param[in] w: widget
+     */
+    virtual void hideSecondaryTask(QEmacsBuffer *const, QWidget *const);
     /*!
      * \brief detach a secondary task from a buffer. The
      * secondary task is identifed by the underlying widget.
      * \param[in] b: buffer
      * \param[in] w: widget
      */
-    virtual void detachSecondaryTask(const QEmacsBuffer *const,
+    virtual void detachSecondaryTask(QEmacsBuffer *const,
                                      QWidget *const);
     /*!
      * \return the list of secondary tasks associated to a buffer
      * \param[in] b: buffer
      */
     virtual const std::vector<SecondaryTask> &getSecondaryTasks(
-        const QEmacsBuffer *const);
+        QEmacsBuffer *const);
 
    protected:
     //! a simple alias
-    using map =
-        std::map<const QEmacsBuffer *, std::vector<SecondaryTask>>;
+    using map = std::map<QEmacsBuffer *, std::vector<SecondaryTask>>;
     //! a simple alias
     using iterator = map::iterator;
     //! map associating a buffer to the list of its secondary tasks
-    map m;
+    map bufferTasks;
 
   };  // end of struct SecondaryTaskManager
 

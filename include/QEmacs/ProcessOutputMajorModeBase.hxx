@@ -31,15 +31,26 @@ namespace qemacs {
                                QEmacsBuffer&,
                                QEmacsTextEditBase&,
                                QWidget* const);
-    void setDirectory(const QString&);
-    void setCommand(const QString&);
-    void setArguments(const QStringList&);
-    void setMajorMode(const QString&);
+  public slots:
+
+    virtual void restart();
+
+    virtual void stop();
+    
+  public:
+
+    virtual void setDirectory(const QString&);
+    virtual void setCommand(const QString&);
+    virtual void setArguments(const QStringList&);
+    virtual void setMajorMode(const QString&);
     /*!
      * \brief handle key event
      * \param[in] e: event
      */
     bool keyPressEvent(QKeyEvent* const) override;
+
+    void completeContextMenu(QMenu* const,
+			     const QTextCursor&) override;
     /*!
      * \brief method called when the process is finished
      * \param[in] s: exit status

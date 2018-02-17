@@ -5,6 +5,7 @@
  * \date   13/02/2018
  */
 
+#include <QtCore/QDebug>
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/SecondaryTaskManager.hxx"
 
@@ -36,21 +37,21 @@ namespace qemacs {
   }  // end of wfind
 
   void SecondaryTaskManager::removeBuffer(QEmacsBuffer* const b){
-    const auto pb = this->m.find(b);
-    if(pb==this->m.end()){
+    const auto pb = this->bufferTasks.find(b);
+    if(pb==this->bufferTasks.end()){
       return;
     }
     // move the task
     const auto tasks = std::move(pb->second);
-    this->m.erase(pb);
+    this->bufferTasks.erase(pb);
     for(const auto& t : tasks){
-      auto pbv = this->m.begin();
-      while(pbv!=this->m.end()){
+      auto pbv = this->bufferTasks.begin();
+      while(pbv!=this->bufferTasks.end()){
         const auto pt = wfind(pbv->second,t.w);
         if(pt!=pbv->second.end()){
           pbv->second.erase(pt);
           if(pbv->second.empty()){
-            pbv = this->m.erase(pbv);
+            pbv = this->bufferTasks.erase(pbv);
           } else {
             ++pbv;
           }
@@ -62,9 +63,9 @@ namespace qemacs {
   }  // end of SecondaryTaskManager::removeBuffer
 
   void SecondaryTaskManager::setCurrentSecondaryTask(
-      const QEmacsBuffer* const b, QWidget* const w) {
-    const auto pb = this->m.find(b);
-    if (pb == this->m.end()) {
+      QEmacsBuffer* const b, QWidget* const w) {
+    const auto pb = this->bufferTasks.find(b);
+    if (pb == this->bufferTasks.end()) {
       return;
     }
     if (wfind(pb->second, w) == pb->second.end()) {
@@ -80,16 +81,15 @@ namespace qemacs {
     if(w==nullptr){
       return;
     }
-    auto found = false;
-    for (auto& b:this->m) {
+    for (auto& b:this->bufferTasks) {
       for (auto& ta : b.second) {
         if(ta.w == w){
-          found = true;
           ta.title = t;
+          if(b.first->isVisible()){
+            b.first->refreshSecondaryTaskTabWidget();
+          }
         }
       }
-    }
-    if (found) {
     }
   }  // end of SecondaryTaskManager::setSecondaryTaskTitle
 
@@ -98,25 +98,24 @@ namespace qemacs {
     if(w==nullptr){
       return;
     }
-    auto found = false;
-    for (auto& b:this->m) {
+    for (auto& b:this->bufferTasks) {
       for (auto& ta : b.second) {
         if(ta.w == w){
-          found = true;
           ta.icon = i;
+          if(b.first->isVisible()){
+            b.first->refreshSecondaryTaskTabWidget();
+          }
         }
       }
-    }
-    if (found) {
     }
   }  // end of SecondaryTaskManager::setSecondaryTaskIcon
 
   void SecondaryTaskManager::attachSecondaryTask(
-      const QEmacsBuffer* const b, const SecondaryTask& t) {
+      QEmacsBuffer* const b, const SecondaryTask& t) {
     if ((t.w == nullptr) || (b == nullptr)) {
       return;
     }
-    auto& v = this->m[b];
+    auto& v = this->bufferTasks[b];
     if (wfind(v, t.w) == v.end()) {
       v.push_back(t);
     }
@@ -124,18 +123,18 @@ namespace qemacs {
   }  // end of SecondaryTaskManager::attachSecondaryTask
 
   const SecondaryTask& SecondaryTaskManager::attachSecondaryTask(
-      const QEmacsBuffer* const b, QWidget* const w) {
+      QEmacsBuffer* const b, QWidget* const w) {
     static const SecondaryTask nulltask;
     if ((w == nullptr) || (b == nullptr)) {
       return nulltask;
     }
-    auto& v = this->m[b];
+    auto& v = this->bufferTasks[b];
     const auto p = wfind(v,w);
     if (p == v.end()) {
       // the widget is not associated with this buffer
       // so we expect
       // the secondary task to be handled by another buffer
-      for (const auto& kv : this->m) {
+      for (const auto& kv : this->bufferTasks) {
         const auto p2 = wfind(kv.second,w);
         if (p2 != kv.second.end()) {
           this->attachSecondaryTask(b,*p2);
@@ -152,18 +151,18 @@ namespace qemacs {
   }  // end of SecondaryTaskManager::attachSecondaryTask
 
   void SecondaryTaskManager::detachSecondaryTask(
-      const QEmacsBuffer* const b, QWidget* const w) {
+      QEmacsBuffer* const b, QWidget* const w) {
     if ((w == nullptr) || (b == nullptr)) {
       return;
     }
-    const auto p = this->m.find(b);
-    if (p != this->m.end()) {
+    const auto p = this->bufferTasks.find(b);
+    if (p != this->bufferTasks.end()) {
       const auto pw = wfind(p->second,w);
       if (pw != p->second.end()) {
         p->second.erase(pw);
         if(p->second.empty()){
           // the buffer don't have any secondary task anymore
-          this->m.erase(p);
+          this->bufferTasks.erase(p);
         }
       } else {
         // w is not associated with b
@@ -174,7 +173,7 @@ namespace qemacs {
       return;
     }
     // now check if the widget is still associated to a task
-    for (const auto& bv : this->m) {
+    for (const auto& bv : this->bufferTasks) {
       const auto pw = wfind(bv.second,w);
       if (pw != bv.second.end()) {
         return;
@@ -185,11 +184,39 @@ namespace qemacs {
     w->deleteLater();
   }  // end of SecondaryTaskManager::detachSecondaryTask
 
+  void SecondaryTaskManager::showSecondaryTask(
+      QEmacsBuffer* const b, QWidget* const w) {
+    if ((w == nullptr) || (b == nullptr)) {
+      return;
+    }
+    const auto p = this->bufferTasks.find(b);
+    if (p != this->bufferTasks.end()) {
+      const auto pw = wfind(p->second,w);
+      if(pw!=p->second.end()){
+        pw->visible = true;
+      }
+    }
+  }  // end of SecondaryTaskManager::showSecondaryTask
+
+  void SecondaryTaskManager::hideSecondaryTask(
+      QEmacsBuffer* const b, QWidget* const w) {
+    if ((w == nullptr) || (b == nullptr)) {
+      return;
+    }
+    const auto p = this->bufferTasks.find(b);
+    if (p != this->bufferTasks.end()) {
+      const auto pw = wfind(p->second,w);
+      if(pw!=p->second.end()){
+        pw->visible = false;
+      }
+    }
+  }  // end of SecondaryTaskManager::hideSecondaryTask
+
   const std::vector<SecondaryTask>&
-  SecondaryTaskManager::getSecondaryTasks(const QEmacsBuffer* const b) {
+  SecondaryTaskManager::getSecondaryTasks(QEmacsBuffer* const b) {
     static const std::vector<SecondaryTask> empty;
-    const auto p = this->m.find(b);
-    if (p != this->m.end()) {
+    const auto p = this->bufferTasks.find(b);
+    if (p != this->bufferTasks.end()) {
       return p->second;
     }
     return empty;

@@ -1,6 +1,9 @@
- <!DOCTYPE RCC><RCC version="1.0">
- <qresource>
- <file alias="QEmacsSuccessIcon.png">images/QEmacsSuccessIcon.png</file>
- <file alias="QEmacsFailureIcon.png">images/QEmacsFailureIcon.png</file>
+<!DOCTYPE RCC><RCC version="1.0">
+  <qresource>
+    <file alias="qemacs/success.png">images/success.png</file>
+    <file alias="qemacs/failure.png">images/failure.png</file>
+    <file alias="qemacs/restart.png">images/restart.png</file>
+    <file alias="qemacs/languages/c.png">images/languages/c.png</file>
+    <file alias="qemacs/languages/cxx.png">images/languages/cxx.png</file>
  </qresource>
- </RCC>
+</RCC>

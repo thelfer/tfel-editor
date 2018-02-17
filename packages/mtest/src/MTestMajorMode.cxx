@@ -214,21 +214,17 @@ namespace qemacs {
     auto nf = new ProcessOutputFrame(this->qemacs, this->buffer);
     this->buffer.attachSecondaryTask(QObject::tr("MTest output"), nf);
     auto& p = nf->getProcess();
-    if (p.state() != QProcess::Running) {
-      auto arg = QStringList{};
-      arg << ("--scheme=" + this->getScheme())
-          << ("--verbose=" + o.vlvl);
-      if (!o.res) {
-        arg << "--result-file-output=no";
-      }
-      if (o.xml) {
-        arg << "--xml-output=true";
-      }
-      arg << af;
-      p.start("mtest", arg);
-      p.waitForStarted();
-      //      p.waitForFinished(1000);
+    auto arg = QStringList{};
+    arg << ("--scheme=" + this->getScheme()) << ("--verbose=" + o.vlvl);
+    if (!o.res) {
+      arg << "--result-file-output=no";
     }
+    if (o.xml) {
+      arg << "--xml-output=true";
+    }
+    arg << af;
+    p.start("mtest", arg);
+    p.waitForStarted();
   }  // end of MTestMajorMode::start
 
   void MTestMajorMode::showImportBehaviourWizard() {

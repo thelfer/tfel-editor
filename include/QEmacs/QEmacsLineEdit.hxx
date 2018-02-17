@@ -43,16 +43,14 @@ namespace qemacs {
     virtual void setLabel(const QString &);
 
     virtual bool isBlocking() const;
-
+    //! destructor
     ~QEmacsLineEdit() override;
 
    public slots:
 
     virtual void userEditingFinished();
 
-    /*!
-     * cancel editing
-     */
+    //! cancel editing
     virtual void cancel();
 
     virtual void showCompletions(const QString &, const QStringList &);
@@ -127,15 +125,16 @@ namespace qemacs {
 
       QEmacsWidget &qemacs;
       QEmacsLineEdit &lineEdit;
-      QCompleter *c_;
-      bool completerHandledByQLineEdit;
       QStringList inputHistory;
-      int pring;
-      bool ctrlx;
-      bool ctrlc;
-      bool yank;
-      int pHistory;
-      bool hMove;
+      QCompleter *c_ = nullptr ;
+      bool completerHandledByQLineEdit = false;
+      int pring = 0;
+      bool ctrlx = false;
+      bool ctrlc = false;
+      bool yank = false;
+      int pHistory = 0;
+      bool hMove = false;
+
     };
 
     void setLineEdit(CustomLineEdit *const);
@@ -178,61 +177,6 @@ namespace qemacs {
     struct FilePathLineEdit;
 
   };  // end of struct QEmacsYesOrNoUserInput
-
-  /*!
-   * An helper class asking the user for a command and displaying the
-   * results in a ProcessOutputFrame created as a slave of the current
-   * buffer
-   */
-  struct QEMACS_VISIBILITY_EXPORT QEmacsProcessLineEdit
-      : public QEmacsLineEdit {
-    /*!
-     * \param[in] l : label
-     * \param[in] c : command guess
-     * \param[in] m : mode used to display the results
-     * \param[in] p : parent
-     */
-    QEmacsProcessLineEdit(const QString &,
-                          const QString &,
-                          const QString &,
-                          QEmacsWidget &);
-    //! destructor
-    ~QEmacsProcessLineEdit() override;
-
-   protected:
-    void treatUserInput() override;
-
-    virtual void run(const QString &,
-                     const QString &,
-                     const QStringList &);
-    //! major mode for the process output frame
-    const QString mode;
-  };  // end of QEmacsProcessLineEdit
-
-  /*!
-   * An helper class asking the user for a shell command and
-   * displaying the results in a ProcessOutputFrame created as a slave
-   * of the current buffer
-   */
-  struct QEMACS_VISIBILITY_EXPORT QEmacsShellProcessLineEdit
-      : public QEmacsProcessLineEdit {
-    /*!
-     * \param[in] l : label
-     * \param[in] c : command guess
-     * \param[in] m : mode used to display the results
-     * \param[in] p : parent
-     */
-    QEmacsShellProcessLineEdit(const QString &,
-                               const QString &,
-                               const QString &,
-                               QEmacsWidget &);
-    //! destructor
-    ~QEmacsShellProcessLineEdit() override;
-
-   protected:
-    void treatUserInput() override;
-
-  };  // end of QEmacsShellProcessLineEdit
 
 }  // end of namespace qemacs
 

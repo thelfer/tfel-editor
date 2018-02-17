@@ -34,6 +34,8 @@ libTFELQEmacs_la_SOURCES = QEmacsResources.cxx       \
 			   QEmacsCommandFactory.cxx              \
 			   QEmacsBuffer.cxx                      \
 			   QEmacsLineEdit.cxx                    \
+			   QEmacsProcessLineEdit.cxx             \
+			   QEmacsShellProcessLineEdit.cxx        \
 			   QEmacsTextEditBase.cxx                \
 			   QEmacsPlainTextEdit.cxx               \
 			   QEmacsTextEdit.cxx                    \
@@ -64,6 +66,8 @@ nodist_libTFELQEmacs_la_SOURCES = moc_QEmacsWidget.cxx      \
 			   	  moc_QEmacsShortCutStyle.cxx               \
 			   	  moc_QEmacsCommand.cxx                     \
 			   	  moc_QEmacsLineEdit.cxx                    \
+			      moc_QEmacsProcessLineEdit.cxx             \
+			      moc_QEmacsShellProcessLineEdit.cxx        \
 				  moc_QEmacsBuffer.cxx                      \
 			      moc_QEmacsTextEditSearch.cxx              \
 				  moc_QEmacsTextEditKeyPressEventFilter.cxx \
@@ -112,8 +116,11 @@ qemacs_LDADD   = -lTFELQEmacs        \
 		 -lTFELException     \
 		 @QT_LIBS@
 
-QEMACSRESOURCES=images/QEmacsFailureIcon.png \
-		images/QEmacsSuccessIcon.png
+QEMACSRESOURCES=images/failure.png                \
+		        images/success.png        \
+		        images/restart.png        \
+		        images/languages/c.png    \
+		        images/languages/cxx.png
 
 moc_%.cxx : @top_srcdir@/include/QEmacs/%.hxx
 	@QT_MOC@ $< -o $@	

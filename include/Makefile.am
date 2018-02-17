@@ -28,6 +28,8 @@ nobase_include_HEADERS = QEmacs/Config.hxx                \
 			 QEmacs/QEmacsTextEditReplaceFilter.hxx       \
 			 QEmacs/QEmacsMajorMode.hxx                   \
 			 QEmacs/QEmacsLineEdit.hxx                    \
+			 QEmacs/QEmacsProcessLineEdit.hxx             \
+			 QEmacs/QEmacsShellProcessLineEdit.hxx        \
 			 QEmacs/QEmacsMajorModeBase.hxx               \
 			 QEmacs/QEmacsMajorModeFactory.hxx            \
 			 QEmacs/QEmacsMajorModeFactory.ixx            \
