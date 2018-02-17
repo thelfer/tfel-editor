@@ -6,6 +6,8 @@
  */
 
 #include <QtCore/QDir>
+#include "TFEL/Utilities/CxxTokenizer.hxx"
+#include "TFEL/Utilities/StringAlgorithms.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/ProcessOutputFrame.hxx"
@@ -41,23 +43,56 @@ namespace qemacs {
   void QEmacsProcessLineEdit::run(const QString& on,
                                   const QString& c,
                                   const QStringList& args) {
+    using namespace tfel::utilities;
     if (c.isEmpty()) {
       this->qemacs.displayInformativeMessage(
           QObject::tr("empty command"));
       return;
     }
     auto& b = this->qemacs.getCurrentBuffer();
-    auto& t = b.getMainFrame();
     auto* po = new ProcessOutputFrame(this->qemacs, b);
-    const auto dn = t.getDirectory();
-    QDir d(dn);
-    const auto de = d.exists();
-    auto& p = po->getProcess();
-    if (de) {
-      p.setWorkingDirectory(d.absolutePath());
-    } else {
-      p.setWorkingDirectory(QDir::current().absolutePath());
+    const auto dn = [&b] {
+      QDir d(b.getMainFrame().getDirectory());
+      if(d.exists()){
+        return d.absolutePath();
+      }
+      return QDir::current().absolutePath();
+    }();
+    auto nargs = QStringList{};
+    const auto sdn = dn.toStdString();
+    for(const auto& a :args){
+      CxxTokenizerOptions opt;
+      opt.shallMergeStrings = false;
+      opt.allowStrayHashCharacter = true;
+      opt.allowStrayBackSlash = true;
+      opt.treatPreprocessorDirectives = false;
+      opt.treatNumbers = false;
+      opt.treatComments = false;
+      opt.joinCxxTwoCharactersSeparators = false;
+      opt.graveAccentAsSeparator = true;
+      opt.charAsString = true;
+      CxxTokenizer tokenizer(opt);
+      try{
+        tokenizer.parseString(a.toStdString());
+        auto ppos = CxxTokenizer::size_type{};
+        auto narg = std::string{};
+        for (const auto& t : tokenizer) {
+          auto value = t.value;
+          if (t.flag == Token::Standard) {
+            value = replace_all(value, ".", sdn);
+            value = replace_all(value, "$(cmd)", sdn);
+            value = replace_all(value, "%cmd%", sdn);
+          }
+          narg += std::string(' ',t.offset - ppos) + value;
+          ppos = t.offset + value.size();
+        }
+        nargs << QString::fromStdString(narg);
+      } catch(...){
+        nargs << a;
+      }
     }
+    auto& p = po->getProcess();
+    p.setWorkingDirectory(dn);
     if (!this->mode.isEmpty()) {
       auto* m = qobject_cast<ProcessOutputMajorModeBase*>(
           po->setMajorMode(this->mode));
