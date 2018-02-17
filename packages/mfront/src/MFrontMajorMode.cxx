@@ -6,6 +6,7 @@
  */
 
 #include <stdexcept>
+#include <QtCore/QDir>
 #include <QtCore/QDebug>
 #include <QtCore/QStringListModel>
 #include <QtCore/QTimer>
@@ -217,16 +218,22 @@ namespace qemacs {
     if (od.exec() == QDialog::Rejected) {
       return;
     }
-    const auto& af = QFileInfo(n).absoluteFilePath();
+    QFileInfo fn(n);
+    if ((!fn.exists()) || (!fn.isFile())) {
+      this->qemacs.displayInformativeMessage(
+          QObject::tr("invalid file name"));
+      return;
+    }
     auto nf = new ProcessOutputFrame(this->qemacs, this->buffer);
     this->buffer.attachSecondaryTask(QObject::tr("MFront output"), nf);
     auto& p = nf->getProcess();
+    p.setWorkingDirectory(fn.dir().absolutePath());
     auto arg = QStringList{};
     arg << ("--verbose=" + o.vlvl);
     if (o.debug) {
       arg << "--debug";
     }
-    arg << af;
+    arg << fn.absoluteFilePath();
     p.start("mfront", arg);
     p.waitForStarted();
   }  // end of startMFront

@@ -50,7 +50,7 @@ namespace qemacs{
                      &ProcessOutputMajorModeBase::restart);
     auto* s = m->addAction("Stop");
     s->setStatusTip(tr("Stop the process"));
-//    s->setIcon(QIcon(":/qemacs/restart.png"));
+    s->setIcon(QIcon::fromTheme("process-stop"));
     s->setIconVisibleInMenu(true);
     QObject::connect(s, &QAction::triggered, this,
                      &ProcessOutputMajorModeBase::stop);

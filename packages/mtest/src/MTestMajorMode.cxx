@@ -5,7 +5,7 @@
  * \date   07/08/2012
  */
 
-#include <QtCore/QDebug>
+#include <QtCore/QDir>
 #include <QtCore/QFileInfo>
 #include <QtGui/QTextCursor>
 
@@ -210,10 +210,16 @@ namespace qemacs {
     if (od.exec() == QDialog::Rejected) {
       return;
     }
-    const auto& af = QFileInfo(n).absoluteFilePath();
+    QFileInfo fn(n);
+    if ((!fn.exists()) || (!fn.isFile())) {
+      this->qemacs.displayInformativeMessage(
+          QObject::tr("invalid file name"));
+      return;
+    }
     auto nf = new ProcessOutputFrame(this->qemacs, this->buffer);
     this->buffer.attachSecondaryTask(QObject::tr("MTest output"), nf);
     auto& p = nf->getProcess();
+    p.setWorkingDirectory(fn.dir().absolutePath());
     auto arg = QStringList{};
     arg << ("--scheme=" + this->getScheme()) << ("--verbose=" + o.vlvl);
     if (!o.res) {
@@ -222,7 +228,7 @@ namespace qemacs {
     if (o.xml) {
       arg << "--xml-output=true";
     }
-    arg << af;
+    arg << fn.absoluteFilePath();
     p.start("mtest", arg);
     p.waitForStarted();
   }  // end of MTestMajorMode::start
@@ -241,7 +247,6 @@ namespace qemacs {
       return;
     };
     const auto f = "mtest:" + n.mid(0, n.lastIndexOf('.')) + ".res";
-    qDebug() << "tplot" << f;
     if (!QProcess::startDetached("tplot", QStringList() << f)) {
       this->qemacs.displayInformativeMessage(
           QObject::tr("launching tplot failed"));
