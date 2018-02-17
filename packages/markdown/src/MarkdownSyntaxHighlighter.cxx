@@ -90,9 +90,10 @@ namespace qemacs {
       } else {
         pr = 3;
       }
-    } else {
+    }
+    if (pr >= 3) {
       // the preamble is over
-      if ((tokens[0].value[0] == '#')&&(tokens[0].offset==0)) {
+      if ((tokens[0].value[0] == '#') && (tokens[0].offset == 0)) {
         // in a header
         const auto lvl = [&tokens] {
           short i = 0;

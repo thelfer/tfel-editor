@@ -37,7 +37,11 @@ namespace qemacs {
                         &QProcess::readyReadStandardOutput, this,
                         &ProcessOutputFrame::displayProcessOutput);
     auto out = this->process->readAll();
+#ifdef Q_OS_WIN
+    auto* codec = QTextCodec::codecForName("cp850");
+#else  /*  Q_OS_WIN */
     auto* codec = QTextCodec::codecForLocale();
+#endif/*  Q_OS_WIN */
     auto* decoder = codec->makeDecoder();
     this->appendPlainText(decoder->toUnicode(out));
     delete decoder;
