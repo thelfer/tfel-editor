@@ -7,6 +7,7 @@
 
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
+#include <QtCore/QDateTime>
 #include <QtGui/QSyntaxHighlighter>
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/QEmacsTextEditBase.hxx"
@@ -27,17 +28,26 @@ namespace qemacs {
     DirectorySyntaxHighlighter(const QString& d, QTextDocument* p)
         : QSyntaxHighlighter(p), directory(d) {
       this->directoryFormat.setForeground(Qt::blue);
+      this->executableFileFormat.setForeground(Qt::darkGreen);
     }  // end of DirectorySyntaxHighlighter
     /*!
      * \brief highlight the current line
      * \param[in] l: line
      */
     void highlightBlock(const QString& l) override {
-      QFileInfo fi(this->directory+QDir::separator()+l);
+      const auto ls = l.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+      if (ls.isEmpty()) {
+        return;
+      }
+      QFileInfo fi(this->directory+QDir::separator()+ls[0]);
       if(fi.isDir()){
-        this->setFormat(0,l.size(),this->directoryFormat);
-      } else {
-        this->setFormat(0, l.size(), this->fileFormat);
+        this->setFormat(0, ls[0].size(), this->directoryFormat);
+      } else if(fi.isFile()){
+        if (fi.isExecutable()) {
+          this->setFormat(0, ls[0].size(), this->executableFileFormat);
+        } else {
+          this->setFormat(0, ls[0].size(), this->standardFileFormat);
+        }
       }
     }  // end of highlightBlock
     //! destructor
@@ -47,7 +57,8 @@ namespace qemacs {
     //! path the directory being treated
     QString directory;
     QTextCharFormat directoryFormat;
-    QTextCharFormat fileFormat;
+    QTextCharFormat executableFileFormat;
+    QTextCharFormat standardFileFormat;
   };  // end of DirectorySyntaxHighlighter
 
   DirectoryMajorMode::DirectoryMajorMode(const QString& d,
@@ -83,12 +94,16 @@ namespace qemacs {
   bool DirectoryMajorMode::keyPressEvent(QKeyEvent* const e) {
     const auto k = e->key();
     const auto m = e->modifiers();
-    if (((m == Qt::AltModifier) && (k == Qt::Key_M)) ||
+    if (((m == Qt::NoModifier) && (k == Qt::Key_Return)) ||
         ((m == Qt::NoModifier) && (k == Qt::Key_Enter))) {
       auto tc = this->textEdit.textCursor();
       tc.select(QTextCursor::LineUnderCursor);
-      const auto path =
-          this->directory + QDir::separator() + tc.selectedText();
+      const auto l = tc.selectedText().split(QRegExp("\\s+"),
+                                             QString::SkipEmptyParts);
+      if (l.isEmpty()) {
+        return true;
+      }
+      const auto path = this->directory + QDir::separator() + l[0];
       QFileInfo fi(path);
       if (fi.isFile()) {
         this->qemacs.openFile(path);
@@ -105,17 +120,27 @@ namespace qemacs {
     if (!fn.isDir()) {
       return;
     }
+    auto mf = int{};
+    auto mo = int{};
+    const auto eis = QDir(this->directory).entryInfoList();
+    for (const auto& ei : eis) {
+      mf = std::max(mf,ei.fileName().size());
+      mo = std::max(mo,ei.owner().size());
+    }
     this->textEdit.setReadOnly(false);
     this->textEdit.setFileName(this->directory);
     auto tc = this->textEdit.textCursor();
     tc.movePosition(QTextCursor::Start, QTextCursor::MoveAnchor);
     tc.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
     tc.removeSelectedText();
-    const auto eis = QDir(this->directory).entryInfoList();
     for (const auto& ei : eis) {
       const auto efn = ei.fileName();
       if (efn != ".") {
-        tc.insertText(efn + '\n');
+        const auto eo = ei.owner();
+        const auto d = ei.lastModified();
+        tc.insertText(efn.leftJustified(mf + 1, ' ') +
+                      eo.leftJustified(mo + 1, ' ') + d.toString() +
+                      '\n');
       }
     }
     this->textEdit.document()->setModified(false);

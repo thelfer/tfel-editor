@@ -5,6 +5,7 @@
  * \date   27/06/2012
  */
 
+#include <QtCore/QDir>
 #include <QtCore/QTime>
 #include <QtCore/QTimer>
 #include <QtCore/QFileInfo>
@@ -91,12 +92,17 @@ namespace qemacs {
   }  // end of QEmacsBuffer::emitNewTreatedFile
 
   QString QEmacsBuffer::getBufferRawName() const {
-    return this->e->getFileName();
-  }  // end of QEmacsBuffer::setBufferName
+    const auto f = this->e->getFileName();
+    QFileInfo fi(f);
+    if (fi.isDir()) {
+      return QDir(f).dirName();
+    }
+    return fi.fileName();
+  }  // end of QEmacsBuffer::getBufferRawName
 
   QString QEmacsBuffer::getBufferName() const {
     const auto s = this->getBufferNameSuffix();
-    const auto f = QFileInfo(this->getBufferRawName()).fileName();
+    const auto f = this->getBufferRawName();
     if (!s.isEmpty()) {
       return f + " <" + s + ">";
     }
@@ -214,11 +220,11 @@ namespace qemacs {
   void QEmacsBuffer::updateBufferName() {
     const auto o = this->getBufferName();
     this->bufferNameSuffix = this->qemacs.chooseBufferNameSuffix(
-        this, this->e->getFileName());
+        this, this->getBufferRawName());
     this->updateBufferInformations();
     const auto n = this->getBufferName();
     emit bufferNameChanged(this, o, n);
-  }
+  } // end of QEmacsBuffer::updateBufferName()
 
   QVector<QMenu *> QEmacsBuffer::getSpecificMenus() {
     return this->e->getSpecificMenus();

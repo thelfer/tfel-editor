@@ -59,9 +59,9 @@ namespace qemacs {
 
     virtual void changeBuffer();
 
-    virtual void launchCommand();
-
     virtual void launchCommand(const QString &);
+
+    virtual void launchCommand();
 
     virtual const QStringList &getKillRing() const;
 

@@ -30,6 +30,7 @@
 #include "QEmacs/QEmacsTextEditSearch.hxx"
 #include "QEmacs/QEmacsTextEditQueryReplace.hxx"
 #include "QEmacs/QEmacsShortCutStyle.hxx"
+#include "QEmacs/QEmacsShellProcessLineEdit.hxx"
 #include "QEmacs/QEmacsHunspellDictionariesManager.hxx"
 #include "QEmacs/QEmacsTextEditBase.hxx"
 
@@ -867,7 +868,7 @@ namespace qemacs {
           return true;
         }
       }
-      QString modifier = QEmacsTextEditBase::getModifier(*e);
+      const auto modifier = QEmacsTextEditBase::getModifier(*e);
       if (modifier.isEmpty()) {
         this->qemacs.displayInformativeMessage(
             QObject::tr("unknown shortcut : Ctr-X - %1")
@@ -1183,14 +1184,17 @@ namespace qemacs {
       this->setTextCursor(tc);
     } else if ((m == Qt::AltModifier) && (k == Qt::Key_V)) {
       QKeyEvent nev(QEvent::None, Qt::Key_PageUp, Qt::NoModifier);
-      QWidget* w = this->widget();
+      auto* w = this->widget();
       w->removeEventFilter(this);
       QCoreApplication::sendEvent(w, &nev);
       w->installEventFilter(this);
-      return true;
     } else if ((m == Qt::AltModifier) && (k == Qt::Key_X)) {
       this->qemacs.launchCommand();
-      return true;
+    } else if ((m == Qt::AltModifier) && (k == Qt::Key_Exclam)) {
+      auto* l = new QEmacsShellProcessLineEdit(
+          "shell command:", "", "", this->qemacs);
+      l->setInputHistorySettingAddress("command/shell/history");
+      this->qemacs.setUserInput(l);
     } else if (((m == Qt::AltModifier) && (k == Qt::Key_Percent)) ||
                ((m == (Qt::AltModifier | Qt::ShiftModifier)) &&
                 (k == Qt::Key_Percent))) {
@@ -1203,13 +1207,12 @@ namespace qemacs {
           new QEmacsTextEditQueryReplace(*this, this->qemacs));
     } else if ((m == Qt::AltModifier) && (k == Qt::Key_G)) {
       this->qemacs.setUserInput(new GotoLine(*this, this->qemacs));
-      return true;
     } else if ((m == Qt::AltModifier) && (k == Qt::Key_Y)) {
       if (this->isReadOnly()) {
         this->qemacs.displayInformativeMessage(
             QObject::tr("read only buffer"));
       } else {
-        const QStringList& ring = this->qemacs.getKillRing();
+        const auto& ring = this->qemacs.getKillRing();
         if ((ring.isEmpty()) || (!this->yank)) {
           if (ring.isEmpty()) {
             this->qemacs.displayInformativeMessage(

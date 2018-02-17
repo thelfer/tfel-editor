@@ -114,7 +114,7 @@ namespace qemacs {
 
   struct QEmacsWidget::Command : public QEmacsLineEdit {
     Command(QEmacsWidget& p)
-        : QEmacsLineEdit(QObject::tr("qemacs command :"), p) {
+        : QEmacsLineEdit(QObject::tr("qemacs command:"), p) {
       auto& f = QEmacsCommandFactory::getQEmacsCommandFactory();
       auto* c = new QCompleter(f.getAvailableQEmacsCommandsNames(), &p);
       c->setWidget(this->input);
@@ -128,28 +128,12 @@ namespace qemacs {
     void treatUserInput() override {
       // the input must be kept before calling the removeUserInput
       // method (this causes the qemacswdget to delete this).
-      QString i = this->input->text();
+      const auto i = this->input->text();
       this->qemacs.removeUserInput(this);
       this->qemacs.launchCommand(i);
     }
 
   };  // end of struct QEmacsTextEdit::Command
-
-  QStringList& QEmacsWidget::getRecentFiles() {
-    static QStringList files;
-    return files;
-  }  // end of QEmacsWidget::getRecentFiles
-
-  void QEmacsWidget::addToRecentFiles(const QString& f) {
-    if (f.isEmpty()) {
-      return;
-    }
-    QStringList& files = QEmacsWidget::getRecentFiles();
-    files.append(f);
-    if (files.size() > 100) {
-      files.pop_front();
-    }
-  }  // end of QEmacsWidget::addToRecentFiles
 
   QEmacsWidget::QEmacsWidget(QWidget* const p)
       : QWidget(p),
@@ -181,6 +165,22 @@ namespace qemacs {
     vl->setSpacing(0);
     this->setLayout(vl);
   }  // end of QEmacsWigdet::QEmacsWigdet
+
+  QStringList& QEmacsWidget::getRecentFiles() {
+    static QStringList files;
+    return files;
+  }  // end of QEmacsWidget::getRecentFiles
+
+  void QEmacsWidget::addToRecentFiles(const QString& f) {
+    if (f.isEmpty()) {
+      return;
+    }
+    QStringList& files = QEmacsWidget::getRecentFiles();
+    files.append(f);
+    if (files.size() > 100) {
+      files.pop_front();
+    }
+  }  // end of QEmacsWidget::addToRecentFiles
 
   void QEmacsWidget::changeMainFramesFont(const QFont& f) {
     for (int i = 0; i != this->buffers->count(); ++i) {
@@ -475,13 +475,13 @@ namespace qemacs {
 
   bool QEmacsWidget::hasUserInput() const {
     return !this->ui.isEmpty();
-  }
+  } // end of QEmacsWidget::hasUserInput
 
   void QEmacsWidget::focusUserInput() {
     if (!this->ui.isEmpty()) {
       this->ui.back()->setFocus();
     }
-  }
+  } // end of QEmacsWidget::focusUserInput
 
   void QEmacsWidget::resetUserInput() {
     if (!this->ui.isEmpty()) {

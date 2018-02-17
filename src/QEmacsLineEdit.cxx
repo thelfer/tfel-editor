@@ -367,35 +367,23 @@ namespace qemacs {
     this->completions->clear();
     this->completions->insertHtml(
         "<font color=\"blue\">Possible completions :</font>");
-    const auto d = cl.size() / 3;
-    const auto m = cl.size() % 3;
+    const auto d = cl.size() / 2;
+    const auto m = cl.size() % 2;
     QString table = "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">";
     for (int i = 0; i != d; ++i) {
       QString l;
       l = "<tr>";
-      l += "<td width=\"30%\">" + cl[i * 3] + "</td>";
-      l += "<td width=\"30%\">" + cl[i * 3 + 1] + "</td>";
-      l += "<td width=\"30%\">" + cl[i * 3 + 2] + "</td>";
+      l += "<td width=\"45%\">" + cl[i * 2] + "</td>";
+      l += "<td width=\"45%\">" + cl[i * 2 + 1] + "</td>";
       l += "</tr>";
       table += l;
     }
     QString ll;
-    if (m != 0) {
+    if (m == 1) {
       ll = "<tr>";
-      if (m == 1) {
-        ll += "<td width=\"30%\">" + cl[d * 3] +
-              "</td>"
-              "<td width=\"30%\"></td>"
-              "<td width=\"30%\"></td>";
-      }
-      if (m == 2) {
-        ll += "<td width=\"30%\">" + cl[d * 3] +
-              "</td>"
-              "<td width=\"30%\">" +
-              cl[d * 3 + 1] +
-              "</td>"
-              "<td width=\"30%\"></td>";
-      }
+      ll += "<td width=\"45%\">" + cl[d * 2] +
+            "</td>"
+            "<td width=\"45%\"></td>";
       ll += "</tr>";
       table += ll;
     }
