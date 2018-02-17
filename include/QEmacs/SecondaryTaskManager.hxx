@@ -12,6 +12,7 @@
 #include <vector>
 #include <QtGui/QIcon>
 #include <QtWidgets/QWidget>
+#include "QEmacs/Config.hxx"
 #include "QEmacs/SecondaryTask.hxx"
 
 namespace qemacs {
@@ -22,7 +23,7 @@ namespace qemacs {
   /*!
    * \brief structure in charge of managing secondary tasks.
    */
-  struct SecondaryTaskManager {
+  struct QEMACS_VISIBILITY_EXPORT SecondaryTaskManager {
     //! default constructor
     SecondaryTaskManager();
     //! copy constructor

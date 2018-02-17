@@ -33,7 +33,7 @@ namespace qemacs{
     }
     this->run(c, s, QStringList() << "-c" << c);
 #else  /*  Q_OS_UNIX */
-    this->run("cmd.exe", s, QStringList() << "/c" << c);
+    this->run(c,"cmd.exe", QStringList() << "/c" << c);
 #endif /* Q_OS_UNIX */
   }  // end of QEmacsShellProcessLineEdit::treatUserInput
 
