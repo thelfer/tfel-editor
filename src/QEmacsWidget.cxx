@@ -40,6 +40,14 @@ struct QEmacsModeRessourceLoader {
 
 namespace qemacs {
 
+  static QString getRealPath(const QString& f) {
+    QFileInfo fi(f);
+    if (fi.isSymLink()) {
+      return fi.symLinkTarget();
+    }
+    return fi.absoluteFilePath();
+  }  // end of getRealPath
+  
   static void setQLineEditFont(QLineEdit* l) {
     QFont f = l->font();
     f.setPointSize(8);
@@ -194,25 +202,13 @@ namespace qemacs {
   }  // end of QEmacsWidget::changeMainFrameFont
 
   QEmacsBuffer* QEmacsWidget::getBufferVisitingFile(const QString& f) {
-    QFileInfo fi(f);
-    QString af;
-    if (fi.isSymLink()) {
-      af = fi.symLinkTarget();
-    } else {
-      af = fi.absoluteFilePath();
-    }
+    const auto af = getRealPath(f);
     for (int i = 0; i != this->buffers->count(); ++i) {
       auto* b = qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
       if (b == nullptr) {
         continue;
       }
-      QFileInfo bfi(b->getBufferRawName());
-      QString bf;
-      if (bfi.isSymLink()) {
-        bf = bfi.symLinkTarget();
-      } else {
-        bf = bfi.absoluteFilePath();
-      }
+      const auto bf = b->getMainFrame().getCompleteFileName();
       if (bf == af) {
         return b;
       }

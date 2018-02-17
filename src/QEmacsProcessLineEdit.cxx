@@ -52,20 +52,6 @@ namespace qemacs {
     const auto dn = t.getDirectory();
     QDir d(dn);
     const auto de = d.exists();
-    QStringList nargs;
-    for (const auto& a : args) {
-      const auto sargs =
-          a.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-      for (const auto& a2 : sargs) {
-        auto na = a2.trimmed();
-        if(de){
-          if ((na == ".") || (na == "$(pwd)") || (na == "%cd%")) {
-            na = dn;
-          }
-        }
-        nargs << na;
-      }
-    }
     auto& p = po->getProcess();
     if (de) {
       p.setWorkingDirectory(d.absolutePath());
@@ -78,11 +64,11 @@ namespace qemacs {
       if (m != nullptr) {
         m->setDirectory(p.workingDirectory());
         m->setCommand(c);
-        m->setArguments(nargs);
+        m->setArguments(args);
         m->setMajorMode(this->mode);
       }
     }
-    p.start(c, nargs);
+    p.start(c, args);
     b.attachSecondaryTask("*" + on + "* ouput", po);
     b.setSecondaryTaskIcon(po,QIcon::fromTheme("system-run"));
   }  // end of QEmacsProcessLineEdit::run
