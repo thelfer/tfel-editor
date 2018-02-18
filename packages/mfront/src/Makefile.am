@@ -6,8 +6,9 @@ AM_CPPFLAGS = -I$(top_srcdir)/packages/mfront/include \
 packagesdir = @prefix@/share/qemacs/packages
 packages_LTLIBRARIES = libMFrontQEmacsMode.la
 
-libMFrontQEmacsMode_la_SOURCES = MFrontMajorMode.cxx  \
-				 MFrontSyntaxHighlighter.cxx          \
+libMFrontQEmacsMode_la_SOURCES = MFrontInitializer.cxx \
+                 MFrontMajorMode.cxx                   \
+				 MFrontSyntaxHighlighter.cxx           \
 				 MFrontOptions.cxx
 libMFrontQEmacsMode_la_LIBADD  = -L@TFELHOME@/lib      \
 			         -lTFELUtilities       \

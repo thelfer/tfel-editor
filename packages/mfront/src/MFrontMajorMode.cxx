@@ -15,11 +15,13 @@
 #include "TFEL/Utilities/CxxTokenizer.hxx"
 #include "MFront/AbstractDSL.hxx"
 #include "MFront/DSLFactory.hxx"
-#include "MFront/InitDSLs.hxx"
+#include "QEmacs/MFrontInitializer.hxx"
 #include "QEmacs/MFrontSyntaxHighlighter.hxx"
 #include "QEmacs/ProcessOutputFrame.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
+#include "QEmacs/QEmacsCommandFactory.hxx"
+#include "QEmacs/QEmacsStandardFunctionCommand.hxx"
 #include "QEmacs/QEmacsMajorModeFactory.hxx"
 #include "QEmacs/QEmacsTextEditBase.hxx"
 #include "QEmacs/MFrontOptions.hxx"
@@ -27,11 +29,107 @@
 
 namespace qemacs {
 
+  static QString getDSLName(QEmacsWidget &qemacs,
+                            QEmacsTextEditBase &t) {
+    using tfel::utilities::CxxTokenizer;
+    try {
+      CxxTokenizer tokenizer;
+      tokenizer.parseString(t.document()->toPlainText().toStdString());
+      tokenizer.stripComments();
+      for (auto p = tokenizer.begin(); p != tokenizer.end(); ++p) {
+        if((p->value == "@DSL") || (p->value == "@Parser")) {
+          ++p;
+          if(p == tokenizer.end()) { return "DefaultDSL"; }
+          return QString::fromStdString(p->value);
+        }
+      }
+    } catch(std::exception &e) {
+      qemacs.displayInformativeMessage("getDSLName: " + QString(e.what()));
+    } catch(...) {
+      qemacs.displayInformativeMessage("getDSLName: unknown exception");
+    }
+    return "DefaultDSL";
+  } // end of getDSLName
+
+  static void runMFront(QEmacsWidget &qemacs,
+                        QEmacsBuffer &b,
+                        QEmacsTextEditBase &t) {
+    const auto n = t.getCompleteFileName();
+    if (n.isEmpty()) {
+      qemacs.displayInformativeMessage(
+          QObject::tr("runMFront: no file name"));
+      return;
+    }
+    auto mkt = [&qemacs, &t] {
+      auto &f = mfront::DSLFactory::getDSLFactory();
+      const auto name = getDSLName(qemacs, t);
+      const auto dsl =
+          f.createNewDSL(name.toStdString())->getTargetType();
+      if (dsl == mfront::AbstractDSL::MATERIALPROPERTYDSL) {
+        return MFrontOptionsDialog::MATERIALPROPERTY;
+      } else if (dsl == mfront::AbstractDSL::BEHAVIOURDSL) {
+        return MFrontOptionsDialog::BEHAVIOUR;
+      }
+      return MFrontOptionsDialog::MODEL;
+    }();
+    MFrontOptions o;
+    MFrontOptionsDialog od(o, mkt, &t);
+    if (od.exec() == QDialog::Rejected) {
+      return;
+    }
+    QFileInfo fn(n);
+    if ((!fn.exists()) || (!fn.isFile())) {
+      qemacs.displayInformativeMessage(
+          QObject::tr("invalid file name"));
+      return;
+    }
+    auto nf = new ProcessOutputFrame(qemacs, b);
+    b.attachSecondaryTask(QObject::tr("MFront output"), nf);
+    auto& p = nf->getProcess();
+    p.setWorkingDirectory(fn.dir().absolutePath());
+    auto arg = QStringList{};
+    arg << ("--verbose=" + o.vlvl);
+    if (o.analysis_type == "Build") {
+      arg << ("--obuild=" + o.vlvl);
+    } else if (o.analysis_type == "Generate") {
+      arg << ("--omake=" + o.vlvl);
+    }
+    if (!o.interface.isEmpty()) {
+      arg << ("--interface=" + o.interface);
+    }
+    auto optional_argument = [&arg](const bool bvalue,
+                                    const char *const opt) {
+      if (bvalue) {
+        arg << opt;
+      }
+    };
+    optional_argument(o.debug, "--debug");
+    optional_argument(o.warning, "--warning");
+    optional_argument(o.pedantic, "--pedantic");
+    arg << fn.absoluteFilePath();
+    qDebug() << arg;
+    p.start("mfront", arg);
+    p.waitForStarted();
+  }  // end of runMFront
+
+  static void startMFront(QEmacsWidget &qemacs,
+                          QEmacsBuffer &b,
+                          QEmacsTextEditBase &t) {
+    if (t.isModified()) {
+      auto *input = t.getSaveInput();
+      QObject::connect(input, &QEmacsTextEditBase::SaveInput::finished,
+                       [&qemacs, &b, &t] { runMFront(qemacs, b, t); });
+      qemacs.setUserInput(input);
+      return;
+    }
+    runMFront(qemacs, b, t);
+  } // end of  startMFront
+
   MFrontMajorMode::MFrontMajorMode(QEmacsWidget &w,
                                    QEmacsBuffer &b,
                                    QEmacsTextEditBase &t)
     : CxxMajorMode(w, b, t) {
-    mfront::initDSLs();
+    MFrontInitializer::init();
     this->c = new QCompleter(this->getKeyWordsList(), &t);
     this->c->setWidget(&t);
     this->c->setCaseSensitivity(Qt::CaseInsensitive);
@@ -47,8 +145,9 @@ namespace qemacs {
     this->rt->start(500);
     this->rm = new QAction(QObject::tr("Run MFront"), this);
     this->rm->setIcon(this->getIcon());
-    QObject::connect(this->rm, &QAction::triggered, this,
-                     &MFrontMajorMode::runMFront);
+    QObject::connect(this->rm, &QAction::triggered, this, [this] {
+      startMFront(this->qemacs, this->buffer, this->textEdit);
+    });
   } // end of MFrontMajorMode::MFrontMajorMode
 
   QString MFrontMajorMode::getName() const {
@@ -91,7 +190,8 @@ namespace qemacs {
   } // end of MFrontMajorMode::getIcon()
 
   void MFrontMajorMode::setSyntaxHighlighter(QTextDocument *const d) {
-    new MFrontSyntaxHighlighter(d, this->getDSLName());
+    new MFrontSyntaxHighlighter(
+        d, getDSLName(this->qemacs, this->textEdit));
   } // end of MFrontMajorMode::setSyntaxHighlighter
 
   void MFrontMajorMode::updateSyntaxHighlighterAndCompleter() {
@@ -131,28 +231,6 @@ namespace qemacs {
     }
   } // end of MFrontMajorMode::completeContextMenu
 
-  QString MFrontMajorMode::getDSLName() {
-    using tfel::utilities::CxxTokenizer;
-    try {
-      CxxTokenizer t;
-      t.parseString(this->textEdit.document()->toPlainText().toStdString());
-      t.stripComments();
-      for(auto p = t.begin(); p != t.end(); ++p) {
-        if((p->value == "@DSL") || (p->value == "@Parser")) {
-          ++p;
-          if(p == t.end()) { return "DefaultDSL"; }
-          return QString::fromStdString(p->value);
-        }
-      }
-    } catch(std::exception &e) {
-      qDebug() << e.what();
-      this->report("MFrontMajorMode::getDSLName: " + QString(e.what()));
-    } catch(...) {
-      this->report("MFrontMajorMode::getDSLName: unknown exception");
-    }
-    return "DefaultDSL";
-  } // end of MFrontMajorMode::getDSLName
-
   void MFrontMajorMode::actionTriggered(QAction *a) {
     if(a == this->ha) {
       const auto k = this->ha->data().toString();
@@ -160,8 +238,9 @@ namespace qemacs {
       this->buffer.attachSecondaryTask(QObject::tr("help on '%1'").arg(k), nf);
       auto &p = nf->getProcess();
       if(p.state() != QProcess::Running) {
-        p.start("mfront", QStringList() << ("--help-keyword="
-                                            + this->getDSLName() + ":" + k));
+        const auto dsl = getDSLName(this->qemacs, this->textEdit);
+        p.start("mfront", QStringList()
+                              << ("--help-keyword=" + dsl + ":" + k));
         p.waitForStarted();
         p.waitForFinished(1000);
       }
@@ -173,7 +252,7 @@ namespace qemacs {
     QStringList keys;
     try {
       auto &f = mfront::DSLFactory::getDSLFactory();
-      const auto n = this->getDSLName();
+      const auto n = getDSLName(this->qemacs,this->textEdit);
       auto dsl = f.createNewParser(n.toStdString());
       std::vector<std::string> mkeys;
       dsl->getKeywordsList(mkeys);
@@ -188,17 +267,6 @@ namespace qemacs {
     return keys;
   } // end of MFrontMajorMode::getKeyWordsList
 
-  void MFrontMajorMode::runMFront() {
-    if (this->textEdit.isModified()) {
-      auto *input = this->textEdit.getSaveInput();
-      QObject::connect(input, &QEmacsTextEditBase::SaveInput::finished, this,
-                       &MFrontMajorMode::startMFront);
-      this->qemacs.setUserInput(input);
-      return;
-    }
-    this->startMFront();
-  } // end of MFrontMajorMode::runMFront()
-
   QString MFrontMajorMode::getLanguageName() const{
     return "mfront";
   } // end of MFrontMajorMode::getLanguageName
@@ -207,38 +275,15 @@ namespace qemacs {
     return "mfront --obuild ";
   }
 
-  void MFrontMajorMode::startMFront(){
-    const auto n = this->textEdit.getCompleteFileName();
-    if (n.isEmpty()) {
-      this->report(QObject::tr("MFrontMajorMode::startMFront: no file name"));
-      return;
-    }
-    MFrontOptions o;
-    MFrontOptionsDialog od(o, &(this->textEdit));
-    if (od.exec() == QDialog::Rejected) {
-      return;
-    }
-    QFileInfo fn(n);
-    if ((!fn.exists()) || (!fn.isFile())) {
-      this->qemacs.displayInformativeMessage(
-          QObject::tr("invalid file name"));
-      return;
-    }
-    auto nf = new ProcessOutputFrame(this->qemacs, this->buffer);
-    this->buffer.attachSecondaryTask(QObject::tr("MFront output"), nf);
-    auto& p = nf->getProcess();
-    p.setWorkingDirectory(fn.dir().absolutePath());
-    auto arg = QStringList{};
-    arg << ("--verbose=" + o.vlvl);
-    if (o.debug) {
-      arg << "--debug";
-    }
-    arg << fn.absoluteFilePath();
-    p.start("mfront", arg);
-    p.waitForStarted();
-  }  // end of startMFront
-
   MFrontMajorMode::~MFrontMajorMode() = default;
+
+  static void runMFront(QEmacsWidget &qemacs) {
+    auto& b = qemacs.getCurrentBuffer();
+    auto &t = b.getMainFrame();
+    startMFront(qemacs, b, t);
+  }  // end of runMFront
+
+  static QEmacsStandardFunctionCommandProxy<runMFront> runMFrontProxy("run-mfront");
 
   static StandardQEmacsMajorModeProxy<MFrontMajorMode>
   proxy("MFront",

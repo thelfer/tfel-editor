@@ -28,6 +28,7 @@ libTFELQEmacs_la_SOURCES = QEmacsResources.cxx       \
 			   QEmacsHunspellDictionariesManager.cxx \
 			   QEmacsWidget.cxx                      \
 			   QEmacsCommand.cxx                     \
+			   QEmacsStandardFunctionCommand.cxx     \
 			   QEmacsRectangleMode.cxx               \
 			   QEmacsGrepCommand.cxx                 \
 			   QEmacsMajorModeChangeCommand.cxx      \

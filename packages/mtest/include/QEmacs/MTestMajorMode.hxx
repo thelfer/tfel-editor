@@ -42,16 +42,12 @@ namespace qemacs {
     QMenu *getSpecificMenu() override;
 
     bool keyPressEvent(QKeyEvent *const) override;
-
+    //! destructor
     ~MTestMajorMode() override;
 
    protected slots:
-    //! \brief method called when the Help menu is called
-    virtual void run();
     //! \brief launch the import behaviour wizard
     virtual void showImportBehaviourWizard();
-    //! \brief method called when the Help menu is called
-    virtual void start();
     //! \brief method called when the `Show Results with TPlot` menu is
     //! called
     virtual void showResults();

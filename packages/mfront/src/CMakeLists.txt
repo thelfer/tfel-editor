@@ -17,7 +17,8 @@ qt_add_resources(MFrontQEmacsResources_RCC
 
 qemacs_package(MFrontQEmacsMode
   ${MFrontQEmacsResources_RCC}
-  ${MFrontQEmacsMode_SOURCES})
+  ${MFrontQEmacsMode_SOURCES}
+  MFrontInitializer.cxx)
 
 target_link_libraries(MFrontQEmacsMode
   TFELQEmacs

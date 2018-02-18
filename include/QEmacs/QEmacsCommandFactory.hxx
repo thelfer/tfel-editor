@@ -38,13 +38,9 @@ namespace qemacs {
      * \param[in] n : name of the major mode
      */
     StandardQEmacsCommandProxy(const QString&, const bool = true);
-    /*!
-     * \param[in] n : return the major mode name
-     */
+    //! \return the name of the command
     QString getName() const override;
-    /*!
-     * \return a new instance of the major mode
-     */
+    //! \return a new instance of command
     QEmacsCommand* getQEmacsCommand(QEmacsWidget&) const override;
     /*!
      * destructor
@@ -56,12 +52,12 @@ namespace qemacs {
     const QString name;
   };  // end of struct StandardQEmacsCommandProxy
 
-  /*!
-   * Major mode factory
-   */
-  struct QEmacsCommandFactory {
-    typedef std::shared_ptr<QEmacsCommand> QEmacsCommandPtr;
-    typedef std::shared_ptr<QEmacsCommandProxy> QEmacsCommandProxyPtr;
+  //! \brief qemacs command factory
+  struct QEMACS_VISIBILITY_EXPORT QEmacsCommandFactory {
+    //! a simple alias
+    using QEmacsCommandPtr = std::shared_ptr<QEmacsCommand>;
+    //! a simple alias
+    using QEmacsCommandProxyPtr = std::shared_ptr<QEmacsCommandProxy>;
 
     static QEmacsCommandFactory& getQEmacsCommandFactory();
 

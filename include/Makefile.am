@@ -12,6 +12,8 @@ nobase_include_HEADERS = QEmacs/Config.hxx                \
 			 QEmacs/QEmacsMainWindow.hxx                  \
 			 QEmacs/QEmacsWidget.hxx                      \
 			 QEmacs/QEmacsCommand.hxx                     \
+			 QEmacs/QEmacsStandardFunctionCommand.hxx     \
+			 QEmacs/QEmacsStandardFunctionCommand.ixx     \
 			 QEmacs/QEmacsGrepCommand.hxx                 \
 			 QEmacs/QEmacsCommandFactory.hxx              \
 			 QEmacs/QEmacsCommandFactory.ixx              \

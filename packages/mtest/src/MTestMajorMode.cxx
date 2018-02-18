@@ -11,6 +11,8 @@
 
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
+#include "QEmacs/QEmacsCommandFactory.hxx"
+#include "QEmacs/QEmacsStandardFunctionCommand.hxx"
 #include "QEmacs/ProcessOutputFrame.hxx"
 #include "QEmacs/MTestStudyOptions.hxx"
 #include "QEmacs/MTestSyntaxHighlighter.hxx"
@@ -20,6 +22,59 @@
 #include "QEmacs/MTestMajorMode.hxx"
 
 namespace qemacs {
+
+  static void runMTest(QEmacsWidget& qemacs,
+                       QEmacsBuffer& b,
+                       QEmacsTextEditBase& t,
+                       const QString& scheme) {
+    const auto n = t.getCompleteFileName();
+    if (n.isEmpty()) {
+      qemacs.displayInformativeMessage(QObject::tr("no file name"));
+      return;
+    }
+    MTestStudyOptions o;
+    MTestStudyOptionsDialog od(o, &t);
+    if (od.exec() == QDialog::Rejected) {
+      return;
+    }
+    QFileInfo fn(n);
+    if ((!fn.exists()) || (!fn.isFile())) {
+      qemacs.displayInformativeMessage(
+          QObject::tr("invalid file name"));
+      return;
+    }
+    auto nf = new ProcessOutputFrame(qemacs, b);
+    b.attachSecondaryTask(QObject::tr("MTest output"), nf);
+    auto& p = nf->getProcess();
+    p.setWorkingDirectory(fn.dir().absolutePath());
+    auto arg = QStringList{};
+    arg << ("--scheme=" + scheme) << ("--verbose=" + o.vlvl);
+    if (!o.res) {
+      arg << "--result-file-output=no";
+    }
+    if (o.xml) {
+      arg << "--xml-output=true";
+    }
+    arg << fn.absoluteFilePath();
+    p.start("mtest", arg);
+    p.waitForStarted();
+  }  // end of runMTest
+
+  static void startMTest(QEmacsWidget& qemacs,
+                         QEmacsBuffer& b,
+                         QEmacsTextEditBase& t,
+                         const QString& scheme) {
+    if (t.isModified()) {
+      auto *input = t.getSaveInput();
+      QObject::connect(input, &QEmacsTextEditBase::SaveInput::finished,
+                       [&qemacs, &b, &t, scheme] {
+                         runMTest(qemacs, b, t, scheme);
+                       });
+      qemacs.setUserInput(input);
+      return;
+    }
+    runMTest(qemacs, b, t, scheme);
+  } // end of  startMTest
 
   MTestMajorMode::MTestMajorMode(QEmacsWidget& w,
                                  QEmacsBuffer& b,
@@ -39,8 +94,10 @@ namespace qemacs {
                      &t, &QEmacsTextEditBase::insertCompletion);
     // creating actions
     this->ra = new QAction(QObject::tr("Run mtest"), this);
-    QObject::connect(this->ra, &QAction::triggered, this,
-                     &MTestMajorMode::run);
+    QObject::connect(this->ra, &QAction::triggered, this, [this] {
+      startMTest(this->qemacs, this->buffer, this->textEdit,
+                 this->getScheme());
+    });
     this->iba = new QAction(QObject::tr("Import Behaviour"), this);
     QObject::connect(this->iba, &QAction::triggered, this,
                      &MTestMajorMode::showImportBehaviourWizard);
@@ -62,7 +119,7 @@ namespace qemacs {
     const auto k = e->key();
     const auto m = e->modifiers();
     if ((m == Qt::AltModifier) && (k == Qt::Key_M)) {
-      this->run();
+      startMTest(this->qemacs,this->buffer,this->textEdit,this->getScheme());
       return true;
     }
     return false;
@@ -186,53 +243,6 @@ namespace qemacs {
     return CxxMajorMode::getCompletionPrefix();
   }
 
-  void MTestMajorMode::run() {
-    if (this->textEdit.isModified()) {
-      QEmacsTextEditBase::SaveInput* input =
-          this->textEdit.getSaveInput();
-      QObject::connect(input, &QEmacsTextEditBase::SaveInput::finished,
-                       this, &MTestMajorMode::start);
-      this->qemacs.setUserInput(input);
-      return;
-    }
-    this->start();
-  }
-
-  void MTestMajorMode::start() {
-    const auto n = this->textEdit.getCompleteFileName();
-    if (n.isEmpty()) {
-      this->qemacs.displayInformativeMessage(
-          QObject::tr("no file name"));
-      return;
-    }
-    MTestStudyOptions o;
-    MTestStudyOptionsDialog od(o, &(this->textEdit));
-    if (od.exec() == QDialog::Rejected) {
-      return;
-    }
-    QFileInfo fn(n);
-    if ((!fn.exists()) || (!fn.isFile())) {
-      this->qemacs.displayInformativeMessage(
-          QObject::tr("invalid file name"));
-      return;
-    }
-    auto nf = new ProcessOutputFrame(this->qemacs, this->buffer);
-    this->buffer.attachSecondaryTask(QObject::tr("MTest output"), nf);
-    auto& p = nf->getProcess();
-    p.setWorkingDirectory(fn.dir().absolutePath());
-    auto arg = QStringList{};
-    arg << ("--scheme=" + this->getScheme()) << ("--verbose=" + o.vlvl);
-    if (!o.res) {
-      arg << "--result-file-output=no";
-    }
-    if (o.xml) {
-      arg << "--xml-output=true";
-    }
-    arg << fn.absoluteFilePath();
-    p.start("mtest", arg);
-    p.waitForStarted();
-  }  // end of MTestMajorMode::start
-
   void MTestMajorMode::showImportBehaviourWizard() {
     ImportBehaviour w(this->textEdit);
     if (w.exec() == QDialog::Accepted) {
@@ -254,6 +264,23 @@ namespace qemacs {
   }  // end of MTestMajorMode::showResults
 
   MTestMajorMode::~MTestMajorMode() = default;
+
+  static void runMTest(QEmacsWidget &qemacs) {
+    auto& b = qemacs.getCurrentBuffer();
+    auto &t = b.getMainFrame();
+    startMTest(qemacs, b, t, "mtest");
+  }  // end of runMTest
+
+  static void runPTest(QEmacsWidget &qemacs) {
+    auto& b = qemacs.getCurrentBuffer();
+    auto &t = b.getMainFrame();
+    startMTest(qemacs, b, t, "ptest");
+  }  // end of runPTest
+
+  static QEmacsStandardFunctionCommandProxy<runMTest> runMTestProxy(
+      "run-mtest");
+  static QEmacsStandardFunctionCommandProxy<runPTest> runPTestProxy(
+      "run-ptest");
 
   static StandardQEmacsMajorModeProxy<MTestMajorMode> proxy(
       "MTest", QVector<QRegExp>() << QRegExp("^[\\w-]+\\.mtest"));

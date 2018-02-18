@@ -46,6 +46,7 @@ qemacs_library(TFELQEmacs
   SecondaryTaskManager.cxx
   Utilities.cxx
   SpellChecker.cxx
+  QEmacsStandardFunctionCommand.cxx
   QEmacsHunspellDictionariesManager.cxx
   QEmacsRectangleMode.cxx
   QEmacsGrepCommand.cxx

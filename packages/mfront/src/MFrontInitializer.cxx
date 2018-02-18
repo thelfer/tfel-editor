@@ -1,0 +1,24 @@
+/*!
+ * \file   MFrontInit.cxx
+ * \brief    
+ * \author Thomas Helfer
+ * \date   17/02/2018
+ */
+
+#include "MFront/InitDSLs.hxx"
+#include "MFront/InitInterfaces.hxx"
+#include "QEmacs/MFrontInitializer.hxx"
+
+namespace qemacs {
+
+  MFrontInitializer::MFrontInitializer() {
+    mfront::initDSLs();
+    mfront::initInterfaces();
+  }  // end of MFrontInitializer::MFrontInitializer
+
+  MFrontInitializer& MFrontInitializer::init() {
+    static MFrontInitializer i;
+    return i;
+  }  // end of initMFront
+
+}  // end of namespace qemacs

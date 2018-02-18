@@ -50,13 +50,7 @@ namespace qemacs {
     virtual void updateSyntaxHighlighterAndCompleter();
     //! method called when the Help menu is called
     virtual void actionTriggered(QAction *);
-    //! slot called to prepare a MFront analysis
-    virtual void runMFront();
-    //! slot called to start a new MFront analysis
-    virtual void startMFront();
   protected:
-    //! \return the name of the DSL
-    virtual QString getDSLName();
     //! return the list of MTest keywords
     virtual QStringList getKeyWordsList();
     /*!
@@ -64,7 +58,7 @@ namespace qemacs {
      * This is mandatory since the @DSL can change with the user inputs
      */
     QTimer *rt = nullptr;
-    //! action associated with the runMFront method
+    //! action associated with the action of running MFront
     QAction *rm = nullptr;
     //! completer
     QCompleter* c = nullptr;
