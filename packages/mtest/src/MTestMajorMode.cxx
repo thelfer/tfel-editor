@@ -265,13 +265,13 @@ namespace qemacs {
 
   MTestMajorMode::~MTestMajorMode() = default;
 
-  static void runMTest(QEmacsWidget &qemacs) {
+  void runMTest(QEmacsWidget &qemacs) {
     auto& b = qemacs.getCurrentBuffer();
     auto &t = b.getMainFrame();
     startMTest(qemacs, b, t, "mtest");
   }  // end of runMTest
 
-  static void runPTest(QEmacsWidget &qemacs) {
+  void runPTest(QEmacsWidget &qemacs) {
     auto& b = qemacs.getCurrentBuffer();
     auto &t = b.getMainFrame();
     startMTest(qemacs, b, t, "ptest");

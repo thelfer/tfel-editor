@@ -88,14 +88,15 @@ namespace qemacs {
     auto& p = nf->getProcess();
     p.setWorkingDirectory(fn.dir().absolutePath());
     auto arg = QStringList{};
+    arg << "--no-gui";
     arg << ("--verbose=" + o.vlvl);
     if (o.analysis_type == "Build") {
       arg << ("--obuild=" + o.vlvl);
     } else if (o.analysis_type == "Generate") {
       arg << ("--omake=" + o.vlvl);
     }
-    if (!o.interface.isEmpty()) {
-      arg << ("--interface=" + o.interface);
+    if (!o.i.isEmpty()) {
+      arg << ("--interface=" + o.i);
     }
     auto optional_argument = [&arg](const bool bvalue,
                                     const char *const opt) {
@@ -277,7 +278,7 @@ namespace qemacs {
 
   MFrontMajorMode::~MFrontMajorMode() = default;
 
-  static void runMFront(QEmacsWidget &qemacs) {
+  void runMFront(QEmacsWidget &qemacs) {
     auto& b = qemacs.getCurrentBuffer();
     auto &t = b.getMainFrame();
     startMFront(qemacs, b, t);

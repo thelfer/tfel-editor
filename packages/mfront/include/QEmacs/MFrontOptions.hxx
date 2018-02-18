@@ -48,7 +48,7 @@ namespace qemacs {
      */
     QString vlvl;
     //! interface to be used
-    QString interface;
+    QString i;
     //! build the libraries
     bool build = true;
     //! debug mode

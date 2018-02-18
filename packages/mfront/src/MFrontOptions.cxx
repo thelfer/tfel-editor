@@ -39,8 +39,7 @@ namespace qemacs {
         interfaces->addItem(QString::fromStdString(i));
       }
       if (f.getRegistredInterfaces().size() != 0) {
-        o.interface =
-            QString::fromStdString(f.getRegistredInterfaces()[0]);
+        o.i = QString::fromStdString(f.getRegistredInterfaces()[0]);
       }
     } else if (t == BEHAVIOUR) {
       const auto &f = mfront::BehaviourInterfaceFactory::
@@ -49,7 +48,7 @@ namespace qemacs {
         interfaces->addItem(QString::fromStdString(i));
       }
       if (f.getRegistredInterfaces().size() != 0) {
-        o.interface =
+        o.i =
             QString::fromStdString(f.getRegistredInterfaces()[0]);
       }
     } else {
@@ -59,7 +58,7 @@ namespace qemacs {
         interfaces->addItem(QString::fromStdString(i));
       }
       if (f.getRegistredInterfaces().size() != 0) {
-        o.interface =
+        o.i =
             QString::fromStdString(f.getRegistredInterfaces()[0]);
       }
     }
@@ -120,7 +119,7 @@ namespace qemacs {
     QObject::connect(
         interfaces, static_cast<void (QComboBox::*)(const QString &)>(
                  &QComboBox::activated),
-        this, [this](const QString &v) { this->opts.interface = v; });
+        this, [this](const QString &v) { this->opts.i = v; });
     QObject::connect(
         atype, static_cast<void (QComboBox::*)(const QString &)>(
                  &QComboBox::activated),
