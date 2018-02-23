@@ -264,7 +264,7 @@ namespace qemacs {
     }
     try{
       const auto sb = w.getSelectedBehaviour();
-      const auto si = sb.interface.toStdString();
+      const auto si = sb.mfront_interface.toStdString();
       const auto sl = sb.library.toStdString();
       const auto sf = sb.behaviour.toStdString();
       const auto sh =
@@ -278,7 +278,7 @@ namespace qemacs {
       auto tc = this->textEdit.textCursor();
       tc.beginEditBlock();
       tc.insertText("@ModellingHypothesis '"+sb.hypothesis+"';\n");
-      tc.insertText("@Behaviour<" + sb.interface + "> '" + sb.library +
+      tc.insertText("@Behaviour<" + sb.mfront_interface + "> '" + sb.library +
                     "' '" + sb.behaviour + "';\n\n");
       tc.insertText("// material propreties\n");
       for(const auto& m: b->getMaterialPropertiesNames()){

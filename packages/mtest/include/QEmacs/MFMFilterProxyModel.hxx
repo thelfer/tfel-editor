@@ -31,7 +31,7 @@ namespace qemacs {
     //! name filter
     QRegExp name;
     //! interface filter
-    QRegExp interface;
+    QRegExp mfront_interface;
     //! material filter
     QRegExp material;
     //! material knowledge

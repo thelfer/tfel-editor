@@ -19,7 +19,7 @@ namespace qemacs {
   }  // end of MFMFilterProxyModel::setNameFilter
 
   void MFMFilterProxyModel::setInterfaceFilter(const QString& i) {
-    this->interface.setPattern(i);
+    this->mfront_interface.setPattern(i);
     this->invalidateFilter();
   }  // end of MFMFilterProxyModel::setInterfaceFilter
 
@@ -56,8 +56,8 @@ namespace qemacs {
     if (!b) {
       return false;
     }
-    if ((!this->interface.isEmpty()) && (this->interface.isValid())) {
-      b = b && this->interface.indexIn(m->data(ii).toString())!=-1;
+    if ((!this->mfront_interface.isEmpty()) && (this->mfront_interface.isValid())) {
+      b = b && this->mfront_interface.indexIn(m->data(ii).toString())!=-1;
     }
     if (!b) {
       return false;

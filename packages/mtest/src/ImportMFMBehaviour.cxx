@@ -125,7 +125,7 @@ namespace qemacs {
     BehaviourDescription b;
     b.behaviour = m->data(ib).toString();
     b.library = m->data(il).toString();
-    b.interface = m->data(ii).toString();
+    b.mfront_interface = m->data(ii).toString();
     b.hypothesis = this->hsb->currentText();
     return b;
   }  // end of ImportMFMBehaviour::getSelectedBehaviour

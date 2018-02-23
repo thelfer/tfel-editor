@@ -27,7 +27,7 @@ namespace qemacs {
     struct BehaviourDescription {
       QString library;
       QString behaviour;
-      QString interface;
+      QString mfront_interface;
       QString hypothesis;
     };  // end of BehaviourDescription
     /*!
