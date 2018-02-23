@@ -69,6 +69,8 @@ namespace qemacs {
     Q_OBJECT
   }; // end of struct MFrontMajorMode
 
+  void runMFront(QEmacsWidget &);
+
 } // end of namespace qemacs
 
 #endif /* LIB_QEMACS_MFRONTMAJORMODE_H */

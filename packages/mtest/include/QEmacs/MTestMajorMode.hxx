@@ -48,6 +48,8 @@ namespace qemacs {
    protected slots:
     //! \brief launch the import behaviour wizard
     virtual void showImportBehaviourWizard();
+    //! \brief launch the import MFM behaviour dialog
+    virtual void showImportMFMBehaviourDialog();
     //! \brief method called when the `Show Results with TPlot` menu is
     //! called
     virtual void showResults();
@@ -69,6 +71,8 @@ namespace qemacs {
     QAction *ha = nullptr;
     //! \brief import behaviour action
     QAction *iba = nullptr;
+    //! \brief import mfm behaviour action
+    QAction *imfmba = nullptr;
     //! \brief run mtest
     QAction *ra = nullptr;
     //! \brief show results with TPlot
@@ -78,6 +82,9 @@ namespace qemacs {
     Q_OBJECT
 
   };  // end of struct MTestMajorMode
+
+  void runMTest(QEmacsWidget &);
+  void runPTest(QEmacsWidget &);
 
 }  // end of namespace qemacs
 

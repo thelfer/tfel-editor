@@ -8,7 +8,9 @@ link_directories("${TFEL_LIBRARY_PATH}")
 
 qt_sources(MTestQEmacsMode_SOURCES
   "${PROJECT_SOURCE_DIR}/packages/mtest/include/QEmacs"
+  MFMFilterProxyModel
   ImportBehaviour
+  ImportMFMBehaviour
   MTestStudyOptions
   MTestMajorMode
   MTestSyntaxHighlighter
@@ -16,11 +18,13 @@ qt_sources(MTestQEmacsMode_SOURCES
   PipeTestSyntaxHighlighter)
 
 qemacs_package(MTestQEmacsMode
+  MFMDataBase.cxx
   ${MTestQEmacsMode_SOURCES})
 
 target_link_libraries(MTestQEmacsMode
   TFELQEmacs
   TFELMTest
+  TFELMFront
   TFELMaterial
   TFELSystem
   Qt5::Core

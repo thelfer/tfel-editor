@@ -42,6 +42,7 @@ qt_sources(TFELQEmacs_SOURCES
 
 qemacs_library(TFELQEmacs
   ${CMAKE_CURRENT_BINARY_DIR}/QEmacsBuildInformation.cxx
+  VerboseLevel.cxx
   SecondaryTask.cxx
   SecondaryTaskManager.cxx
   Utilities.cxx

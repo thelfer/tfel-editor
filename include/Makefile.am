@@ -1,4 +1,5 @@
-nobase_include_HEADERS = QEmacs/Config.hxx                \
+nobase_include_HEADERS = QEmacs/Config.hxx                 \
+			 QEmacs/VerboseLevel.hxx                      \
 			 QEmacs/SecondaryTask.hxx                     \
 			 QEmacs/SecondaryTaskManager.hxx              \
 			 QEmacs/QEmacsFileDownloader.hxx              \

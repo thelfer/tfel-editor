@@ -488,12 +488,12 @@ namespace qemacs {
   }
 
   QVector<QMenu*> QEmacsTextEditBase::getSpecificMenus() {
-    QVector<QMenu*> m;
-    if (this->mode != nullptr) {
-      auto * mm = this->mode->getSpecificMenu();
-      if (mm != nullptr) {
-        m.push_back(mm);
-      }
+      QVector<QMenu*> m;
+      if (this->mode != nullptr) {
+        auto* mm = this->mode->getSpecificMenu();
+        if (mm != nullptr) {
+          m.push_back(mm);
+        }
     }
     return m;
   }  // end of QEmacsTextEditBase::getSpecificMenu

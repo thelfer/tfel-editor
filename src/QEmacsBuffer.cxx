@@ -370,7 +370,7 @@ namespace qemacs {
       this->stw->show();
     }
     return s;
-  }  // end of QEmacsBuffer::addSecondaryTask
+  }  // end of QEmacsBuffer::attachSecondaryTask
 
   void QEmacsBuffer::attachSecondaryTask(QWidget *const p) {
     if(this->getSecondaryTaskIndex(p)!=-1){

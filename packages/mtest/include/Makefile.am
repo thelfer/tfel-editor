@@ -1,7 +1,10 @@
-nobase_include_HEADERS = QEmacs/MTestStudyOptions.hxx         \
-			 QEmacs/MTestMajorMode.hxx            \
-			 QEmacs/MTestSyntaxHighlighter.hxx    \
-			 QEmacs/PipeTestMajorMode.hxx         \
-			 QEmacs/PipeTestSyntaxHighlighter.hxx \
-			 QEmacs/ImportBehaviour.hxx
+nobase_include_HEADERS = QEmacs/MTestStudyOptions.hxx \
+			 QEmacs/MTestMajorMode.hxx               \
+			 QEmacs/MTestSyntaxHighlighter.hxx       \
+			 QEmacs/PipeTestMajorMode.hxx            \
+			 QEmacs/PipeTestSyntaxHighlighter.hxx    \
+			 QEmacs/MFMDataBase.hxx                  \
+			 QEmacs/MFMFilterProxyModel.hxx          \
+			 QEmacs/ImportBehaviour.hxx              \
+			 QEmacs/ImportMFMBehaviour.hxx
 EXTRA_DIST = CMakeLists.txt

@@ -1,4 +1,5 @@
 install_header(QEmacs Config.hxx)
+install_header(QEmacs VerboseLevel.hxx)
 install_header(QEmacs SecondaryTask.hxx)
 install_header(QEmacs SecondaryTaskManager.hxx)
 install_header(QEmacs QEmacsFileDownloader.hxx)

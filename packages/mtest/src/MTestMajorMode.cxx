@@ -6,9 +6,11 @@
  */
 
 #include <QtCore/QDir>
+#include <QtCore/QDebug>
 #include <QtCore/QFileInfo>
 #include <QtGui/QTextCursor>
-
+#include "TFEL/System/ExternalLibraryManager.hxx"
+#include "MTest/Behaviour.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/QEmacsCommandFactory.hxx"
@@ -17,8 +19,8 @@
 #include "QEmacs/MTestStudyOptions.hxx"
 #include "QEmacs/MTestSyntaxHighlighter.hxx"
 #include "QEmacs/QEmacsMajorModeFactory.hxx"
-
 #include "QEmacs/ImportBehaviour.hxx"
+#include "QEmacs/ImportMFMBehaviour.hxx"
 #include "QEmacs/MTestMajorMode.hxx"
 
 namespace qemacs {
@@ -101,6 +103,9 @@ namespace qemacs {
     this->iba = new QAction(QObject::tr("Import Behaviour"), this);
     QObject::connect(this->iba, &QAction::triggered, this,
                      &MTestMajorMode::showImportBehaviourWizard);
+    this->imfmba = new QAction(QObject::tr("Import MFM behaviour"), this);
+    QObject::connect(this->imfmba, &QAction::triggered, this,
+                     &MTestMajorMode::showImportMFMBehaviourDialog);
     this->tpa =
         new QAction(QObject::tr("Plot results using TPlot"), this);
     QObject::connect(this->tpa, &QAction::triggered, this,
@@ -135,6 +140,7 @@ namespace qemacs {
     m->addAction(this->tpa);
     m->addSeparator();
     m->addAction(this->iba);
+    m->addAction(this->imfmba);
     m->addSeparator();
     auto* km = m->addMenu(QObject::tr("Keywords"));
     auto keys = this->getKeyWordsList();
@@ -248,6 +254,64 @@ namespace qemacs {
     if (w.exec() == QDialog::Accepted) {
     }
   }  // end of MTestMajorMode::showImportBehaviourWizard
+
+  void MTestMajorMode::showImportMFMBehaviourDialog() {
+   using tfel::material::ModellingHypothesis;
+   using tfel::system::ExternalLibraryManager;
+   ImportMFMBehaviour w(this->qemacs, &(this->textEdit));
+   if (w.exec() != QDialog::Accepted) {
+     return;
+    }
+    try{
+      const auto sb = w.getSelectedBehaviour();
+      const auto si = sb.interface.toStdString();
+      const auto sl = sb.library.toStdString();
+      const auto sf = sb.behaviour.toStdString();
+      const auto sh =
+          ModellingHypothesis::fromString(sb.hypothesis.toStdString());
+      mtest::Behaviour::Parameters params;
+      //       qDebug() << sb.interface << sb.library << sb.behaviour
+      //                << sb.hypothesis;
+      //       qDebug() << QString::fromStdString(si) <<
+      //       QString::fromStdString(sl) << QString::fromStdString(sf);
+      auto b = mtest::Behaviour::getBehaviour(si, sl, sf, params, sh);
+      auto tc = this->textEdit.textCursor();
+      tc.beginEditBlock();
+      tc.insertText("@ModellingHypothesis '"+sb.hypothesis+"';\n");
+      tc.insertText("@Behaviour<" + sb.interface + "> '" + sb.library +
+                    "' '" + sb.behaviour + "';\n\n");
+      tc.insertText("// material propreties\n");
+      for(const auto& m: b->getMaterialPropertiesNames()){
+        tc.insertText("@MaterialProperty<...> '" +
+                      QString::fromStdString(m) + "' ...;\n");
+      }
+      tc.insertText("\n");
+      tc.insertText("// parameters\n");
+      for(const auto& p: b->getParametersNames()){
+      tc.insertText("// @Parameter'" + QString::fromStdString(p) +
+                    "' ... ;\n");
+      }
+      tc.insertText("\n");
+      tc.insertText("// internal state variable initialisations\n");
+      for(const auto& iv: b->getInternalStateVariablesNames()){
+      tc.insertText("// @InternalStateVariable '" + QString::fromStdString(iv) +
+                    "';\n");
+      }
+      tc.insertText("\n");
+      tc.insertText("// external state variable\n");
+      for(const auto& ev: b->getExternalStateVariablesNames()){
+      tc.insertText("// @ExternalStateVariable '" + QString::fromStdString(ev) +
+                    "' ... ;\n");
+      }
+      tc.endEditBlock();
+      this->textEdit.setTextCursor(tc);
+    } catch (std::exception& e) {
+      qDebug() << e.what();
+      this->report(e.what());
+    } catch (...) {
+      return;
+    }
+  }  // end of MTestMajorMode::showImportMFMBehaviourDialog
 
   void MTestMajorMode::showResults() {
     const auto n = this->textEdit.getCompleteFileName();

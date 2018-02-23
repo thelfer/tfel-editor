@@ -36,7 +36,7 @@ namespace qemacs {
 
   QString MarkdownMajorMode::getDescription() const {
     return "major mode dedicated to the Markdown language";
-  }  // end of CppMajorMode
+  }  // end of MarkdownMajorMode::getDescription
 
   void MarkdownMajorMode::format() {
   }  // end of MarkdownMajorMode::format()
@@ -110,6 +110,39 @@ namespace qemacs {
     //                      &MarkdownMajorMode::AnalysisFinished);
     //     this->buffer.addSlave(QObject::tr("Markdown Output"), s);
   }  // end of MarkdownMajorMode::startPandoc
+
+  bool MarkdownMajorMode::handleShortCut(const int k1,
+                                       const Qt::KeyboardModifiers m,
+                                       const int k2) {
+    if ((k1 == Qt::Key_C) && (m == Qt::NoModifier) &&
+        (k2 == Qt::Key_Equal)) {
+      auto toc = new QEmacsPlainTextEdit(this->qemacs, this->buffer);
+      toc->setMajorMode("Markdown");
+      auto c = toc->textCursor();
+      auto tc = this->textEdit.textCursor();
+      tc.movePosition(QTextCursor::Start, QTextCursor::MoveAnchor);
+      while (!tc.atEnd()) {
+        tc.movePosition(QTextCursor::StartOfBlock,
+                        QTextCursor::MoveAnchor);
+        tc.movePosition(QTextCursor::EndOfBlock,
+                        QTextCursor::KeepAnchor);
+        const auto l = tc.selectedText();
+        if (l.startsWith('#')) {
+          c.insertText(l + '\n');
+        }
+        if(!tc.atEnd()){
+          tc.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor);
+          tc.movePosition(QTextCursor::StartOfBlock,
+                          QTextCursor::MoveAnchor);
+        }
+      }
+      toc->setReadOnly(true);
+      this->buffer.attachSecondaryTask("Table of contents", toc);
+      return true;
+    }
+    return CompiledLanguageMajorModeBase::handleShortCut(k1,m,k2);
+  }  // end of MarkdownMajorMode::handleShortCut
+
 
   bool MarkdownMajorMode::keyPressEvent(QKeyEvent *const ev) {
     const auto k = ev->key();
@@ -225,27 +258,30 @@ namespace qemacs {
                      QTextCursor::MoveAnchor);
       b.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
       p += b.selectedText().trimmed();
-      b.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor);
-      b.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
-      while (b <= e) {
-        b.movePosition(QTextCursor::StartOfBlock,
-                       QTextCursor::MoveAnchor);
-        b.movePosition(QTextCursor::EndOfBlock,
-                       QTextCursor::KeepAnchor);
-        p += ' ' + b.selectedText().trimmed();
+      if (!b.atEnd()) {
         b.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor);
         b.movePosition(QTextCursor::EndOfBlock,
                        QTextCursor::MoveAnchor);
-        if (b.atEnd()) {
-          break;
+        while (b <= e) {
+          b.movePosition(QTextCursor::StartOfBlock,
+                         QTextCursor::MoveAnchor);
+          b.movePosition(QTextCursor::EndOfBlock,
+                         QTextCursor::KeepAnchor);
+          p += ' ' + b.selectedText().trimmed();
+          if (b.atEnd()) {
+            break;
+          }
+          b.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor);
+          b.movePosition(QTextCursor::EndOfBlock,
+                         QTextCursor::MoveAnchor);
         }
-      }
-      if (e.atEnd()) {
-        b.movePosition(QTextCursor::StartOfBlock,
-                       QTextCursor::MoveAnchor);
-        b.movePosition(QTextCursor::EndOfBlock,
-                       QTextCursor::KeepAnchor);
-        p += ' ' + b.selectedText().trimmed();
+        //         if (e.atEnd()) {
+        //           b.movePosition(QTextCursor::StartOfBlock,
+        //                          QTextCursor::MoveAnchor);
+        //           b.movePosition(QTextCursor::EndOfBlock,
+        //                          QTextCursor::KeepAnchor);
+        //           p += ' ' + b.selectedText().trimmed();
+        //         }
       }
       // split the string
       const auto words =
@@ -296,10 +332,10 @@ namespace qemacs {
             lineStart = false;
           }
         }
-      }
-      tc.endEditBlock();
-      this->textEdit.setTextCursor(tc);
-      return true;
+        }
+        tc.endEditBlock();
+        this->textEdit.setTextCursor(tc);
+        return true;
     } else if ((m == Qt::AltModifier) && (k == Qt::Key_M)) {
       QSettings s;
       const auto ch =
@@ -316,7 +352,7 @@ namespace qemacs {
       this->qemacs.setUserInput(l);
       return true;
     }
-    return false;
+    return CompiledLanguageMajorModeBase::keyPressEvent(ev);
   }  // end of MarkdownMajorMode::keyPressEvent
 
   SpellChecker &MarkdownMajorMode::getSpellChecker() {

@@ -44,7 +44,11 @@ namespace qemacs {
     void format() override;
 
     bool keyPressEvent(QKeyEvent *const) override;
-    
+
+    bool handleShortCut(const int,
+                        const Qt::KeyboardModifiers,
+                        const int) override;
+
     QIcon getIcon() const override;
 
     SpellChecker &getSpellChecker();

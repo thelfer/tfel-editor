@@ -436,6 +436,9 @@ namespace qemacs {
     } else if ((k1 == Qt::Key_C) && (k2 == Qt::Key_R) &&
                (m == Qt::ControlModifier)) {
       return this->sendRegionToCastem();
+    } else if ((k1 == Qt::Key_C) && (k2 == Qt::Key_B) &&
+               (m == Qt::ControlModifier)) {
+      return this->sendBufferToCastem();
     }
     return false;
   }  // end of CastemMajorMode::handleShortCut

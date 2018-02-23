@@ -57,6 +57,8 @@ namespace qemacs {
     bool warning = false;
     //! pedantic checks
     bool pedantic = false;
+    //! pedantic checks
+    bool profiling = false;
   }; // end of MFrontOptions
 
   //! \brief a dialog used to choose the options passed to `MTest`

@@ -5,5 +5,6 @@
     <file alias="qemacs/restart.png">images/restart.png</file>
     <file alias="qemacs/languages/c.png">images/languages/c.png</file>
     <file alias="qemacs/languages/cxx.png">images/languages/cxx.png</file>
+    <file alias="qemacs/misc/wizard.png">images/misc/wizard.png</file>
  </qresource>
 </RCC>

@@ -11,16 +11,23 @@ libMTestQEmacsMode_la_SOURCES = MTestStudyOptions.cxx         \
 				MTestSyntaxHighlighter.cxx    \
 				PipeTestMajorMode.cxx         \
 				PipeTestSyntaxHighlighter.cxx \
-				ImportBehaviour.cxx
+                  MFMFilterProxyModel.cxx       \
+				MFMDataBase.cxx               \
+				ImportBehaviour.cxx           \
+				ImportMFMBehaviour.cxx
 
-libMTestQEmacsMode_la_LIBADD   = -L@TFELHOME@/lib      \
-			         -lTFELMTest
+libMTestQEmacsMode_la_LIBADD   = -L@TFELHOME@/lib \
+			         -lTFELMTest                 \
+			         -lTFELMFront                \
+			         -lTFELSystem
 
 nodist_libMTestQEmacsMode_la_SOURCES = moc_MTestMajorMode.cxx            \
 				       moc_MTestStudyOptions.cxx         \
 				       moc_MTestSyntaxHighlighter.cxx    \
 				       moc_PipeTestMajorMode.cxx         \
-				       moc_PipeTestSyntaxHighlighter.cxx
+				       moc_PipeTestSyntaxHighlighter.cxx \
+				       moc_MFMFilterProxyModel.cxx       \
+				       moc_ImportMFMBehaviour.cxx
 
 moc_%.cxx : @top_srcdir@/packages/mtest/include/QEmacs/%.hxx
 	@QT_MOC@ $< -o $@	

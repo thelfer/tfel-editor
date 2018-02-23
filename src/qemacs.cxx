@@ -13,6 +13,7 @@
 #include<QtCore/QStringList>
 #include<QtWidgets/QApplication>
 #include"TFEL/System/ExternalLibraryManager.hxx"
+#include"QEmacs/VerboseLevel.hxx"
 #include"QEmacs/QEmacsBuildInformation.hxx"
 #include"QEmacs/QEmacsMainWindow.hxx"
 
@@ -24,7 +25,11 @@ static void loadExternalPackages()
   // trying the qemacs load path
   auto * userFiles = ::getenv("QEMACS_LOAD_PATH");
   if(userFiles!=nullptr){
+#ifdef Q_OS_WIN
+    paths << QString(userFiles).split(";",QString::SkipEmptyParts);
+#else  /* Q_OS_WIN */
     paths << QString(userFiles).split(":",QString::SkipEmptyParts);
+#endif /* Q_OS_WIN */
   }
   // add the standard path
   paths << QEmacsBuildInformation::getDataDirectory();
@@ -53,7 +58,6 @@ static void loadExternalPackages()
 
 int main(int argc,char ** const argv)
 {
-  using namespace qemacs;
   QApplication a(argc,argv);
   a.setApplicationName("qemacs");
   a.setApplicationVersion(PACKAGE_VERSION); 
@@ -61,12 +65,13 @@ int main(int argc,char ** const argv)
   loadExternalPackages();
   QStringList files;
   for(int i=1;i!=argc;++i){
-    if(argv[i][0]!='-'){
+    if (argv[i][0] != '-') {
       files.append(argv[i]);
+    } else if (strcmp(argv[i], "--debug") == 0) {
+      qemacs::setVerboseMode(qemacs::VERBOSE_DEBUG);
     }
   }
-  
-  QEmacsMainWindow qemacs(files);
+  qemacs::QEmacsMainWindow qemacs(files);
   qemacs.show();
   return QApplication::exec();
 }

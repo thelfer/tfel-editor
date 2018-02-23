@@ -15,8 +15,7 @@
 #include<QtWidgets/QWizard>
 #include "MTest/Behaviour.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
   // forward declaration
   struct QEmacsTextEditBase;

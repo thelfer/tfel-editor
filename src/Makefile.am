@@ -17,7 +17,8 @@ localedir = $(datadir)/locale
 AM_CPPFLAGS += -DLOCALEDIR=\"$(localedir)\"
 
 lib_LTLIBRARIES = libTFELQEmacs.la
-libTFELQEmacs_la_SOURCES = QEmacsResources.cxx       \
+libTFELQEmacs_la_SOURCES = QEmacsResources.cxx        \
+			   VerboseLevel.cxx                      \
 			   SecondaryTask.cxx                     \
 			   SecondaryTaskManager.cxx              \
 			   QEmacsFileDownloader.cxx              \
@@ -117,11 +118,12 @@ qemacs_LDADD   = -lTFELQEmacs        \
 		 -lTFELException     \
 		 @QT_LIBS@
 
-QEMACSRESOURCES=images/failure.png                \
+QEMACSRESOURCES=images/failure.png        \
 		        images/success.png        \
 		        images/restart.png        \
 		        images/languages/c.png    \
-		        images/languages/cxx.png
+		        images/languages/cxx.png  \
+		        images/misc/wizard.png
 
 moc_%.cxx : @top_srcdir@/include/QEmacs/%.hxx
 	@QT_MOC@ $< -o $@	

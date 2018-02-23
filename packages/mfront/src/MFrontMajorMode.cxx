@@ -11,6 +11,7 @@
 #include <QtCore/QStringListModel>
 #include <QtCore/QTimer>
 #include <QtCore/QFileInfo>
+#include <QtGui/QDesktopServices>
 #include <QtWidgets/QAbstractItemView>
 #include "TFEL/Utilities/CxxTokenizer.hxx"
 #include "MFront/AbstractDSL.hxx"
@@ -18,6 +19,7 @@
 #include "QEmacs/MFrontInitializer.hxx"
 #include "QEmacs/MFrontSyntaxHighlighter.hxx"
 #include "QEmacs/ProcessOutputFrame.hxx"
+#include "QEmacs/ProcessOutputMajorModeBase.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/QEmacsCommandFactory.hxx"
@@ -87,29 +89,39 @@ namespace qemacs {
     b.attachSecondaryTask(QObject::tr("MFront output"), nf);
     auto& p = nf->getProcess();
     p.setWorkingDirectory(fn.dir().absolutePath());
-    auto arg = QStringList{};
-    arg << "--no-gui";
-    arg << ("--verbose=" + o.vlvl);
+    auto args = QStringList{};
+    args << "--no-gui";
+    args << ("--verbose=" + o.vlvl);
     if (o.analysis_type == "Build") {
-      arg << ("--obuild=" + o.vlvl);
+      args << ("--obuild=" + o.vlvl);
     } else if (o.analysis_type == "Generate") {
-      arg << ("--omake=" + o.vlvl);
+      args << ("--omake=" + o.vlvl);
     }
     if (!o.i.isEmpty()) {
-      arg << ("--interface=" + o.i);
+      args << ("--interface=" + o.i);
     }
-    auto optional_argument = [&arg](const bool bvalue,
+    auto optional_argument = [&args](const bool bvalue,
                                     const char *const opt) {
       if (bvalue) {
-        arg << opt;
+        args << opt;
       }
     };
     optional_argument(o.debug, "--debug");
     optional_argument(o.warning, "--warning");
     optional_argument(o.pedantic, "--pedantic");
-    arg << fn.absoluteFilePath();
-    qDebug() << arg;
-    p.start("mfront", arg);
+    if(mkt==MFrontOptionsDialog::BEHAVIOUR){
+      optional_argument(o.profiling, "--@Profiling=true");
+    }
+    args << fn.absoluteFilePath();
+    auto *m = qobject_cast<ProcessOutputMajorModeBase *>(
+        nf->setMajorMode("compilation-output"));
+    if (m != nullptr) {
+      m->setDirectory(p.workingDirectory());
+      m->setCommand("mfront");
+      m->setArguments(args);
+      m->setMajorMode("compilation-output");
+    }
+    p.start("mfront", args);
     p.waitForStarted();
   }  // end of runMFront
 
@@ -160,14 +172,53 @@ namespace qemacs {
   } // end of CppMajorMode
 
   QMenu *MFrontMajorMode::getSpecificMenu() {
+    auto online_ressource = [](QMenu *const m, const QString &t,
+                                const QString &url) {
+      auto *const a = m->addAction(t);
+      QObject::connect(a, &QAction::triggered,
+                       [url] { QDesktopServices::openUrl(QUrl(url)); });
+      return a;
+    };  // end of online_ressources
+    auto online_ressource2 = [online_ressource](
+        QMenu *const m, const QString &t, const QString &url,
+        const QIcon i) {
+      online_ressource(m,t,url)->setIcon(i);
+    };  // end of online_ressources2
     auto *t = qobject_cast<QWidget *>(this->parent());
     if (t == nullptr) {
       return nullptr;
     }
-    QMenu *m(new QMenu(QObject::tr("MFront"), t));
+    auto *const m = new QMenu(QObject::tr("MFront"), t);
     m->addAction(this->rm);
+    auto *const w = m->addMenu(QObject::tr("Wizards"));
+    w->setIcon(QIcon(":/qemacs/misc/wizard.png"));
+    auto *const sebw = w->addAction(QObject::tr("Implicit DSL wizard"));
+    sebw->setToolTip(
+        QObject::tr("Create the basis of a behaviour \n"
+                    "implementation based on the Implicit DSL."));
+    auto *const d = m->addMenu(QObject::tr("Online Documentation"));
+    d->setIcon(QIcon::fromTheme("help-browser"));
+    online_ressource2(d, QObject::tr("MFront website"),
+                      "http://tfel.sourceforge.net", this->getIcon());
+    online_ressource2(d, QObject::tr("General documentation"),
+                      "http://tfel.sourceforge.net/documentation.html",
+                      this->getIcon());
+    online_ressource2(d, QObject::tr("MFront gallery"),
+                      "http://tfel.sourceforge.net/gallery.html",
+                      this->getIcon());
+    online_ressource2(d, QObject::tr("Frequently asked questions"),
+                      "http://tfel.sourceforge.net/faq.html",
+                      QIcon::fromTheme("help-faq"));
+    auto *const h = m->addMenu(QObject::tr("Getting help"));
+    h->setIcon(QIcon::fromTheme("dialog-question"));
+    online_ressource(h, QObject::tr("Forum"),
+                     "https://sourceforge.net/p/tfel/discussion/");
+    online_ressource(h, QObject::tr("Report bugs"),
+                     "https://sourceforge.net/p/tfel/tickets/");
+    online_ressource(h, QObject::tr("Contact the authors"),
+                     "mailto:tfel-contact@cea.fr?subject=About MFront usage");
     return m;
-  } // end of
+  }  // end of MFrontMajorMode::getSpecificMenu
 
   QCompleter *MFrontMajorMode::getCompleter() {
     return this->c;

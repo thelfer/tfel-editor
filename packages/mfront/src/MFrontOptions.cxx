@@ -101,32 +101,46 @@ namespace qemacs {
     rwarnings->setCheckState(Qt::Unchecked);
     gl2->addWidget(new QLabel(QObject::tr("Extra warnings")), 2, 0);
     gl2->addWidget(rwarnings, 2, 1, Qt::AlignHCenter);
-    // pedantics
+    // pedantic warnings
     auto *rpedantic = new QCheckBox();
     rpedantic->setCheckState(Qt::Unchecked);
-    gl2->addWidget(new QLabel(QObject::tr("Extra pedantic")), 3, 0);
+    gl2->addWidget(new QLabel(QObject::tr("Pedantic warnings")), 3, 0);
     gl2->addWidget(rpedantic, 3, 1, Qt::AlignHCenter);
+    // profiling
+    if (t == BEHAVIOUR) {
+      auto *rprofiling = new QCheckBox();
+      rprofiling->setCheckState(Qt::Unchecked);
+      gl2->addWidget(new QLabel(QObject::tr("Performance profiling")),
+                     4, 0);
+      gl2->addWidget(rprofiling, 4, 1, Qt::AlignHCenter);
+      QObject::connect(rprofiling, &QCheckBox::stateChanged, this,
+                       [this](const int s) {
+                         this->opts.profiling = s == Qt::Checked;
+                       });
+    }
     //
     ao->setLayout(gl2);
     ao->setFlat(true);
     auto *dbb = new QDialogButtonBox(QDialogButtonBox::Ok |
                                      QDialogButtonBox::Cancel);
     hl->addWidget(dbb);
+    // actions
     QObject::connect(dbb, &QDialogButtonBox::accepted, this,
                      &MFrontOptionsDialog::accept);
     QObject::connect(dbb, &QDialogButtonBox::rejected, this,
                      &MFrontOptionsDialog::reject);
     QObject::connect(
         interfaces, static_cast<void (QComboBox::*)(const QString &)>(
-                 &QComboBox::activated),
+                        &QComboBox::activated),
         this, [this](const QString &v) { this->opts.i = v; });
     QObject::connect(
         atype, static_cast<void (QComboBox::*)(const QString &)>(
-                 &QComboBox::activated),
-        this, [this](const QString &v) { this->opts.analysis_type = v; });
+                   &QComboBox::activated),
+        this,
+        [this](const QString &v) { this->opts.analysis_type = v; });
     QObject::connect(
         olvl, static_cast<void (QComboBox::*)(const QString &)>(
-                 &QComboBox::activated),
+                  &QComboBox::activated),
         this, [this](const QString &v) { this->opts.olvl = v; });
     QObject::connect(
         vlv, static_cast<void (QComboBox::*)(const QString &)>(

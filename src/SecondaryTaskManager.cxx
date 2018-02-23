@@ -5,7 +5,7 @@
  * \date   13/02/2018
  */
 
-#include <QtCore/QDebug>
+#include "QEmacs/VerboseLevel.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/SecondaryTaskManager.hxx"
 
@@ -37,6 +37,10 @@ namespace qemacs {
   }  // end of wfind
 
   void SecondaryTaskManager::removeBuffer(QEmacsBuffer* const b){
+    if (b == nullptr) {
+      return;
+    }
+    debug("removing buffer: ", b->getBufferName(), b);
     const auto pb = this->bufferTasks.find(b);
     if(pb==this->bufferTasks.end()){
       return;
