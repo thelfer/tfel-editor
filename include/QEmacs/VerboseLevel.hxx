@@ -37,15 +37,6 @@ namespace qemacs {
   QEMACS_VISIBILITY_EXPORT void setVerboseMode(
       const VerboseLevel = VERBOSE_LEVEL0);
 
-  /*!
-   * \brief send arguments to the debug stream if the verbose level is
-   * greater than `VERBOSE_DEBUG`.
-   */
-  template <typename... T>
-  void debug(T&&...);
-
 }  // end of namespace qemacs
-
-#include "QEmacs/VerboseLevel.ixx"
 
 #endif /* LIB_QEMACS_VERBOSELEVEL_HXX */

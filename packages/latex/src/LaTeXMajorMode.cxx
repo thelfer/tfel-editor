@@ -299,10 +299,8 @@ namespace qemacs {
     }
   }  // end of LaTeXMajorMode::setSpellCheckLanguage
 
-  void LaTeXMajorMode::completeContextMenuForMispelledWord(QMenu *m,
-                                                           const QString &l,
-                                                           const int p,
-                                                           const int ap) {
+  void LaTeXMajorMode::completeContextMenuForMispelledWord(
+      QMenu* m, const QString& l, const int p, const int ap) {
     int pos = 0;
     while (pos != l.size()) {
       if (l[pos].isLetter()) {
@@ -317,11 +315,13 @@ namespace qemacs {
           this->emwp = ap + pos;
           const QString w = l.mid(npos, pos - npos);
           if (!this->spellChecker.spell(w)) {
-            for (auto &pa : this->suggestions) { delete pa; }
+            for (auto& pa : this->suggestions) {
+              delete pa;
+            }
             this->suggestions.clear();
             const auto ss = this->spellChecker.suggest(w);
-              for (const auto& s : ss) {
-              auto *a = new QAction(s, this);
+            for (const auto& s : ss) {
+              auto* a = new QAction(s, this);
               a->setData(s);
               this->suggestions.push_back(a);
             }
@@ -331,7 +331,7 @@ namespace qemacs {
                 m->insertAction(*(cactions.begin()), m->addSeparator());
               }
               for (int i = this->suggestions.size(); i > 0; --i) {
-                auto *a = this->suggestions[i - 1];
+                auto* a = this->suggestions[i - 1];
                 cactions = m->actions();
                 if (cactions.isEmpty()) {
                   m->addAction(a);
@@ -349,13 +349,13 @@ namespace qemacs {
         ++pos;
       }
     }
-  } // end of LaTeXMajorMode::completeContextMenuForMispelledWord
+  }  // end of LaTeXMajorMode::completeContextMenuForMispelledWord
 
   SpellChecker& LaTeXMajorMode::getSpellChecker() {
     return this->spellChecker;
   }
 
-  void LaTeXMajorMode::replaceMispelledWordBySuggestion(QAction *a) {
+  void LaTeXMajorMode::replaceMispelledWordBySuggestion(QAction* a) {
     if (this->suggestions.indexOf(a) != -1) {
       QTextCursor tc(this->textEdit.textCursor());
       tc.beginEditBlock();

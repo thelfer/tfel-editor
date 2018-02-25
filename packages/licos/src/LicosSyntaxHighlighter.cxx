@@ -25,7 +25,7 @@ namespace qemacs
     // highlighting
     this->keyFormat.setForeground(Qt::blue);
     this->optFormat.setForeground(Qt::darkCyan);
-    this->importFormat = this->quotationFormat;
+    this->importFormat = this->stringFormat;
     this->importFormat.setUnderlineStyle(QTextCharFormat::SingleUnderline);
     this->importFormat.setToolTip("open in new buffer");
     const auto keys   = LicosSyntaxHighlighter::getKeys();
@@ -104,7 +104,7 @@ namespace qemacs
 	  }
 	}
 	if(!b){
-	  f = this->quotationFormat;
+	  f = this->stringFormat;
 	  b = true;
 	}
 	// } else if (p->flag==Token::Number){

@@ -34,28 +34,23 @@ namespace qemacs {
     ~MarkdownSyntaxHighlighter() override;
 
    protected:
-     /*!
-      * \brief highlight the current word, if mispelled
-      * \param[in] w: current word
-      * \param[in] p: position of the beginning of the word
-      */
-     void highLightMispellWords(const QString &, const int);
-     //! calling object, to share the same spell checker
-     MarkdownMajorMode& mode;
-     //! formatting of level 1 headers
-     QTextCharFormat h1;
-     //! formatting of level 2 headers
-     QTextCharFormat h2;
-     //! formatting of level 3 headers
-     QTextCharFormat h3;
-     //! formatting of level 4 (and above) headers
-     QTextCharFormat h4;
-     //! metadata
-     QTextCharFormat md;
-     //! parsing options
-     tfel::utilities::CxxTokenizerOptions options;
-    private:
-     Q_OBJECT
+    //! calling object, to share the same spell checker
+    MarkdownMajorMode &mode;
+    //! formatting of level 1 headers
+    QTextCharFormat h1;
+    //! formatting of level 2 headers
+    QTextCharFormat h2;
+    //! formatting of level 3 headers
+    QTextCharFormat h3;
+    //! formatting of level 4 (and above) headers
+    QTextCharFormat h4;
+    //! metadata
+    QTextCharFormat md;
+    //! parsing options
+    tfel::utilities::CxxTokenizerOptions options;
+
+   private:
+    Q_OBJECT
 
   };  // end of struct MarkdownSyntaxHighlighter
 

@@ -1,5 +1,5 @@
 SUBDIRS = castem licos latex markdown \
-	  make mfront python          \
+	  cmake make mfront python        \
 	  gnuplot mtest
 
 if QEMACS_TPLOT

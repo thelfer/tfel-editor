@@ -1,11 +1,12 @@
 find_package(Qt5 5.3 COMPONENTS
+  REQUIRED
   Core Widgets 
   Xml Svg
   Network
   PrintSupport
+  OPTIONAL_COMPONENTS
   WebEngine
-  WebEngineWidgets
-  REQUIRED)
+  WebEngineWidgets)
 
 macro(moc_source header_directory file)
   set(header_file "${header_directory}/${file}.hxx")

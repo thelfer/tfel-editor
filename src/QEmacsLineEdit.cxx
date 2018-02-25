@@ -357,6 +357,9 @@ namespace qemacs {
     if (this->completions == nullptr) {
       this->completions =
           new QEmacsTextEdit(this->qemacs, this->buffer);
+      if (this->completions == nullptr) {
+        return;
+      }
       this->completions->setReadOnly(true);
       this->scompletions =
           this->buffer.attachSecondaryTask("*completions*",

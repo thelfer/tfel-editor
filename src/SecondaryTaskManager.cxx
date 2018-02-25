@@ -5,7 +5,7 @@
  * \date   13/02/2018
  */
 
-#include "QEmacs/VerboseLevel.hxx"
+#include "QEmacs/Debug.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/SecondaryTaskManager.hxx"
 
@@ -45,23 +45,22 @@ namespace qemacs {
     if(pb==this->bufferTasks.end()){
       return;
     }
-    // move the task
+    // move the tasks associated with the removed buffer
     const auto tasks = std::move(pb->second);
     this->bufferTasks.erase(pb);
     for(const auto& t : tasks){
-      auto pbv = this->bufferTasks.begin();
-      while(pbv!=this->bufferTasks.end()){
-        const auto pt = wfind(pbv->second,t.w);
-        if(pt!=pbv->second.end()){
-          pbv->second.erase(pt);
-          if(pbv->second.empty()){
-            pbv = this->bufferTasks.erase(pbv);
-          } else {
-            ++pbv;
-          }
-        } else {
-          ++pbv;
+      // counting the number of times this task exists
+      bool found = false;
+      for(const auto& bv : this->bufferTasks){
+        const auto pt = wfind(bv.second, t.w);
+        if (pt != bv.second.end()) {
+          found = true;
+          break;
         }
+      }
+      if (!found) {
+        debug("deleting widget associated with task:", t.title);
+        t.w->deleteLater();
       }
     }
   }  // end of SecondaryTaskManager::removeBuffer
@@ -160,9 +159,13 @@ namespace qemacs {
       return;
     }
     const auto p = this->bufferTasks.find(b);
+    auto title = QString{};
     if (p != this->bufferTasks.end()) {
       const auto pw = wfind(p->second,w);
       if (pw != p->second.end()) {
+        title = pw->title;
+        debug("removing task:", title, "for buffer",
+              b->getBufferName());
         p->second.erase(pw);
         if(p->second.empty()){
           // the buffer don't have any secondary task anymore
@@ -185,6 +188,7 @@ namespace qemacs {
     }
     // w was associated to b and is no more associated
     // with any other buffer
+    debug("deleting widget associated with task:", title);
     w->deleteLater();
   }  // end of SecondaryTaskManager::detachSecondaryTask
 

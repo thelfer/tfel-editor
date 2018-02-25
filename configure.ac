@@ -169,22 +169,14 @@ echo "qt5 libraries: $QT_LIBS"
 echo "qt5 moc      : $QT_MOC"
 
 AC_CONFIG_SUBDIRS([src/hunspell-1.3.2])
-if test "x$enable_private_hunspell" == "xyes"; then
-    AC_DEFINE(QEMACS_HUNSPELL_SUPPORT)
-    AM_CONDITIONAL([QEMACS_PRIVATE_HUNSPELL],true)
-    AM_CONDITIONAL([QEMACS_EXTERNAL_HUNSPELL],false)
-else
-    PKG_CHECK_MODULES(hunspell,[hunspell],
+PKG_CHECK_MODULES(hunspell,[hunspell],
 	[HAVE_HUNSPELL=yes],
 	[HAVE_HUNSPELL=no])
-    if test "x$HAVE_HUNSPELL" == "xyes"; then
-        AM_CONDITIONAL([QEMACS_PRIVATE_HUNSPELL],false)
-	AM_CONDITIONAL([QEMACS_EXTERNAL_HUNSPELL],true)
-	AC_DEFINE(QEMACS_HUNSPELL_SUPPORT)
-    else 
-        AM_CONDITIONAL([QEMACS_PRIVATE_HUNSPELL],true)
-	AM_CONDITIONAL([QEMACS_EXTERNAL_HUNSPELL],false)
-    fi
+if test "x$HAVE_HUNSPELL" == "xyes"; then
+    AM_CONDITIONAL([QEMACS_EXTERNAL_HUNSPELL],true)
+    AC_DEFINE(QEMACS_HUNSPELL_SUPPORT)
+else 
+    AM_CONDITIONAL([QEMACS_EXTERNAL_HUNSPELL],false)
 fi
 
 AC_CONFIG_FILES([Makefile
@@ -212,6 +204,9 @@ AC_CONFIG_FILES([Makefile
 		 packages/make/Makefile
 		 packages/make/src/Makefile
 		 packages/make/include/Makefile
+		 packages/cmake/Makefile
+		 packages/cmake/src/Makefile
+		 packages/cmake/include/Makefile
 		 packages/mtest/Makefile
 		 packages/mtest/src/Makefile
 		 packages/mtest/include/Makefile

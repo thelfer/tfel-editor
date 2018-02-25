@@ -11,6 +11,9 @@
 #include <QtGui/QTextCursor>
 #include "TFEL/System/ExternalLibraryManager.hxx"
 #include "MTest/Behaviour.hxx"
+#include "MTest/AbaqusStandardBehaviour.hxx"
+#include "MTest/AbaqusExplicitBehaviour.hxx"
+#include "MTest/AnsysStandardBehaviour.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/QEmacsCommandFactory.hxx"
@@ -230,11 +233,11 @@ namespace qemacs {
       }
       nf->moveCursor(QTextCursor::Start, QTextCursor::MoveAnchor);
     }
-  }
+  } // end of MTestMajorMode::actionTriggered
 
   QCompleter* MTestMajorMode::getCompleter() {
     return this->c;
-  }  // end of getCompleter
+  }  // end of MTestMajorMode::getCompleter
 
   QString MTestMajorMode::getCompletionPrefix() {
     auto tc = this->textEdit.textCursor();
@@ -247,7 +250,7 @@ namespace qemacs {
       }
     }
     return CxxMajorMode::getCompletionPrefix();
-  }
+  } // end of MTestMajorMode::getCompletionPrefix
 
   void MTestMajorMode::showImportBehaviourWizard() {
     ImportBehaviour w(this->textEdit);
@@ -266,7 +269,6 @@ namespace qemacs {
       const auto sb = w.getSelectedBehaviour();
       const auto si = sb.mfront_interface.toStdString();
       const auto sl = sb.library.toStdString();
-      const auto sf = sb.behaviour.toStdString();
       const auto sh =
           ModellingHypothesis::fromString(sb.hypothesis.toStdString());
       mtest::Behaviour::Parameters params;
@@ -274,40 +276,87 @@ namespace qemacs {
       //                << sb.hypothesis;
       //       qDebug() << QString::fromStdString(si) <<
       //       QString::fromStdString(sl) << QString::fromStdString(sf);
+      const auto sf = [&sb, &si, &sh] {
+        using namespace mtest;
+        const auto f = sb.behaviour.toStdString();
+        if ((si == "abaqus") || (si == "abaqus_standard") ||
+            (si == "abaqus_umat") || (si == "Abaqus")) {
+          return f + AbaqusStandardBehaviour::getHypothesisSuffix(sh);
+        } else if ((si == "abaqus_explicit") ||
+                   (si == "abaqus_vumat") || (si == "AbaqusExplicit")) {
+          return f + AbaqusExplicitBehaviour::getHypothesisSuffix(sh);
+        } else if ((si == "ansys") || (si == "ansys_usermat") ||
+                   (si == "Ansys")) {
+          return f + AnsysStandardBehaviour::getHypothesisSuffix(sh);
+        }
+        return f;
+      }();
       auto b = mtest::Behaviour::getBehaviour(si, sl, sf, params, sh);
       auto tc = this->textEdit.textCursor();
       tc.beginEditBlock();
-      tc.insertText("@ModellingHypothesis '"+sb.hypothesis+"';\n");
-      tc.insertText("@Behaviour<" + sb.mfront_interface + "> '" + sb.library +
-                    "' '" + sb.behaviour + "';\n\n");
-      tc.insertText("// material propreties\n");
-      for(const auto& m: b->getMaterialPropertiesNames()){
-        tc.insertText("@MaterialProperty<...> '" +
-                      QString::fromStdString(m) + "' ...;\n");
-      }
-      tc.insertText("\n");
-      tc.insertText("// parameters\n");
-      for(const auto& p: b->getParametersNames()){
-      tc.insertText("// @Parameter'" + QString::fromStdString(p) +
-                    "' ... ;\n");
-      }
-      tc.insertText("\n");
-      tc.insertText("// internal state variable initialisations\n");
-      for(const auto& iv: b->getInternalStateVariablesNames()){
-      tc.insertText("// @InternalStateVariable '" + QString::fromStdString(iv) +
-                    "';\n");
-      }
-      tc.insertText("\n");
-      tc.insertText("// external state variable\n");
-      for(const auto& ev: b->getExternalStateVariablesNames()){
-      tc.insertText("// @ExternalStateVariable '" + QString::fromStdString(ev) +
-                    "' ... ;\n");
-      }
-      tc.endEditBlock();
-      this->textEdit.setTextCursor(tc);
-    } catch (std::exception& e) {
-      qDebug() << e.what();
-      this->report(e.what());
+      tc.insertText("@ModellingHypothesis '" + sb.hypothesis + "';\n");
+      tc.insertText("@Behaviour<" + sb.mfront_interface + "> '" +
+                    sb.library + "' '" + QString::fromStdString(sf) +
+                    "';\n\n");
+      if (!b->getMaterialPropertiesNames().empty()) {
+        tc.insertText("// material propreties\n");
+        for (const auto& m : b->getMaterialPropertiesNames()) {
+          tc.insertText("@MaterialProperty<...> '" +
+                        QString::fromStdString(m) + "' ...;\n");
+        }
+        tc.insertText("\n");
+        }
+        if (!b->getParametersNames().empty()) {
+          tc.insertText("// parameters\n");
+          for (const auto& p : b->getParametersNames()) {
+            const auto v = b->getRealParameterDefaultValue(p);
+            tc.insertText("// @Parameter' " +
+                          QString::fromStdString(p) + "' " +
+                          QString::number(v) + ";\n");
+          }
+          tc.insertText("\n");
+        }
+        if (!b->getIntegerParametersNames().empty()) {
+          tc.insertText("// integer parameters\n");
+          for (const auto& p : b->getIntegerParametersNames()) {
+            const auto v = b->getIntegerParameterDefaultValue(p);
+            tc.insertText("// @IntegerParameter' " +
+                          QString::fromStdString(p) + "' " +
+                          QString::number(v) + ";\n");
+          }
+          tc.insertText("\n");
+        }
+        if (!b->getUnsignedShortParametersNames().empty()) {
+          tc.insertText("// UnsignedShort parameters\n");
+          for (const auto& p : b->getUnsignedShortParametersNames()) {
+            const auto v = b->getUnsignedShortParameterDefaultValue(p);
+            tc.insertText("// @UnsignedIntegerParameter' " +
+                          QString::fromStdString(p) + "' " +
+                          QString::number(v) + ";\n");
+          }
+          tc.insertText("\n");
+        }
+        if (!b->getInternalStateVariablesNames().empty()) {
+          tc.insertText("// internal state variable initialisations\n");
+          for (const auto& iv : b->getInternalStateVariablesNames()) {
+            tc.insertText("// @InternalStateVariable '" +
+                          QString::fromStdString(iv) + "';\n");
+          }
+          tc.insertText("\n");
+        }
+        if (!b->getExternalStateVariablesNames().empty()) {
+          tc.insertText("// external state variable\n");
+          for (const auto& ev : b->getExternalStateVariablesNames()) {
+            tc.insertText("// @ExternalStateVariable '" +
+                          QString::fromStdString(ev) + "' ... ;\n");
+          }
+          tc.insertText("\n");
+        }
+        tc.endEditBlock();
+        this->textEdit.setTextCursor(tc);
+      } catch (std::exception& e) {
+        qDebug() << e.what();
+        this->report(e.what());
     } catch (...) {
       return;
     }

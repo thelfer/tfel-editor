@@ -1,4 +1,6 @@
 nobase_include_HEADERS = QEmacs/Config.hxx                 \
+			 QEmacs/Debug.hxx                             \
+			 QEmacs/Debug.ixx                             \
 			 QEmacs/VerboseLevel.hxx                      \
 			 QEmacs/SecondaryTask.hxx                     \
 			 QEmacs/SecondaryTaskManager.hxx              \

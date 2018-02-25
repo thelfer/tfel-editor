@@ -1,16 +1,8 @@
-if QEMACS_PRIVATE_HUNSPELL
-SUBDIRS = hunspell-1.3.2
-endif
-
 AM_CPPFLAGS = -I$(top_srcdir)/include          \
 	      @QT_CXXFLAGS@                        \
 	      `@TFELCONFIG@ --includes --cppflags`
 if QEMACS_EXTERNAL_HUNSPELL
 AM_CPPFLAGS += -I$(hunspell_CFLAGS)
-endif
-if QEMACS_PRIVATE_HUNSPELL
-AM_CPPFLAGS += -I$(top_srcdir)/src/hunspell-1.3.2/src
-AM_CPPFLAGS += -I$(top_builddir)/src/hunspell-1.3.2/src/hunspell
 endif
 
 localedir = $(datadir)/locale
@@ -100,10 +92,6 @@ libTFELQEmacs_la_LIBADD   = @QT_LIBS@            \
 			    -lTFELUtilities
 if QEMACS_EXTERNAL_HUNSPELL
 libTFELQEmacs_la_LIBADD += $(hunspell_LIBS)
-endif
-if QEMACS_PRIVATE_HUNSPELL
-libTFELQEmacs_la_LIBADD += -L$(top_builddir)/src/hunspell-1.3.2/src/hunspell \
-			   -lhunspell-1.3
 endif
 
 bin_PROGRAMS  = qemacs

@@ -26,6 +26,8 @@ namespace qemacs {
 
     QString getDescription() const override;
 
+    void setSpellCheckLanguage(const QString &) override;
+
     void setSyntaxHighlighter(QTextDocument *const) override;
 
     QMenu *getSpecificMenu() override;

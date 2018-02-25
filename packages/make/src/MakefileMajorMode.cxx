@@ -67,6 +67,8 @@ namespace qemacs {
   MakefileMajorMode::~MakefileMajorMode() = default;
 
   static StandardQEmacsMajorModeProxy<MakefileMajorMode> proxy(
-      "Makefile", QVector<QRegExp>() << QRegExp("^Makefile$"));
+      "Makefile",
+      QVector<QRegExp>() << QRegExp("^Makefile$")
+                         << QRegExp("^Makefile\\.am$"));
 
 } // end of namespace qemacs

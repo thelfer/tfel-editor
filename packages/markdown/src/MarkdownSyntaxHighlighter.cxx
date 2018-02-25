@@ -1,5 +1,5 @@
 /*!
- * \file  MarkdownSyntaxHighlighter.Markdown
+ * \file  MarkdownSyntaxHighlighter.cxx
  * \brief
  * \author Helfer Thomas
  * \date   30/06/2012
@@ -109,43 +109,41 @@ namespace qemacs {
         switch (lvl) {
           case 1:
             this->setFormat(0, l.size(), this->h1);
-            return;
+            break;
           case 2:
             this->setFormat(0, l.size(), this->h2);
-            return;
+            break;
           case 3:
             this->setFormat(0, l.size(), this->h3);
-            return;
+            break;
           default:
             this->setFormat(0, l.size(), this->h4);
-            return;
+            break;
+        }
+      } else {
+        auto &sc = this->mode.getSpellChecker();
+        for (const auto &t : tokens) {
+          const auto b = [&t] {
+            for (const auto &c : t.value) {
+              if (std::isalpha(c) == 0) {
+                return false;
+              }
+            }
+            return true;
+          }();
+          if(b){
+            QTextCharFormat f;
+            f.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+            const auto w = QString::fromStdString(t.value);
+            if (!sc.spell(w)) {
+              this->setFormat(t.offset, t.value.size(), f);
+            }
+          }
         }
       }
     }
     this->setCurrentBlockState(pr + 10 * s);
   }  // end of MarkdownSyntaxHighlighter::highlight
-
-  void MarkdownSyntaxHighlighter::highLightMispellWords(
-      const QString &w, const int p) {
-    auto &sc = this->mode.getSpellChecker();
-    QTextCharFormat f;
-    f.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
-    int pos = 0;
-    while (pos != w.size()) {
-      if (w[pos].isLetter()) {
-        const auto npos = pos;
-        ++pos;
-        while ((pos != w.size()) && (w[pos].isLetter())) {
-          ++pos;
-        }
-        if (!sc.spell(w.mid(npos, pos - npos))) {
-          this->setFormat(p + npos, pos - npos, f);
-        }
-      } else {
-        ++pos;
-      }
-    }
-  }  // end of MarkdownSyntaxHighlighter::highLightMispellWords
 
   MarkdownSyntaxHighlighter::~MarkdownSyntaxHighlighter() = default;
 

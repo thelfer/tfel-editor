@@ -21,7 +21,7 @@ namespace qemacs {
     this->keyFormat.setForeground(Qt::darkMagenta);
     this->keyFormat.setFontWeight(QFont::Bold);
     this->numberFormat.setForeground(Qt::darkRed);
-    this->quotationFormat.setForeground(Qt::darkGreen);
+    this->stringFormat.setForeground(Qt::darkGreen);
     this->commentFormat.setForeground(Qt::red);
   }
 
@@ -44,7 +44,7 @@ namespace qemacs {
       QTextCharFormat f;
       bool b = false;
       if ((pt->flag == Token::String) || (pt->flag == Token::Char)) {
-        f = this->quotationFormat;
+        f = this->stringFormat;
         b = true;
       } else if (pt->flag == Token::Preprocessor) {
         f = this->preprocessorFormat;
@@ -75,7 +75,7 @@ namespace qemacs {
         auto pt = tokenizer.begin();
         std::advance(pt, 2);
         while (pt != tokenizer.end()) {
-          this->setFormat(pt->offset, pt->value.size(), this->quotationFormat);
+          this->setFormat(pt->offset, pt->value.size(), this->stringFormat);
           if (pt->value == ">") { break; }
           ++pt;
         }

@@ -44,7 +44,7 @@ namespace qemacs {
     QTextCharFormat keyFormat;
     QTextCharFormat numberFormat;
     QTextCharFormat commentFormat;
-    QTextCharFormat quotationFormat;
+    QTextCharFormat stringFormat;
     QTextCharFormat preprocessorFormat;
 
     tfel::utilities::CxxTokenizerOptions options;

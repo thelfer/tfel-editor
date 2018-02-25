@@ -14,6 +14,7 @@
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QSplitter>
+#include "QEmacs/Debug.hxx"
 #include "QEmacs/Utilities.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/QEmacsPlainTextEdit.hxx"
@@ -205,8 +206,6 @@ namespace qemacs {
                      &QEmacsBuffer::updateDate);
     QObject::connect(this->e, &QEmacsPlainTextEdit::majorModeChanged,
                      this, &QEmacsBuffer::updateBufferInformations);
-    QObject::connect(this->stw, &SecondaryTaskTabWidget::tabCloseRequested,
-                     this, &QEmacsBuffer::closeSecondaryTask);
     QObject::connect(this->stw, &SecondaryTaskTabWidget::tabCloseRequested,
                      this, &QEmacsBuffer::closeSecondaryTask);
     QObject::connect(this->stw, &SecondaryTaskTabWidget::currentChanged,
@@ -459,8 +458,8 @@ namespace qemacs {
   void QEmacsBuffer::removeSecondaryTask(QWidget *const s) {
     for (int i = 0; i != this->stw->count(); ++i) {
       if (s == this->stw->widget(i)) {
-        this->qemacs.detachSecondaryTask(this,s);
         this->stw->removeTab(i);
+        this->qemacs.detachSecondaryTask(this,s);
         if (this->stw->count() == 0) {
           this->stw->hide();
         }
@@ -536,6 +535,7 @@ namespace qemacs {
   }  // end of QEmacsBuffer::hideSecondaryTasks
 
   void QEmacsBuffer::closeSecondaryTask(int i) {
+    debug("QEmacsBuffer::closeSecondaryTask: removing tab",i);
     this->qemacs.detachSecondaryTask(this, this->stw->widget(i));
     this->stw->removeTab(i);
     if (this->stw->count() == 0) {

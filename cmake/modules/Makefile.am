@@ -13,5 +13,6 @@ EXTRA_DIST=OptimizeForArchitecture.cmake \
 	   pandoc.cmake			 \
 	   tfel.cmake			 \
 	   tfel-plot.cmake		 \
-	   qemacs.cmake
+	   qemacs.cmake             \
+	   hunspell.cmake
 

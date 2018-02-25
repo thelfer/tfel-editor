@@ -61,16 +61,31 @@ qemacs_library(TFELQEmacs
   ${QEmacsResources_RCC}
   ${TFELQEmacs_SOURCES})
 
-target_link_libraries(TFELQEmacs
-  TFELSystem
-  TFELUtilities
-  TFELException
-  Qt5::Core
-  Qt5::Widgets
-  Qt5::Network
-  Qt5::WebEngine
-  Qt5::WebEngineWidgets
-  Qt5::PrintSupport)
+
+if(HUNSPELL_FOUND)
+  target_link_libraries(TFELQEmacs
+    TFELSystem
+    TFELUtilities
+    TFELException
+    Qt5::Core
+    Qt5::Widgets
+    Qt5::Network
+    Qt5::WebEngine
+    Qt5::WebEngineWidgets
+    Qt5::PrintSupport
+    ${HUNSPELL_LIBRARIES})
+elseif(HUNSPELL_FOUND)
+  target_link_libraries(TFELQEmacs
+    TFELSystem
+    TFELUtilities
+    TFELException
+    Qt5::Core
+    Qt5::Widgets
+    Qt5::Network
+    Qt5::WebEngine
+    Qt5::WebEngineWidgets
+    Qt5::PrintSupport)
+endif(HUNSPELL_FOUND)
 
 qt_sources(qemacs_SOURCES
   "${PROJECT_SOURCE_DIR}/include/QEmacs"

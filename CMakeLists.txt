@@ -18,6 +18,9 @@ endif(enable-tfel-plot)
 # qt support
 include(cmake/modules/qt.cmake)
 
+# hunspell support
+include(cmake/modules/hunspell.cmake)
+
 # testing
 set(CTEST_CONFIGURATION_TYPE "${JOB_BUILD_CONFIGURATION}")
 # (must be placed *before* any add_subdirectory, cmake bug ?)

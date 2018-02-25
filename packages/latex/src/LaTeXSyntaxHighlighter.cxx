@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  LaTeXSyntaxHighlighter.cxx
  * \brief
  * \author Helfer Thomas
@@ -11,52 +11,46 @@
 #include "QEmacs/LaTeXMajorMode.hxx"
 #include "QEmacs/LaTeXSyntaxHighlighter.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
-  int
-  LaTeXSyntaxHighlighter::startOfComment(const QString& l)
-  {
-    for(int i=0;i!=l.size();++i){
-      if(l[i]=='%'){
-	// check if previous character was not a '\'
-	int j = i;
-	if(j==0){
-	  return 0;
-	}
-	--j;
-	if((j>=0)&&(l[j]!='\\')){
-	  return i;
-	}
-	bool b(true); // true if it is a comment
-	while((j>=0)&&(l[j]=='\\')){
-	  b = !b;
-	  --j;
-	}
-	if(b){
-	  return i;
-	}
+  int LaTeXSyntaxHighlighter::startOfComment(const QString& l) {
+    for (int i = 0; i != l.size(); ++i) {
+      if (l[i] == '%') {
+        // check if previous character was not a '\'
+        int j = i;
+        if (j == 0) {
+          return 0;
+        }
+        --j;
+        if ((j >= 0) && (l[j] != '\\')) {
+          return i;
+        }
+        bool b(true);  // true if it is a comment
+        while ((j >= 0) && (l[j] == '\\')) {
+          b = !b;
+          --j;
+        }
+        if (b) {
+          return i;
+        }
       }
     }
     return -1;
   }
 
-  QString
-  LaTeXSyntaxHighlighter::stripComment(const QString& l)
-  {
+  QString LaTeXSyntaxHighlighter::stripComment(const QString& l) {
     int c = LaTeXSyntaxHighlighter::startOfComment(l);
-    if(c!=-1){
-      if(c==0){
-	return QString();
+    if (c != -1) {
+      if (c == 0) {
+        return QString();
       }
-      return l.mid(0,c);
+      return l.mid(0, c);
     }
     return l;
   }
 
   QVector<LaTeXSyntaxHighlighter::HighlightingRule>
-  LaTeXSyntaxHighlighter::buildHighlightingRules()
-  {
+  LaTeXSyntaxHighlighter::buildHighlightingRules() {
     QVector<HighlightingRule> rules;
     QTextCharFormat keyFormat;
     QTextCharFormat envFormat;
@@ -67,18 +61,20 @@ namespace qemacs
     // boldFormat.setFontWeight(QFont::Bold);
     // itFormat.setFontItalic(true);
     HighlightingRule rule;
-    // rule.format  = QVector<QTextCharFormat>() << this->keyFormat << this->boldFormat;
+    // rule.format  = QVector<QTextCharFormat>() << this->keyFormat <<
+    // this->boldFormat;
     // rule.pattern = QRegExp("(\\\\textbf)\\{(\\w+)\\}");
     // rule.pattern.setMinimal(true);
     // rules.append(rule);
-    // rule.format  = QVector<QTextCharFormat>() << this->keyFormat << this->itFormat;
+    // rule.format  = QVector<QTextCharFormat>() << this->keyFormat <<
+    // this->itFormat;
     // rule.pattern = QRegExp("(\\\\textit)\\{(\\w+)\\}");
     // rule.pattern.setMinimal(true);
     // rules.append(rule);
-    rule.format  = QVector<QTextCharFormat>(1,keyFormat);
+    rule.format = QVector<QTextCharFormat>(1, keyFormat);
     rule.pattern = QRegExp("\\\\\\w+");
     rules.append(rule);
-    rule.format  = QVector<QTextCharFormat>() << envFormat << keyFormat;
+    rule.format = QVector<QTextCharFormat>() << envFormat << keyFormat;
     rule.pattern = QRegExp("(\\\\begin)\\{(\\w+)\\}");
     rule.pattern.setMinimal(true);
     rules.append(rule);
@@ -86,103 +82,97 @@ namespace qemacs
     rule.pattern.setMinimal(true);
     rules.append(rule);
     return rules;
-  } // end of LaTeXSyntaxHighlighter::buildHighlightingRules
-  
+  }  // end of LaTeXSyntaxHighlighter::buildHighlightingRules
+
   const QVector<LaTeXSyntaxHighlighter::HighlightingRule>&
-  LaTeXSyntaxHighlighter::getHighlightingRules()
-  {
-    static auto rules = LaTeXSyntaxHighlighter::buildHighlightingRules();
+  LaTeXSyntaxHighlighter::getHighlightingRules() {
+    static auto rules =
+        LaTeXSyntaxHighlighter::buildHighlightingRules();
     return rules;
   }
 
   LaTeXSyntaxHighlighter::LaTeXSyntaxHighlighter(LaTeXMajorMode& m,
-						 QTextDocument *p)
-    : QSyntaxHighlighter(p),
-      mode(m)
-  {
+                                                 QTextDocument* p)
+      : QSyntaxHighlighter(p), mode(m) {
     this->commentFormat.setForeground(Qt::red);
   }
 
-  void LaTeXSyntaxHighlighter::highlightBlock(const QString &text)
-  {
+  void LaTeXSyntaxHighlighter::highlightBlock(const QString& text) {
     const auto& rules = LaTeXSyntaxHighlighter::getHighlightingRules();
     // remove comments
     int c = LaTeXSyntaxHighlighter::startOfComment(text);
     QString l;
-    if(c!=-1){
-      this->setFormat(c,text.size()-c,this->commentFormat);
-      l = text.mid(0,c);
+    if (c != -1) {
+      this->setFormat(c, text.size() - c, this->commentFormat);
+      l = text.mid(0, c);
     } else {
-      l = text.mid(0,c);
+      l = text.mid(0, c);
     }
     int pos = 0;
-    while(pos!=l.size()){
+    while (pos != l.size()) {
       int cpos = -1;
       auto mp = rules.end();
-      for(auto p=rules.begin();p!=rules.end();++p){
-	QRegExp e(p->pattern);
-	const auto rp = e.indexIn(l,pos);
-	if(rp!=-1){
-	  if((cpos==-1)||(rp<=cpos)){
-	    mp   = p;
-	    cpos = rp;
-	  }	  
-	}
+      for (auto p = rules.begin(); p != rules.end(); ++p) {
+        QRegExp e(p->pattern);
+        const auto rp = e.indexIn(l, pos);
+        if (rp != -1) {
+          if ((cpos == -1) || (rp <= cpos)) {
+            mp = p;
+            cpos = rp;
+          }
+        }
       }
-      if(cpos!=-1){
-	if(cpos!=pos){
-	  this->highLightMispellWords(l.mid(pos,cpos-pos),pos);
-	}
-	// treating the LaTeX command
-	const auto &rule = *mp;
-	QRegExp e(rule.pattern);
-	e.indexIn(l,pos);
-	int length = e.matchedLength();
-    	if(rule.format.size()==1){
-    	  this->setFormat(cpos, length, rule.format[0]);
-    	} else {
-    	  if(e.captureCount()==rule.format.size()){
-    	    for(int i=0;i!=e.captureCount();++i){
-    	      QString cap = e.cap(i+1);
-    	      int cs   = cap.size();
-    	      cpos = l.indexOf(cap,cpos);
-    	      this->setFormat(cpos,cs,rule.format[i]);
-    	      cpos += cs;
-    	    }
-    	  }
-	}
-	pos = cpos+length;
+      if (cpos != -1) {
+        if (cpos != pos) {
+          this->highLightMispellWords(l.mid(pos, cpos - pos), pos);
+        }
+        // treating the LaTeX command
+        const auto& rule = *mp;
+        QRegExp e(rule.pattern);
+        e.indexIn(l, pos);
+        int length = e.matchedLength();
+        if (rule.format.size() == 1) {
+          this->setFormat(cpos, length, rule.format[0]);
+        } else {
+          if (e.captureCount() == rule.format.size()) {
+            for (int i = 0; i != e.captureCount(); ++i) {
+              QString cap = e.cap(i + 1);
+              int cs = cap.size();
+              cpos = l.indexOf(cap, cpos);
+              this->setFormat(cpos, cs, rule.format[i]);
+              cpos += cs;
+            }
+          }
+        }
+        pos = cpos + length;
       } else {
-	this->highLightMispellWords(l.mid(pos,l.size()-pos),pos);
-	pos = l.size();
+        this->highLightMispellWords(l.mid(pos, l.size() - pos), pos);
+        pos = l.size();
       }
     }
   }
 
-  void
-  LaTeXSyntaxHighlighter::highLightMispellWords(const QString& l,
-						const int p)
-  {
+  void LaTeXSyntaxHighlighter::highLightMispellWords(const QString& l,
+                                                     const int p) {
     using namespace std;
     QTextCharFormat f;
     auto& spellChecker = this->mode.getSpellChecker();
-    f.setUnderlineStyle (QTextCharFormat::SpellCheckUnderline);
+    f.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
     int pos = 0;
-    while(pos!=l.size()){
-      if(l[pos].isLetter()){
-	const auto npos = pos;
-	++pos;
-	while((pos!=l.size())&&(l[pos].isLetter())){
-	  ++pos;
-	}
-	if(!spellChecker.spell(l.mid(npos,pos-npos))){
-	  this->setFormat(p+npos,pos-npos,f);
-	}
+    while (pos != l.size()) {
+      if (l[pos].isLetter()) {
+        const auto npos = pos;
+        ++pos;
+        while ((pos != l.size()) && (l[pos].isLetter())) {
+          ++pos;
+        }
+        if (!spellChecker.spell(l.mid(npos, pos - npos))) {
+          this->setFormat(p + npos, pos - npos, f);
+        }
       } else {
-	++pos;
+        ++pos;
       }
     }
-  } // end of LaTeXSyntaxHighlighter::highLightMispellWords
+  }  // end of LaTeXSyntaxHighlighter::highLightMispellWords
 
-} // end of namespace qemacs
-
+}  // end of namespace qemacs

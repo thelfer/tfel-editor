@@ -38,6 +38,13 @@ namespace qemacs {
     return "major mode dedicated to the Markdown language";
   }  // end of MarkdownMajorMode::getDescription
 
+  void MarkdownMajorMode::setSpellCheckLanguage(const QString& l) {
+    this->spellChecker.setSpellCheckLanguage(l);
+    //     if (this->highlighter != nullptr) {
+    //       this->highlighter->rehighlight();
+    //     }
+  }  // end of MarkdownMajorMode::setSpellCheckLanguage
+
   void MarkdownMajorMode::format() {
   }  // end of MarkdownMajorMode::format()
 
