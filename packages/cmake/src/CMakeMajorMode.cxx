@@ -56,6 +56,7 @@ namespace qemacs {
       if(cmds.indexOf(k) != -1) {
         delete this->ha;
         this->ha = new QAction(QObject::tr("Help on %1").arg(k), this);
+        this->ha->setIcon(QIcon::fromTheme("dialog-question"));
         this->ha->setData(k);
         const auto cactions = m->actions();
         if(cactions.isEmpty()) {
