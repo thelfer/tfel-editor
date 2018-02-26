@@ -74,7 +74,7 @@ if(HUNSPELL_FOUND)
     Qt5::WebEngineWidgets
     Qt5::PrintSupport
     ${HUNSPELL_LIBRARIES})
-elseif(HUNSPELL_FOUND)
+else(HUNSPELL_FOUND)
   target_link_libraries(TFELQEmacs
     TFELSystem
     TFELUtilities
