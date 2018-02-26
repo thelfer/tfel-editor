@@ -10,7 +10,8 @@ qt_sources(MFrontQEmacsMode_SOURCES
   "${PROJECT_SOURCE_DIR}/packages/mfront/include/QEmacs"
   MFrontMajorMode
   MFrontSyntaxHighlighter
-  MFrontOptions)
+  MFrontOptions
+  ImplicitDSLWizard)
 
 qt_add_resources(MFrontQEmacsResources_RCC
   MFrontModeResources.qrc)

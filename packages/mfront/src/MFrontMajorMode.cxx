@@ -17,6 +17,7 @@
 #include "TFEL/Utilities/CxxTokenizer.hxx"
 #include "MFront/AbstractDSL.hxx"
 #include "MFront/DSLFactory.hxx"
+#include "QEmacs/Debug.hxx"
 #include "QEmacs/MFrontInitializer.hxx"
 #include "QEmacs/MFrontSyntaxHighlighter.hxx"
 #include "QEmacs/ProcessOutputFrame.hxx"
@@ -32,19 +33,20 @@
 
 namespace qemacs {
 
-  struct MFMExamples {
+  struct MFrontExamples {
     //! file implementing material properties, sorted by material
     std::map<QString, QStringList> properties;
     //! file implementing behaviours, sorted by material
     std::map<QString, QStringList> behaviours;
     //! file implementing models, sorted by material
     std::map<QString, QStringList> models;
-  }; // end of struct MFMExamples
+  }; // end of struct MFrontExamples
 
-  static MFMExamples buildMFrontMaterialsExamplesList() {
-    auto r = MFMExamples();
-    const auto mfm = ::getenv("MFMHOME");
+  static MFrontExamples buildMFrontExamplesList(const char* const src) {
+    auto r = MFrontExamples();
+    const auto mfm = ::getenv(src);
     if (mfm == nullptr) {
+      debug("variable",src,"is not defined");
       return r;
     }
 #ifdef Q_OS_WIN
@@ -52,7 +54,7 @@ namespace qemacs {
 #else  /* Q_OS_WIN */
     const auto paths = QString(mfm).split(":", QString::SkipEmptyParts);
 #endif /* Q_OS_WIN */
-    for (const auto path : paths) {
+    for (const auto& path : paths) {
 #ifdef Q_OS_WIN
       QDir d(path + "\\share\\mfm\\materials");
 #else  /* Q_OS_WIN */
@@ -85,10 +87,17 @@ namespace qemacs {
       }
     }
     return r;
-  } // end of buildMFrontMaterialsExamplesList
+  } // end of buildMFrontExamplesList
 
-  static const MFMExamples &getMFrontMaterialsExamples() {
-    static const MFMExamples e(buildMFrontMaterialsExamplesList());
+  static const MFrontExamples &getMFrontGalleryExamples() {
+    static const MFrontExamples e(
+        buildMFrontExamplesList("MFRONTGALLERYHOME"));
+    return e;
+  }
+
+  static const MFrontExamples &getMFrontMaterialsExamples() {
+    static const MFrontExamples e(
+        buildMFrontExamplesList("MFMHOME"));
     return e;
   }
 
@@ -260,33 +269,41 @@ namespace qemacs {
     sebw->setToolTip(
         QObject::tr("Create the basis of a behaviour \n"
                     "implementation based on the Implicit DSL."));
-    const auto &emfm = getMFrontMaterialsExamples();
-    if ((!emfm.properties.empty()) || (!emfm.behaviours.empty()) ||
-        (!emfm.models.empty())) {
-      auto *const em =
-          m->addMenu(QObject::tr("Examples from MFrontMaterials"));
-      em->setIcon(this->getIcon());
-      auto append = [this, &em](
-          const QString &n, const std::map<QString, QStringList> &mfs) {
-        if(mfs.empty()){
-          return;
-        }
-        auto *const sem = em->addMenu(n);
-        for(const auto& mn : mfs){
-          auto *const sem2 = sem->addMenu(mn.first);
-          for(const auto& f: mn.second){
-            QFileInfo fi(f);
-            auto *const a = sem2->addAction(fi.fileName());
-            a->setIcon(this->getIcon());
-            QObject::connect(a, &QAction::triggered, this,
-                             [f, this] { this->qemacs.openFile(f); });
+    QObject::connect(sebw, &QAction::triggered, this,
+                     &MFrontMajorMode::runImplicitDSLWizard);
+    auto append_examples = [this, &m](const QString &label,
+                                      const MFrontExamples &emfm) {
+      if ((!emfm.properties.empty()) || (!emfm.behaviours.empty()) ||
+          (!emfm.models.empty())) {
+        auto *const em = m->addMenu(label);
+        em->setIcon(this->getIcon());
+        auto append = [this, &em](
+            const QString &n,
+            const std::map<QString, QStringList> &mfs) {
+          if (mfs.empty()) {
+            return;
           }
-        }
-      };
-      append(QObject::tr("Properties"), emfm.properties);
-      append(QObject::tr("Behaviours"), emfm.behaviours);
-      append(QObject::tr("Models"), emfm.models);
-    }
+          auto *const sem = em->addMenu(n);
+          for (const auto &mn : mfs) {
+            auto *const sem2 = sem->addMenu(mn.first);
+            for (const auto &f : mn.second) {
+              QFileInfo fi(f);
+              auto *const a = sem2->addAction(fi.fileName());
+              a->setIcon(this->getIcon());
+              QObject::connect(a, &QAction::triggered, this,
+                               [f, this] { this->qemacs.openFile(f); });
+            }
+          }
+        };
+        append(QObject::tr("Properties"), emfm.properties);
+        append(QObject::tr("Behaviours"), emfm.behaviours);
+        append(QObject::tr("Models"), emfm.models);
+      }
+    };
+    append_examples(QObject::tr("Open examples from MFrontGallery"),
+                    getMFrontGalleryExamples());
+    append_examples(QObject::tr("Open examples from MFrontMaterials"),
+                    getMFrontMaterialsExamples());
     auto *const d = m->addMenu(QObject::tr("Online Documentation"));
     d->setIcon(QIcon::fromTheme("help-browser"));
     online_ressource2(d, QObject::tr("MFront website"),
@@ -423,6 +440,10 @@ namespace qemacs {
   QString MFrontMajorMode::getDefaultCompilationCommand() const {
     return "mfront --obuild ";
   }
+
+  void MFrontMajorMode::runImplicitDSLWizard() {
+    
+  }  // end of MFrontMajorMode::runImplicitDSLWizard
 
   MFrontMajorMode::~MFrontMajorMode() = default;
 

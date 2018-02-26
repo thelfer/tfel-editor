@@ -53,10 +53,10 @@ namespace qemacs {
         << "equation";
       //      = LaTeXSyntaxHighlighter::getPrimaryBlocks();
       // n <<  LaTeXSyntaxHighlighter::getSecondaryBlocks();
-      auto* c = new QCompleter(n, &p);
-      c->setWidget(this->input);
-      c->setCompletionMode(QCompleter::InlineCompletion);
-      this->input->setCompleter(c, false);
+      auto* const co = new QCompleter(n, &p);
+      co->setWidget(this->input);
+      co->setCompletionMode(QCompleter::InlineCompletion);
+      this->input->setCompleter(co, false);
     }
 
     ~LaTeXInsertBlock() override = default;

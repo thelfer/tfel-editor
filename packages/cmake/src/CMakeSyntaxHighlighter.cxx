@@ -73,7 +73,8 @@ namespace qemacs {
       return;
     }
     if ((tokens.size() > 2) && (tokens[1].value == "(")) {
-      if (cmds.contains(QString::fromStdString(tokens[0].value))) {
+      const auto cmd = QString::fromStdString(tokens[0].value).toLower();
+      if (cmds.contains(cmd)) {
         this->setFormat(tokens[0].offset, tokens[0].value.size(),
                         this->commandFormat1);
       } else {

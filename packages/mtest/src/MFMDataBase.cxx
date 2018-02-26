@@ -77,7 +77,7 @@ namespace qemacs{
 #else  /* Q_OS_WIN */
     const auto paths = QString(mfm).split(":", QString::SkipEmptyParts);
 #endif /* Q_OS_WIN */
-    for (const auto path : paths) {
+    for (const auto& path : paths) {
 #ifdef Q_OS_WIN
       QDir d(path + "\\bin");
 #else  /* Q_OS_WIN */

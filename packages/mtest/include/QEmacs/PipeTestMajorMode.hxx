@@ -32,8 +32,6 @@ namespace qemacs {
     const std::vector<std::string>& getKeyWordsList() const override;
     //! return the scheme name
     QString getScheme() const override;
-    // completer
-    QCompleter* c;
 
    private:
     Q_OBJECT

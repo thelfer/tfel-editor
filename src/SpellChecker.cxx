@@ -63,7 +63,7 @@ namespace qemacs {
     const auto dictionaryPath = dicts.getDictionaryPath(l);
     delete this->_hunspell;
     if (dictionaryPath.isEmpty()) {
-      this->_hunspell = 0;
+      this->_hunspell = nullptr;
       return;
     }
     const auto datadir = [] {

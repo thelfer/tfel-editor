@@ -11,9 +11,15 @@
 #include <QtGui/QTextCursor>
 #include "TFEL/System/ExternalLibraryManager.hxx"
 #include "MTest/Behaviour.hxx"
+#ifdef TFEL_HAS_ABAQUS_INTERFACE_SUPPORT
 #include "MTest/AbaqusStandardBehaviour.hxx"
+#endif /* TFEL_HAS_ABAQUS_INTERFACE_SUPPORT */
+#ifdef TFEL_HAS_ABAQUS_EXPLICIT_INTERFACE_SUPPORT
 #include "MTest/AbaqusExplicitBehaviour.hxx"
+#endif /* TFEL_HAS_ABAQUS_EXPLICIT_INTERFACE_SUPPORT */
+#ifdef TFEL_HAS_ANSYS_INTERFACE_SUPPORT
 #include "MTest/AnsysStandardBehaviour.hxx"
+#endif /* TFEL_HAS_ANSYS_INTERFACE_SUPPORT */
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/QEmacsCommandFactory.hxx"
@@ -276,20 +282,32 @@ namespace qemacs {
       //                << sb.hypothesis;
       //       qDebug() << QString::fromStdString(si) <<
       //       QString::fromStdString(sl) << QString::fromStdString(sf);
-      const auto sf = [&sb, &si, &sh] {
-        using namespace mtest;
-        const auto f = sb.behaviour.toStdString();
-        if ((si == "abaqus") || (si == "abaqus_standard") ||
-            (si == "abaqus_umat") || (si == "Abaqus")) {
-          return f + AbaqusStandardBehaviour::getHypothesisSuffix(sh);
-        } else if ((si == "abaqus_explicit") ||
-                   (si == "abaqus_vumat") || (si == "AbaqusExplicit")) {
-          return f + AbaqusExplicitBehaviour::getHypothesisSuffix(sh);
-        } else if ((si == "ansys") || (si == "ansys_usermat") ||
-                   (si == "Ansys")) {
-          return f + AnsysStandardBehaviour::getHypothesisSuffix(sh);
-        }
-        return f;
+      const auto sf =
+          [&sb, &si, &sh] {
+            using namespace mtest;
+            const auto f = sb.behaviour.toStdString();
+#ifdef TFEL_HAS_ABAQUS_INTERFACE_SUPPORT
+            if ((si == "abaqus") || (si == "abaqus_standard") ||
+                (si == "abaqus_umat") || (si == "Abaqus")) {
+              return f +
+                     AbaqusStandardBehaviour::getHypothesisSuffix(sh);
+            }
+#endif /* TFEL_HAS_ABAQUS_INTERFACE_SUPPORT */
+#ifdef TFEL_HAS_ABAQUS_INTERFACE_SUPPORT
+            if ((si == "abaqus_explicit") || (si == "abaqus_vumat") ||
+                (si == "AbaqusExplicit")) {
+              return f +
+                     AbaqusExplicitBehaviour::getHypothesisSuffix(sh);
+            }
+#endif /* TFEL_HAS_ABAQUS_INTERFACE_SUPPORT */
+#ifdef TFEL_HAS_ANSYS_INTERFACE_SUPPORT
+            if ((si == "ansys") || (si == "ansys_usermat") ||
+                (si == "Ansys")) {
+              return f +
+                     AnsysStandardBehaviour::getHypothesisSuffix(sh);
+              }
+#endif /* TFEL_HAS_ANSYS_INTERFACE_SUPPORT */
+              return f;
       }();
       auto b = mtest::Behaviour::getBehaviour(si, sl, sf, params, sh);
       auto tc = this->textEdit.textCursor();

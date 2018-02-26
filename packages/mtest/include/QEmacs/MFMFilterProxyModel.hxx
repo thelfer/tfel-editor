@@ -18,7 +18,7 @@ namespace qemacs {
    * \brief A simple proxy model to filter MFrontMaterials entries.
    */
   struct MFMFilterProxyModel : public QSortFilterProxyModel {
-    MFMFilterProxyModel(QObject* parent = 0);
+    MFMFilterProxyModel(QObject* parent = nullptr);
 
    public slots:
     virtual void setNameFilter(const QString&);

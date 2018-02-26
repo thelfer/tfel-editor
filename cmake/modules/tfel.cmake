@@ -53,6 +53,31 @@ find_tfel_library(TFELUtilities)
 find_tfel_library(TFELMath)
 find_tfel_library(TFELMaterial)
 
+# list of available behaviour interfaces
+EXECUTE_PROCESS(COMMAND ${MFRONT} "--list-behaviour-interfaces"
+  OUTPUT_VARIABLE MFRONT_BEHAVIOUR_INTERFACES_TMP
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
+string(REGEX MATCHALL "[a-zA-Z]+"
+       MFRONT_BEHAVIOUR_INTERFACES ${MFRONT_BEHAVIOUR_INTERFACES_TMP})
+
+# check for the Abaqus/Standard interface
+list (FIND MFRONT_BEHAVIOUR_INTERFACES "abaqus" abaqus_interface_index)
+if (${abaqus_interface_index} GREATER -1)
+  add_definitions("-DTFEL_HAS_ABAQUS_INTERFACE_SUPPORT")
+endif()
+
+# check for the Abaqus/Explicit interface
+list (FIND MFRONT_BEHAVIOUR_INTERFACES "abaqusexplicit" abaqus_explicit_interface_index)
+if (${abaqus_explicit_interface_index} GREATER -1)
+  add_definitions("-DTFEL_HAS_ABAQUS_EXPLICIT_INTERFACE_SUPPORT")
+endif()
+
+# check for the Ansys interface
+list (FIND MFRONT_BEHAVIOUR_INTERFACES "ansys" ansys_interface_index)
+if (${ansys_interface_index} GREATER -1)
+  add_definitions("-DTFEL_HAS_ANSYS_INTERFACE_SUPPORT")
+endif()
+
 MESSAGE(STATUS "mfront        : ${MFRONT}")
 MESSAGE(STATUS "tfel-config   : ${TFEL_CONFIG}")
 MESSAGE(STATUS "tfel include  : ${TFEL_INCLUDE_PATH}")

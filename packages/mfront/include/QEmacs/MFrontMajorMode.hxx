@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  MFrontMajorMode.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,10 +6,10 @@
  */
 
 #ifndef LIB_QEMACS_MFRONTMAJORMODE_HXX
-#define LIB_QEMACS_MFRONTMAJORMODE_HXX 
+#define LIB_QEMACS_MFRONTMAJORMODE_HXX
 
-#include<QtCore/QTimer>
-#include"QEmacs/CxxMajorMode.hxx"
+#include <QtCore/QTimer>
+#include "QEmacs/CxxMajorMode.hxx"
 
 namespace qemacs {
 
@@ -28,11 +28,12 @@ namespace qemacs {
 
     void setSyntaxHighlighter(QTextDocument *const) override;
 
-    QMenu* getSpecificMenu() override;
+    QMenu *getSpecificMenu() override;
 
-    void completeContextMenu(QMenu *const, const QTextCursor &) override;
+    void completeContextMenu(QMenu *const,
+                             const QTextCursor &) override;
 
-    QCompleter* getCompleter() override;
+    QCompleter *getCompleter() override;
 
     QString getCompletionPrefix() override;
 
@@ -41,37 +42,40 @@ namespace qemacs {
     QString getDefaultCompilationCommand() const override;
 
     QIcon getIcon() const override;
-    //! destructor    
+    //! destructor
     ~MFrontMajorMode() override;
 
-  protected slots:
+   protected slots:
     //! method called periodically to refresh the syntax highlighter
     //! and the completer
     virtual void updateSyntaxHighlighterAndCompleter();
     //! method called when the Help menu is called
     virtual void actionTriggered(QAction *);
-  protected:
+    //! run the Implicit DSL wizard
+    void runImplicitDSLWizard();
+
+   protected:
     //! return the list of MTest keywords
     virtual QStringList getKeyWordsList();
     /*!
      * \brief a timer to refresh syntax highlighting
-     * This is mandatory since the @DSL can change with the user inputs
+     * This is mandatory since the value after `@DSL` can change with
+     * the user inputs.
      */
     QTimer *rt = nullptr;
     //! action associated with the action of running MFront
     QAction *rm = nullptr;
     //! completer
-    QCompleter* c = nullptr;
+    QCompleter *c = nullptr;
     //! help action
     QAction *ha = nullptr;
 
    private:
     Q_OBJECT
-  }; // end of struct MFrontMajorMode
+  };  // end of struct MFrontMajorMode
 
   void runMFront(QEmacsWidget &);
 
-} // end of namespace qemacs
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_MFRONTMAJORMODE_H */
-

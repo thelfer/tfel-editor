@@ -46,11 +46,11 @@ namespace qemacs {
       for (const auto &b : LicosSyntaxHighlighter::getBlocks()) {
         blocks << QString::fromStdString(b);
       }
-      auto *c = new QCompleter(blocks, &p);
-      c->setWidget(this->input);
-      c->setCompletionMode(QCompleter::InlineCompletion);
+      auto *const co = new QCompleter(blocks, &p);
+      co->setWidget(this->input);
+      co->setCompletionMode(QCompleter::InlineCompletion);
       this->setInputHistorySettingAddress("licos/insertblock/history");
-      this->input->setCompleter(c, false);
+      this->input->setCompleter(co, false);
     }
 
     ~LicosInsertBlock() override = default;

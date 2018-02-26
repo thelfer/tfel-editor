@@ -85,7 +85,7 @@ namespace qemacs {
           const auto b = m->data(ib).toString().toStdString();
           try{
             const auto mh = elm.getSupportedModellingHypotheses(l, b);
-            for (const auto h : mh) {
+            for (const auto& h : mh) {
               this->hsb->addItem(QString::fromStdString(h));
             }
           } catch (...) {

@@ -9,14 +9,16 @@ packages_LTLIBRARIES = libMFrontQEmacsMode.la
 libMFrontQEmacsMode_la_SOURCES = MFrontInitializer.cxx \
                  MFrontMajorMode.cxx                   \
 				 MFrontSyntaxHighlighter.cxx           \
-				 MFrontOptions.cxx
+				 MFrontOptions.cxx                   \
+				 ImplicitDSLWizard.cxx
 libMFrontQEmacsMode_la_LIBADD  = -L@TFELHOME@/lib      \
 			         -lTFELUtilities       \
 				 -lTFELMFront
 
 nodist_libMFrontQEmacsMode_la_SOURCES = moc_MFrontMajorMode.cxx   \
-				        moc_MFrontSyntaxHighlighter.cxx           \
-				        moc_MFrontOptions.cxx                     \
+				        moc_MFrontSyntaxHighlighter.cxx          \
+				        moc_MFrontOptions.cxx                    \
+				        moc_ImplicitDSLWizard.cxx                \
 				        MFrontModeResources.cxx
 
 MFRONTMODERESOURCES=images/MFrontIcon.png

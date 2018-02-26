@@ -234,11 +234,11 @@ namespace qemacs {
     // available dictionaries
     auto &dm =
         HunspellDictionaries::getQEmacsHunspellDictionariesManager();
-    QStringList dicts = dm.getAvailableDictionnaries();
+    const auto dicts = dm.getAvailableDictionnaries();
     this->changeSpellCheckLanguageActions.clear();
     if (!dicts.isEmpty()) {
-      QMenu *d = this->om->addMenu(QObject::tr("Dictionaries"));
-      for (const auto di : dicts) {
+      auto *const d = this->om->addMenu(QObject::tr("Dictionaries"));
+      for (const auto& di : dicts) {
         auto *a = d->addAction(di);
         a->setData(di);
         this->changeSpellCheckLanguageActions.push_back(a);

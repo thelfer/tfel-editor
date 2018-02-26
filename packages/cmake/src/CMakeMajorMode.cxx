@@ -52,7 +52,7 @@ namespace qemacs {
     QString l = b.selectedText();
     QRegExp r("^\\s*(\\w+)");
     if(r.indexIn(l) >= 0) {
-      QString k = r.cap(1);
+      QString k = r.cap(1).toLower();
       if(cmds.indexOf(k) != -1) {
         delete this->ha;
         this->ha = new QAction(QObject::tr("Help on %1").arg(k), this);
