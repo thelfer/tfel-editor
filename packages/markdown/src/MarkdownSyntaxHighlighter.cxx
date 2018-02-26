@@ -6,6 +6,7 @@
  */
 
 #include <tuple>
+#include <cctype>
 #include <utility>
 #include <cstdlib>
 #include <stdexcept>

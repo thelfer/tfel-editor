@@ -1,7 +1,7 @@
 include(cmake/modules/qemacs.cmake)
 qemacs_project(qemacs 0 1-dev)
 cmake_minimum_required(VERSION 2.4)
-
+cmake_policy(SET CMP0020 NEW)
 include(cmake/modules/autotools.cmake)
 
 #compiler options
