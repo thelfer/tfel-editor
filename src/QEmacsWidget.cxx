@@ -272,6 +272,12 @@ namespace qemacs {
                      &QEmacsWidget::updateBufferName);
     QObject::connect(b, &QEmacsBuffer::newTreatedFile, this,
                      &QEmacsWidget::emitNewTreatedFile);
+    QObject::connect(b, &QEmacsBuffer::mainFrameMajorModeChanged, this,
+                     [this, b] {
+                       if (&(this->getCurrentBuffer()) == b) {
+                         emit currentBufferMajorModeChanged();
+                       }
+                     });
     return b;
   }  // end of QEmacsWidget::createNewBuffer
 

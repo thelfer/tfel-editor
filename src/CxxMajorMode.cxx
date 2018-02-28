@@ -13,8 +13,7 @@
 #include"QEmacs/CxxSyntaxHighlighter.hxx"
 #include"QEmacs/CxxMajorMode.hxx"
 
-namespace qemacs
-{
+namespace qemacs {
 
   CxxMajorMode::CxxMajorMode(QEmacsWidget &w,
                              QEmacsBuffer &b,

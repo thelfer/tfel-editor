@@ -47,6 +47,8 @@ namespace qemacs {
                      &QEmacsMainWindow::updateBuffersMenu);
     QObject::connect(e, &QEmacsWidget::bufferRemoved, this,
                      &QEmacsMainWindow::updateBuffersMenu);
+    QObject::connect(e, &QEmacsWidget::currentBufferMajorModeChanged,
+                     this, &QEmacsMainWindow::createMainMenu);
     QObject::connect(e, &QEmacsWidget::currentBufferChanged, this,
                      &QEmacsMainWindow::createMainMenu);
     QObject::connect(e, &QEmacsWidget::newTreatedFile, this,

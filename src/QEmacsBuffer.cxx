@@ -84,42 +84,6 @@ namespace qemacs {
     this->emitNewTreatedFile(this->e->getCompleteFileName());
   }  // end of QEmacsBuffer::QEmacsBuffer
 
-  int QEmacsBuffer::getId() const {
-    return this->id;
-  }  // end of QEmacsBuffer::getId
-
-  void QEmacsBuffer::emitNewTreatedFile(const QString &f) {
-    emit newTreatedFile(f);
-  }  // end of QEmacsBuffer::emitNewTreatedFile
-
-  QString QEmacsBuffer::getBufferRawName() const {
-    const auto f = this->e->getFileName();
-    QFileInfo fi(f);
-    if (fi.isDir()) {
-      return QDir(f).dirName();
-    }
-    return fi.fileName();
-  }  // end of QEmacsBuffer::getBufferRawName
-
-  QString QEmacsBuffer::getBufferName() const {
-    const auto s = this->getBufferNameSuffix();
-    const auto f = this->getBufferRawName();
-    if (!s.isEmpty()) {
-      return f + " <" + s + ">";
-    }
-    return f;
-  }  // end of QEmacsBuffer::getBufferName
-
-  QString QEmacsBuffer::getBufferNameSuffix() const {
-    return this->bufferNameSuffix;
-  }  // end of QEmacsBuffer::setBufferName
-
-  void QEmacsBuffer::focusInEvent(QFocusEvent *) {
-    if (!this->e->hasFocus()) {
-      this->e->setFocus();
-    }
-  }  // end of QEmacsBuffer::focusInEvent
-
   void QEmacsBuffer::initialize() {
     // setting
     this->e->setMainFrame(true);
@@ -206,6 +170,9 @@ namespace qemacs {
                      &QEmacsBuffer::updateDate);
     QObject::connect(this->e, &QEmacsPlainTextEdit::majorModeChanged,
                      this, &QEmacsBuffer::updateBufferInformations);
+    QObject::connect(this->e, &QEmacsPlainTextEdit::majorModeChanged,
+                     this,
+                     [this] { emit mainFrameMajorModeChanged(); });
     QObject::connect(this->stw, &SecondaryTaskTabWidget::tabCloseRequested,
                      this, &QEmacsBuffer::closeSecondaryTask);
     QObject::connect(this->stw, &SecondaryTaskTabWidget::currentChanged,
@@ -215,6 +182,42 @@ namespace qemacs {
                      });
     this->updateBufferName();
   }
+
+  int QEmacsBuffer::getId() const {
+    return this->id;
+  }  // end of QEmacsBuffer::getId
+
+  void QEmacsBuffer::emitNewTreatedFile(const QString &f) {
+    emit newTreatedFile(f);
+  }  // end of QEmacsBuffer::emitNewTreatedFile
+
+  QString QEmacsBuffer::getBufferRawName() const {
+    const auto f = this->e->getFileName();
+    QFileInfo fi(f);
+    if (fi.isDir()) {
+      return QDir(f).dirName();
+    }
+    return fi.fileName();
+  }  // end of QEmacsBuffer::getBufferRawName
+
+  QString QEmacsBuffer::getBufferName() const {
+    const auto s = this->getBufferNameSuffix();
+    const auto f = this->getBufferRawName();
+    if (!s.isEmpty()) {
+      return f + " <" + s + ">";
+    }
+    return f;
+  }  // end of QEmacsBuffer::getBufferName
+
+  QString QEmacsBuffer::getBufferNameSuffix() const {
+    return this->bufferNameSuffix;
+  }  // end of QEmacsBuffer::setBufferName
+
+  void QEmacsBuffer::focusInEvent(QFocusEvent *) {
+    if (!this->e->hasFocus()) {
+      this->e->setFocus();
+    }
+  }  // end of QEmacsBuffer::focusInEvent
 
   void QEmacsBuffer::updateBufferName() {
     const auto o = this->getBufferName();

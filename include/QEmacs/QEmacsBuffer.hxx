@@ -121,6 +121,7 @@ namespace qemacs {
 
    signals:
 
+    void mainFrameMajorModeChanged();
     //! signal launched when the menu of the buffer shall be updated
     void updatedMenu();
     /*!
