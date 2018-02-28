@@ -7,3 +7,9 @@ This mode is dedicated to:
 
 # Main features
 
+![Editing an `MFront` file](img/mfront/screenshot1.png "Editing an
+`MFront` file")
+
+- Completion of `MFront` keywords. Keywords depends on the currently
+  used `DSL`.
+- Easy access to the command-line documentation of each keyword.
