@@ -47,55 +47,102 @@ namespace qemacs {
   }  // end of MarkdownSyntaxHighlighter::MarkdownSyntaxHighlighter
 
   void MarkdownSyntaxHighlighter::highlightBlock(const QString &l) {
-    using tfel::utilities::CxxTokenizer;
-    using tfel::utilities::CxxTokenizerOptions;
-    int pr, s;
-    std::tie(pr, s) = [this] {
-      const auto state = [this] {
-        const auto cs = this->previousBlockState();
-        return cs != -1 ? cs : 0;
-      }();
-      const auto r = div(state, 10);
-      return std::make_pair(r.rem, r.quot);
+    using namespace tfel::utilities;
+    constexpr const int valid_flag = 1 << 0;
+    constexpr const int bold_flag = 1 << 1;
+    constexpr const int emph_flag = 1 << 2;
+    // previous state + validity flag
+    const auto ipstate = [this] {
+      const auto pbs = this->previousBlockState();
+      return pbs != -1 ? pbs : valid_flag;
     }();
-    if (l.isEmpty()) {
-      pr = 3;
-      this->setCurrentBlockState(pr + 10 * s);
+    auto set_invalid_state = [this] { this->setCurrentBlockState(0); };
+    auto set_state = [this](const int s) {
+      const auto ns = (s << 1) + valid_flag;
+      this->setCurrentBlockState(ns);
+    };
+    if (!(ipstate & valid_flag)) {
+      this->setCurrentBlockState(0);
       return;
     }
+    const auto pstate = ipstate >> 1;
+    int m, pr, s;
+    std::tie(m, pr, s) = [this, pstate] {
+      const auto r = div(pstate, 100);
+      const auto r2 = div(r.quot, 10);
+      return std::make_tuple(r.rem, r2.rem, r2.quot);
+    }();
+    bool bold = (m == 0 && (s & bold_flag));
+    bool emph = (m == 0 && (s & emph_flag));
+    // tokenize the line
     CxxTokenizer tokens(this->options);
     try {
       tokens.parseString(l.toStdString());
     } catch (std::exception &e) {
-      qDebug() << e.what();
-      pr = 3;
-      this->setCurrentBlockState(pr + 10 * s);
+      set_invalid_state();
       return;
     } catch (...) {
-      pr = 3;
-      this->setCurrentBlockState(pr + 10 * s);
+      set_invalid_state();
       return;
     }
-    if (tokens.empty()) {
-      pr = 3;
-      this->setCurrentBlockState(pr + 10 * s);
-      return;
-    }
+    auto &sc = this->mode.getSpellChecker();
+    auto spell_check = [this, &sc](const Token &t) {
+      if (t.value.empty()) {
+        return;
+      }
+      if (std::isalpha(t.value[0]) == 0) {
+        return;
+      }
+      const auto w = QString::fromStdString(t.value);
+      if (!sc.spell(w)) {
+        QTextCharFormat f;
+        f.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+        this->setFormat(t.offset, t.value.size(), f);
+      }
+    };
+    auto spell_check_all_tokens = [&tokens, &spell_check] {
+      for (const auto &t : tokens) {
+        spell_check(t);
+      }
+    };
+    // m is the current mode
+    // - 0: standard text
+    // - 1: LaTeX equation
     if (pr < 3) {
+      if (tokens.empty()) {
+        pr = 3;
+        set_state(300);
+        return;
+      }
       // here we are in the firt three lines of the file and the
       // preamble can still be opened.
-      if ((tokens[0].value[0] == '%')&&(tokens[0].offset==0)) {
+      if ((tokens[0].value[0] == '%') && (tokens[0].offset == 0)) {
         // title, author, date
         this->setFormat(0, l.size(), this->md);
+        spell_check_all_tokens();
         ++pr;
+        set_state(100*pr);
+        return;
       } else {
         pr = 3;
       }
     }
-    if (pr >= 3) {
-      // the preamble is over
+    // the preamble is over, looking for headers
+    if (m == 0) {
+      if (tokens.empty()) {
+        if (bold || emph) {
+          set_invalid_state();
+        } else {
+          set_state(300);
+        }
+        return;
+      }
       if ((tokens[0].value[0] == '#') && (tokens[0].offset == 0)) {
         // in a header
+        if (bold || emph) {
+          set_invalid_state();
+          return;
+        }
         const auto lvl = [&tokens] {
           short i = 0;
           for (const auto &t : tokens) {
@@ -121,29 +168,12 @@ namespace qemacs {
             this->setFormat(0, l.size(), this->h4);
             break;
         }
-      } else {
-        auto &sc = this->mode.getSpellChecker();
-        for (const auto &t : tokens) {
-          const auto b = [&t] {
-            for (const auto &c : t.value) {
-              if (std::isalpha(c) == 0) {
-                return false;
-              }
-            }
-            return true;
-          }();
-          if(b){
-            QTextCharFormat f;
-            f.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
-            const auto w = QString::fromStdString(t.value);
-            if (!sc.spell(w)) {
-              this->setFormat(t.offset, t.value.size(), f);
-            }
-          }
-        }
+        spell_check_all_tokens();
+        set_state(300);
+        return;
       }
     }
-    this->setCurrentBlockState(pr + 10 * s);
+    set_state(300);
   }  // end of MarkdownSyntaxHighlighter::highlight
 
   MarkdownSyntaxHighlighter::~MarkdownSyntaxHighlighter() = default;

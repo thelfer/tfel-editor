@@ -16,11 +16,13 @@
 #include <QtPrintSupport/QPrinter>
 #include <QtPrintSupport/QPrintDialog>
 #include <QtGui/QCloseEvent>
+#include "QEmacs/Debug.hxx"
 #include "QEmacs/QEmacsHunspellDictionariesManager.hxx"
 #include "QEmacs/QEmacsShortCutStyle.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/QEmacsPlainTextEdit.hxx"
+#include "QEmacs/QEmacsMajorModeFactory.hxx"
 #include "QEmacs/QEmacsMainWindow.hxx"
 
 namespace qemacs {
@@ -111,11 +113,12 @@ namespace qemacs {
   void QEmacsMainWindow::selectFont() {
     auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if (e != nullptr) {
-      bool ok;
-      QFont f = QFontDialog::getFont(&ok, this);
-      f.setStyleStrategy(QFont::PreferAntialias);
-      if (ok) {
-        QSettings s;
+      QSettings s;
+      QFontDialog fd;
+      fd.setCurrentFont(s.value("font/textedit").value<QFont>());
+      if (fd.exec()) {
+        auto f = fd.selectedFont();
+        f.setStyleStrategy(QFont::PreferAntialias);
         s.setValue("font/textedit", f);
         e->changeMainFramesFont(f);
       }
@@ -144,6 +147,7 @@ namespace qemacs {
                      &QEmacsWidget::saveCurrentBuffer);
     this->ka = new QAction(tr("C&lose current buffer"), this);
     this->ka->setStatusTip(tr("Close the current buffer"));
+    this->ka->setIcon(QIcon::fromTheme("window-close"));
     QObject::connect(this->ka, &QAction::triggered, e,
                      &QEmacsWidget::closeCurrentBuffer);
     this->pra = new QAction(tr("Print current buffer"), this);
@@ -154,6 +158,7 @@ namespace qemacs {
                      &QEmacsMainWindow::print);
     this->saa = new QAction(tr("S&ave all buffers"), this);
     this->saa->setStatusTip(tr("Save all buffers"));
+    this->saa->setIcon(QIcon::fromTheme("document-save"));
     QObject::connect(this->saa, &QAction::triggered, e,
                      &QEmacsWidget::saveAllBuffers);
     // edit actions
@@ -199,17 +204,20 @@ namespace qemacs {
                      &QEmacsMainWindow::close);
     // font actions
     this->fa = new QAction(tr("Main Frames' F&ont"), this);
+    this->fa->setIcon(QIcon::fromTheme("preferences-desktop-font"));
     this->fa->setStatusTip(tr("Select Font"));
     QObject::connect(this->fa, &QAction::triggered, this,
                      &QEmacsMainWindow::selectFont);
     this->esca =
         new QAction(tr("Change to emacs's style shortcuts"), this);
     this->esca->setStatusTip(tr("Use emacs's style shortcuts"));
+    this->esca->setIcon(QIcon::fromTheme("preferences-desktop-keyboard"));
     QObject::connect(this->esca, &QAction::triggered, this,
                      &QEmacsMainWindow::useEmacsShortCuts);
     this->qsca =
         new QAction(tr("Change to Qt's style shortcuts"), this);
     this->qsca->setStatusTip(tr("Use Qt's style shortcuts"));
+    this->qsca->setIcon(QIcon::fromTheme("preferences-desktop-keyboard"));
     QObject::connect(this->qsca, &QAction::triggered, this,
                      &QEmacsMainWindow::useQtShortCuts);
     // help actions
@@ -238,6 +246,7 @@ namespace qemacs {
     this->changeSpellCheckLanguageActions.clear();
     if (!dicts.isEmpty()) {
       auto *const d = this->om->addMenu(QObject::tr("Dictionaries"));
+      d->setIcon(QIcon::fromTheme("accessories-dictionary"));
       for (const auto& di : dicts) {
         auto *a = d->addAction(di);
         a->setData(di);
@@ -325,6 +334,7 @@ namespace qemacs {
     this->fm->addAction(this->oa);
     if (settings.contains("recent files")) {
       const auto files = settings.value("recent files").toStringList();
+      debug("recent files:", files);
       auto *rfm =
           this->fm->addMenu(QIcon::fromTheme("document-open-recent"),
                             QObject::tr("&Recent Files"));
@@ -367,16 +377,24 @@ namespace qemacs {
 
   void QEmacsMainWindow::createRecentFilesMenu(
       QMenu *const m, const QStringList &files) {
-    int n = 0;
-    int s = files.size();
+    //    auto &mf =
+    //    QEmacsMajorModeFactory::getQEmacsMajorModeFactory();
+    auto n = int{};
+    const auto s = files.size();
     if (s == 0) {
       return;
     }
+    //     auto &b = this->getCurrentBuffer();
+    //     auto &t = b.getMainFrame();
     for (int i = s - 1; (i >= 0) && (n != 5); --i, ++n) {
       const auto&f = files.at(i);
       QFileInfo fi(f);
       if ((fi.exists()) && (fi.isFile()) && (fi.isReadable())) {
-        auto *rf = m->addAction(fi.fileName());
+        auto *rf   = m->addAction(fi.fileName());
+        //         auto *mode =
+        //         mf.getQEmacsMajorModeForFile(fi.fileName(),
+        //         *this,b,t);
+        //         rf->setIcon(m->getIcon());
         rf->setData(fi.absoluteFilePath());
       }
     }

@@ -40,9 +40,9 @@ namespace qemacs {
 
   void MarkdownMajorMode::setSpellCheckLanguage(const QString& l) {
     this->spellChecker.setSpellCheckLanguage(l);
-    //     if (this->highlighter != nullptr) {
-    //       this->highlighter->rehighlight();
-    //     }
+    if (this->highlighter != nullptr) {
+      this->highlighter->rehighlight();
+    }
   }  // end of MarkdownMajorMode::setSpellCheckLanguage
 
   void MarkdownMajorMode::format() {
@@ -71,7 +71,7 @@ namespace qemacs {
   }  // end of MarkdownMajorMode::getIcon()
 
   void MarkdownMajorMode::setSyntaxHighlighter(QTextDocument *const d) {
-    new MarkdownSyntaxHighlighter(*this, d);
+    this->highlighter = new MarkdownSyntaxHighlighter(*this, d);
   }  // end of MarkdownMajorMode::setSyntaxHighlighter
 
   void MarkdownMajorMode::completeContextMenu(QMenu *const,

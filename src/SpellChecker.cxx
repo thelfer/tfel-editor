@@ -157,6 +157,9 @@ namespace qemacs {
   bool SpellChecker::spell(const QString &word) {
 #ifdef QEMACS_HUNSPELL_SUPPORT
     // Encode from Unicode to the encoding used by current dictionary
+    if(!this->_hunspell){
+      return true;
+    }
     return this->_hunspell->spell(
                this->_codec->fromUnicode(word).constData()) != 0;
 #else  /* QEMACS_HUNSPELL_SUPPORT */
@@ -167,6 +170,9 @@ namespace qemacs {
 
   QStringList SpellChecker::suggest(const QString &word) {
 #ifdef QEMACS_HUNSPELL_SUPPORT
+    if(!this->_hunspell){
+      return {};
+    }
     char **suggestWordList;
     // Encode from Unicode to the encoding used by current dictionary
     int numSuggestions = this->_hunspell->suggest(
@@ -179,14 +185,13 @@ namespace qemacs {
     return suggestions;
 #else  /* QEMACS_HUNSPELL_SUPPORT */
     static_cast<void>(word);
-    return QStringList();
+    return {};
 #endif /* QEMACS_HUNSPELL_SUPPORT */
   }
 
-  QVector<std::pair<int, int>> SpellChecker::spellLine(
+  std::vector<std::pair<int, int>> SpellChecker::spellLine(
       const QString &l) {
-    using namespace std;
-    QVector<pair<int, int>> r;
+    std::vector<std::pair<int, int>> r;
     int pos = 0;
     while (pos != l.size()) {
       if (l[pos].isLetter()) {
@@ -196,7 +201,7 @@ namespace qemacs {
           ++pos;
         }
         if (!this->spell(l.mid(npos, pos - npos))) {
-          r.push_back(make_pair(npos, pos));
+          r.push_back({npos, pos});
         }
       } else {
         ++pos;

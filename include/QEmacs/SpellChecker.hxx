@@ -37,6 +37,7 @@
 #ifndef LIB_QEMACS_SPELLCHECKER_HXX
 #define LIB_QEMACS_SPELLCHECKER_HXX
 
+#include <vector>
 #include <utility>
 
 #include <QtCore/QString>
@@ -56,7 +57,7 @@ namespace qemacs {
 
     bool spell(const QString &);
 
-    QVector<std::pair<int, int>> spellLine(const QString &);
+    std::vector<std::pair<int, int>> spellLine(const QString &);
 
     QStringList suggest(const QString &);
 

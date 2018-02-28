@@ -62,7 +62,8 @@ namespace qemacs
   QEmacsHunspellDictionariesManager::searchDictionariesInDefaultLocations()
   {
 #ifdef Q_OS_UNIX
-    this->searchDictionaries("/usr/share/myspell/dicts/");
+//    this->searchDictionaries("/usr/share/myspell/dicts/");
+    this->searchDictionaries("/usr/share/hunspell/");
 #endif
   } // end of QEmacsHunspellDictionariesManager::searchDictionariesInDefaultLocations
 

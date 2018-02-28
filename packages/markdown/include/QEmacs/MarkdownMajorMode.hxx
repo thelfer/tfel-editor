@@ -8,6 +8,7 @@
 #ifndef LIB_QEMACS_MFRONTMAJORMODE_HXX
 #define LIB_QEMACS_MFRONTMAJORMODE_HXX
 
+#include <QtGui/QSyntaxHighlighter>
 #include <QEmacs/SpellChecker.hxx>
 #include "QEmacs/CompiledLanguageMajorModeBase.hxx"
 
@@ -71,6 +72,7 @@ namespace qemacs {
     QAction *rm = nullptr;
     //! checking
     SpellChecker spellChecker;
+    QSyntaxHighlighter *highlighter = nullptr;
 
    private:
     Q_OBJECT

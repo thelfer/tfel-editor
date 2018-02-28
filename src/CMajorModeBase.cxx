@@ -228,7 +228,6 @@ namespace qemacs {
                               const QTextCursor& c) {
     static QRegExp rcursor("(\\d+)");
     const auto cf = this->textEdit.getFileName();
-    QTemporaryFile tmp(cf);
     const auto keepEmptyLine = [&b, &e, &c] {
       if(!((c == b) && (c == e))) {
         return false;
@@ -238,28 +237,7 @@ namespace qemacs {
       tc.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
       return tc.selectedText().trimmed().isEmpty();
     }();
-    auto tc = c;
-    tc.beginEditBlock();
-    if(keepEmptyLine) {
-      tc.insertText(";");
-      tc.movePosition(QTextCursor::PreviousCharacter,
-                      QTextCursor::MoveAnchor);
-    }
-    auto undo = [&tc, keepEmptyLine] {
-      tc.endEditBlock();
-      if(keepEmptyLine) {
-        tc.document()->undo();
-      }
-    }; // end of undo
-    auto skip = [&tc](const int cpos) {
-      // skip the first spaces
-      tc.movePosition(QTextCursor::StartOfLine,
-                      QTextCursor::MoveAnchor);
-      tc.movePosition(QTextCursor::NextWord, QTextCursor::MoveAnchor);
-      if (tc.position() < cpos) {
-        tc.setPosition(cpos);
-      }
-    }; // end of skip
+    QTemporaryFile tmp(cf);
     if(!tmp.open()) {
       this->qemacs.displayInformativeMessage(
           QObject::tr("can't open temporary file"));
@@ -272,7 +250,6 @@ namespace qemacs {
     if(!writer.write(this->textEdit.document())) {
       this->qemacs.displayInformativeMessage(
           QObject::tr("can't write buffer in temporary file"));
-      undo();
       return;
     }
     tmp2.close();
@@ -285,19 +262,17 @@ namespace qemacs {
                   QStringList()
                       << "-assume-filename=cxx"
                       << ("-lines=" + lb + ':' + le) << ("-style=file")
-                      << ("-cursor=" + QString::number(tc.position()))
+                      << ("-cursor=" + QString::number(c.position()))
                       << tmp.fileName());
     if (!cformat.waitForStarted()) {
       this->qemacs.displayInformativeMessage(
           QObject::tr("call to 'clang-format' failed"));
-      undo();
       return;
     }
     cformat.closeWriteChannel();
     if(!cformat.waitForFinished()) {
       this->qemacs.displayInformativeMessage(
           QObject::tr("call to 'clang-format' failed"));
-      undo();
       return;
     }
     QTextStream in(cformat.readAll());
@@ -305,22 +280,34 @@ namespace qemacs {
     if(rcursor.indexIn(pr, 0) == -1) {
       this->qemacs.displayInformativeMessage(
           QObject::tr("analysis of 'clang-format' output failed"));
-      undo();
       return;
     }
     const auto cpos = rcursor.cap(1).toInt();
+    auto tc = c;
+    tc.beginEditBlock();
     tc.movePosition(QTextCursor::Start, QTextCursor::MoveAnchor);
     tc.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
     tc.insertText(in.readAll());
     tc.setPosition(cpos);
     if (keepEmptyLine) {
-      tc.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
-      tc.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
-      const auto s = tc.selectedText();
-      tc.removeSelectedText();
-      tc.insertText(s.mid(0,s.indexOf(';')));
-    } else {
-      skip(cpos);
+      auto tc2 = tc;
+      tc2.movePosition(QTextCursor::StartOfBlock,
+                      QTextCursor::MoveAnchor);
+      tc2.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+      const auto l = tc2.selectedText();
+      if (!l.trimmed().isEmpty()) {
+        auto nspace = int{};
+        for (const auto& cl : l) {
+          if(!cl.isSpace()){
+            break;
+          }
+          ++nspace;
+        }
+        tc.insertText("\n");
+        if (nspace != 0) {
+          tc.insertText(QString(nspace,' '));
+        }
+      }
     }
     tc.endEditBlock();
     this->textEdit.setTextCursor(tc);
