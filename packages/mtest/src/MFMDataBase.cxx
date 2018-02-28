@@ -9,6 +9,7 @@
 #include <QtGui/QStandardItemModel>
 #include "TFEL/System/ExternalLibraryManager.hxx"
 #include "MFront/LibraryDescription.hxx"
+#include "QEmacs/Debug.hxx"
 #include "QEmacs/MFMDataBase.hxx"
 
 namespace qemacs{
@@ -70,6 +71,7 @@ namespace qemacs{
     // loading
     const auto mfm = ::getenv("MFMHOME");
     if (mfm == nullptr) {
+      debug("MFMDataBase::load: MFMHOME is not defined");
       return m;
     }
 #ifdef Q_OS_WIN
@@ -83,9 +85,17 @@ namespace qemacs{
 #else  /* Q_OS_WIN */
       QDir d(path + "/lib");
 #endif /* Q_OS_WIN */
+      debug("MFMDataBase::load: trying ",d.absolutePath());
       if (!d.exists()) {
         continue;
       }
+#ifdef Q_OS_WIN
+      const auto prefix = "";
+      const auto suffix =
+          mfront::LibraryDescription::getDefaultLibrarySuffix(
+              mfront::LibraryDescription::WINDOWS,
+              mfront::LibraryDescription::SHARED_LIBRARY);
+#else  /* Q_OS_WIN */
       const auto prefix =
           mfront::LibraryDescription::getDefaultLibraryPrefix(
               mfront::LibraryDescription::UNIX,
@@ -94,16 +104,24 @@ namespace qemacs{
           mfront::LibraryDescription::getDefaultLibrarySuffix(
               mfront::LibraryDescription::UNIX,
               mfront::LibraryDescription::SHARED_LIBRARY);
+#endif /* Q_OS_WIN */
       for (const auto& ei : d.entryInfoList()) {
         if (!ei.isFile()) {
+          debug("MFMDataBase::load:", ei.absoluteFilePath(),
+                "is not a file");
           continue;
         }
         if ((!ei.baseName().startsWith(prefix)) ||
             (ei.suffix() != suffix)) {
+          debug("MFMDataBase::load:", ei.absoluteFilePath(),
+                "has not the prefix (", prefix, ") and/or the suffix (",
+                suffix, ") of a shared library");
           continue;
         }
         const auto l = ei.absoluteFilePath().toStdString();
         try {
+          debug("MFMDataBase::load: looking in ",
+                ei.absoluteFilePath());
           for (const auto& ept : elm.getEntryPoints(l)) {
             try {
               add(l, ept);

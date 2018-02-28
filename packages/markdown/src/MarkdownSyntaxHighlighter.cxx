@@ -52,12 +52,12 @@ namespace qemacs {
     constexpr const int bold_flag = 1 << 1;
     constexpr const int emph_flag = 1 << 2;
     // previous state + validity flag
-    const auto ipstate = [this] {
+    const auto ipstate = [this,valid_flag] {
       const auto pbs = this->previousBlockState();
       return pbs != -1 ? pbs : valid_flag;
     }();
     auto set_invalid_state = [this] { this->setCurrentBlockState(0); };
-    auto set_state = [this](const int s) {
+    auto set_state = [this,valid_flag](const int s) {
       const auto ns = (s << 1) + valid_flag;
       this->setCurrentBlockState(ns);
     };
