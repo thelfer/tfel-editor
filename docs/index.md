@@ -7,7 +7,9 @@ amazing abilities of the [`Qt` library](https://www.qt.io/):
 
 `qemacs` provides with advanced major modes for:
 
-- Editing and compiling `MFront` files <http://tfel.sourceforge.net>
+- Editing and compiling `MFront` files <http://tfel.sourceforge.net>.
+  See [the description of `MFront` major mode](mfront-major.html) for
+  details.
 - Editing and running `MTest` files <http://tfel.sourceforge.net>
 - Editing and running `Licos` input files (see
   <https://www.sciencedirect.com/science/article/pii/S0029549315003842>).
