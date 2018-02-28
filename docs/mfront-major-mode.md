@@ -12,4 +12,6 @@ This mode is dedicated to:
 
 - Completion of `MFront` keywords. Keywords depends on the currently
   used `DSL`.
+- Ease implementation of `MFront` files for providing wizards.
 - Easy access to the command-line documentation of each keyword.
+- Easy access to the `MFront` documentation.
