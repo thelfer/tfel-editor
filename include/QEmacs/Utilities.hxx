@@ -18,8 +18,11 @@ class QLabel;
 class QHBoxLayout;
 //! forward declaration
 class QAbstractScrollArea;
+
+#ifdef QEMACS_HAVE_WEBENGINE
 //! forward declaration
 class QWebEngineView;
+#endif /* QEMACS_HAVE_WEBENGINE */
 
 namespace qemacs {
 
@@ -42,9 +45,11 @@ namespace qemacs {
   void setQAbstractScrollAreaInLayout(QHBoxLayout* const,
                                       QAbstractScrollArea* const);
 
+#ifdef QEMACS_HAVE_WEBENGINE
   void setQWebEngineViewInLayout(QHBoxLayout* const,
                                  QWebEngineView* const);
-
+#endif /* QEMACS_HAVE_WEBENGINE */
+  
   QString commonPart(const QString&, const QString&);
 
   QString commonPart(const QStringList&);

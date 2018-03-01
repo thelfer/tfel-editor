@@ -36,9 +36,15 @@ qt_sources(TFELQEmacs_SOURCES
   ProcessOutputFrame
   ProcessOutputMajorModeBase
   QAbstractScrollAreaWrapper
-  QWebEngineViewWrapper
   ProcessInteractionFrame
   DirectoryMajorMode)
+
+if(WebEngine_FOUND AND WebEngineWidgets_FOUND)
+  qt_sources(TFELQEmacs_SOURCES2
+  "${PROJECT_SOURCE_DIR}/include/QEmacs"
+  QWebEngineViewWrapper)
+endif(WebEngine_FOUND AND WebEngineWidgets_FOUND)
+
 
 qemacs_library(TFELQEmacs
   ${CMAKE_CURRENT_BINARY_DIR}/QEmacsBuildInformation.cxx
@@ -61,30 +67,33 @@ qemacs_library(TFELQEmacs
   ${QEmacsResources_RCC}
   ${TFELQEmacs_SOURCES})
 
+set(QT_LIBRARIES
+    Qt5::Core
+    Qt5::Widgets
+    Qt5::Network
+    Qt5::PrintSupport)
 
+if(WebEngine_FOUND AND WebEngineWidgets_FOUND)
+set(QT_LIBRARIES
+  ${QT_LIBRARIES}
+  Qt5::WebEngine
+  Qt5::WebEngineWidgets)  
+endif(WebEngine_FOUND AND WebEngineWidgets_FOUND)
+
+  
 if(HUNSPELL_FOUND)
   target_link_libraries(TFELQEmacs
     TFELSystem
     TFELUtilities
     TFELException
-    Qt5::Core
-    Qt5::Widgets
-    Qt5::Network
-    Qt5::WebEngine
-    Qt5::WebEngineWidgets
-    Qt5::PrintSupport
+    ${QT_LIBRARIES}
     ${HUNSPELL_LIBRARIES})
 else(HUNSPELL_FOUND)
   target_link_libraries(TFELQEmacs
     TFELSystem
     TFELUtilities
     TFELException
-    Qt5::Core
-    Qt5::Widgets
-    Qt5::Network
-    Qt5::WebEngine
-    Qt5::WebEngineWidgets
-    Qt5::PrintSupport)
+    ${QT_LIBRARIES})
 endif(HUNSPELL_FOUND)
 
 qt_sources(qemacs_SOURCES

@@ -1,12 +1,16 @@
 find_package(Qt5 5.3 COMPONENTS
-  REQUIRED
   Core Widgets 
   Xml Svg
   Network
   PrintSupport
-  OPTIONAL_COMPONENTS
+  REQUIRED)
+find_package(Qt5 5.3 COMPONENTS
   WebEngine
   WebEngineWidgets)
+
+if(WebEngine_FOUND AND WebEngineWidgets_FOUND)
+  add_definition("-DQEMACS_HAVE_WEBENGINE")
+endif(WebEngine_FOUND AND WebEngineWidgets_FOUND)
 
 macro(moc_source header_directory file)
   set(header_file "${header_directory}/${file}.hxx")

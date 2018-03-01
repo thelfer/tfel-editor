@@ -19,7 +19,9 @@
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/QEmacsPlainTextEdit.hxx"
 #include "QEmacs/QEmacsMajorMode.hxx"
+#ifdef QEMACS_HAVE_WEBENGINE
 #include "QEmacs/QWebEngineViewWrapper.hxx"
+#endif /* QEMACS_HAVE_WEBENGINE */
 #include "QEmacs/QAbstractScrollAreaWrapper.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
 
@@ -334,7 +336,9 @@ namespace qemacs {
     if (s == nullptr) {
       return nullptr;
     }
+#ifdef QEMACS_HAVE_WEBENGINE
     auto *pw = qobject_cast<QWebEngineView *>(s);
+#endif /* QEMACS_HAVE_WEBENGINE */
     auto *p = qobject_cast<QAbstractScrollArea *>(s);
     SecondaryTask st;
     if(t.size()>8){
@@ -343,6 +347,7 @@ namespace qemacs {
       st.title = t;
     }
     st.current = true;
+#ifdef QEMACS_HAVE_WEBENGINE
     if (pw != nullptr) {
       auto *w = new QWebEngineViewWrapper(pw, this);
       st.w = s;
@@ -354,6 +359,9 @@ namespace qemacs {
       }
       return w;
     } else if (p != nullptr) {
+#else /* QEMACS_HAVE_WEBENGINE */
+      if (p != nullptr) {
+#endif /* QEMACS_HAVE_WEBENGINE */
       auto *w = new QAbstractScrollAreaWrapper(p, this);
       st.w = s;
       this->qemacs.attachSecondaryTask(this,st);

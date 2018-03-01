@@ -12,7 +12,9 @@
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QAbstractScrollArea>
+#ifdef QEMACS_HAVE_WEBENGINE
 #include <QtWebEngineWidgets/QWebEngineView>
+#endif /* QEMACS_HAVE_WEBENGINE */
 #include "QEmacs/Utilities.hxx"
 
 namespace qemacs {
@@ -54,6 +56,7 @@ namespace qemacs {
     hl->setSpacing(0);
   }
 
+#ifdef QEMACS_HAVE_WEBENGINE
   void setQWebEngineViewInLayout(QHBoxLayout* const hl,
                                  QWebEngineView* const a) {
     // a->page()->setScrollBarPolicy(Qt::Vertical,
@@ -65,7 +68,8 @@ namespace qemacs {
     hl->setContentsMargins(0, 0, 0, 0);
     hl->setSpacing(0);
   }
-
+#endif /* QEMACS_HAVE_WEBENGINE */
+  
   QString commonPart(const QString& s1, const QString& s2) {
     QString r;
     int l = qMin(s1.size(), s2.size());
