@@ -4,7 +4,7 @@
  * \author Thomas Helfer
  * \date   01/03/2018
  */
-
+#include <QtGui/QDoubleValidator>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QComboBox>
@@ -17,8 +17,13 @@
 namespace qemacs {
 
   MaterialPropertySelectorWidget::MaterialPropertySelectorWidget(
-      const QString& n, QWidget* const p)
-      : QGroupBox(n,p) {
+      const QString& n, const QString& m, QWidget* const p)
+      : QGroupBox(n, p),
+        name(n),
+        material(m),
+        cv(new QLineEdit),
+        cle(new QLineEdit),
+        cfe(new QLineEdit) {
     auto* const ml = new QVBoxLayout();
     auto* const mt = new QComboBox();
     mt->addItems(QStringList() << "constant"
@@ -26,22 +31,24 @@ namespace qemacs {
     ml->addWidget(mt);
     auto * mpd = new QStackedWidget;
     // a line edit to set the constant value
-    auto* const cv = new QLineEdit;
-    cv->setFixedHeight(QFontMetrics(cv->font()).lineSpacing());
-    mpd->addWidget(cv);
+    this->cv->setFixedHeight(QFontMetrics(cv->font()).lineSpacing());
+    auto* const vv = new QDoubleValidator;
+    vv->setNotation(QDoubleValidator::ScientificNotation);
+    this->cv->setValidator(vv);
+    mpd->addWidget(this->cv);
     // a widget to set a castem material property
     auto* const cw = new QGroupBox;
     auto* const gl = new QGridLayout;
     // library
-    gl->addWidget(new QLabel(QObject::tr("Library")),0,0);
-    auto* const cle = new QLineEdit;
-    cle->setFixedHeight(QFontMetrics(cle->font()).lineSpacing());
-    gl->addWidget(cle,0,1);
+    gl->addWidget(new QLabel(QObject::tr("Library")), 0, 0);
+    this->cle->setReadOnly(true);
+    this->cle->setFixedHeight(QFontMetrics(cle->font()).lineSpacing());
+    gl->addWidget(this->cle, 0, 1);
     // function
-    gl->addWidget(new QLabel(QObject::tr("Function")),1,0);
-    auto* const cfe = new QLineEdit;
-    cfe->setFixedHeight(QFontMetrics(cfe->font()).lineSpacing());
-    gl->addWidget(cfe,1,1);
+    gl->addWidget(new QLabel(QObject::tr("Function")), 1, 0);
+    this->cfe->setReadOnly(true);
+    this->cfe->setFixedHeight(QFontMetrics(cfe->font()).lineSpacing());
+    gl->addWidget(this->cfe, 1, 1);
     // import buttons
     auto* const co = new QPushButton("Browse");
     co->setIcon(QIcon::fromTheme("document-open"));
@@ -65,7 +72,14 @@ namespace qemacs {
 
     QObject::connect(mt, static_cast<void (QComboBox::*)(int)>(
                              &QComboBox::activated),
-                     mpd, &QStackedWidget::setCurrentIndex);
+                     this, [this, mpd](const int i) {
+                       if (i != mpd->currentIndex()) {
+                         this->cv->clear();
+                         this->cle->clear();
+                         this->cfe->clear();
+                         mpd->setCurrentIndex(i);
+                       }
+                     });
   }  // end
   // of MaterialPropertySelectorWidget::MaterialPropertySelectorWidget
 
@@ -74,13 +88,19 @@ namespace qemacs {
 
   void MaterialPropertySelectorWidget::importFromMFM() {
     ImportMFMMaterialProperty::Options o;
+    o.name = this->name;
+    o.material = this->material;
     o.minterface = "Castem";
     ImportMFMMaterialProperty w(o);
     if (w.exec() != QDialog::Accepted) {
       return;
-   }
-   
-
+    }
+    const auto l = w.getLibrary();
+    const auto f = w.getFunction();
+    if ((!l.isEmpty()) && (!f.isEmpty())) {
+      this->cle->setText(l);
+      this->cfe->setText(f);
+    }
   }  // end of MaterialPropertySelectorWidget::importFromMFM
 
   MaterialPropertySelectorWidget::~MaterialPropertySelectorWidget() =

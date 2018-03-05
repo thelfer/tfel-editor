@@ -1,6 +1,6 @@
 /*!
  * \file   include/QEmacs/MaterialPropertySelectorWidget.hxx
- * \brief    
+ * \brief
  * \author Thomas Helfer
  * \date   01/03/2018
  */
@@ -9,6 +9,7 @@
 #define LIB_QEMACS_MATERIALPROPERTYSELECTORWIDGET_HXX
 
 #include <QtCore/QString>
+#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QGroupBox>
 
 namespace qemacs {
@@ -20,10 +21,12 @@ namespace qemacs {
     /*!
      * \brief constructor
      * \param[in] n: name
+     * \param[in] m: material
      * \param[in] p: parent widget
      */
-    MaterialPropertySelectorWidget(const QString&,
-                                   QWidget* const = nullptr);
+    MaterialPropertySelectorWidget(const QString &,
+                                   const QString &,
+                                   QWidget *const = nullptr);
     //! destructor
     ~MaterialPropertySelectorWidget() override;
 
@@ -35,13 +38,29 @@ namespace qemacs {
     void importFromMFM();
 
    protected:
-    //! externale name of the material property
-    QString ename;
+    //! external name of the material property
+    QString name;
+    //! material name
+    QString material;
+    /*!
+     * \brief value used for a constant material property.
+     */
+    QLineEdit *cv;
+    /*!
+     * \brief a line edit to display the library path for a `Cast3M`
+     * material property.
+     */
+    QLineEdit *cle;
+    /*!
+     * \brief a line edit to display the function for a `Cast3M`
+     * material property.
+     */
+    QLineEdit *cfe;
 
    private:
     Q_OBJECT
   };  // end of struct MaterialPropertySelectorWidget
 
-} // end of namespace qemacs
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_MATERIALPROPERTYSELECTORWIDGET_HXX */

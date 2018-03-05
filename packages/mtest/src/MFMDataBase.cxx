@@ -39,6 +39,7 @@ namespace qemacs{
     m->setHeaderData(2, Qt::Horizontal, QObject::tr("Material"));
     m->setHeaderData(3, Qt::Horizontal, QObject::tr("Library"));
     m->setHeaderData(4, Qt::Horizontal, QObject::tr("Interface"));
+    m->setHeaderData(5, Qt::Horizontal, QObject::tr("Interface"));
     auto add = [this, &m, &elm](const std::string& l,
                                 const std::string& e) {
       const auto type = elm.getMaterialKnowledgeType(l, e);

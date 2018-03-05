@@ -190,14 +190,34 @@ namespace qemacs {
 
   void ImportBehaviour::MaterialPropertyPage::
       updateMaterialPropertiesList() {
-    auto b = this->wizard.getBehaviourDescription().generate();
+    using tfel::system::ExternalLibraryManager;
+    auto& elm = ExternalLibraryManager::getExternalLibraryManager();
+    auto bd = this->wizard.getBehaviourDescription();
+    const auto b  = bd.generate();
     if (b == nullptr) {
       return;
     }
+    const auto m = [&elm, &bd] {
+      try {
+        return QString::fromStdString(elm.getMaterial(
+            bd.library.toStdString(), bd.behaviour.toStdString()));
+      } catch (std::exception& e) {
+        debug(
+            "ImportBehaviour::MaterialPropertyPage::"
+            "updateMaterialPropertiesList:",
+            e.what());
+      } catch (...) {
+        debug(
+            "ImportBehaviour::MaterialPropertyPage::"
+            "updateMaterialPropertiesList:"
+            "unknow exception");
+      }
+      return QString();
+    }();
     auto* const vl = new QVBoxLayout;
     for (const auto& mp : b->getMaterialPropertiesNames()) {
       vl->addWidget(new MaterialPropertySelectorWidget(
-          QString::fromStdString(mp)));
+          QString::fromStdString(mp), m));
     }
     this->setLayout(vl);
   }  // end of

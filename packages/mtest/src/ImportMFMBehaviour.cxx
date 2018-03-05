@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <QtCore/QRegExp>
 #include <QtGui/QStandardItemModel>
+#include <QtWidgets/QCheckBox>
 #include <QtWidgets/QDialogButtonBox>
 #include "TFEL/System/ExternalLibraryManager.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
@@ -35,12 +36,11 @@ namespace qemacs {
         this->view->model()->index(0, 0),
         QItemSelectionModel::Select | QItemSelectionModel::Rows);
     this->view->hideColumn(0);
-//  this->view->resizeColumnToContents(1);
+    this->view->hideColumn(3);
     this->view->setRootIsDecorated(false);
     this->view->setAlternatingRowColors(true);
     this->view->setSortingEnabled(true);
     auto* const lv = new QVBoxLayout;
-    lv->addWidget(this->view);
     auto* const fg = new QGridLayout;
     // name filter
     auto* const nfl = new QLabel("Name filter");
@@ -97,13 +97,27 @@ namespace qemacs {
     fg->addWidget(this->isb,2,1);
     fg->addWidget(hsl,3,0);
     fg->addWidget(this->hsb,3,1);
-    lv->addLayout(fg);
-    // button
+    // advanced options
+    auto* const sl = new QCheckBox(QObject::tr("Show library path"));
+    sl->setChecked(false);
+    QObject::connect(sl, &QCheckBox::stateChanged, this,
+                     [this](const int s) {
+                       if (s == Qt::Checked) {
+                         this->view->showColumn(3);
+                       } else {
+                         this->view->hideColumn(3);
+                       }
+                     });
+    /* buttons */
     auto* bb = new QDialogButtonBox(QDialogButtonBox::Ok |
                                     QDialogButtonBox::Cancel);
     connect(bb, &QDialogButtonBox::accepted, this,
             &QDialog::accept);
     connect(bb, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    // main layout
+    lv->addWidget(this->view);
+    lv->addLayout(fg);
+    lv->addWidget(sl);
     lv->addWidget(bb);
     this->setLayout(lv);
   }  // end of ImportMFMBehaviour::ImportMFMBehaviour

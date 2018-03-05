@@ -8,6 +8,8 @@
 #include <stdexcept>
 #include <QtCore/QRegExp>
 #include <QtGui/QStandardItemModel>
+#include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QCheckBox>
 #include <QtWidgets/QDialogButtonBox>
 #include "TFEL/System/ExternalLibraryManager.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
@@ -23,9 +25,6 @@ namespace qemacs {
     MFMDataBase db;
     auto* const bfpm = new MFMFilterProxyModel(this);
     bfpm->setMaterialKnowledgeType("MaterialProperty");
-    if (!o.minterface.isEmpty()) {
-      bfpm->setInterfaceFilter(o.minterface);
-    }
     bfpm->setDynamicSortFilter(true);
     bfpm->setSourceModel(db.load(this));
     this->view->setModel(bfpm);
@@ -36,12 +35,12 @@ namespace qemacs {
         this->view->model()->index(0, 0),
         QItemSelectionModel::Select | QItemSelectionModel::Rows);
     this->view->hideColumn(0);
-//  this->view->resizeColumnToContents(1);
+    this->view->hideColumn(3);
     this->view->setRootIsDecorated(false);
     this->view->setAlternatingRowColors(true);
     this->view->setSortingEnabled(true);
     auto* const lv = new QVBoxLayout;
-    lv->addWidget(this->view);
+    /* filters */
     auto* const fg = new QGridLayout;
     // name filter
     auto* const nfl = new QLabel("Name filter");
@@ -49,18 +48,27 @@ namespace qemacs {
     nfl->setBuddy(nfe);
     QObject::connect(nfe, &QLineEdit::textChanged, bfpm,
                      &MFMFilterProxyModel::setNameFilter);
+    if (!o.name.isEmpty()) {
+      nfe->setText(o.name);
+    }
     // material filter
     auto* const mfl = new QLabel(QObject::tr("Material filter"));
     auto* const mfe = new QLineEdit;
     mfl->setBuddy(mfe);
     QObject::connect(mfe, &QLineEdit::textChanged, bfpm,
                      &MFMFilterProxyModel::setMaterialFilter);
+    if (!o.material.isEmpty()) {
+      mfe->setText(o.material);
+    }
     fg->addWidget(nfl, 0, 0);
     fg->addWidget(nfe, 0, 1);
     fg->addWidget(mfl, 1, 0);
     fg->addWidget(mfe, 1, 1);
-    if (o.minterface.isEmpty()) {
-      // interface filter
+    // interface filter
+    if (!o.minterface.isEmpty()) {
+      bfpm->setInterfaceFilter(o.minterface);
+      this->view->hideColumn(4);
+    } else {
       auto* const isl = new QLabel(QObject::tr("Interface"));
       isl->setBuddy(this->isb);
       this->isb->addItem(".+");
@@ -72,36 +80,63 @@ namespace qemacs {
       fg->addWidget(isl, 2, 0);
       fg->addWidget(this->isb, 2, 1);
     }
-    lv->addLayout(fg);
-    // button
+    /* advanced options */
+    auto* const sl = new QCheckBox(QObject::tr("Show library path"));
+    sl->setChecked(false);
+    QObject::connect(sl, &QCheckBox::stateChanged, this,
+                     [this](const int s) {
+                       if (s == Qt::Checked) {
+                         this->view->showColumn(3);
+                       } else {
+                         this->view->hideColumn(3);
+                       }
+                     });
+    // the author is not yet available
+    //     auto* const sa = new QCheckBox(QObject::tr("Show author"));
+    //     sa->setChecked(false);
+    //     QObject::connect(sa, &QCheckBox::stateChanged, this,
+    //                      [this](const int s) {
+    //                        if (s == Qt::Checked) {
+    //                          this->view->showColumn(5);
+    //                        } else {
+    //                          this->view->showColumn(5);
+    //                        }
+    //                      });
+    /* buttons */
     auto* bb = new QDialogButtonBox(QDialogButtonBox::Ok |
                                     QDialogButtonBox::Cancel);
     connect(bb, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(bb, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    // main layout
+    lv->addWidget(this->view);
+    lv->addLayout(fg);
+    lv->addWidget(sl);
     lv->addWidget(bb);
     this->setLayout(lv);
   }  // end of ImportMFMMaterialProperty::ImportMFMMaterialProperty
 
-  //   MaterialPropertyDescription
-  //   ImportMFMMaterialProperty::getSelectedMaterialProperty() const {
-  //     const auto indexes =
-  //         this->view->selectionModel()->selectedRows();
-  //     if (indexes.size() != 1) {
-  //       return {};
-  //     }
-  //     auto* const m = this->view->model();
-  //     const auto il = m->index(indexes[0].row(), 3);
-  //     const auto ib = m->index(indexes[0].row(), 1);
-  //     const auto ii = m->index(indexes[0].row(), 4);
-  //     MaterialPropertyDescription b;
-  //     b.MaterialProperty = m->data(ib).toString();
-  //     b.library = m->data(il).toString();
-  //     b.minterface = m->data(ii).toString();
-  //     b.hypothesis = this->hsb->currentText();
-  //     return b;
-  //   }  // end of
-  //   ImportMFMMaterialProperty::getSelectedMaterialProperty
-  //
+  QString ImportMFMMaterialProperty::getLibrary() const {
+    const auto indexes =
+        this->view->selectionModel()->selectedRows();
+    if (indexes.size() != 1) {
+      return {};
+    }
+    auto* const m = this->view->model();
+    const auto il = m->index(indexes[0].row(), 3);
+    return m->data(il).toString();
+  } // end of ImportMFMMaterialProperty::getLibrary
+
+  QString ImportMFMMaterialProperty::getFunction() const {
+    const auto indexes =
+        this->view->selectionModel()->selectedRows();
+    if (indexes.size() != 1) {
+      return {};
+    }
+    auto* const m = this->view->model();
+    const auto ifct = m->index(indexes[0].row(), 1);
+    return m->data(ifct).toString();
+  }  // end of ImportMFMMaterialProperty::getFunction
+
   ImportMFMMaterialProperty::~ImportMFMMaterialProperty() = default;
 
 }  // end of namespace qemacs

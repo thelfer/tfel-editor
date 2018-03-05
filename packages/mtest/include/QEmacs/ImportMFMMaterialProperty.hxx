@@ -27,6 +27,16 @@ namespace qemacs {
     //! option of the dialog box
     struct Options {
       /*!
+       * \brief name of the material property. This is used to
+       * initialize the name filter.
+       */
+      QString name;
+      /*!
+       * \brief name of the material. This is used to initialize the
+       * material filter.
+       */
+      QString material;
+      /*!
        * \brief if this member is not empty, the user will not be able
        * to select the interface of the material property. The material
        * properties displayed would use the given interface.
@@ -40,9 +50,10 @@ namespace qemacs {
      */
     ImportMFMMaterialProperty(const Options& o,
                               QWidget* const p = nullptr);
-    //     //! \return the selected MaterialProperty.
-    //     MaterialPropertyDescription getSelectedMaterialProperty()
-    //     const;
+    //! \return the selected library
+    QString getLibrary() const;
+    //! \return the selected function
+    QString getFunction() const;
     //! destructor
     ~ImportMFMMaterialProperty() override;
 
