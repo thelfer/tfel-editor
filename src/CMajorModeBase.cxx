@@ -223,23 +223,16 @@ namespace qemacs {
     }
   } // end of CMajorModeBase::comment
 
-  void CMajorModeBase::indent(const QTextCursor& b,
-                              const QTextCursor& e,
-                              const QTextCursor& c) {
-    static QRegExp rcursor("(\\d+)");
-    const auto cf = this->textEdit.getFileName();
-    const auto keepEmptyLine = [&b, &e, &c] {
-      if(!((c == b) && (c == e))) {
-        return false;
-      }
-      auto tc = c;
-      tc.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
-      tc.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
-      return tc.selectedText().trimmed().isEmpty();
-    }();
+  static void do_indent(QEmacsWidget& qemacs,
+                        QEmacsTextEditBase& textEdit,
+                        QTextCursor& c,
+                        const QTextCursor& b,
+                        const QTextCursor& e) {
+    QRegExp rcursor("(\\d+)");
+    const auto cf = textEdit.getFileName();
     QTemporaryFile tmp(cf);
-    if(!tmp.open()) {
-      this->qemacs.displayInformativeMessage(
+    if (!tmp.open()) {
+      qemacs.displayInformativeMessage(
           QObject::tr("can't open temporary file"));
       return;
     }
@@ -247,8 +240,8 @@ namespace qemacs {
     writer.setFormat("plaintext");
     QFile tmp2(tmp.fileName());
     writer.setDevice(&tmp2);
-    if(!writer.write(this->textEdit.document())) {
-      this->qemacs.displayInformativeMessage(
+    if(!writer.write(textEdit.document())) {
+      qemacs.displayInformativeMessage(
           QObject::tr("can't write buffer in temporary file"));
       return;
     }
@@ -265,37 +258,70 @@ namespace qemacs {
                       << ("-cursor=" + QString::number(c.position()))
                       << tmp.fileName());
     if (!cformat.waitForStarted()) {
-      this->qemacs.displayInformativeMessage(
+      qemacs.displayInformativeMessage(
           QObject::tr("call to 'clang-format' failed"));
       return;
     }
     cformat.closeWriteChannel();
     if(!cformat.waitForFinished()) {
-      this->qemacs.displayInformativeMessage(
+      qemacs.displayInformativeMessage(
           QObject::tr("call to 'clang-format' failed"));
       return;
     }
     QTextStream in(cformat.readAll());
     auto pr = in.readLine();
     if(rcursor.indexIn(pr, 0) == -1) {
-      this->qemacs.displayInformativeMessage(
+      qemacs.displayInformativeMessage(
           QObject::tr("analysis of 'clang-format' output failed"));
       return;
     }
     const auto cpos = rcursor.cap(1).toInt();
-    auto tc = c;
-    tc.beginEditBlock();
-    tc.movePosition(QTextCursor::Start, QTextCursor::MoveAnchor);
-    tc.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
-    tc.insertText(in.readAll());
-    tc.setPosition(cpos);
+    c.movePosition(QTextCursor::Start, QTextCursor::MoveAnchor);
+    c.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
+    c.insertText(in.readAll());
+    c.setPosition(cpos);
+  }  // end of do_indent
+
+  void CMajorModeBase::indent(const QTextCursor& b,
+                              const QTextCursor& e,
+                              const QTextCursor& c) {
+    const auto keepEmptyLine = [&b, &e, &c] {
+      if(!((c == b) && (c == e))) {
+        return false;
+      }
+      auto tc = c;
+      tc.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
+      tc.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+      return tc.selectedText().trimmed().isEmpty();
+    }();
     if (keepEmptyLine) {
+      auto tc = c;
+      // current line is empty
+      while (true) {
+        tc.movePosition(QTextCursor::StartOfBlock,
+                        QTextCursor::MoveAnchor);
+        if (tc.atStart()) {
+          break;
+        }
+        tc.movePosition(QTextCursor::EndOfBlock,
+                        QTextCursor::KeepAnchor);
+        if (!tc.selectedText().trimmed().isEmpty()) {
+          break;
+        }
+        tc.movePosition(QTextCursor::Up, QTextCursor::MoveAnchor);
+      }
+      tc.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
+      tc.beginEditBlock();
+      do_indent(this->qemacs, this->textEdit, tc, tc, tc);
       auto tc2 = tc;
       tc2.movePosition(QTextCursor::StartOfBlock,
                       QTextCursor::MoveAnchor);
       tc2.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
       const auto l = tc2.selectedText();
-      if (!l.trimmed().isEmpty()) {
+      if (l.trimmed().isEmpty()) {
+        tc.movePosition(QTextCursor::StartOfBlock,
+                        QTextCursor::MoveAnchor);
+      } else {
         auto nspace = int{};
         for (const auto& cl : l) {
           if(!cl.isSpace()){
@@ -308,9 +334,36 @@ namespace qemacs {
           tc.insertText(QString(nspace,' '));
         }
       }
+      tc.endEditBlock();
+      textEdit.setTextCursor(tc);
+      return;
     }
-    tc.endEditBlock();
-    this->textEdit.setTextCursor(tc);
+    if ((c == b) && (c == e)) {
+      auto tc = c;
+      tc.movePosition(QTextCursor::NoMove, QTextCursor::MoveAnchor);
+      tc.movePosition(QTextCursor::StartOfBlock,
+                      QTextCursor::KeepAnchor);
+      if (tc.selectedText().trimmed().isEmpty()) {
+        tc.movePosition(QTextCursor::NextWord, QTextCursor::MoveAnchor);
+        tc.beginEditBlock();
+        do_indent(this->qemacs, this->textEdit, tc, tc, tc);
+        tc.endEditBlock();
+        textEdit.setTextCursor(tc);
+        return;
+      } else {
+        tc = c;
+        tc.beginEditBlock();
+        do_indent(this->qemacs, this->textEdit, tc, tc, tc);
+        tc.endEditBlock();
+        textEdit.setTextCursor(tc);
+      }
+    } else {
+      auto tc = c;
+      tc.beginEditBlock();
+      do_indent(this->qemacs, this->textEdit, tc, b, e);
+      tc.endEditBlock();
+      textEdit.setTextCursor(tc);
+    }
   }
 
   void CMajorModeBase::indentLine(const QTextCursor& c) {

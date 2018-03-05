@@ -586,6 +586,8 @@ namespace qemacs {
     }
 
     static StandardQEmacsMajorModeProxy<CastemMajorMode> proxy(
-        "Cast3M", QVector<QRegExp>() << QRegExp("^.+\\.dgibi$"));
+        "Cast3M",
+        QVector<QRegExp>() << QRegExp("^.+\\.dgibi$"),
+        ":/Cast3MIcon.png");
 
 }  // end of namespace qemacs

@@ -6,14 +6,12 @@
  */
 
 #ifndef LIB_QEMACS_QEMACSCOMMANDFACTORY_IXX
-#define LIB_QEMACS_QEMACSCOMMANDFACTORY_IXX 
+#define LIB_QEMACS_QEMACSCOMMANDFACTORY_IXX
 
-#include<QtCore/QMap>
-
-#include<QtCore/QString>
-
-#include"TFEL/Config/TFELConfig.hxx"
-#include"TFEL/System/ExternalLibraryManager.hxx"
+#include <map>
+#include <QtCore/QString>
+#include "TFEL/Config/TFELConfig.hxx"
+#include "TFEL/System/ExternalLibraryManager.hxx"
 
 namespace qemacs {
 

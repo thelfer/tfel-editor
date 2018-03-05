@@ -8,7 +8,7 @@
 #ifndef LIB_QEMACS_QEMACSTEXTEDITBASE_HXX
 #define LIB_QEMACS_QEMACSTEXTEDITBASE_HXX
 
-#include <QtCore/QMap>
+#include <map>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
 #include <QtGui/QTextCursor>
@@ -188,7 +188,7 @@ namespace qemacs {
 
     virtual const QEmacsMajorMode &getMajorMode() const;
 
-    virtual QVector<QMenu *> getSpecificMenus();
+    virtual std::vector<QMenu *> getSpecificMenus();
 
     virtual QIcon getIcon() const;
 
@@ -289,7 +289,7 @@ namespace qemacs {
      * save the previous positions of the cursor for Ctrl-P/Ctrl-N
      * moves
      */
-    QMap<int, int> positions;
+    std::map<int, int> positions;
 
     QString fileName;
 

@@ -19,7 +19,8 @@ namespace qemacs {
     this->options.allowStrayBackSlash = true;
     this->options.allowStrayHashCharacter = true;
     this->options.treatStrings = false;
-    this->options.treatComments = false;
+    this->options.treatCComments = false;
+    this->options.treatCxxComments = false;
     this->options.graveAccentAsSeparator = true;
     this->options.joinCxxTwoCharactersSeparators = true;
     this->options.dotAsSeparator = false;

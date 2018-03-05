@@ -67,7 +67,8 @@ namespace qemacs {
       opt.allowStrayBackSlash = true;
       opt.treatPreprocessorDirectives = false;
       opt.treatNumbers = false;
-      opt.treatComments = false;
+      opt.treatCComments = false;
+      opt.treatCxxComments = false;
       opt.joinCxxTwoCharactersSeparators = false;
       opt.graveAccentAsSeparator = true;
       opt.charAsString = true;

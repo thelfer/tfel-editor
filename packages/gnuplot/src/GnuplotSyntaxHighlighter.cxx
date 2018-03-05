@@ -19,7 +19,8 @@ namespace qemacs{
       highlightingRules.push_back(rule);
     }
     this->options.charAsString = true;
-    this->options.treatComments = false;
+    this->options.treatCComments = false;
+    this->options.treatCxxComments = false;
     this->options.joinCxxTwoCharactersSeparators = true;
     this->options.joinCxxTwoCharactersSeparators = true;
     this->options.allowStrayHashCharacter = true;

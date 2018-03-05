@@ -41,7 +41,7 @@ namespace qemacs {
     }
 
     QString getName() const override {
-      return "gnuplot";
+      return "Gnuplot";
     }  // end of LicosMajorMode
 
     QString getDescription() const override {
@@ -82,7 +82,7 @@ namespace qemacs {
   };  // end of GnuplotMajorMode
 
   static StandardQEmacsMajorModeProxy<GnuplotMajorMode> proxy(
-      "gnuplot",
+      "Gnuplot",
       QVector<QRegExp>() << QRegExp("^[\\w-\\.0-9]+\\.gp")
                          << QRegExp("^[\\w-\\.0-9]+\\.gnuplot"));
 

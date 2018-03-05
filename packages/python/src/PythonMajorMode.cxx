@@ -1,33 +1,28 @@
-/*! 
+/*!
  * \file  PythonMajorMode.cxx
  * \brief
  * \author Helfer Thomas
  * \brief  26/09/2012
  */
 
-#include<QtCore/QDir>
-#include<QtCore/QDebug>
+#include <QtCore/QDir>
+#include <QtCore/QDebug>
+#include <QtGui/QSyntaxHighlighter>
+#include "TFEL/Utilities/CxxTokenizer.hxx"
+#include "QEmacs/Debug.hxx"
+#include "QEmacs/QEmacsWidget.hxx"
+#include "QEmacs/QEmacsBuffer.hxx"
+#include "QEmacs/QEmacsTextEditBase.hxx"
+#include "QEmacs/QEmacsMajorMode.hxx"
+#include "QEmacs/QEmacsMajorModeBase.hxx"
+#include "QEmacs/CSyntaxHighlighterBase.hxx"
+#include "QEmacs/QEmacsMajorModeFactory.hxx"
 
-#include<QtGui/QSyntaxHighlighter>
+namespace qemacs {
 
-#include"QEmacs/QEmacsWidget.hxx"
-#include"QEmacs/QEmacsBuffer.hxx"
-#include"QEmacs/QEmacsTextEditBase.hxx"
-
-#include"QEmacs/QEmacsMajorMode.hxx"
-#include"QEmacs/QEmacsMajorModeBase.hxx"
-#include"QEmacs/CSyntaxHighlighterBase.hxx"
-#include"QEmacs/QEmacsMajorModeFactory.hxx"
-
-namespace qemacs
-{
-
-  struct PythonSyntaxHighlighter
-    : public CSyntaxHighlighterBase
-  {
-    explicit PythonSyntaxHighlighter(QTextDocument *p)
-      : CSyntaxHighlighterBase(p)
-    {
+  struct PythonSyntaxHighlighter : public CSyntaxHighlighterBase {
+    explicit PythonSyntaxHighlighter(QTextDocument* p)
+        : CSyntaxHighlighterBase(p) {
       for (const auto key :
            {"and",    "del",    "from",   "not",      "while",
             "as",     "elif",   "global", "or",       "with",
@@ -41,60 +36,49 @@ namespace qemacs
         rule.format = this->keyFormat;
         highlightingRules.push_back(rule);
       }
-    } // end of PythonSyntaxHighlighter
-
-  }; // end of struct PythonSyntaxHighlighter
+      this->options.allowStrayHashCharacter = true;
+      this->options.treatPreprocessorDirectives = false;
+      this->options.treatCComments = false;
+      this->options.treatCxxComments = false;
+      this->options.charAsString = true;
+      this->options.treatHashCharacterAsCommentDelimiter = true;
+    }  // end of PythonSyntaxHighlighter
+  };   // end of struct PythonSyntaxHighlighter
 
   /*!
-   * A major mode to display the results of the grepOutput unix command
+   * \brief A major mode for the `Python` programming language
    */
-  struct PythonMajorMode final
-    : public QEmacsMajorModeBase
-  {
-    
+  struct PythonMajorMode final : public QEmacsMajorModeBase {
     PythonMajorMode(QEmacsWidget& w,
-			QEmacsBuffer& b,
-			QEmacsTextEditBase& t)
-      : QEmacsMajorModeBase(w,b,t,&t)
-    {}
+                    QEmacsBuffer& b,
+                    QEmacsTextEditBase& t)
+        : QEmacsMajorModeBase(w, b, t, &t) {}
 
-    QString getName() const override
-    {
-      return "python";
-    } // end of LicosMajorMode
+    QString getName() const override {
+      return "Python";
+    }  // end of LicosMajorMode
 
-    QString getDescription() const override
-    {
+    QString getDescription() const override {
       return "major mode dedicated to the python programming language";
-    } // end of getDescription
+    }  // end of getDescription
 
-    void setSyntaxHighlighter(QTextDocument* d) override
-    {
+    void setSyntaxHighlighter(QTextDocument* d) override {
       new PythonSyntaxHighlighter(d);
-    } // end of setSyntaxHighlighter
+    }  // end of setSyntaxHighlighter
 
-    bool mousePressEvent(QMouseEvent *) override
-    {
-      return false;
-    }
+    bool mousePressEvent(QMouseEvent*) override { return false; }
 
-    bool keyPressEvent(QKeyEvent *) override
-    {
-      return false;
-    }
+    bool keyPressEvent(QKeyEvent*) override { return false; }
 
-    void format() override
-    {}
+    void format() override {}
 
-    void comment() override
-    {}
+    void comment() override {}
 
     ~PythonMajorMode() override = default;
 
-  }; // end of PythonMajorMode
-  
-  static StandardQEmacsMajorModeProxy<PythonMajorMode> proxy("python",QVector<QRegExp>() 
-							     << QRegExp("^[\\w-]+\\.py$"));
+  };  // end of PythonMajorMode
 
-} // end of namespace qemacs
+  static StandardQEmacsMajorModeProxy<PythonMajorMode> proxy(
+      "Python", QVector<QRegExp>() << QRegExp("^[\\w-]+\\.py$"));
 
+}  // end of namespace qemacs

@@ -26,7 +26,8 @@ namespace qemacs {
     this->options.allowStrayHashCharacter = true;
     this->options.treatNumbers = false;
     this->options.treatStrings = false;
-    this->options.treatComments = false;
+    this->options.treatCComments = false;
+    this->options.treatCxxComments = false;
     this->options.graveAccentAsSeparator = true;
     this->options.joinCxxTwoCharactersSeparators = true;
     // formating options
@@ -86,7 +87,8 @@ namespace qemacs {
       return;
     }
     auto &sc = this->mode.getSpellChecker();
-    auto spell_check = [this, &sc](const Token &t) {
+    auto spell_check = [this, &sc](const Token &t,
+                                   const QTextCharFormat &f) {
       if (t.value.empty()) {
         return;
       }
@@ -95,14 +97,14 @@ namespace qemacs {
       }
       const auto w = QString::fromStdString(t.value);
       if (!sc.spell(w)) {
-        QTextCharFormat f;
-        f.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
-        this->setFormat(t.offset, t.value.size(), f);
+        QTextCharFormat nf(f);
+        nf.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+        this->setFormat(t.offset, t.value.size(), nf);
       }
     };
-    auto spell_check_all_tokens = [&tokens, &spell_check] {
+    auto spell_check_all_tokens = [&tokens, &spell_check] (const QTextCharFormat& f){
       for (const auto &t : tokens) {
-        spell_check(t);
+        spell_check(t, f);
       }
     };
     // m is the current mode
@@ -119,7 +121,7 @@ namespace qemacs {
       if ((tokens[0].value[0] == '%') && (tokens[0].offset == 0)) {
         // title, author, date
         this->setFormat(0, l.size(), this->md);
-        spell_check_all_tokens();
+        spell_check_all_tokens(this->md);
         ++pr;
         set_state(100*pr);
         return;
@@ -157,21 +159,36 @@ namespace qemacs {
         switch (lvl) {
           case 1:
             this->setFormat(0, l.size(), this->h1);
+            spell_check_all_tokens(this->h1);
             break;
           case 2:
             this->setFormat(0, l.size(), this->h2);
+            spell_check_all_tokens(this->h1);
             break;
           case 3:
             this->setFormat(0, l.size(), this->h3);
+            spell_check_all_tokens(this->h1);
             break;
           default:
             this->setFormat(0, l.size(), this->h4);
+            spell_check_all_tokens(this->h1);
             break;
         }
-        spell_check_all_tokens();
         set_state(300);
         return;
       }
+      // standard line at last
+      //       // testing latex mode
+      //       if ((tokens.size() > 2) && (tokens[0].value == "\\") &&
+      //           (tokens[1] == "[")) {
+      //         // starting latex formula
+      //         if (bold || emph) {
+      //           set_invalid_state();
+      //           return;
+      //         }
+      //         set_state();
+      //       }
+      spell_check_all_tokens(QTextCharFormat());
     }
     set_state(300);
   }  // end of MarkdownSyntaxHighlighter::highlight

@@ -370,6 +370,7 @@ namespace qemacs {
 
   static StandardQEmacsMajorModeProxy<MarkdownMajorMode> proxy(
       "Markdown",
-      QVector<QRegExp>() << QRegExp("^[\\w-0-9_\\.]+\\.md"));
+      QVector<QRegExp>() << QRegExp("^[\\w-0-9_\\.]+\\.md"),
+      "x-office-document");
 
 }  // end of namespace qemacs

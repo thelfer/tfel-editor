@@ -166,9 +166,7 @@ namespace qemacs {
 
   };  // end of struct QEmacsYesOrNoUserInput
 
-  /*!
-   * An helper class asking the user for a file path
-   */
+  //! An helper class asking the user for a file path
   struct QEMACS_VISIBILITY_EXPORT QEmacsFilePathUserInput
       : public QEmacsLineEdit {
     QEmacsFilePathUserInput(const QString &, QEmacsWidget &);

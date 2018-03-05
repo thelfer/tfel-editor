@@ -8,10 +8,9 @@
 #ifndef LIB_QEMACS_QEMACSCOMMANDFACTORY_HXX
 #define LIB_QEMACS_QEMACSCOMMANDFACTORY_HXX
 
+#include <map>
 #include <memory>
-#include <QtCore/QMap>
 #include <QtCore/QString>
-
 #include "QEmacs/Config.hxx"
 #include "QEmacs/QEmacsCommand.hxx"
 
@@ -75,7 +74,7 @@ namespace qemacs {
 
     void addQEmacsCommand(const QEmacsCommandProxyPtr);
 
-    QList<QString> getAvailableQEmacsCommandsNames() const;
+    QStringList getAvailableQEmacsCommandsNames() const;
 
     bool hasQEmacsCommand(const QString&) const;
 
@@ -84,7 +83,7 @@ namespace qemacs {
 
     ~QEmacsCommandFactory();
 
-    QMap<QString, QEmacsCommandProxyPtr> proxies;
+    std::map<QString, QEmacsCommandProxyPtr> proxies;
 
   };  // end of struct QEmacsCommandFactory
 

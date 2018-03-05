@@ -368,33 +368,30 @@ namespace qemacs {
         // this->ddoca->setIconVisibleInMenu(true);
       }
       // tutorials
-      QMap<QString, QString> tutorials;
-      QMap<QString, QString>::const_iterator pt;
-      tutorials.insert(QObject::tr("Coupling schemes"), "licos-coupling.pdf");
-      tutorials.insert(QObject::tr("Postprocessings"),
-                       "licos-postprocessings.pdf");
-      tutorials.insert(QObject::tr("Gaz Management"), "licos-gas.pdf");
-      tutorials.insert(QObject::tr("Basic principles"), "licos-principes.pdf");
-      tutorials.insert(QObject::tr("Introduction"), "licos-introduction.pdf");
-      tutorials.insert(QObject::tr("Python extensions"), "licos-python.pdf");
-      tutorials.insert(QObject::tr("Loadings"), "licos-loadings.pdf");
-      tutorials.insert(QObject::tr("Heat transfer and mechanics"),
-                       "licos-thermomechanicalmodel.pdf");
-      tutorials.insert(QObject::tr("Meshing"), "licos-mesh.pdf");
-      tutorials.insert(QObject::tr("Time"), "licos-times.pdf");
-      tutorials.insert(QObject::tr("Misc"), "licos-misc.pdf");
-      tutorials.insert(QObject::tr("User guide"), "licos-userguide.pdf");
-      tutorials.insert(QObject::tr("Multiple systems"),
-                       "licos-multitranches.pdf");
-      tutorials.insert(QObject::tr("Workspace"), "licos-workspace.pdf");
-      for (pt = tutorials.begin(); pt != tutorials.end(); ++pt) {
-        fi.setFile(p1 + QDir::separator() + "share/doc/licos/tutorial/"
-                   + pt.value());
+      std::map<QString, QString> tutorials = {
+          {QObject::tr("Coupling schemes"), "licos-coupling.pdf"},
+          {QObject::tr("Postprocessings"), "licos-postprocessings.pdf"},
+          {QObject::tr("Gaz Management"), "licos-gas.pdf"},
+          {QObject::tr("Basic principles"), "licos-principes.pdf"},
+          {QObject::tr("Introduction"), "licos-introduction.pdf"},
+          {QObject::tr("Python extensions"), "licos-python.pdf"},
+          {QObject::tr("Loadings"), "licos-loadings.pdf"},
+          {QObject::tr("Heat transfer and mechanics"),
+           "licos-thermomechanicalmodel.pdf"},
+          {QObject::tr("Meshing"), "licos-mesh.pdf"},
+          {QObject::tr("Time"), "licos-times.pdf"},
+          {QObject::tr("Misc"), "licos-misc.pdf"},
+          {QObject::tr("User guide"), "licos-userguide.pdf"},
+          {QObject::tr("Multiple systems"), "licos-multitranches.pdf"},
+          {QObject::tr("Workspace"), "licos-workspace.pdf"}};
+      for (const auto& t : tutorials) {
+        fi.setFile(p1 + QDir::separator() +
+                   "share/doc/licos/tutorial/" + t.second);
         if ((fi.exists()) && (fi.isReadable())) {
-          this->tudoca.push_back(new QAction(pt.key(), this));
-          this->tudoca.back()->setData(p1 + QDir::separator()
-                                       + "share/doc/licos/tutorial/"
-                                       + pt.value());
+          this->tudoca.push_back(new QAction(t.first, this));
+          this->tudoca.back()->setData(p1 + QDir::separator() +
+                                       "share/doc/licos/tutorial/" +
+                                       t.second);
           this->tudoca.back()->setIcon(QIcon(":/LicosPDFIcon.png"));
           this->tudoca.back()->setIconVisibleInMenu(true);
         }
@@ -1430,8 +1427,9 @@ namespace qemacs {
   void LicosMajorMode::format() {
   } // end of LicosMajorMode::format
 
-  static StandardQEmacsMajorModeProxy<LicosMajorMode>
-      proxy("licos",
-            QVector<QRegExp>() << QRegExp("^" + fileNameRegExp() + "\\.ple"));
+  static StandardQEmacsMajorModeProxy<LicosMajorMode> proxy(
+      "licos",
+      QVector<QRegExp>() << QRegExp("^" + fileNameRegExp() + "\\.ple"),
+      ":/LicosIcon.png");
 
 } // end of namespace qemacs

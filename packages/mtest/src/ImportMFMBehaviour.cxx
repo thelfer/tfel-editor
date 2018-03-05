@@ -17,10 +17,8 @@
 
 namespace qemacs {
 
-  ImportMFMBehaviour::ImportMFMBehaviour(QEmacsWidget& w,
-                                         QWidget* const p)
+  ImportMFMBehaviour::ImportMFMBehaviour(QWidget* const p)
       : QDialog(p),
-        qemacs(w),
         view(new QTreeView),
         isb(new QComboBox),
         hsb(new QComboBox) {
@@ -110,7 +108,7 @@ namespace qemacs {
     this->setLayout(lv);
   }  // end of ImportMFMBehaviour::ImportMFMBehaviour
 
-  ImportMFMBehaviour::BehaviourDescription
+  BehaviourDescription
   ImportMFMBehaviour::getSelectedBehaviour() const {
     const auto indexes =
         this->view->selectionModel()->selectedRows();
@@ -121,11 +119,10 @@ namespace qemacs {
     const auto il = m->index(indexes[0].row(), 3);
     const auto ib = m->index(indexes[0].row(), 1);
     const auto ii = m->index(indexes[0].row(), 4);
-
     BehaviourDescription b;
     b.behaviour = m->data(ib).toString();
     b.library = m->data(il).toString();
-    b.mfront_interface = m->data(ii).toString();
+    b.minterface = m->data(ii).toString();
     b.hypothesis = this->hsb->currentText();
     return b;
   }  // end of ImportMFMBehaviour::getSelectedBehaviour

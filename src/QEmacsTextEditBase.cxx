@@ -487,11 +487,14 @@ namespace qemacs {
     this->setExtraSelections(e);
   }
 
-  QVector<QMenu*> QEmacsTextEditBase::getSpecificMenus() {
-      QVector<QMenu*> m;
+  std::vector<QMenu*> QEmacsTextEditBase::getSpecificMenus() {
+      std::vector<QMenu*> m;
       if (this->mode != nullptr) {
         auto* mm = this->mode->getSpecificMenu();
         if (mm != nullptr) {
+          //           mm->setSizePolicy(QSizePolicy::MinimumExpanding,
+          //                             QSizePolicy::Preferred);
+          //           mm->setIcon(this->mode->getIcon());
           m.push_back(mm);
         }
     }
@@ -1050,7 +1053,7 @@ namespace qemacs {
       int p = c.position() - c.block().position();
       this->positions[c.block().blockNumber()] = p;
       c.movePosition(QTextCursor::PreviousBlock, this->moveMode);
-      if (this->positions.contains(c.block().blockNumber())) {
+      if (this->positions.count(c.block().blockNumber()) == 0) {
         p = this->positions[c.block().blockNumber()];
       }
       int npos = qMax(qMin(p, c.block().length() - 1), 0);
@@ -1060,7 +1063,7 @@ namespace qemacs {
       int p = c.position() - c.block().position();
       this->positions[c.block().blockNumber()] = p;
       c.movePosition(QTextCursor::NextBlock, this->moveMode);
-      if (this->positions.contains(c.block().blockNumber())) {
+      if (this->positions.count(c.block().blockNumber()) == 0) {
         p = this->positions[c.block().blockNumber()];
       }
       int npos = qMax(qMin(p, c.block().length() - 1), 0);

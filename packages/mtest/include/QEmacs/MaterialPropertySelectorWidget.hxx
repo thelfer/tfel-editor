@@ -9,14 +9,14 @@
 #define LIB_QEMACS_MATERIALPROPERTYSELECTORWIDGET_HXX
 
 #include <QtCore/QString>
-#include <QtWidgets/QWidget>
+#include <QtWidgets/QGroupBox>
 
 namespace qemacs {
 
   /*!
    * \brief a widget aiming at selecting material property
    */
-  struct MaterialPropertySelectorWidget : QWidget {
+  struct MaterialPropertySelectorWidget : QGroupBox {
     /*!
      * \brief constructor
      * \param[in] n: name
@@ -26,6 +26,13 @@ namespace qemacs {
                                    QWidget* const = nullptr);
     //! destructor
     ~MaterialPropertySelectorWidget() override;
+
+   public slots:
+
+    //! import from a user library
+    void import();
+    //! import from mfront materials
+    void importFromMFM();
 
    protected:
     //! externale name of the material property

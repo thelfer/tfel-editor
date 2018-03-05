@@ -1,33 +1,38 @@
 AM_CPPFLAGS = -I$(top_srcdir)/packages/mtest/include  \
-	      -I$(top_srcdir)/include                 \
-	      @QT_CXXFLAGS@                            \
+	      -I$(top_srcdir)/include                     \
+	      @QT_CXXFLAGS@                               \
 	      `@TFELCONFIG@ --includes --cppflags`
 
 packagesdir = @prefix@/share/qemacs/packages
 packages_LTLIBRARIES = libMTestQEmacsMode.la
 
-libMTestQEmacsMode_la_SOURCES = MTestStudyOptions.cxx         \
-				MTestMajorMode.cxx            \
-				MTestSyntaxHighlighter.cxx    \
-				PipeTestMajorMode.cxx         \
-				PipeTestSyntaxHighlighter.cxx \
-                  MFMFilterProxyModel.cxx       \
-				MFMDataBase.cxx               \
-				ImportBehaviour.cxx           \
-				ImportMFMBehaviour.cxx
+libMTestQEmacsMode_la_SOURCES = MTestStudyOptions.cxx  \
+				MTestMajorMode.cxx                   \
+				MTestSyntaxHighlighter.cxx           \
+				PipeTestMajorMode.cxx                \
+				PipeTestSyntaxHighlighter.cxx        \
+                  MFMFilterProxyModel.cxx              \
+				MFMDataBase.cxx                      \
+				BehaviourDescription.cxx             \
+				ImportBehaviour.cxx                  \
+				ImportMFMMaterialProperty.cxx        \
+				ImportMFMBehaviour.cxx               \
+				MaterialPropertySelectorWidget.cxx
 
 libMTestQEmacsMode_la_LIBADD   = -L@TFELHOME@/lib \
 			         -lTFELMTest                 \
 			         -lTFELMFront                \
 			         -lTFELSystem
 
-nodist_libMTestQEmacsMode_la_SOURCES = moc_MTestMajorMode.cxx            \
-				       moc_MTestStudyOptions.cxx         \
-				       moc_MTestSyntaxHighlighter.cxx    \
-				       moc_PipeTestMajorMode.cxx         \
-				       moc_PipeTestSyntaxHighlighter.cxx \
-				       moc_MFMFilterProxyModel.cxx       \
-				       moc_ImportMFMBehaviour.cxx
+nodist_libMTestQEmacsMode_la_SOURCES = moc_MTestMajorMode.cxx   \
+				       moc_MTestStudyOptions.cxx              \
+				       moc_MTestSyntaxHighlighter.cxx         \
+				       moc_PipeTestMajorMode.cxx              \
+				       moc_PipeTestSyntaxHighlighter.cxx      \
+				       moc_MFMFilterProxyModel.cxx            \
+				       moc_ImportMFMMaterialProperty.cxx      \
+				       moc_ImportMFMBehaviour.cxx             \
+				       moc_MaterialPropertySelectorWidget.cxx
 
 moc_%.cxx : @top_srcdir@/packages/mtest/include/QEmacs/%.hxx
 	@QT_MOC@ $< -o $@	

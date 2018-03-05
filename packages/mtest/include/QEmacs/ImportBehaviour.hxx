@@ -1,6 +1,6 @@
 /*!
  * \file   ImportBehaviour.hxx
- * \brief    
+ * \brief
  * \author THOMAS HELFER
  * \date   02/05/2017
  */
@@ -8,12 +8,12 @@
 #ifndef LIB_QEMACS_MTEST_IMPORTBEHAVIOUR_HXX
 #define LIB_QEMACS_MTEST_IMPORTBEHAVIOUR_HXX
 
-#include<memory>
-#include<QtWidgets/QComboBox>
-#include<QtWidgets/QPushButton>
-#include<QtWidgets/QLineEdit>
-#include<QtWidgets/QWizard>
-#include "MTest/Behaviour.hxx"
+#include <memory>
+#include <QtWidgets/QComboBox>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QWizard>
+#include "QEmacs/BehaviourDescription.hxx"
 
 namespace qemacs {
 
@@ -21,82 +21,90 @@ namespace qemacs {
   struct QEmacsTextEditBase;
 
   struct ImportBehaviour : public QWizard {
-
-    ImportBehaviour(QEmacsTextEditBase&);
-    //! \return the hypothesis selected
-    QString getHypothesis() const;
-    //! \return a Behaviour build on the information provided by the user
-    std::shared_ptr<mtest::Behaviour> getBehaviour() const;
+    ImportBehaviour(QEmacsTextEditBase &);
+    //! \return the descrioption of the selected
+    BehaviourDescription getBehaviourDescription() const;
     //! destructor
     ~ImportBehaviour() override;
 
    protected:
-    struct SelectHypothesisPage;
     struct SelectBehaviourPage;
     struct MaterialPropertyPage;
+    struct ConclusionPage;
 
-    SelectHypothesisPage *sh;
-    SelectBehaviourPage  *sb;
+    SelectBehaviourPage *sb;
     MaterialPropertyPage *mp;
+    ConclusionPage *c;
 
    private:
-    Q_OBJECT    
-  }; // end of struct ImportBehaviour
-
-  struct ImportBehaviour::SelectHypothesisPage : public QWizardPage {
-    /*!
-     * \brief constructor
-     * \param[in] w: reference to the calling wizard;
-     */
-    SelectHypothesisPage(ImportBehaviour&);
-
-  private:
-    //! the calling wizard
-    ImportBehaviour& wizard;
     Q_OBJECT
-  };
+  };  // end of struct ImportBehaviour
 
   struct ImportBehaviour::SelectBehaviourPage : public QWizardPage {
-    
-    SelectBehaviourPage(ImportBehaviour&);
+    SelectBehaviourPage(ImportBehaviour &);
 
-  private slots:
+   private slots:
 
     /*!
-     * \brief update the list of behaviours
-     * \param[in] l: library name
+     * \brief update the list of behaviours when a library
+     * is selected.
      */
-    virtual void updateBehaviourList(const QString&);
-    
+    virtual void updateBehaviourList();
+    /*!
+     * \brief update the list of modelling hypotheses when a behaviour
+     * is selected.
+     */
+    virtual void updateModellingHypotheses();
+
     virtual void selectLibrary();
 
     bool validatePage() override;
-    //! 
+    //!
     int nextId() const override;
 
-  private:
+   signals:
+
+    void behaviourDescriptionChanged();
+
+   private:
     //! list of behaviours declared in the selected library
     QComboBox *bl;
-    //! enter the library location
+    //! list of modelling hypothesis for the selected behaviour
+    QComboBox *mh;
+    //! the library location
     QLineEdit *le;
     //! select library button
     QPushButton *slb;
     //! the calling wizard
-    ImportBehaviour& wizard;
+    ImportBehaviour &wizard;
     Q_OBJECT
   };
 
   struct ImportBehaviour::MaterialPropertyPage : public QWizardPage {
-    MaterialPropertyPage(ImportBehaviour&);
+    MaterialPropertyPage(ImportBehaviour &);
 
     int nextId() const override;
 
-  private:
+   public slots:
+    void updateMaterialPropertiesList();
+
+   private:
     //! the calling wizard
-    ImportBehaviour& wizard;
+    ImportBehaviour &wizard;
     Q_OBJECT
   };  // end of ImportBehaviour::MaterialPropertyPage
 
-} // end of namespace qemacs
+  struct ImportBehaviour::ConclusionPage : public QWizardPage {
+    ConclusionPage(ImportBehaviour &);
+
+    int nextId() const override;
+
+   private:
+    //! the calling wizard
+    ImportBehaviour &wizard;
+    Q_OBJECT
+  };  // end of ImportBehaviour::ConclusionPage
+
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_MTEST_IMPORTBEHAVIOUR_HXX */

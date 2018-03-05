@@ -70,6 +70,18 @@ namespace qemacs
     return nullptr;
   } // end of QEmacsMajorModeFactory::getQEmacsMajorMode
 
+  QString QEmacsMajorModeFactory::getQEmacsMajorModeNameForFile(
+      const QString& f) {
+    for (const auto& p : this->proxies) {
+      for(const auto& r : p.rexp){
+        if (r.indexIn(f) >= 0) {
+          return p.proxy->getName();
+        }
+      }
+    }
+    return "";
+  }  // end of QEmacsMajorModeFactory::getQEmacsMajorModeNameForFile
+
   void QEmacsMajorModeFactory::addQEmacsMajorMode(
       const QEmacsMajorModeProxyPtr proxy,
       const QVector<QRegExp>& e,
@@ -86,23 +98,35 @@ namespace qemacs
     this->proxies.push_front(p);
   } // end of QEmacsMajorModeFactory::getQEmacsMajorMode
 
+  QIcon QEmacsMajorModeFactory::getQEmacsMajorModeIcon(
+      const QString& n) const {
+    for (const auto& p : proxies) {
+      if (p.proxy->getName() == n) {
+        return p.proxy->getIcon();
+      }
+    }
+    return QIcon();
+  }  // end of  QEmacsMajorModeFactory::getQEmacsMajorModeIcon()
+
   QStringList
   QEmacsMajorModeFactory::getAvailableQEmacsMajorModesNames() const {
     QStringList n;
-    for(const auto& p : proxies){
+    for (const auto& p : proxies) {
       n.push_back(p.proxy->getName());
     }
     return n;
-  } // end of QEmacsMajorModeFactory::getAvailableQEmacsMajorModesNames() const
+    }  // end of
+       // QEmacsMajorModeFactory::getAvailableQEmacsMajorModesNames()
+       // const
 
-  QEmacsMajorModeFactory&
-  QEmacsMajorModeFactory::getQEmacsMajorModeFactory() {
-    static QEmacsMajorModeFactory m;
-    return m;
-  } // end of QEmacsMajorModeFactory::~QEmacsMajorModeFactory()
+    QEmacsMajorModeFactory&
+    QEmacsMajorModeFactory::getQEmacsMajorModeFactory() {
+      static QEmacsMajorModeFactory m;
+      return m;
+    }  // end of QEmacsMajorModeFactory::~QEmacsMajorModeFactory()
 
-  QEmacsMajorModeFactory::QEmacsMajorModeFactory() = default;
-  QEmacsMajorModeFactory::~QEmacsMajorModeFactory() = default;
+    QEmacsMajorModeFactory::QEmacsMajorModeFactory() = default;
+    QEmacsMajorModeFactory::~QEmacsMajorModeFactory() = default;
   
 } // end of namespace qemacs
 

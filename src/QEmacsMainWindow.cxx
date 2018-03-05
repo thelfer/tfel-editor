@@ -129,108 +129,108 @@ namespace qemacs {
 
   void QEmacsMainWindow::createActions() {
     auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
-    this->na = new QAction(tr("N&ew"), this);
-    this->na->setStatusTip(tr("New buffer"));
+    this->na = new QAction(QObject::tr("N&ew"), this);
+    this->na->setStatusTip(QObject::tr("New buffer"));
     this->na->setIcon(QIcon::fromTheme("document-new"));
     this->na->setIconVisibleInMenu(true);
     QObject::connect(this->na, &QAction::triggered, e,
                      &QEmacsWidget::createEmptyBuffer);
-    this->oa = new QAction(tr("O&pen"), this);
-    this->oa->setStatusTip(tr("Open a file"));
+    this->oa = new QAction(QObject::tr("O&pen"), this);
+    this->oa->setStatusTip(QObject::tr("Open a file"));
     this->oa->setIcon(QIcon::fromTheme("document-open"));
     this->oa->setIconVisibleInMenu(true);
     QObject::connect(this->oa, &QAction::triggered, this,
                      &QEmacsMainWindow::openFile);
-    this->sa = new QAction(tr("S&ave current buffer"), this);
-    this->sa->setStatusTip(tr("Save the current buffer"));
+    this->sa = new QAction(QObject::tr("S&ave current buffer"), this);
+    this->sa->setStatusTip(QObject::tr("Save the current buffer"));
     this->sa->setIcon(QIcon::fromTheme("document-save"));
     this->sa->setIconVisibleInMenu(true);
     QObject::connect(this->sa, &QAction::triggered, e,
                      &QEmacsWidget::saveCurrentBuffer);
-    this->ka = new QAction(tr("C&lose current buffer"), this);
-    this->ka->setStatusTip(tr("Close the current buffer"));
+    this->ka = new QAction(QObject::tr("C&lose current buffer"), this);
+    this->ka->setStatusTip(QObject::tr("Close the current buffer"));
     this->ka->setIcon(QIcon::fromTheme("window-close"));
     QObject::connect(this->ka, &QAction::triggered, e,
                      &QEmacsWidget::closeCurrentBuffer);
-    this->pra = new QAction(tr("Print current buffer"), this);
+    this->pra = new QAction(QObject::tr("Print current buffer"), this);
     this->pra->setIcon(QIcon::fromTheme("document-print"));
     this->pra->setIconVisibleInMenu(true);
-    this->pra->setStatusTip(tr("Print the current buffer"));
+    this->pra->setStatusTip(QObject::tr("Print the current buffer"));
     QObject::connect(this->pra, &QAction::triggered, this,
                      &QEmacsMainWindow::print);
-    this->saa = new QAction(tr("S&ave all buffers"), this);
-    this->saa->setStatusTip(tr("Save all buffers"));
+    this->saa = new QAction(QObject::tr("S&ave all buffers"), this);
+    this->saa->setStatusTip(QObject::tr("Save all buffers"));
     this->saa->setIcon(QIcon::fromTheme("document-save"));
     QObject::connect(this->saa, &QAction::triggered, e,
                      &QEmacsWidget::saveAllBuffers);
     // edit actions
-    this->ua = new QAction(tr("U&ndo"), this);
+    this->ua = new QAction(QObject::tr("U&ndo"), this);
     this->ua->setIcon(QIcon::fromTheme("edit-undo"));
     this->ua->setIconVisibleInMenu(true);
     QObject::connect(this->ua, &QAction::triggered, this,
                      &QEmacsMainWindow::undo);
-    this->ra = new QAction(tr("R&edo"), this);
+    this->ra = new QAction(QObject::tr("R&edo"), this);
     this->ra->setIcon(QIcon::fromTheme("edit-redo"));
     this->ra->setIconVisibleInMenu(true);
     QObject::connect(this->ra, &QAction::triggered, this,
                      &QEmacsMainWindow::redo);
-    this->sea = new QAction(tr("S&elect All"), this);
+    this->sea = new QAction(QObject::tr("S&elect All"), this);
     this->sea->setIcon(QIcon::fromTheme("edit-select-all"));
     this->sea->setIconVisibleInMenu(true);
     QObject::connect(this->sea, &QAction::triggered, this,
                      &QEmacsMainWindow::selectAll);
-    this->ca = new QAction(tr("C&ut"), this);
-    this->ca->setStatusTip(tr("Cut the selected text"));
+    this->ca = new QAction(QObject::tr("C&ut"), this);
+    this->ca->setStatusTip(QObject::tr("Cut the selected text"));
     this->ca->setIcon(QIcon::fromTheme("edit-cut"));
     this->ca->setIconVisibleInMenu(true);
     QObject::connect(this->ca, &QAction::triggered, this,
                      &QEmacsMainWindow::cut);
-    this->ca2 = new QAction(tr("C&opy"), this);
-    this->ca2->setStatusTip(tr("Copy the selected text to clipboard"));
+    this->ca2 = new QAction(QObject::tr("C&opy"), this);
+    this->ca2->setStatusTip(QObject::tr("Copy the selected text to clipboard"));
     this->ca2->setIcon(QIcon::fromTheme("edit-copy"));
     this->ca2->setIconVisibleInMenu(true);
     QObject::connect(this->ca2, &QAction::triggered, this,
                      &QEmacsMainWindow::copy);
-    this->pa = new QAction(tr("P&aste"), this);
-    this->pa->setStatusTip(tr("Paste from clipboard"));
+    this->pa = new QAction(QObject::tr("P&aste"), this);
+    this->pa->setStatusTip(QObject::tr("Paste from clipboard"));
     this->pa->setIcon(QIcon::fromTheme("edit-paste"));
     this->pa->setIconVisibleInMenu(true);
     QObject::connect(this->pa, &QAction::triggered, this,
                      &QEmacsMainWindow::paste);
     // exit actions
-    this->ea = new QAction(tr("E&xit"), this);
-    this->ea->setStatusTip(tr("Exit qemacs"));
+    this->ea = new QAction(QObject::tr("E&xit"), this);
+    this->ea->setStatusTip(QObject::tr("Exit qemacs"));
     this->ea->setIcon(QIcon::fromTheme("window-close"));
     this->ea->setIconVisibleInMenu(true);
     QObject::connect(this->ea, &QAction::triggered, this,
                      &QEmacsMainWindow::close);
     // font actions
-    this->fa = new QAction(tr("Main Frames' F&ont"), this);
+    this->fa = new QAction(QObject::tr("Main Frames' F&ont"), this);
     this->fa->setIcon(QIcon::fromTheme("preferences-desktop-font"));
-    this->fa->setStatusTip(tr("Select Font"));
+    this->fa->setStatusTip(QObject::tr("Select Font"));
     QObject::connect(this->fa, &QAction::triggered, this,
                      &QEmacsMainWindow::selectFont);
     this->esca =
-        new QAction(tr("Change to emacs's style shortcuts"), this);
-    this->esca->setStatusTip(tr("Use emacs's style shortcuts"));
+        new QAction(QObject::tr("Change to emacs's style shortcuts"), this);
+    this->esca->setStatusTip(QObject::tr("Use emacs's style shortcuts"));
     this->esca->setIcon(QIcon::fromTheme("preferences-desktop-keyboard"));
     QObject::connect(this->esca, &QAction::triggered, this,
                      &QEmacsMainWindow::useEmacsShortCuts);
     this->qsca =
-        new QAction(tr("Change to Qt's style shortcuts"), this);
-    this->qsca->setStatusTip(tr("Use Qt's style shortcuts"));
+        new QAction(QObject::tr("Change to Qt's style shortcuts"), this);
+    this->qsca->setStatusTip(QObject::tr("Use Qt's style shortcuts"));
     this->qsca->setIcon(QIcon::fromTheme("preferences-desktop-keyboard"));
     QObject::connect(this->qsca, &QAction::triggered, this,
                      &QEmacsMainWindow::useQtShortCuts);
     // help actions
-    this->aa = new QAction(tr("&About"), this);
-    this->aa->setStatusTip(tr("Show the application's About box"));
+    this->aa = new QAction(QObject::tr("&About"), this);
+    this->aa->setStatusTip(QObject::tr("Show the application's About box"));
     this->aa->setIcon(QIcon::fromTheme("help-about"));
     this->aa->setIconVisibleInMenu(true);
     connect(this->aa, &QAction::triggered, this,
             &QEmacsMainWindow::about);
-    this->aa2 = new QAction(tr("About &Qt"), this);
-    this->aa2->setStatusTip(tr("Show the Qt library's About box"));
+    this->aa2 = new QAction(QObject::tr("About &Qt"), this);
+    this->aa2->setStatusTip(QObject::tr("Show the Qt library's About box"));
     connect(this->aa2, &QAction::triggered, qApp,
             &QApplication::aboutQt);
   }  // end of QEmacsMainWindow::createActions
@@ -241,6 +241,7 @@ namespace qemacs {
     this->om->clear();
     // font
     this->om->addAction(this->fa);
+#ifdef QEMACS_HUNSPELL_SUPPORT
     // available dictionaries
     auto &dm =
         HunspellDictionaries::getQEmacsHunspellDictionariesManager();
@@ -258,6 +259,7 @@ namespace qemacs {
           d, &QMenu::triggered, this,
           &QEmacsMainWindow::spellCheckLanguageActionTriggered);
     }
+#endif /* QEMACS_HUNSPELL_SUPPORT */
     // short cuts
     if (s.getStyle() != QEmacsShortCutStyle::EMACS) {
       this->om->addAction(this->esca);
@@ -331,7 +333,7 @@ namespace qemacs {
 // https://codereview.qt-project.org/#/c/170352/
 //
 #endif
-    this->fm = this->menuBar()->addMenu(tr("File"));
+    this->fm = this->menuBar()->addMenu(QObject::tr("File"));
     this->fm->addAction(this->na);
     this->fm->addAction(this->oa);
     if (settings.contains("recent files")) {
@@ -352,7 +354,7 @@ namespace qemacs {
     this->fm->addSeparator();
     this->fm->addAction(this->ea);
     // edit menu
-    this->em = this->menuBar()->addMenu(tr("Edit"));
+    this->em = this->menuBar()->addMenu(QObject::tr("Edit"));
     this->em->addAction(this->ua);
     this->em->addAction(this->ra);
     this->em->addSeparator();
@@ -361,42 +363,54 @@ namespace qemacs {
     this->em->addAction(this->pa);
     this->em->addAction(this->sea);
     // buffer menu
-    this->bm = this->menuBar()->addMenu(tr("Buffers"));
+    this->bm = this->menuBar()->addMenu(QObject::tr("Buffers"));
     this->updateBuffersMenu();
     QObject::connect(this->bm, &QMenu::triggered, this,
                      &QEmacsMainWindow::bufferMenuActionTriggered);
+    // qemacs menu
+    this->bm = this->menuBar()->addMenu(QObject::tr("QEmacs"));
+    auto *const qcmds = this->bm->addMenu(QObject::tr("Commands"));
+    auto *const lqcmd = qcmds->addAction(QObject::tr("Launch"));
+    QObject::connect(lqcmd, &QAction::triggered, e,
+                     static_cast<void (QEmacsWidget::*)(void)>(
+                         &QEmacsWidget::launchCommand));
+    auto *const qmm = this->bm->addMenu(QObject::tr("Major Mode"));
+    auto &mf = QEmacsMajorModeFactory::getQEmacsMajorModeFactory();
+    for (const auto &mn : mf.getAvailableQEmacsMajorModesNames()) {
+      auto *const qmma = qmm->addAction(mn);
+      qmma->setIcon(mf.getQEmacsMajorModeIcon(mn));
+      QObject::connect(qmma, &QAction::triggered, e, [e, mn] {
+        e->getCurrentBuffer().getMainFrame().setMajorMode(mn);
+      });
+    }
+    // menu associated with the current major mode
     for (const auto& m : e->getCurrentBufferSpecificMenus()) {
       this->menuBar()->addMenu(m);
     }
     // options
-    this->om = this->menuBar()->addMenu(tr("Options"));
+    this->om = this->menuBar()->addMenu(QObject::tr("Options"));
     this->updateOptionsMenu();
     // help menu
-    this->hm = this->menuBar()->addMenu(tr("Help"));
+    this->hm = this->menuBar()->addMenu(QObject::tr("Help"));
     this->hm->addAction(this->aa);
     this->hm->addAction(this->aa2);
   }  // end of QEmacsMainWindow::createMainMenu
 
   void QEmacsMainWindow::createRecentFilesMenu(
       QMenu *const m, const QStringList &files) {
-    //    auto &mf =
-    //    QEmacsMajorModeFactory::getQEmacsMajorModeFactory();
+    auto &mf = QEmacsMajorModeFactory::getQEmacsMajorModeFactory();
     auto n = int{};
     const auto s = files.size();
     if (s == 0) {
       return;
     }
-    //     auto &b = this->getCurrentBuffer();
-    //     auto &t = b.getMainFrame();
     for (int i = s - 1; (i >= 0) && (n != 5); --i, ++n) {
       const auto&f = files.at(i);
       QFileInfo fi(f);
       if ((fi.exists()) && (fi.isFile()) && (fi.isReadable())) {
-        auto *rf   = m->addAction(fi.fileName());
-        //         auto *mode =
-        //         mf.getQEmacsMajorModeForFile(fi.fileName(),
-        //         *this,b,t);
-        //         rf->setIcon(m->getIcon());
+        auto *rf = m->addAction(fi.fileName());
+        const auto mn = mf.getQEmacsMajorModeNameForFile(fi.fileName());
+        rf->setIcon(mf.getQEmacsMajorModeIcon(mn));
         rf->setData(fi.absoluteFilePath());
       }
     }

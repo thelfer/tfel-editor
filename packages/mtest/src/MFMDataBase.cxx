@@ -9,6 +9,7 @@
 #include <QtGui/QStandardItemModel>
 #include "TFEL/System/ExternalLibraryManager.hxx"
 #include "MFront/LibraryDescription.hxx"
+#include "MFront/TargetsDescription.hxx"
 #include "QEmacs/Debug.hxx"
 #include "QEmacs/MFMDataBase.hxx"
 
@@ -89,22 +90,13 @@ namespace qemacs{
       if (!d.exists()) {
         continue;
       }
-#ifdef Q_OS_WIN
-      const auto prefix = "";
-      const auto suffix =
-          mfront::LibraryDescription::getDefaultLibrarySuffix(
-              mfront::LibraryDescription::WINDOWS,
-              mfront::LibraryDescription::SHARED_LIBRARY);
-#else  /* Q_OS_WIN */
+      const auto td = mfront::TargetsDescription();
       const auto prefix =
           mfront::LibraryDescription::getDefaultLibraryPrefix(
-              mfront::LibraryDescription::UNIX,
-              mfront::LibraryDescription::SHARED_LIBRARY);
+              td.system, td.libraryType);
       const auto suffix =
           mfront::LibraryDescription::getDefaultLibrarySuffix(
-              mfront::LibraryDescription::UNIX,
-              mfront::LibraryDescription::SHARED_LIBRARY);
-#endif /* Q_OS_WIN */
+              td.system, td.libraryType);
       for (const auto& ei : d.entryInfoList()) {
         if (!ei.isFile()) {
           debug("MFMDataBase::load:", ei.absoluteFilePath(),

@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  QEmacsHunspellDictionariesManager.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,54 +6,45 @@
  */
 
 #ifndef LIB_HUNSPELL_QEMACSDICTIONARIESMANAGER_HXX
-#define LIB_HUNSPELL_QEMACSDICTIONARIESMANAGER_HXX 
+#define LIB_HUNSPELL_QEMACSDICTIONARIESMANAGER_HXX
 
-#include<QtCore/QMap>
-#include"QEmacs/Config.hxx"
+#include <map>
+#include "QEmacs/Config.hxx"
 
-namespace qemacs
-{
-  
+namespace qemacs {
+
   /*!
    * structure in charge of managing hunspell dictionaries
    */
-  struct QEMACS_VISIBILITY_EXPORT QEmacsHunspellDictionariesManager
-  {
-
+  struct QEMACS_VISIBILITY_EXPORT QEmacsHunspellDictionariesManager {
     static QEmacsHunspellDictionariesManager&
     getQEmacsHunspellDictionariesManager();
 
-    QString
-    getDefaultSpellCheckLanguage() const;
+    QString getDefaultSpellCheckLanguage() const;
 
-    QString
-    getDictionaryPath(const QString&) const;
+    QString getDictionaryPath(const QString&) const;
 
-    QStringList
-    getAvailableDictionnaries() const;
+    QStringList getAvailableDictionnaries() const;
 
-  protected:
-
+   protected:
     QEmacsHunspellDictionariesManager();
 
-    QEmacsHunspellDictionariesManager(const QEmacsHunspellDictionariesManager&);
+    QEmacsHunspellDictionariesManager(
+        const QEmacsHunspellDictionariesManager&);
 
-    void
-    searchDictionariesInDefaultLocations();
+    void searchDictionariesInDefaultLocations();
 
-    void
-    searchDictionaries(const QString&);
+    void searchDictionaries(const QString&);
 
-    QEmacsHunspellDictionariesManager&
-    operator=(const QEmacsHunspellDictionariesManager&);
+    QEmacsHunspellDictionariesManager& operator=(
+        const QEmacsHunspellDictionariesManager&);
 
     // first  key : lang
     // second key : path to dictionaries
-    QMap<QString,QString> dictionaries;
+    std::map<QString, QString> dictionaries;
 
-  }; // end of struct QEmacsHunspellDictionariesManager
+  };  // end of struct QEmacsHunspellDictionariesManager
 
-} // end of namespace qemacs
+}  // end of namespace qemacs
 
 #endif /* LIB_HUNSPELL_QEMACSDICTIONARIESMANAGER_HXX */
-

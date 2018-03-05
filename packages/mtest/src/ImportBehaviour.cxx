@@ -1,86 +1,70 @@
 /*!
  * \file   ImportBehaviour.cxx
  * \brief
- * \author THOMAS HELFER
+ * \author Thomas Helfer
  * \date   02/06/2017
  */
 
-#include <QtCore/QDebug>
 #include <QtCore/QStringListModel>
+#include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QListWidget>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QFileDialog>
+#include <QtWidgets/QVBoxLayout>
 #include "TFEL/System/ExternalLibraryManager.hxx"
 #include "TFEL/Material/ModellingHypothesis.hxx"
-
+#include "MFront/TargetsDescription.hxx"
+#include "QEmacs/Debug.hxx"
 #include "QEmacs/QEmacsTextEditBase.hxx"
+#include "QEmacs/MaterialPropertySelectorWidget.hxx"
 #include "QEmacs/ImportBehaviour.hxx"
 
 namespace qemacs {
 
-  ImportBehaviour::SelectHypothesisPage::SelectHypothesisPage(
-      ImportBehaviour& w)
-      : wizard(w) {
-    using tfel::material::ModellingHypothesis;
-    auto* vl = new QVBoxLayout;
-    auto* l = new QListWidget;
-    auto r = 0;
-    auto r3D = 0;
-    l->setSelectionMode(QAbstractItemView::SingleSelection);
-    for (const auto& h :
-         ModellingHypothesis::getModellingHypotheses()) {
-      const auto sh =
-          QString::fromStdString(ModellingHypothesis::toString(h));
-      if (sh == "Tridimensional") {
-        r3D = r;
-      }
-      auto* i = new QListWidgetItem;
-      i->setText(sh);
-      l->insertItem(r, i);
-      ++r;
-    }
-    vl->addWidget(l);
-    this->registerField("Hypothesis*", l);
-    qDebug() << this->field("Hypothesis").toString();
-    //    l->setCurrentRow(r3D);
-    this->setLayout(vl);
-  }  // end of
-     // ImportBehaviour::SelectHypothesisPage::SelectHypothesisPage
-
   ImportBehaviour::SelectBehaviourPage::SelectBehaviourPage(
       ImportBehaviour& w)
       : bl(new QComboBox(this)),
+        mh(new QComboBox(this)),
         le(new QLineEdit(this)),
         slb(new QPushButton(QObject::tr("Open"), this)),
         wizard(w) {
     this->setTitle("Select a behaviour");
     auto* label = new QLabel(
         "This wizard will help you "
-        "to define the behaviour");
+        "to load a behaviour");
     label->setWordWrap(true);
-    auto* librayLabel = new QLabel(QObject::tr("&Library:"));
-    librayLabel->setToolTip(
+    // library selection
+    auto* libraryLabel = new QLabel(QObject::tr("&Library:"));
+    libraryLabel->setToolTip(
         QObject::tr("The user shall select a library"));
-    librayLabel->setBuddy(this->le);
+    libraryLabel->setBuddy(this->le);
+    this->bl->setSizePolicy(QSizePolicy::MinimumExpanding,
+                            QSizePolicy::Preferred);
     auto* blabel = new QLabel(QObject::tr("&Behaviour:"));
+    blabel->setBuddy(this->bl);
     blabel->setToolTip(
         QObject::tr("The user shall shall select a behaviour "
                     "in the selected library."));
-    auto* be = new QLineEdit(this);
 
-    blabel->setBuddy(be);
+    auto* lh = new QLabel(QObject::tr("Modelling hypothesis"));
+    this->mh->setSizePolicy(
+        QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
+    // layouts definition
     auto* l = new QVBoxLayout;
     auto* g = new QGridLayout;
-
+    // library selection
     l->addWidget(label);
-    g->addWidget(librayLabel, 0, 0);
+    g->addWidget(libraryLabel, 0, 0);
     g->addWidget(this->le, 0, 1);
     g->addWidget(this->slb, 0, 2);
-    // parent
+    // behaviour selection
     g->addWidget(blabel, 1, 0);
-    g->addWidget(be, 1, 1);
-    g->addWidget(this->bl, 1, 2);
-    // main layout
+    g->addWidget(this->bl, 1, 1, 1, 2);
+    // modelling hypothesis selection
+    g->addWidget(lh, 2, 0);
+    g->addWidget(this->mh, 2, 1, 1, 2);
+
+    // setting the main layout
     l->addLayout(g);
     this->setLayout(l);
 
@@ -90,40 +74,49 @@ namespace qemacs {
     QObject::connect(
         this->le, &QLineEdit::textChanged, this,
         &ImportBehaviour::SelectBehaviourPage::updateBehaviourList);
-    QObject::connect(this->bl,
-                     static_cast<void (QComboBox::*)(const QString&)>(
-                         &QComboBox::activated),
-                     be, &QLineEdit::setText);
-    // baseClassLabel = new QLabel(tr("B&ase class:"));
-    // baseClassLineEdit = new QLineEdit;
-    // baseClassLabel->setBuddy(baseClassLineEdit);
-
-    // qobjectMacroCheckBox = new QCheckBox(tr("Generate Q_OBJECT
-    // &macro"));
-
+    QObject::connect(this->bl, &QComboBox::currentTextChanged, this,
+                     &ImportBehaviour::SelectBehaviourPage::
+                         updateModellingHypotheses);
+    QObject::connect(this->bl, &QComboBox::currentTextChanged, this,
+                     [this] { emit behaviourDescriptionChanged(); });
+    QObject::connect(this->mh, &QComboBox::currentTextChanged, this,
+                     [this] { emit behaviourDescriptionChanged(); });
     this->registerField("Library*", this->le);
-    this->registerField("Behaviour*", be);
-    // registerField("baseClass", baseClassLineEdit);
-    // registerField("qobjectMacro", qobjectMacroCheckBox);
+    this->registerField("Behaviour*", this->bl, "currentText",
+                        "currentTextChanged");
+    this->registerField("Hypothesis*", this->mh, "currentText",
+                        "currentTextChanged");
   }
 
   void ImportBehaviour::SelectBehaviourPage::selectLibrary() {
-    qDebug() << "h: " << this->wizard.getHypothesis();
-    const auto& l =
-        QFileDialog::getOpenFileName(this, tr("Select Library"));
+    const auto td = mfront::TargetsDescription();
+    const QString prefix =
+        mfront::LibraryDescription::getDefaultLibraryPrefix(
+            td.system, td.libraryType);
+    const QString suffix =
+        mfront::LibraryDescription::getDefaultLibrarySuffix(
+            td.system, td.libraryType);
+    const auto& l = QFileDialog::getOpenFileName(
+        this, QObject::tr("Select Library"), "",
+        QObject::tr("Shared Library")+ "("+prefix+"*." + suffix + ")");
     if (l.isEmpty()) {
       return;
     }
     this->le->setText(l);
   }
 
-  void ImportBehaviour::SelectBehaviourPage::updateBehaviourList(
-      const QString& l) {
+  void ImportBehaviour::SelectBehaviourPage::updateBehaviourList() {
+    const auto l = this->field("Library").toString();
+    if (l.isEmpty()) {
+      return;
+    }
     using tfel::system::ExternalLibraryManager;
     auto& elm = ExternalLibraryManager::getExternalLibraryManager();
     const auto lib = l.toStdString();
     auto b = QStringList{};
     auto epts = std::vector<std::string>{};
+    // clearing the behaviour list
+    this->bl->clear();
     this->bl->clear();
     try {
       epts = elm.getEntryPoints(lib);
@@ -137,62 +130,124 @@ namespace qemacs {
           this->bl->addItem(QString::fromStdString(e));
         }
       } catch (std::exception& ex) {
-        qDebug() << ex.what();
+        debug(
+            "ImportBehaviour::SelectBehaviourPage::updateBehaviourList",
+            ex.what());
       }
+    }
+    if (this->bl->count() > 0) {
+      this->bl->setCurrentIndex(0);
     }
   }  // end of ImportBehaviour::SelectBehaviourPage::updateBehaviourList
 
+  void
+  ImportBehaviour::SelectBehaviourPage::updateModellingHypotheses() {
+    this->mh->clear();
+    const auto l = this->field("Library").toString().toStdString();
+    const auto b = this->field("Behaviour").toString().toStdString();
+    if ((l.empty()) || (b.empty())) {
+      return;
+    }
+    using tfel::system::ExternalLibraryManager;
+    auto& elm = ExternalLibraryManager::getExternalLibraryManager();
+    try {
+      for (const auto& h : elm.getSupportedModellingHypotheses(l, b)) {
+        this->mh->addItem(QString::fromStdString(h));
+      }
+    } catch (std::exception& ex) {
+      debug(
+          "ImportBehaviour::SelectBehaviourPage::"
+          "updateModellingHypotheses",
+          ex.what());
+    }
+    if (this->mh->count() > 0) {
+      this->mh->setCurrentIndex(0);
+    }
+  }  // end of
+     // ImportBehaviour::SelectBehaviourPage::updateModellingHypotheses
+
   bool ImportBehaviour::SelectBehaviourPage::validatePage() {
-    return this->wizard.getBehaviour() != nullptr;
+    const auto b = this->wizard.getBehaviourDescription();
+    return b.generate() != nullptr;
   }  // end of ImportBehaviour::SelectLibrary::validatePage
 
-  //!
   int ImportBehaviour::SelectBehaviourPage::nextId() const {
-    auto b = this->wizard.getBehaviour();
+    auto b = this->wizard.getBehaviourDescription().generate();
     if (b) {
-      return b->getMaterialPropertiesNames().empty() ? 3 : 1;
+      if(b->getMaterialPropertiesNames().empty()){
+        return 2;
+      }
+      return 1;
     }
     return 2;
-  }
+  } // end of ImportBehaviour::SelectBehaviourPage::nextId
 
   ImportBehaviour::MaterialPropertyPage::MaterialPropertyPage(
       ImportBehaviour& w)
-      : wizard(w) {}  // end of
+      : wizard(w) {
+  }  // end of
   // ImportBehaviour::MaterialPropertyPage::MaterialPropertyPage
 
+  void ImportBehaviour::MaterialPropertyPage::
+      updateMaterialPropertiesList() {
+    auto b = this->wizard.getBehaviourDescription().generate();
+    if (b == nullptr) {
+      return;
+    }
+    auto* const vl = new QVBoxLayout;
+    for (const auto& mp : b->getMaterialPropertiesNames()) {
+      vl->addWidget(new MaterialPropertySelectorWidget(
+          QString::fromStdString(mp)));
+    }
+    this->setLayout(vl);
+  }  // end of
+  // ImportBehaviour::MaterialPropertyPage::updateMaterialPropertiesList
+
   int ImportBehaviour::MaterialPropertyPage::nextId() const {
+    return 2;
+  } // end of ImportBehaviour::MaterialPropertyPage::nextId
+
+  ImportBehaviour::ConclusionPage::ConclusionPage(ImportBehaviour& w)
+      : wizard(w) {}  // end of
+  // ImportBehaviour::ConclusionPage::ConclusionPage
+
+  int ImportBehaviour::ConclusionPage::nextId() const {
     return -1;
   }
 
   ImportBehaviour::ImportBehaviour(QEmacsTextEditBase& t)
       : QWizard(&t),
-        sh(new SelectHypothesisPage(*this)),
         sb(new SelectBehaviourPage(*this)),
-        mp(new MaterialPropertyPage(*this)) {
+        mp(new MaterialPropertyPage(*this)),
+        c(new ConclusionPage(*this)) {
     this->setWindowTitle(QObject::tr("Import Behaviour"));
-    this->setPage(0, this->sh);
-    this->setPage(1, this->sb);
-    this->setPage(2, this->mp);
+    this->setPage(0, this->sb);
+    this->setPage(1, this->mp);
+    this->setPage(2, this->c);
+    QObject::connect(
+        this->sb, &SelectBehaviourPage::behaviourDescriptionChanged,
+        this->mp, &MaterialPropertyPage::updateMaterialPropertiesList);
     this->setStartId(0);
   }  // end of ImportBehaviour::ImportBehaviour
 
-  QString ImportBehaviour::getHypothesis() const {
-    return this->field("Hypothesis").toString();
-  }  // end of ImportBehaviour::getHypothesis
-
-  std::shared_ptr<mtest::Behaviour> ImportBehaviour::getBehaviour()
-      const {
-    using namespace mtest;
-    using namespace tfel::material;
+  BehaviourDescription
+  ImportBehaviour::getBehaviourDescription() const {
+    using tfel::system::ExternalLibraryManager;
+    auto& elm = ExternalLibraryManager::getExternalLibraryManager();
+    BehaviourDescription b;
+    b.library    = this->field("Library").toString();
+    b.behaviour  = this->field("Behaviour").toString();
+    b.hypothesis = this->field("Hypothesis").toString();
+    const auto l = b.library.toStdString();
+    const auto f = b.behaviour.toStdString();
     try {
-      return Behaviour::getBehaviour(
-          this->getHypothesis().toStdString(),
-          this->field("Library").toString().toStdString(),
-          this->field("Behaviour").toString().toStdString(),
-          Behaviour::Parameters(), ModellingHypothesis::TRIDIMENSIONAL);
+      b.minterface = QString::fromStdString(elm.getInterface(l, f));
     } catch (std::exception&) {
+      return {};
+    } catch (...) {
+      return {};
     }
-    return {};
+    return b;
   }  // end of ImportBehaviour::getBehaviour
 
   ImportBehaviour::~ImportBehaviour() = default;

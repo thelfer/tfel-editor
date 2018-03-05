@@ -410,10 +410,10 @@ namespace qemacs {
     if (l == nullptr) {
       return;
     }
-    if (this->ui.contains(l)) {
+    if (std::find(this->ui.begin(),this->ui.end(),l) != this->ui.end()) {
       return;
     }
-    if (!this->ui.isEmpty()) {
+    if (!this->ui.empty()) {
       if (this->ui.back()->isBlocking()) {
         this->displayInformativeMessage(
             QObject::tr("command attemted "
@@ -422,7 +422,7 @@ namespace qemacs {
         return;
       }
     }
-    this->ui.append(l);
+    this->ui.push_back(l);
     setQEmacsLineEditFont(this->ui.back());
     this->minibuffer->addWidget(this->ui.back());
     this->minibuffer->setCurrentWidget(this->ui.back());
@@ -441,10 +441,10 @@ namespace qemacs {
   }
 
   void QEmacsWidget::removeUserInput(QEmacsLineEdit* p) {
-    if (this->ui.isEmpty()) {
+    if (this->ui.empty()) {
       return;
     }
-    if (!this->ui.contains(p)) {
+    if (std::find(this->ui.begin(),this->ui.end(),p) == this->ui.end()) {
       return;
     }
     if (p->isBlocking()) {
@@ -452,8 +452,8 @@ namespace qemacs {
       this->buffers->setEnabled(true);
     }
     this->minibuffer->removeWidget(p);
-    this->ui.remove(this->ui.indexOf(p));
-    if (this->ui.isEmpty()) {
+    this->ui.erase(std::find(this->ui.begin(),this->ui.end(),p));
+    if (this->ui.empty()) {
       this->minibuffer->setCurrentWidget(this->eui);
     } else {
       this->minibuffer->setCurrentWidget(this->ui.back());
@@ -463,30 +463,30 @@ namespace qemacs {
   }  // end of QEmacsWidget::removeUserInput
 
   void QEmacsWidget::removeUserInput() {
-    if (this->ui.isEmpty()) {
+    if (this->ui.empty()) {
       return;
     }
     this->removeUserInput(this->ui.back());
   }  // end of QEmacsWidget::removeUserInput
 
   void QEmacsWidget::removeUserInputs() {
-    while (!this->ui.isEmpty()) {
+    while (!this->ui.empty()) {
       this->removeUserInput(this->ui.back());
     }
   }  // end of QEmacsWidget::removeUserInputs
 
   bool QEmacsWidget::hasUserInput() const {
-    return !this->ui.isEmpty();
+    return !this->ui.empty();
   } // end of QEmacsWidget::hasUserInput
 
   void QEmacsWidget::focusUserInput() {
-    if (!this->ui.isEmpty()) {
+    if (!this->ui.empty()) {
       this->ui.back()->setFocus();
     }
   } // end of QEmacsWidget::focusUserInput
 
   void QEmacsWidget::resetUserInput() {
-    if (!this->ui.isEmpty()) {
+    if (!this->ui.empty()) {
       this->minibuffer->setCurrentWidget(this->ui.back());
     } else {
       this->minibuffer->setCurrentWidget(this->eui);
@@ -524,25 +524,25 @@ namespace qemacs {
     return n;
   }  // end of QEmacsWidget::getBuffersNames
 
-  QVector<QIcon> QEmacsWidget::getBuffersIcons() const {
-    QVector<QIcon> icons;
+  std::vector<QIcon> QEmacsWidget::getBuffersIcons() const {
+    std::vector<QIcon> icons;
     for (int i = 0; i != this->buffers->count(); ++i) {
       QEmacsBuffer const* b =
           qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
       if (b != nullptr) {
-        icons.append(b->getIcon());
+        icons.push_back(b->getIcon());
       }
     }
     return icons;
   }
 
-  QVector<int> QEmacsWidget::getBuffersIds() const {
-    QVector<int> ids;
+  std::vector<int> QEmacsWidget::getBuffersIds() const {
+    std::vector<int> ids;
     for (int i = 0; i != this->buffers->count(); ++i) {
-      QEmacsBuffer const* b =
+      auto const* b =
           qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
       if (b != nullptr) {
-        ids.append(b->getId());
+        ids.push_back(b->getId());
       }
     }
     return ids;
@@ -669,9 +669,9 @@ namespace qemacs {
     QEmacsWidget& t;
   };
 
-  QVector<QMenu*> QEmacsWidget::getCurrentBufferSpecificMenus() {
+  std::vector<QMenu*> QEmacsWidget::getCurrentBufferSpecificMenus() {
     if (this->buffers->count() == 0) {
-      return QVector<QMenu*>();
+      return std::vector<QMenu*>();
     }
     auto* b =
         qobject_cast<QEmacsBuffer*>(this->buffers->currentWidget());
@@ -683,7 +683,7 @@ namespace qemacs {
   }  // end of QEmacsWidget::emitNewTreatedFile
 
   void QEmacsWidget::launchCommand() {
-    if (!this->ui.isEmpty()) {
+    if (!this->ui.empty()) {
       this->displayInformativeMessage(
           QObject::tr("command attemted "
                       "to use minibuffer "

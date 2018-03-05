@@ -167,6 +167,7 @@ fi
 echo "qt5 C++ flags: $QT_CXXFLAGS"
 echo "qt5 libraries: $QT_LIBS"
 echo "qt5 moc      : $QT_MOC"
+AC_DEFINE(QEMACS_HAVE_WEBENGINE)
 
 AC_CONFIG_SUBDIRS([src/hunspell-1.3.2])
 PKG_CHECK_MODULES(hunspell,[hunspell],
@@ -216,7 +217,13 @@ AC_CONFIG_FILES([Makefile
 		 packages/gnuplot/include/Makefile
 		 packages/gnuplot/src/Makefile
 		 packages/tplot/Makefile
-		 packages/tplot/src/Makefile])
+		 packages/tplot/src/Makefile
+		 packages/sh/Makefile
+		 packages/sh/include/Makefile
+		 packages/sh/src/Makefile
+		 packages/bash/Makefile
+		 packages/bash/include/Makefile
+		 packages/bash/src/Makefile])
 
 AC_OUTPUT
 

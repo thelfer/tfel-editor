@@ -10,15 +10,18 @@ qt_sources(MTestQEmacsMode_SOURCES
   "${PROJECT_SOURCE_DIR}/packages/mtest/include/QEmacs"
   MFMFilterProxyModel
   ImportBehaviour
+  ImportMFMMaterialProperty
   ImportMFMBehaviour
   MTestStudyOptions
   MTestMajorMode
   MTestSyntaxHighlighter
   PipeTestMajorMode
-  PipeTestSyntaxHighlighter)
+  PipeTestSyntaxHighlighter
+  MaterialPropertySelectorWidget)
 
 qemacs_package(MTestQEmacsMode
   MFMDataBase.cxx
+  BehaviourDescription.cxx
   ${MTestQEmacsMode_SOURCES})
 
 target_link_libraries(MTestQEmacsMode

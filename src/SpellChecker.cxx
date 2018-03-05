@@ -103,10 +103,12 @@ namespace qemacs {
     } else {
       this->_userDictionary.clear();
     }
-    QString dictFile = dictionaryPath + QDir::separator() + l + ".dic";
-    QString affixFile = dictionaryPath + QDir::separator() + l + ".aff";
-    QByteArray dictFilePathBA = dictFile.toLocal8Bit();
-    QByteArray affixFilePathBA = affixFile.toLocal8Bit();
+    const auto dictFile =
+        dictionaryPath + QDir::separator() + l + ".dic";
+    const auto affixFile =
+        dictionaryPath + QDir::separator() + l + ".aff";
+    const auto dictFilePathBA = dictFile.toLocal8Bit();
+    const auto affixFilePathBA = affixFile.toLocal8Bit();
     this->_hunspell = new Hunspell(affixFilePathBA.constData(),
                                    dictFilePathBA.constData());
     // detect encoding analyzing the SET option in the affix

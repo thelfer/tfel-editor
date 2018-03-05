@@ -8,8 +8,7 @@
 #ifndef LIB_QEMACS_QEMACSBUFFER_HXX
 #define LIB_QEMACS_QEMACSBUFFER_HXX
 
-#include <QtCore/QMap>
-#include <QtCore/QVector>
+#include <vector>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
 #include <QtWidgets/QMenu>
@@ -64,7 +63,7 @@ namespace qemacs {
      */
     virtual QString getCurrentSecondaryTaskTitle() const;
 
-    virtual QVector<QMenu *> getSpecificMenus();
+    virtual std::vector<QMenu *> getSpecificMenus();
 
     virtual QIcon getIcon() const;
 

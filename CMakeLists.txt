@@ -11,7 +11,7 @@ include(cmake/modules/tfel.cmake)
 
 option(enable-tfel-plot "enable tfel-plot" OFF)
 if(enable-tfel-plot)
-  #find the tfel-plot package
+  # find the tfel-plot package
   include(cmake/modules/tfel-plot.cmake)
 endif(enable-tfel-plot)
 

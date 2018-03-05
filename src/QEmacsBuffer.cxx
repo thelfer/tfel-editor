@@ -230,7 +230,7 @@ namespace qemacs {
     emit bufferNameChanged(this, o, n);
   } // end of QEmacsBuffer::updateBufferName()
 
-  QVector<QMenu *> QEmacsBuffer::getSpecificMenus() {
+  std::vector<QMenu *> QEmacsBuffer::getSpecificMenus() {
     return this->e->getSpecificMenus();
   }  // end of QEmacsBuffer::getSpecificMenu
 

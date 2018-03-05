@@ -52,17 +52,18 @@ namespace qemacs {
 
   CxxMajorMode::~CxxMajorMode() = default;
 
-  static StandardQEmacsMajorModeProxy<CxxMajorMode>
-      proxy("C++",
-            QVector<QRegExp>() << QRegExp(fileNameRegExp()+"\\.cxx$")
-                               << QRegExp(fileNameRegExp()+"\\.hxx$")
-                               << QRegExp(fileNameRegExp()+"\\.ixx$")
-                               << QRegExp(fileNameRegExp()+"\\.cpp$")
-                               << QRegExp(fileNameRegExp()+"\\.hpp$")
-                               << QRegExp(fileNameRegExp()+"\\.ipp$")
-                               << QRegExp(fileNameRegExp()+"\\.CC$")
-                               << QRegExp(fileNameRegExp()+"\\.hh$")
-                               << QRegExp(fileNameRegExp()+"\\.c$")
-                               << QRegExp(fileNameRegExp()+"\\.h$"));
+  static StandardQEmacsMajorModeProxy<CxxMajorMode> proxy(
+      "C++",
+      QVector<QRegExp>() << QRegExp(fileNameRegExp() + "\\.cxx$")
+                         << QRegExp(fileNameRegExp() + "\\.hxx$")
+                         << QRegExp(fileNameRegExp() + "\\.ixx$")
+                         << QRegExp(fileNameRegExp() + "\\.cpp$")
+                         << QRegExp(fileNameRegExp() + "\\.hpp$")
+                         << QRegExp(fileNameRegExp() + "\\.ipp$")
+                         << QRegExp(fileNameRegExp() + "\\.CC$")
+                         << QRegExp(fileNameRegExp() + "\\.hh$")
+                         << QRegExp(fileNameRegExp() + "\\.c$")
+                         << QRegExp(fileNameRegExp() + "\\.h$"),
+      ":/qemacs/languages/cxx.png");
 
 } // end of namespace qemacs

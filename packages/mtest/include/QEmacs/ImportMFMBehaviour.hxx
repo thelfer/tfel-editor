@@ -14,35 +14,23 @@
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QTreeView>
+#include "QEmacs/BehaviourDescription.hxx"
 
 namespace qemacs {
 
-  // forward declaration
-  struct QEmacsWidget;
 
   struct ImportMFMBehaviour : QDialog {
     /*!
-     * \brief structure describing the selected behaviour
-     */
-    struct BehaviourDescription {
-      QString library;
-      QString behaviour;
-      QString mfront_interface;
-      QString hypothesis;
-    };  // end of BehaviourDescription
-    /*!
      * \brief constructor
-     * \param[in] w: qemacs widget
      * \param[in] p: parent
      */
-    ImportMFMBehaviour(QEmacsWidget&, QWidget* const p);
+    ImportMFMBehaviour(QWidget* const p = nullptr);
     //! \return the selected behaviour.
     BehaviourDescription getSelectedBehaviour() const;
-    //! desctructor
+    //! destructor
     ~ImportMFMBehaviour() override;
 
    protected:
-    QEmacsWidget& qemacs;
     QTreeView* view;
     // interface
     QComboBox* isb;

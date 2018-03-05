@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  QEmacsMajorModeFactory.hxx
  * \brief
  * \author Helfer Thomas
@@ -8,26 +8,24 @@
 #ifndef LIB_QEMACS_QEMACSMAJORMODEFACTORY_IXX
 #define LIB_QEMACS_QEMACSMAJORMODEFACTORY_IXX
 
-#include<QtCore/QMap>
+#include <QtCore/QString>
+#include "TFEL/Config/TFELConfig.hxx"
+#include "TFEL/System/ExternalLibraryManager.hxx"
 
-#include<QtCore/QString>
-
-#include"TFEL/Config/TFELConfig.hxx"
-#include"TFEL/System/ExternalLibraryManager.hxx"
-
-namespace qemacs
-{
+namespace qemacs {
 
   template <typename T>
   StandardQEmacsMajorModeProxy<T>::StandardQEmacsMajorModeProxy(
-      const QString& n, const QVector<QRegExp>& e, const bool b)
-      : name(n), rexp(e) {
+      const QString& n,
+      const QVector<QRegExp>& e,
+      const QString& i,
+      const bool b)
+      : name(n), rexp(e), icon(i) {
     if (b) {
-      QEmacsMajorModeFactory& f =
-          QEmacsMajorModeFactory::getQEmacsMajorModeFactory();
+      auto& f = QEmacsMajorModeFactory::getQEmacsMajorModeFactory();
       f.addQEmacsMajorMode(
           std::shared_ptr<QEmacsMajorModeProxy>(
-              new StandardQEmacsMajorModeProxy(n, e, false)),
+              new StandardQEmacsMajorModeProxy(n, e, i, false)),
           e);
     }
   }  // end of
@@ -37,6 +35,11 @@ namespace qemacs
   QString StandardQEmacsMajorModeProxy<T>::getName() const {
     return this->name;
   }  // end of StandardQEmacsMajorModeProxy<T>::getName() const
+
+  template <typename T>
+  QIcon StandardQEmacsMajorModeProxy<T>::getIcon() const {
+    return QIcon(this->icon);
+  }  // end of StandardQEmacsMajorModeProxy<T>::getIcon() const
 
   template <typename T>
   QEmacsMajorMode* StandardQEmacsMajorModeProxy<T>::getQEmacsMajorMode(
@@ -49,6 +52,6 @@ namespace qemacs
   }  // end of
      // StandardQEmacsMajorModeProxy::~StandardQEmacsMajorModeProxy
 
-} // end of namespace qemacs
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_QEMACSMAJORMODEFACTORY_IXX */

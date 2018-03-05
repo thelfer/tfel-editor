@@ -8,9 +8,7 @@
 #ifndef LIB_QEMACS_QEMACSMAJORMODEBASE_HXX
 #define LIB_QEMACS_QEMACSMAJORMODEBASE_HXX
 
-#include <QtCore/QMap>
 #include <QtCore/QString>
-
 #include "QEmacs/Config.hxx"
 #include "QEmacs/QEmacsMajorMode.hxx"
 

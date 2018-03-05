@@ -458,6 +458,7 @@ namespace qemacs {
 
   static StandardQEmacsMajorModeProxy<MFrontMajorMode> proxy(
       "MFront",
-      QVector<QRegExp>() << QRegExp("^[\\w-0-9_\\.]+\\.mfront"));
+      QVector<QRegExp>() << QRegExp("^[\\w-0-9_\\.]+\\.mfront"),
+      ":/mfront/MFrontIcon.png");
 
 }  // end of namespace qemacs

@@ -1,6 +1,6 @@
 SUBDIRS = castem licos latex markdown \
-	  cmake make mfront python        \
-	  gnuplot mtest
+	  cmake make mfront python    \
+	  gnuplot mtest sh bash
 
 if QEMACS_TPLOT
 SUBDIRS +=  tplot

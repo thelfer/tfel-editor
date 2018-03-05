@@ -9,11 +9,10 @@
 #define LIB_QEMACS_QEMACSMAJORMODEFACTORY_HXX 
 
 #include<memory>
-
 #include<QtCore/QVector>
 #include<QtCore/QRegExp>
 #include<QtCore/QString>
-
+#include<QtGui/QIcon>
 #include"QEmacs/Config.hxx"
 #include"QEmacs/QEmacsMajorMode.hxx"
 
@@ -31,6 +30,8 @@ namespace qemacs {
   {
     //! \return the name of the major mode
     virtual QString getName() const = 0;
+    //! \return the icon associated with the major mode
+    virtual QIcon getIcon() const = 0;
     /*!
      * \return the major mode
      * \param[in] w: qemacs widget
@@ -50,15 +51,19 @@ namespace qemacs {
   template <typename T>
   struct StandardQEmacsMajorModeProxy : public QEmacsMajorModeProxy {
     /*!
-     * \param[in] n : name of the major mode
-     * \param[in] e : supported file extensions
+     * \param[in] n: name of the major mode
+     * \param[in] e: supported file extensions
+     * \param[in] i: major mode icon
      */
     StandardQEmacsMajorModeProxy(
         const QString&,
         const QVector<QRegExp>& = QVector<QRegExp>(),
+        const QString& = QString(),
         const bool = true);
-    //! \return return the major mode name
+    //! \return the major mode name
     QString getName() const override;
+    //! \return the major mode icon
+    QIcon getIcon() const override;
     /*!
      * \return a new instance of the major mode
      * \param[in] w: qemacs widget
@@ -75,16 +80,17 @@ namespace qemacs {
     const QString name;
     //! file extensions supported by the major mode
     const QVector<QRegExp> rexp;
+    //! major mode name
+    const QString icon;
   }; // end of struct StandardQEmacsMajorModeProxy
 
   //! \brief major mode factory
   struct QEMACS_VISIBILITY_EXPORT QEmacsMajorModeFactory
   {
     typedef std::shared_ptr<QEmacsMajorMode>      QEmacsMajorModePtr;    
-    typedef std::shared_ptr<QEmacsMajorModeProxy> QEmacsMajorModeProxyPtr;    
+    typedef std::shared_ptr<QEmacsMajorModeProxy> QEmacsMajorModeProxyPtr;
 
-    static QEmacsMajorModeFactory&
-    getQEmacsMajorModeFactory();
+    static QEmacsMajorModeFactory& getQEmacsMajorModeFactory();
 
     void loadLibrary(const QString&);
 
@@ -100,7 +106,6 @@ namespace qemacs {
         QEmacsWidget&,
         QEmacsBuffer&,
         QEmacsTextEditBase&) const;
-
     /*!
      * \return a major associated with the given file
      * \param[in] f: file name
@@ -119,6 +124,17 @@ namespace qemacs {
                             const bool = true);
 
     QStringList getAvailableQEmacsMajorModesNames() const;
+
+    /*!
+     * \return a major associated with the given file
+     * \param[in] f: file name
+     */
+    QString getQEmacsMajorModeNameForFile(const QString&);
+    /*!
+     * \return the icon associated with a major mode
+     * \param[in] n: major mode name
+     */
+    QIcon getQEmacsMajorModeIcon(const QString&) const;
 
     bool hasQEmacsMajorMode(const QString&) const;
 

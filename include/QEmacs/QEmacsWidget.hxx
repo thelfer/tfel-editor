@@ -8,6 +8,7 @@
 #ifndef LIB_QEMACS_QEMACSWIDGET_HXX
 #define LIB_QEMACS_QEMACSWIDGET_HXX
 
+#include <vector>
 #include <QtCore/QString>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QAction>
@@ -42,9 +43,9 @@ namespace qemacs {
 
     virtual QStringList getBuffersNames() const;
 
-    virtual QVector<QIcon> getBuffersIcons() const;
+    virtual std::vector<QIcon> getBuffersIcons() const;
 
-    virtual QVector<int> getBuffersIds() const;
+    virtual std::vector<int> getBuffersIds() const;
 
     virtual void changeBuffer(const QString &);
 
@@ -53,7 +54,7 @@ namespace qemacs {
     virtual QString chooseBufferNameSuffix(QEmacsBuffer *,
                                            const QString &);
 
-    virtual QVector<QMenu *> getCurrentBufferSpecificMenus();
+    virtual std::vector<QMenu *> getCurrentBufferSpecificMenus();
 
     virtual QEmacsBuffer &getCurrentBuffer();
 
@@ -199,7 +200,7 @@ namespace qemacs {
     //! user message
     QLineEdit *um;
     //! user input
-    QVector<QEmacsLineEdit *> ui;
+    std::vector<QEmacsLineEdit *> ui;
     //! empty line edit
     QLineEdit *eui;
     //! the list of tokens pasted/killed

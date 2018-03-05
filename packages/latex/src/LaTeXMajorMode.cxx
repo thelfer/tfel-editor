@@ -717,6 +717,7 @@ namespace qemacs {
   static StandardQEmacsMajorModeProxy<LaTeXMajorMode> proxy(
       "LaTeX",
       QVector<QRegExp>() << QRegExp("^[\\w-0-9_\\.]+\\.tex")
-                         << QRegExp("^[\\w-0-9_\\.]+\\.sty"));
+                         << QRegExp("^[\\w-0-9_\\.]+\\.sty"),
+      ":/qemacs/languages/latex.png");
 
 }  // end of namespace qemacs
