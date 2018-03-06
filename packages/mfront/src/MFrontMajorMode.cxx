@@ -245,8 +245,8 @@ namespace qemacs {
   }  // end of CppMajorMode
 
   QMenu *MFrontMajorMode::getSpecificMenu() {
-    auto online_ressource = [](QMenu *const m, const QString &t,
-                               const QString &url) {
+    auto online_ressource = [this](QMenu *const m, const QString &t,
+				   const QString &url) {
       auto *const a = m->addAction(t);
       QObject::connect(a, &QAction::triggered,
                        [url] { QDesktopServices::openUrl(QUrl(url)); });

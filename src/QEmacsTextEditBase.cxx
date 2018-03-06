@@ -5,6 +5,7 @@
  * \brief 19/08/2012
  */
 
+#include <stdexcept>
 #include <QtCore/QFileInfo>
 #include <QtCore/QDebug>
 #include <QtCore/QPointer>

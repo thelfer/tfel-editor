@@ -5,6 +5,7 @@
  * \date   21/02/2018
  */
 
+#include <stdexcept>
 #include <QtCore/QDir>
 #include <QtGui/QStandardItemModel>
 #include "TFEL/System/ExternalLibraryManager.hxx"
