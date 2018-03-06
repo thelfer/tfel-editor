@@ -403,7 +403,12 @@ namespace qemacs {
   void QEmacsWidget::displayInformativeMessage(const QString& m) {
     this->um->setText(m);
     this->minibuffer->setCurrentWidget(this->um);
+#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
+    QTimer::singleShot(1000, this, SIGNAL(resetUserInput));
+#else
     QTimer::singleShot(1000, this, &QEmacsWidget::resetUserInput);
+#endif
+
   }  // end of QEmacsWidget::displayInformativeMessage
 
   void QEmacsWidget::setUserInput(QEmacsLineEdit* const l) {

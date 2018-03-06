@@ -236,7 +236,9 @@ namespace qemacs {
   }  // end of QEmacsMainWindow::createActions
 
   void QEmacsMainWindow::updateOptionsMenu() {
-    typedef QEmacsHunspellDictionariesManager HunspellDictionaries;
+#ifdef QEMACS_HUNSPELL_SUPPORT
+    using  HunspellDictionaries = QEmacsHunspellDictionariesManager;
+#endif /* QEMACS_HUNSPELL_SUPPORT */
     auto &s = QEmacsShortCutStyle::getQEmacsShortCutStyle();
     this->om->clear();
     // font
