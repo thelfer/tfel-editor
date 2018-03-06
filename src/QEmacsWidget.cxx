@@ -404,7 +404,7 @@ namespace qemacs {
     this->um->setText(m);
     this->minibuffer->setCurrentWidget(this->um);
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-    QTimer::singleShot(1000, this, SIGNAL(resetUserInput));
+    QTimer::singleShot(1000, this, SLOT(resetUserInput()));
 #else
     QTimer::singleShot(1000, this, &QEmacsWidget::resetUserInput);
 #endif
