@@ -11,6 +11,8 @@
 #include <QtCore/QString>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QGroupBox>
+#include "TFEL/Utilities/GenTypeBase.hxx"
+#include "QEmacs/MaterialPropertyDescription.hxx"
 
 namespace qemacs {
 
@@ -27,6 +29,8 @@ namespace qemacs {
     MaterialPropertySelectorWidget(const QString &,
                                    const QString &,
                                    QWidget *const = nullptr);
+    //! \return the selected material property
+    MaterialPropertyDescription getMaterialProperty() const;
     //! destructor
     ~MaterialPropertySelectorWidget() override;
 

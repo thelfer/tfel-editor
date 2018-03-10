@@ -9,8 +9,10 @@
 #define LIB_QEMACS_BEHAVIOURDESCRIPTION_HXX
 
 #include <memory>
+#include <vector>
 #include <QtCore/QString>
 #include "MTest/Behaviour.hxx"
+#include "QEmacs/MaterialPropertyDescription.hxx"
 
 namespace qemacs {
 
@@ -26,6 +28,16 @@ namespace qemacs {
     BehaviourDescription& operator=(BehaviourDescription&&);
     //! copy assignement
     BehaviourDescription& operator=(const BehaviourDescription&);
+    /*!
+     * \return the function implementing the behaviour (depends of the
+     * entry point, the hypothesis and the interface)
+     */
+    QString getFunction() const;
+    /*!
+     * \brief generate an instance of the mtest::Behaviour class based
+     * on the information holded by the structure.
+     */
+    std::shared_ptr<mtest::Behaviour> generate() const;
     //! \brief library in which the library is implemented
     QString library;
     //! \brief entry point associated with the behaviour
@@ -38,16 +50,8 @@ namespace qemacs {
     QString minterface;
     //! \brief modelling hypothesis
     QString hypothesis;
-    /*!
-     * \return the function implementing the behaviour (depends of the
-     * entry point, the hypothesis and the interface)
-     */
-    QString getFunction() const;
-    /*!
-     * \brief generate an instance of the mtest::Behaviour class based
-     * on the information holded by the structure.
-     */
-    std::shared_ptr<mtest::Behaviour> generate() const;
+    //! \brief material properties description
+    std::vector<MaterialPropertyDescription> material_properties;
   };  // end of BehaviourDescription
 
 }  // end of namespace qemacs

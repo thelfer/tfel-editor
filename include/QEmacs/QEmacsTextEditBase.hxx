@@ -39,6 +39,8 @@ namespace qemacs {
 
    public slots:
 
+    virtual void print() = 0;
+
     virtual void clear() = 0;
 
     virtual void undo() = 0;

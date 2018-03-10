@@ -13,8 +13,6 @@
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QFontDialog>
 #include <QtWidgets/QApplication>
-#include <QtPrintSupport/QPrinter>
-#include <QtPrintSupport/QPrintDialog>
 #include <QtGui/QCloseEvent>
 #include "QEmacs/Debug.hxx"
 #include "QEmacs/QEmacsHunspellDictionariesManager.hxx"
@@ -484,14 +482,9 @@ namespace qemacs {
   void QEmacsMainWindow::print() {
     auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if (e != nullptr) {
-      QPrinter printer;
-      QPrintDialog printDialog(&printer, this);
-      if (printDialog.exec() == QDialog::Accepted) {
-        auto& t = e->getCurrentBuffer().getMainFrame();
-        t.print(&printer);
-      }
+      e->print();
     }
-  }
+  } // end of QEmacsMainWindow::print
 
   QSize QEmacsMainWindow::sizeHint() const {
     return QSize(800, 600);

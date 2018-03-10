@@ -25,7 +25,7 @@ namespace qemacs {
       static QString e("/rectangle-mode/insert/histroy");
       QSettings s;
       this->setInputHistorySettingAddress(e);
-      QStringList ch = s.value(e).toStringList();
+      const auto ch = s.value(e).toStringList();
       if (!ch.isEmpty()) {
         this->defaultEntry = ch.back();
         this->setLabel(QObject::tr("String rectangle (default %1)")

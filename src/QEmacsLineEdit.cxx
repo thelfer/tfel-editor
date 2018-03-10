@@ -447,6 +447,13 @@ namespace qemacs {
       this->isUserEditingFinished = true;
       auto h = this->input->getInputHistory();
       h.append(this->input->text());
+      if (h.size() > 100) {
+        // number of elements to be erased
+        const auto ne = h.size() - 100;
+        for (auto i = 0; i != ne; ++i) {
+          h.removeAt(0);
+        }
+      }
       this->input->setInputHistory(h);
       if (!this->inputHistorySettingAddress.isEmpty()) {
         QSettings s;

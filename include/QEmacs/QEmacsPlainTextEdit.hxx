@@ -23,47 +23,48 @@ namespace qemacs
 
     QEmacsPlainTextEdit(const QString&, QEmacsWidget&, QEmacsBuffer&);
 
-    virtual void print(QPrinter *const);
     //! destructor
     ~QEmacsPlainTextEdit() override;
 
   public slots:
 
-    void clear() override;
+   void print() override;
 
-    void undo() override;
+   void clear() override;
 
-    void redo() override;
+   void undo() override;
 
-    void cut() override;
-      
-    void copy() override;
-      
-    void paste() override;
-      
-    void selectAll() override;
-      
-    void setPlainText(const QString&) override;
-      
-    void insertPlainText(const QString&) override;
+   void redo() override;
 
-    void appendPlainText(const QString&) override;
+   void cut() override;
 
-    void setHtml(const QString&) override;
-    
-    void insertHtml(const QString&) override;
+   void copy() override;
 
-    void appendHtml(const QString&) override;
-      
-    void setTextInteractionFlags(Qt::TextInteractionFlags) override;
-      
-    void setTextCursor(const QTextCursor&) override;
+   void paste() override;
 
-    void centerCursor() override;
+   void selectAll() override;
 
-    void setReadOnly(bool) override;
-      
-    void setUndoRedoEnabled(bool) override;
+   void setPlainText(const QString&) override;
+
+   void insertPlainText(const QString&) override;
+
+   void appendPlainText(const QString&) override;
+
+   void setHtml(const QString&) override;
+
+   void insertHtml(const QString&) override;
+
+   void appendHtml(const QString&) override;
+
+   void setTextInteractionFlags(Qt::TextInteractionFlags) override;
+
+   void setTextCursor(const QTextCursor&) override;
+
+   void centerCursor() override;
+
+   void setReadOnly(bool) override;
+
+   void setUndoRedoEnabled(bool) override;
 
   public:
       

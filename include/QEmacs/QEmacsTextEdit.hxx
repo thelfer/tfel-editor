@@ -24,6 +24,8 @@ namespace qemacs
 
   public slots:
 
+    void print() override;
+
     void clear() override;
 
     void undo() override;

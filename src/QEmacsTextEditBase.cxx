@@ -39,9 +39,7 @@ namespace qemacs {
 
   QEmacsTextEditBase::QEmacsTextEditBase(QEmacsWidget& g,
                                          QEmacsBuffer& b)
-      : QWidget(&g),
-        qemacs(g),
-        buffer(b){
+      : QWidget(&g), qemacs(g), buffer(b) {
     auto& dm = QEmacsHunspellDictionariesManager::
         getQEmacsHunspellDictionariesManager();
     this->spellCheckLanguage = dm.getDefaultSpellCheckLanguage();
@@ -55,12 +53,12 @@ namespace qemacs {
     if (w != nullptr) {
       w->setFocus();
     }
-  } // end of QEmacsTextEditBase::setFocus
+  }  // end of QEmacsTextEditBase::setFocus
 
   void QEmacsTextEditBase::setFont(const QFont& f) {
     auto* e = this->widget();
     e->setFont(f);
-  } // end of QEmacsTextEditBase::setFont
+  }  // end of QEmacsTextEditBase::setFont
 
   void QEmacsTextEditBase::initialize(QAbstractScrollArea* const e) {
     this->ua = nullptr;
@@ -109,7 +107,7 @@ namespace qemacs {
       }
     }
     // standard event processing
-    return QObject::eventFilter(o,e);
+    return QObject::eventFilter(o, e);
   }
 
   QString QEmacsTextEditBase::getModifier(const QKeyEvent& e) {
@@ -139,7 +137,7 @@ namespace qemacs {
       }
     }
     return m;
-  }
+  }  // end of QEmacsTextEditBase::getModifier
 
   struct QEmacsTextEditBase::KillOtherBufferAndWriteFile
       : public QEmacsYesOrNoUserInput {
@@ -205,7 +203,7 @@ namespace qemacs {
 
     QEmacsTextEditBase& textEdit;
     QString file;
-  };
+  };  // end of QEmacsTextEditBase::OverWriteFile
 
   struct QEmacsTextEditBase::WriteFile
       : public QEmacsFilePathUserInput {
@@ -239,18 +237,18 @@ namespace qemacs {
         return;
       }
       if (f == of) {
-        this->qemacs.displayInformativeMessage("current file specified");
+        this->qemacs.displayInformativeMessage(
+            "current file specified");
         return;
       }
       QFileInfo fn(f);
       if (fn.isDir()) {
-        if(of.isEmpty()){
-          this->qemacs.displayInformativeMessage(
-              "directory specified");
+        if (of.isEmpty()) {
+          this->qemacs.displayInformativeMessage("directory specified");
           return;
         }
         QFileInfo ofn(of);
-        f += QDir::separator()+ofn.fileName();
+        f += QDir::separator() + ofn.fileName();
         fn.setFile(f);
       }
       if (fn.exists()) {
@@ -414,7 +412,7 @@ namespace qemacs {
     this->sa->setIconVisibleInMenu(true);
     QObject::connect(this->sa, &QAction::triggered, this,
                      &QEmacsTextEditBase::selectAll);
-  }
+  }  // end of QEmacsTextEditBase::createContextMenuActions
 
   void QEmacsTextEditBase::gotoLine(const int l) {
     auto c = this->textCursor();
@@ -429,7 +427,7 @@ namespace qemacs {
     }
     this->setTextCursor(c);
     this->centerCursor();
-  } // end QEmacsTextEditBase::gotoLine
+  }  // end QEmacsTextEditBase::gotoLine
 
   void QEmacsTextEditBase::gotoPosition(const int l, const int c) {
     this->gotoLine(l);
@@ -443,11 +441,11 @@ namespace qemacs {
     } else {
       tc.movePosition(QTextCursor::EndOfLine, this->moveMode);
       tc.movePosition(QTextCursor::NextCharacter, this->moveMode,
-                      -std::min(-c+1, mpos));
+                      -std::min(-c + 1, mpos));
     }
     this->setTextCursor(tc);
     this->centerCursor();
-  } // end of QEmacsTextEditBase::gotoPosition
+  }  // end of QEmacsTextEditBase::gotoPosition
 
   QString QEmacsTextEditBase::getCurrentWord() const {
     auto tc = this->textCursor();
@@ -489,15 +487,15 @@ namespace qemacs {
   }
 
   std::vector<QMenu*> QEmacsTextEditBase::getSpecificMenus() {
-      std::vector<QMenu*> m;
-      if (this->mode != nullptr) {
-        auto* mm = this->mode->getSpecificMenu();
-        if (mm != nullptr) {
-          //           mm->setSizePolicy(QSizePolicy::MinimumExpanding,
-          //                             QSizePolicy::Preferred);
-          //           mm->setIcon(this->mode->getIcon());
-          m.push_back(mm);
-        }
+    std::vector<QMenu*> m;
+    if (this->mode != nullptr) {
+      auto* mm = this->mode->getSpecificMenu();
+      if (mm != nullptr) {
+        //           mm->setSizePolicy(QSizePolicy::MinimumExpanding,
+        //                             QSizePolicy::Preferred);
+        //           mm->setIcon(this->mode->getIcon());
+        m.push_back(mm);
+      }
     }
     return m;
   }  // end of QEmacsTextEditBase::getSpecificMenu
@@ -507,14 +505,14 @@ namespace qemacs {
       return QIcon();
     }
     return this->mode->getIcon();
-  } // end of QEmacsTextEditBase::getIcon
+  }  // end of QEmacsTextEditBase::getIcon
 
   void QEmacsTextEditBase::insertCompletion(const QString& completion) {
     if (this->mode == nullptr) {
       return;
     }
     this->mode->completeCurrentWord(*this, completion);
-  } // end of QEmacsTextEditBase::insertCompletion
+  }  // end of QEmacsTextEditBase::insertCompletion
 
   void QEmacsTextEditBase::removeKeyPressEventFilter() {
     if (this->filter != nullptr) {
@@ -548,7 +546,7 @@ namespace qemacs {
         this->filter, &QEmacsTextEditKeyPressEventFilter::destroyed,
         this, &QEmacsTextEditBase::keyPressEventFilterDestroyed);
     return true;
-  } // end of QEmacsTextEditBase::setKeyPressEventFilter
+  }  // end of QEmacsTextEditBase::setKeyPressEventFilter
 
   void QEmacsTextEditBase::setFileName(const QString& f) {
     QFileInfo fi(f);
@@ -577,7 +575,7 @@ namespace qemacs {
 
   QEmacsTextEditBase::SaveInput* QEmacsTextEditBase::getSaveInput() {
     return new SaveInput(this->qemacs, *this);
-  } // end of QEmacsTextEditBase::getSaveInput
+  }  // end of QEmacsTextEditBase::getSaveInput
 
   void QEmacsTextEditBase::save() {
     if (!this->document()->isModified()) {
@@ -632,7 +630,7 @@ namespace qemacs {
     this->setFileName(f);
     this->document()->setModified();
     this->save();
-  } // end of QEmacsTextEditBase::writeFile
+  }  // end of QEmacsTextEditBase::writeFile
 
   void QEmacsTextEditBase::emitCursorPositionChanged() {
     emit cursorPositionChanged();
@@ -717,8 +715,9 @@ namespace qemacs {
       // Qt::ShiftModifier);
       const bool hasModifier = m != Qt::NoModifier;
       QString completionPrefix = this->mode->getCompletionPrefix();
-      if (hasModifier || (completionPrefix.length() <
-                          this->mode->getMinimalCompletionLength()) ||
+      if (hasModifier ||
+          (completionPrefix.length() <
+           this->mode->getMinimalCompletionLength()) ||
           e->text().isEmpty() || eow.contains(e->text().right(1))) {
         completer->popup()->hide();
         return true;
@@ -794,17 +793,17 @@ namespace qemacs {
       this->ctrlx = false;
       if (m != Qt::ControlModifier) {
         if (k == Qt::Key_1) {
-          if(this->isMainFrame()){
+          if (this->isMainFrame()) {
             this->buffer.hideSecondaryTasks();
           }
           return true;
         } else if (k == Qt::Key_2) {
-          if(this->isMainFrame()){
+          if (this->isMainFrame()) {
             this->buffer.showSecondaryTasks(Qt::Vertical);
           }
           return true;
         } else if (k == Qt::Key_3) {
-          if(this->isMainFrame()){
+          if (this->isMainFrame()) {
             this->buffer.showSecondaryTasks(Qt::Horizontal);
           }
           return true;
@@ -831,6 +830,9 @@ namespace qemacs {
               b.focusMainFrame();
             }
           }
+          return true;
+        } else if (k == Qt::Key_P) {
+          this->print();
           return true;
         } else if (k == Qt::Key_B) {
           this->qemacs.changeBuffer();
@@ -880,7 +882,7 @@ namespace qemacs {
       } else {
         this->qemacs.displayInformativeMessage(
             QObject::tr("unknown shortcut : Ctr-X - %1-%2")
-                .arg(modifier,e->text()));
+                .arg(modifier, e->text()));
       }
       return true;
     }
@@ -891,7 +893,7 @@ namespace qemacs {
           return true;
         }
       }
-      QString modifier = QEmacsTextEditBase::getModifier(*e);
+      const auto modifier = QEmacsTextEditBase::getModifier(*e);
       if (modifier.isEmpty()) {
         this->qemacs.displayInformativeMessage(
             QObject::tr("unknown shortcut : Ctr-C - %1")
@@ -1195,8 +1197,8 @@ namespace qemacs {
     } else if ((m == Qt::AltModifier) && (k == Qt::Key_X)) {
       this->qemacs.launchCommand();
     } else if ((m == Qt::AltModifier) && (k == Qt::Key_Exclam)) {
-      auto* l = new QEmacsShellProcessLineEdit(
-          "shell command:", "", "", this->qemacs);
+      auto* l = new QEmacsShellProcessLineEdit("shell command:", "", "",
+                                               this->qemacs);
       l->setInputHistorySettingAddress("command/shell/history");
       this->qemacs.setUserInput(l);
     } else if (((m == Qt::AltModifier) && (k == Qt::Key_Percent)) ||
@@ -1426,7 +1428,7 @@ namespace qemacs {
 
   void QEmacsTextEditBase::setMoveMode(QTextCursor::MoveMode m) {
     this->moveMode = m;
-  } // end of QEmacsTextEditBase::setMoveMode
+  }  // end of QEmacsTextEditBase::setMoveMode
 
   QEmacsTextEditBase::~QEmacsTextEditBase() {
     if (this->filter != nullptr) {

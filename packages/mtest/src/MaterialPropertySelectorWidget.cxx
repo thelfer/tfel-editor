@@ -34,6 +34,7 @@ namespace qemacs {
     this->cv->setFixedHeight(QFontMetrics(cv->font()).lineSpacing());
     auto* const vv = new QDoubleValidator;
     vv->setNotation(QDoubleValidator::ScientificNotation);
+    vv->setLocale(QLocale(QLocale::C));
     this->cv->setValidator(vv);
     mpd->addWidget(this->cv);
     // a widget to set a castem material property
@@ -84,6 +85,7 @@ namespace qemacs {
   // of MaterialPropertySelectorWidget::MaterialPropertySelectorWidget
 
   void MaterialPropertySelectorWidget::import() {
+
   }  // end of MaterialPropertySelectorWidget::import
 
   void MaterialPropertySelectorWidget::importFromMFM() {
@@ -102,6 +104,19 @@ namespace qemacs {
       this->cfe->setText(f);
     }
   }  // end of MaterialPropertySelectorWidget::importFromMFM
+
+  MaterialPropertyDescription
+  MaterialPropertySelectorWidget::getMaterialProperty() const {
+    if ((!this->cle->text().isEmpty()) &&
+        (!this->cfe->text().isEmpty())) {
+      return CastemMaterialPropertyDescription{
+          this->name, this->cle->text(), this->cfe->text()};
+    } else if (!this->cv->text().isEmpty()) {
+      return ConstantMaterialPropertyDescription{
+          this->name, this->cv->text().toDouble()};
+    }
+    return {};
+  }  // end of getMaterialProperty
 
   MaterialPropertySelectorWidget::~MaterialPropertySelectorWidget() =
       default;

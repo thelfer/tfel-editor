@@ -77,6 +77,103 @@ namespace qemacs {
     runMTest(qemacs, b, t, scheme);
   } // end of  startMTest
 
+  static void insertBehaviour(QEmacsTextEditBase& textEdit,
+                              const BehaviourDescription& bd) {
+   auto b = bd.generate();
+   if (!b) {
+     return;
+   }
+   auto tc = textEdit.textCursor();
+   tc.beginEditBlock();
+   tc.insertText("@ModellingHypothesis '" + bd.hypothesis + "';\n");
+   tc.insertText("@Behaviour<" + bd.minterface + "> '" + bd.library +
+                 "' '" + bd.getFunction() + "';\n\n");
+   if (!b->getMaterialPropertiesNames().empty()) {
+     tc.insertText("// material properties\n");
+     for (const auto& m : b->getMaterialPropertiesNames()) {
+       const auto mp = QString::fromStdString(m);
+       const auto pmpd = std::find_if(
+           bd.material_properties.begin(), bd.material_properties.end(),
+           [&mp](const MaterialPropertyDescription& mpd) {
+             if (mpd.is<ConstantMaterialPropertyDescription>()) {
+               const auto& cmpd =
+                   mpd.get<ConstantMaterialPropertyDescription>();
+               return mp == cmpd.name;
+             } else if (mpd.is<CastemMaterialPropertyDescription>()) {
+               const auto& cmpd =
+                   mpd.get<CastemMaterialPropertyDescription>();
+               return mp == cmpd.name;
+             }
+             return false;
+           });
+       if (pmpd != bd.material_properties.end()) {
+         if (pmpd->is<ConstantMaterialPropertyDescription>()) {
+           const auto& cmpd = pmpd->get<ConstantMaterialPropertyDescription>();
+           tc.insertText("@MaterialProperty<constant> '" + mp + "' " +
+                         QString::number(cmpd.value) + ";\n");
+         } else if (pmpd->is<CastemMaterialPropertyDescription>()) {
+           const auto& cmpd = pmpd->get<CastemMaterialPropertyDescription>();
+           tc.insertText("@MaterialProperty<castem> '" + mp + "' " +
+                         "'" + cmpd.library + "' '" + cmpd.function +
+                         "';\n");
+         } else {
+           tc.insertText("@MaterialProperty<...> '" + mp + "' ...;\n");
+         }
+       } else {
+         tc.insertText("@MaterialProperty<...> '" + mp + "' ...;\n");
+       }
+     }
+     tc.insertText("\n");
+   }
+   if (!b->getParametersNames().empty()) {
+     tc.insertText("// parameters\n");
+     for (const auto& p : b->getParametersNames()) {
+       const auto v = b->getRealParameterDefaultValue(p);
+       tc.insertText("// @Parameter' " + QString::fromStdString(p) +
+                     "' " + QString::number(v) + ";\n");
+     }
+     tc.insertText("\n");
+   }
+   if (!b->getIntegerParametersNames().empty()) {
+     tc.insertText("// integer parameters\n");
+     for (const auto& p : b->getIntegerParametersNames()) {
+       const auto v = b->getIntegerParameterDefaultValue(p);
+       tc.insertText("// @IntegerParameter' " +
+                     QString::fromStdString(p) + "' " +
+                     QString::number(v) + ";\n");
+     }
+     tc.insertText("\n");
+   }
+   if (!b->getUnsignedShortParametersNames().empty()) {
+     tc.insertText("// UnsignedShort parameters\n");
+     for (const auto& p : b->getUnsignedShortParametersNames()) {
+       const auto v = b->getUnsignedShortParameterDefaultValue(p);
+       tc.insertText("// @UnsignedIntegerParameter' " +
+                     QString::fromStdString(p) + "' " +
+                     QString::number(v) + ";\n");
+     }
+     tc.insertText("\n");
+   }
+   if (!b->getInternalStateVariablesNames().empty()) {
+     tc.insertText("// internal state variable initialisations\n");
+     for (const auto& iv : b->getInternalStateVariablesNames()) {
+       tc.insertText("// @InternalStateVariable '" +
+                     QString::fromStdString(iv) + "';\n");
+     }
+     tc.insertText("\n");
+   }
+   if (!b->getExternalStateVariablesNames().empty()) {
+     tc.insertText("// external state variable\n");
+     for (const auto& ev : b->getExternalStateVariablesNames()) {
+       tc.insertText("// @ExternalStateVariable '" +
+                     QString::fromStdString(ev) + "' ... ;\n");
+     }
+     tc.insertText("\n");
+   }
+   tc.endEditBlock();
+   textEdit.setTextCursor(tc);
+  }  // end of insertBehaviour
+
   MTestMajorMode::MTestMajorMode(QEmacsWidget& w,
                                  QEmacsBuffer& b,
                                  QEmacsTextEditBase& t)
@@ -126,7 +223,7 @@ namespace qemacs {
       startMTest(this->qemacs,this->buffer,this->textEdit,this->getScheme());
       return true;
     }
-    return false;
+    return CxxMajorMode::keyPressEvent(e);
   }  // end of MTestMajorMode::keyPressEvent
 
   QMenu* MTestMajorMode::getSpecificMenu() {
@@ -251,6 +348,7 @@ namespace qemacs {
   void MTestMajorMode::showImportBehaviourWizard() {
     ImportBehaviour w(this->textEdit);
     if (w.exec() == QDialog::Accepted) {
+      insertBehaviour(this->textEdit, w.getSelectedBehaviour());
     }
   }  // end of MTestMajorMode::showImportBehaviourWizard
 
@@ -258,74 +356,9 @@ namespace qemacs {
    using tfel::material::ModellingHypothesis;
    using tfel::system::ExternalLibraryManager;
    ImportMFMBehaviour w(&(this->textEdit));
-   if (w.exec() != QDialog::Accepted) {
-     return;
+   if (w.exec() == QDialog::Accepted) {
+     insertBehaviour(this->textEdit, w.getSelectedBehaviour());
    }
-   const auto bd = w.getSelectedBehaviour();
-   auto b = bd.generate();
-   if (!b) {
-     return;
-   }
-   auto tc = this->textEdit.textCursor();
-   tc.beginEditBlock();
-   tc.insertText("@ModellingHypothesis '" + bd.hypothesis + "';\n");
-   tc.insertText("@Behaviour<" + bd.minterface + "> '" + bd.library +
-                 "' '" + bd.getFunction() + "';\n\n");
-   if (!b->getMaterialPropertiesNames().empty()) {
-     tc.insertText("// material propreties\n");
-     for (const auto& m : b->getMaterialPropertiesNames()) {
-       tc.insertText("@MaterialProperty<...> '" +
-                     QString::fromStdString(m) + "' ...;\n");
-     }
-     tc.insertText("\n");
-   }
-   if (!b->getParametersNames().empty()) {
-     tc.insertText("// parameters\n");
-     for (const auto& p : b->getParametersNames()) {
-       const auto v = b->getRealParameterDefaultValue(p);
-       tc.insertText("// @Parameter' " + QString::fromStdString(p) +
-                     "' " + QString::number(v) + ";\n");
-     }
-     tc.insertText("\n");
-   }
-   if (!b->getIntegerParametersNames().empty()) {
-     tc.insertText("// integer parameters\n");
-     for (const auto& p : b->getIntegerParametersNames()) {
-       const auto v = b->getIntegerParameterDefaultValue(p);
-       tc.insertText("// @IntegerParameter' " +
-                     QString::fromStdString(p) + "' " +
-                     QString::number(v) + ";\n");
-     }
-     tc.insertText("\n");
-   }
-   if (!b->getUnsignedShortParametersNames().empty()) {
-     tc.insertText("// UnsignedShort parameters\n");
-     for (const auto& p : b->getUnsignedShortParametersNames()) {
-       const auto v = b->getUnsignedShortParameterDefaultValue(p);
-       tc.insertText("// @UnsignedIntegerParameter' " +
-                     QString::fromStdString(p) + "' " +
-                     QString::number(v) + ";\n");
-     }
-     tc.insertText("\n");
-   }
-   if (!b->getInternalStateVariablesNames().empty()) {
-     tc.insertText("// internal state variable initialisations\n");
-     for (const auto& iv : b->getInternalStateVariablesNames()) {
-       tc.insertText("// @InternalStateVariable '" +
-                     QString::fromStdString(iv) + "';\n");
-     }
-     tc.insertText("\n");
-   }
-   if (!b->getExternalStateVariablesNames().empty()) {
-     tc.insertText("// external state variable\n");
-     for (const auto& ev : b->getExternalStateVariablesNames()) {
-       tc.insertText("// @ExternalStateVariable '" +
-                     QString::fromStdString(ev) + "' ... ;\n");
-     }
-     tc.insertText("\n");
-   }
-   tc.endEditBlock();
-   this->textEdit.setTextCursor(tc);
   }  // end of MTestMajorMode::showImportMFMBehaviourDialog
 
   void MTestMajorMode::showResults() {

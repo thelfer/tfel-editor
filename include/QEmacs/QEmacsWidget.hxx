@@ -86,6 +86,9 @@ namespace qemacs {
      */
     virtual void openFile();
 
+    //! \brief print the current widget main frame
+    virtual void print();
+
     /*!
      * open a file in a new buffer
      * \param[in] f : file name

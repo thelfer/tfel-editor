@@ -43,7 +43,7 @@ namespace qemacs {
       this->runCompilation();
       return true;
     }
-    return false;
+    return CMajorModeBase::keyPressEvent(e);
   } // end of LicosMajorMode::keyPressEvent
 
   void CxxMajorMode::setSyntaxHighlighter(QTextDocument *const d) {

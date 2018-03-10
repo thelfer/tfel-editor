@@ -21,6 +21,8 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QListView>
 #include <QtWidgets/QDialogButtonBox>
+#include <QtPrintSupport/QPrinter>
+#include <QtPrintSupport/QPrintDialog>
 #include "QEmacs/utf8/utf8.h"
 #include "QEmacs/Utilities.hxx"
 #include "QEmacs/DirectoryMajorMode.hxx"
@@ -121,7 +123,7 @@ namespace qemacs {
     return QString();
   }
 
-#endif /* Q_WS_X11 */
+#endif /* Q_OS_UNIX */
 
   QEmacsPlainTextEdit::QEmacsPlainTextEdit(QEmacsWidget& g,
                                            QEmacsBuffer& b)
@@ -201,9 +203,13 @@ namespace qemacs {
 
   QAbstractScrollArea* QEmacsPlainTextEdit::widget() { return this->e; }
 
-  void QEmacsPlainTextEdit::print(QPrinter* const p) {
-    this->e->print(p);
-  }
+  void QEmacsPlainTextEdit::print() {
+    QPrinter printer;
+    QPrintDialog printDialog(&printer, this);
+    if (printDialog.exec() == QDialog::Accepted) {
+      this->e->print(&printer);
+    }
+  } // end of QEmacsPlainTextEdit::print
 
   void QEmacsPlainTextEdit::undo() {
     this->e->undo();

@@ -12,13 +12,38 @@
 
 namespace qemacs{
 
-  struct ImplicitDSLWizard : public QWizard {
-    //! desctructor
-    ~ImplicitDSLWizard() override;
+  struct BehaviourMetaDataPage : public QWizardPage {
+    /*!
+     * \brief constructor
+     * \param[in] p: parent
+     */
+    BehaviourMetaDataPage(QWizard *const);
+
+    bool validatePage() override;
+    //!
+    int nextId() const override;
+    //! destructor
+    ~BehaviourMetaDataPage() override;
 
    private:
     Q_OBJECT
-  }; // end of struct ImplicitDSLWizard
+  }; // end of struct BehaviourMetaDataPage
+
+  struct ImplicitDSLWizard : public QWizard {
+    /*!
+     * \brief constructor
+     * \param[in] p: parent
+     */
+    ImplicitDSLWizard(QWidget *const p = nullptr);
+    //! destructor
+    ~ImplicitDSLWizard() override;
+
+   protected:
+    BehaviourMetaDataPage *md = nullptr;
+
+   private:
+    Q_OBJECT
+  };  // end of struct ImplicitDSLWizard
 
 } // end of namespace qemacs
 

@@ -5,16 +5,18 @@
  * \date   19/08/2012
  */
 
-#include<QtCore/QDir>
-#include<QtCore/QDate>
-#include<QtCore/QFile>
-#include<QtCore/QFileInfo>
-#include<QtCore/QTextStream>
-#include<QtWidgets/QHBoxLayout>
-#include<QtWidgets/QMessageBox>
-#include<QtWidgets/QApplication>
-#include"QEmacs/Utilities.hxx"
-#include"QEmacs/QEmacsTextEdit.hxx"
+#include <QtCore/QDir>
+#include <QtCore/QDate>
+#include <QtCore/QFile>
+#include <QtCore/QFileInfo>
+#include <QtCore/QTextStream>
+#include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QApplication>
+#include <QtPrintSupport/QPrinter>
+#include <QtPrintSupport/QPrintDialog>
+#include "QEmacs/Utilities.hxx"
+#include "QEmacs/QEmacsTextEdit.hxx"
 
 namespace qemacs {
 
@@ -172,6 +174,14 @@ namespace qemacs {
       Qt::TextInteractionFlags f) {
     this->e->setTextInteractionFlags(f);
   }
+
+  void QEmacsTextEdit::print() {
+    QPrinter printer;
+    QPrintDialog printDialog(&printer, this);
+    if (printDialog.exec() == QDialog::Accepted) {
+      this->e->print(&printer);
+    }
+  } // end of QEmacsTextEdit::print
 
   QEmacsTextEdit::~QEmacsTextEdit() = default;
 

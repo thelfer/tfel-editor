@@ -760,6 +760,11 @@ namespace qemacs {
     }
   }  // end of QEmacsWidget::closeCurrentBuffer
 
+  void QEmacsWidget::print(){
+    auto& t = this->getCurrentBuffer().getMainFrame();
+    t.print();
+  } // end of QEmacsWidget::print
+
   QEmacsWidget::~QEmacsWidget() {
     this->removeUserInputs();
     delete this->buffers;

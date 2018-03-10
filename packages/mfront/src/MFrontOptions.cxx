@@ -38,18 +38,11 @@ namespace qemacs {
       for(const auto& i : f.getRegistredInterfaces()){
         interfaces->addItem(QString::fromStdString(i));
       }
-      if (f.getRegistredInterfaces().size() != 0) {
-        o.i = QString::fromStdString(f.getRegistredInterfaces()[0]);
-      }
     } else if (t == BEHAVIOUR) {
       const auto &f = mfront::BehaviourInterfaceFactory::
           getBehaviourInterfaceFactory();
       for(const auto& i : f.getRegistredInterfaces()){
         interfaces->addItem(QString::fromStdString(i));
-      }
-      if (f.getRegistredInterfaces().size() != 0) {
-        o.i =
-            QString::fromStdString(f.getRegistredInterfaces()[0]);
       }
     } else {
       const auto &f =
@@ -57,12 +50,12 @@ namespace qemacs {
       for(const auto& i : f.getRegistredInterfaces()){
         interfaces->addItem(QString::fromStdString(i));
       }
-      if (f.getRegistredInterfaces().size() != 0) {
-        o.i =
-            QString::fromStdString(f.getRegistredInterfaces()[0]);
-      }
     }
     gl1->addWidget(new QLabel(QObject::tr("Interface")), 0, 0);
+    if (!o.i.isEmpty()) {
+      interfaces->setCurrentText(o.i);
+    }
+    o.i = interfaces->currentText();
     gl1->addWidget(interfaces, 0, 1);
     auto *atype = new QComboBox;
     atype->addItems(QStringList() << "Build"

@@ -11,12 +11,12 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QScrollArea>
 #include "TFEL/System/ExternalLibraryManager.hxx"
 #include "TFEL/Material/ModellingHypothesis.hxx"
 #include "MFront/TargetsDescription.hxx"
 #include "QEmacs/Debug.hxx"
 #include "QEmacs/QEmacsTextEditBase.hxx"
-#include "QEmacs/MaterialPropertySelectorWidget.hxx"
 #include "QEmacs/ImportBehaviour.hxx"
 
 namespace qemacs {
@@ -167,12 +167,12 @@ namespace qemacs {
      // ImportBehaviour::SelectBehaviourPage::updateModellingHypotheses
 
   bool ImportBehaviour::SelectBehaviourPage::validatePage() {
-    const auto b = this->wizard.getBehaviourDescription();
+    const auto b = this->wizard.getSelectedBehaviour();
     return b.generate() != nullptr;
   }  // end of ImportBehaviour::SelectLibrary::validatePage
 
   int ImportBehaviour::SelectBehaviourPage::nextId() const {
-    auto b = this->wizard.getBehaviourDescription().generate();
+    auto b = this->wizard.getSelectedBehaviour().generate();
     if (b) {
       if(b->getMaterialPropertiesNames().empty()){
         return 2;
@@ -192,7 +192,7 @@ namespace qemacs {
       updateMaterialPropertiesList() {
     using tfel::system::ExternalLibraryManager;
     auto& elm = ExternalLibraryManager::getExternalLibraryManager();
-    auto bd = this->wizard.getBehaviourDescription();
+    auto bd = this->wizard.getSelectedBehaviour();
     const auto b  = bd.generate();
     if (b == nullptr) {
       return;
@@ -214,18 +214,53 @@ namespace qemacs {
       }
       return QString();
     }();
+
+    auto* cw = new QWidget;
     auto* const vl = new QVBoxLayout;
+    auto mpsws_new = std::vector<MaterialPropertySelectorWidget*>{};
     for (const auto& mp : b->getMaterialPropertiesNames()) {
-      vl->addWidget(new MaterialPropertySelectorWidget(
-          QString::fromStdString(mp), m));
+      auto* const mpsw = new MaterialPropertySelectorWidget(
+          QString::fromStdString(mp), m);
+      mpsws_new.push_back(mpsw);
+      vl->addWidget(mpsw);
     }
-    this->setLayout(vl);
+    cw->setLayout(vl);
+    auto* const sa = new QScrollArea;
+    sa->setWidget(cw);
+    sa->setWidgetResizable(true);
+    // 
+    qDeleteAll(this->children());
+    this->mpsws.swap(mpsws_new);
+    auto* const l = this->layout();
+    if (l != nullptr) {
+      delete l;
+    }
+    //
+    auto* const cl = new QVBoxLayout;
+    cl->addWidget(sa);
+    this->setLayout(cl);
   }  // end of
   // ImportBehaviour::MaterialPropertyPage::updateMaterialPropertiesList
 
   int ImportBehaviour::MaterialPropertyPage::nextId() const {
     return 2;
   } // end of ImportBehaviour::MaterialPropertyPage::nextId
+
+  std::vector<MaterialPropertyDescription> ImportBehaviour::
+      MaterialPropertyPage::getMaterialPropertyDescriptions() const {
+    std::vector<MaterialPropertyDescription> r;
+    for (const auto& mpsw : this->mpsws) {
+      const auto& d = mpsw->getMaterialProperty();
+      if (!d.empty()) {
+        r.push_back(d);
+      }
+    }
+    return r;
+  }  // end of
+     // ImportBehaviour::MaterialPropertyPage::getMaterialPropertyDescriptions
+
+  ImportBehaviour::MaterialPropertyPage::~MaterialPropertyPage() =
+      default;
 
   ImportBehaviour::ConclusionPage::ConclusionPage(ImportBehaviour& w)
       : wizard(w) {}  // end of
@@ -250,8 +285,7 @@ namespace qemacs {
     this->setStartId(0);
   }  // end of ImportBehaviour::ImportBehaviour
 
-  BehaviourDescription
-  ImportBehaviour::getBehaviourDescription() const {
+  BehaviourDescription ImportBehaviour::getSelectedBehaviour() const {
     using tfel::system::ExternalLibraryManager;
     auto& elm = ExternalLibraryManager::getExternalLibraryManager();
     BehaviourDescription b;
@@ -267,6 +301,7 @@ namespace qemacs {
     } catch (...) {
       return {};
     }
+    b.material_properties = this->mp->getMaterialPropertyDescriptions();
     return b;
   }  // end of ImportBehaviour::getBehaviour
 
