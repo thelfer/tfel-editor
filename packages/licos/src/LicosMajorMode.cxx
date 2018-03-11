@@ -30,7 +30,7 @@
 #include "QEmacs/LicosTokenizer.hxx"
 #include "QEmacs/ProcessOutputFrame.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
-#include "QEmacs/QEmacsLineEdit.hxx"
+#include "QEmacs/QEmacsCommandLine.hxx"
 #include "QEmacs/QEmacsMajorModeFactory.hxx"
 #include "QEmacs/QEmacsPlainTextEdit.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
@@ -38,10 +38,10 @@
 
 namespace qemacs {
 
-  struct LicosMajorMode::LicosInsertBlock : public QEmacsLineEdit {
+  struct LicosMajorMode::LicosInsertBlock : public QEmacsCommandLine {
 
     LicosInsertBlock(QEmacsWidget &p, QEmacsTextEditBase &t)
-        : QEmacsLineEdit(QObject::tr("insert block :"), p), textEdit(t) {
+        : QEmacsCommandLine(QObject::tr("insert block :"), p), textEdit(t) {
       QStringList blocks;
       for (const auto &b : LicosSyntaxHighlighter::getBlocks()) {
         blocks << QString::fromStdString(b);

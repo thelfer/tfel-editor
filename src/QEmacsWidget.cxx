@@ -9,17 +9,18 @@
 #include <QtCore/QTimer>
 #include <QtCore/QDebug>
 #include <QtCore/QTextStream>
+#include <QtGui/QCloseEvent>
 #include <QtWidgets/QCompleter>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
-#include <QtGui/QCloseEvent>
 
 #include "QEmacs/QEmacsCommand.hxx"
 #include "QEmacs/QEmacsCommandFactory.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/QEmacsLineEdit.hxx"
+#include "QEmacs/QEmacsCommandLine.hxx"
 #include "QEmacs/QEmacsPlainTextEdit.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
@@ -48,19 +49,19 @@ namespace qemacs {
     return fi.absoluteFilePath();
   }  // end of getRealPath
   
-  static void setQLineEditFont(QLineEdit* l) {
-    QFont f = l->font();
+  static void setQLineEditFont(QEmacsLineEdit* l) {
+    auto f = l->font();
     f.setPointSize(8);
     l->setFont(f);
     l->setContentsMargins(0, 0, 0, 0);
-  }
+  } // end of setQLineEditFont
 
-  static void setQEmacsLineEditFont(QEmacsLineEdit* l) {
-    QFont f = l->font();
+  static void setQEmacsCommandLineFont(QEmacsCommandLine* l) {
+    auto f = l->font();
     f.setPointSize(8);
     l->setFont(f);
     l->setContentsMargins(0, 0, 0, 0);
-  }
+  } // end of setQEmacsCommandLineFont
 
   struct QEmacsWidget::OpenFile : public QEmacsFilePathUserInput {
     OpenFile(QEmacsWidget& p, const QString& path)
@@ -83,11 +84,11 @@ namespace qemacs {
 
   };  // end of struct QEmacsTextEdit::OpenFile
 
-  struct QEmacsWidget::ChangeBuffer : public QEmacsLineEdit {
+  struct QEmacsWidget::ChangeBuffer : public QEmacsCommandLine {
     ChangeBuffer(QEmacsWidget& p,
                  const QStringList& bn,
                  const QString& d)
-        : QEmacsLineEdit(
+        : QEmacsCommandLine(
               QObject::tr("switch to buffer") +
                   (!d.isEmpty() ? QObject::tr("(default '%1')").arg(d)
                                 : "") +
@@ -120,9 +121,9 @@ namespace qemacs {
 
   };  // end of struct QEmacsTextEdit::ChangeBuffer
 
-  struct QEmacsWidget::Command : public QEmacsLineEdit {
+  struct QEmacsWidget::Command : public QEmacsCommandLine {
     Command(QEmacsWidget& p)
-        : QEmacsLineEdit(QObject::tr("qemacs command:"), p) {
+        : QEmacsCommandLine(QObject::tr("qemacs command:"), p) {
       auto& f = QEmacsCommandFactory::getQEmacsCommandFactory();
       auto* c = new QCompleter(f.getAvailableQEmacsCommandsNames(), &p);
       c->setWidget(this->input);
@@ -147,9 +148,9 @@ namespace qemacs {
       : QWidget(p),
         buffers(new QStackedWidget),
         minibuffer(new QStackedWidget),
-        um(new QLineEdit),
+        um(new QEmacsLineEdit(*this)),
         ui(0),
-        eui(new QLineEdit),
+        eui(new QEmacsLineEdit(*this)),
         nid(0) {
     QEmacsModeRessourceLoader loader;
     auto* vl = new QVBoxLayout;
@@ -411,7 +412,7 @@ namespace qemacs {
 
   }  // end of QEmacsWidget::displayInformativeMessage
 
-  void QEmacsWidget::setUserInput(QEmacsLineEdit* const l) {
+  void QEmacsWidget::setUserInput(QEmacsCommandLine* const l) {
     if (l == nullptr) {
       return;
     }
@@ -428,7 +429,7 @@ namespace qemacs {
       }
     }
     this->ui.push_back(l);
-    setQEmacsLineEditFont(this->ui.back());
+    setQEmacsCommandLineFont(this->ui.back());
     this->minibuffer->addWidget(this->ui.back());
     this->minibuffer->setCurrentWidget(this->ui.back());
     this->ui.back()->setFocus();
@@ -436,16 +437,16 @@ namespace qemacs {
       this->buffers->setEnabled(false);
     }
     QObject::connect(
-        this->ui.back(), &QEmacsLineEdit::finished, this,
-        static_cast<void (QEmacsWidget::*)(QEmacsLineEdit*)>(
+        this->ui.back(), &QEmacsCommandLine::finished, this,
+        static_cast<void (QEmacsWidget::*)(QEmacsCommandLine*)>(
             &QEmacsWidget::removeUserInput));
     QObject::connect(
-        this->ui.back(), &QEmacsLineEdit::destroyed, this,
-        static_cast<void (QEmacsWidget::*)(QEmacsLineEdit*)>(
+        this->ui.back(), &QEmacsCommandLine::destroyed, this,
+        static_cast<void (QEmacsWidget::*)(QEmacsCommandLine*)>(
             &QEmacsWidget::removeUserInput));
   }
 
-  void QEmacsWidget::removeUserInput(QEmacsLineEdit* p) {
+  void QEmacsWidget::removeUserInput(QEmacsCommandLine* p) {
     if (this->ui.empty()) {
       return;
     }

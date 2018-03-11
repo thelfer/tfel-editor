@@ -9,7 +9,7 @@
 #define LIB_QEMACS_QEMACSPROCESSLINEEDIT_HXX
 
 #include"QEmacs/Config.hxx"
-#include "QEmacs/QEmacsLineEdit.hxx"
+#include "QEmacs/QEmacsCommandLine.hxx"
 
 namespace qemacs{
 
@@ -19,7 +19,7 @@ namespace qemacs{
    * buffer
    */
   struct QEMACS_VISIBILITY_EXPORT QEmacsProcessLineEdit
-      : public QEmacsLineEdit {
+      : public QEmacsCommandLine {
     /*!
      * \param[in] l : label
      * \param[in] c : command guess

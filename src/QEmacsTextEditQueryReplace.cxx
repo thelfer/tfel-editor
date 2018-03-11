@@ -16,7 +16,7 @@ namespace qemacs {
 
   QEmacsTextEditQueryReplace::QEmacsTextEditQueryReplace(
       QEmacsTextEditBase& t, QEmacsWidget& p)
-      : QEmacsLineEdit("", p), textEdit(t), stage(0) {
+      : QEmacsCommandLine("", p), textEdit(t), stage(0) {
     const auto h = QEmacsTextEditQueryReplace::getHistory();
     if (h.length() < 2) {
       this->setLabel(QObject::tr("query replace :"));
@@ -30,7 +30,7 @@ namespace qemacs {
 
   QEmacsTextEditQueryReplace::QEmacsTextEditQueryReplace(
       QEmacsTextEditBase& t, QEmacsWidget& p, const QString& s1_)
-      : QEmacsLineEdit(QObject::tr("query replace %1 with :").arg(s1_),
+      : QEmacsCommandLine(QObject::tr("query replace %1 with :").arg(s1_),
                        p),
         textEdit(t),
         s1(s1_),
@@ -44,7 +44,7 @@ namespace qemacs {
       QEmacsWidget& p,
       const QString& s1_,
       const QString& s2_)
-      : QEmacsLineEdit(QObject::tr("query replacing %1 with %2 "
+      : QEmacsCommandLine(QObject::tr("query replacing %1 with %2 "
                                    "(type 'y', 'n' or '!')")
                            .arg(s1_, s2_),
                        p),

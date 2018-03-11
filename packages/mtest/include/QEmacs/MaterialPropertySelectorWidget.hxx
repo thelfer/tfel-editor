@@ -9,9 +9,9 @@
 #define LIB_QEMACS_MATERIALPROPERTYSELECTORWIDGET_HXX
 
 #include <QtCore/QString>
-#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QGroupBox>
 #include "TFEL/Utilities/GenTypeBase.hxx"
+#include "QEmacs/QEmacsLineEdit.hxx"
 #include "QEmacs/MaterialPropertyDescription.hxx"
 
 namespace qemacs {
@@ -22,11 +22,13 @@ namespace qemacs {
   struct MaterialPropertySelectorWidget : QGroupBox {
     /*!
      * \brief constructor
+     * \param[in] q: qemacs widget
      * \param[in] n: name
      * \param[in] m: material
      * \param[in] p: parent widget
      */
-    MaterialPropertySelectorWidget(const QString &,
+    MaterialPropertySelectorWidget(QEmacsWidget &,
+                                   const QString &,
                                    const QString &,
                                    QWidget *const = nullptr);
     //! \return the selected material property
@@ -42,6 +44,8 @@ namespace qemacs {
     void importFromMFM();
 
    protected:
+    //! qemacs widget
+    QEmacsWidget &qemacs;
     //! external name of the material property
     QString name;
     //! material name
@@ -49,17 +53,17 @@ namespace qemacs {
     /*!
      * \brief value used for a constant material property.
      */
-    QLineEdit *cv;
+    QEmacsLineEdit *cv;
     /*!
      * \brief a line edit to display the library path for a `Cast3M`
      * material property.
      */
-    QLineEdit *cle;
+    QEmacsLineEdit *cle;
     /*!
      * \brief a line edit to display the function for a `Cast3M`
      * material property.
      */
-    QLineEdit *cfe;
+    QEmacsLineEdit *cfe;
 
    private:
     Q_OBJECT

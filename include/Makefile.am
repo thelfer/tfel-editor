@@ -4,6 +4,7 @@ nobase_include_HEADERS = QEmacs/Config.hxx                 \
 			 QEmacs/VerboseLevel.hxx                      \
 			 QEmacs/SecondaryTask.hxx                     \
 			 QEmacs/SecondaryTaskManager.hxx              \
+			 QEmacs/QEmacsLineEdit.hxx                    \
 			 QEmacs/QEmacsFileDownloader.hxx              \
 			 QEmacs/QEmacsBuildInformation.hxx            \
 			 QEmacs/QEmacsShortCutStyle.hxx               \
@@ -32,7 +33,7 @@ nobase_include_HEADERS = QEmacs/Config.hxx                 \
 			 QEmacs/QEmacsTextEditKeyPressEventFilter.hxx \
 			 QEmacs/QEmacsTextEditReplaceFilter.hxx       \
 			 QEmacs/QEmacsMajorMode.hxx                   \
-			 QEmacs/QEmacsLineEdit.hxx                    \
+			 QEmacs/QEmacsCommandLine.hxx                 \
 			 QEmacs/QEmacsProcessLineEdit.hxx             \
 			 QEmacs/QEmacsShellProcessLineEdit.hxx        \
 			 QEmacs/QEmacsMajorModeBase.hxx               \

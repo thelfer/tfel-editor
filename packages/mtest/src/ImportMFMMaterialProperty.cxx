@@ -12,6 +12,7 @@
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QDialogButtonBox>
 #include "TFEL/System/ExternalLibraryManager.hxx"
+#include "QEmacs/QEmacsLineEdit.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/MFMDataBase.hxx"
 #include "QEmacs/MFMFilterProxyModel.hxx"
@@ -19,7 +20,8 @@
 
 namespace qemacs {
 
-  ImportMFMMaterialProperty::ImportMFMMaterialProperty(const Options& o,
+  ImportMFMMaterialProperty::ImportMFMMaterialProperty(QEmacsWidget& q,
+                                                       const Options& o,
                                                        QWidget* const p)
       : QDialog(p), view(new QTreeView), isb(new QComboBox) {
     MFMDataBase db;
@@ -44,18 +46,18 @@ namespace qemacs {
     auto* const fg = new QGridLayout;
     // name filter
     auto* const nfl = new QLabel("Name filter");
-    auto* const nfe = new QLineEdit;
+    auto* const nfe = new QEmacsLineEdit(q);
     nfl->setBuddy(nfe);
-    QObject::connect(nfe, &QLineEdit::textChanged, bfpm,
+    QObject::connect(nfe, &QEmacsLineEdit::textChanged, bfpm,
                      &MFMFilterProxyModel::setNameFilter);
     if (!o.name.isEmpty()) {
       nfe->setText(o.name);
     }
     // material filter
     auto* const mfl = new QLabel(QObject::tr("Material filter"));
-    auto* const mfe = new QLineEdit;
+    auto* const mfe = new QEmacsLineEdit(q);
     mfl->setBuddy(mfe);
-    QObject::connect(mfe, &QLineEdit::textChanged, bfpm,
+    QObject::connect(mfe, &QEmacsLineEdit::textChanged, bfpm,
                      &MFMFilterProxyModel::setMaterialFilter);
     if (!o.material.isEmpty()) {
       mfe->setText(o.material);

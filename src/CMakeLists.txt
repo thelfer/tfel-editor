@@ -12,10 +12,11 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/QEmacsBuildInformation.cxx.in"
 qt_sources(TFELQEmacs_SOURCES
   "${PROJECT_SOURCE_DIR}/include/QEmacs"
   QEmacsWidget
+  QEmacsLineEdit
   QEmacsFileDownloader
   QEmacsShortCutStyle
   QEmacsCommand
-  QEmacsLineEdit
+  QEmacsCommandLine
   QEmacsProcessLineEdit
   QEmacsShellProcessLineEdit
   QEmacsBuffer

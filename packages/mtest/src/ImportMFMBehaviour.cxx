@@ -11,6 +11,7 @@
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QDialogButtonBox>
 #include "TFEL/System/ExternalLibraryManager.hxx"
+#include "QEmacs/QEmacsLineEdit.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/MFMDataBase.hxx"
 #include "QEmacs/MFMFilterProxyModel.hxx"
@@ -18,7 +19,8 @@
 
 namespace qemacs {
 
-  ImportMFMBehaviour::ImportMFMBehaviour(QWidget* const p)
+  ImportMFMBehaviour::ImportMFMBehaviour(QEmacsWidget& q,
+                                         QWidget* const p)
       : QDialog(p),
         view(new QTreeView),
         isb(new QComboBox),
@@ -44,15 +46,15 @@ namespace qemacs {
     auto* const fg = new QGridLayout;
     // name filter
     auto* const nfl = new QLabel("Name filter");
-    auto* const nfe = new QLineEdit;
+    auto* const nfe = new QEmacsLineEdit(q);
     nfl->setBuddy(nfe);
-    QObject::connect(nfe, &QLineEdit::textChanged, bfpm,
+    QObject::connect(nfe, &QEmacsLineEdit::textChanged, bfpm,
                      &MFMFilterProxyModel::setNameFilter);
     // material filter
     auto* const mfl = new QLabel(QObject::tr("Material filter"));
-    auto* const mfe = new QLineEdit;
+    auto* const mfe = new QEmacsLineEdit(q);
     mfl->setBuddy(mfe);
-    QObject::connect(mfe, &QLineEdit::textChanged, bfpm,
+    QObject::connect(mfe, &QEmacsLineEdit::textChanged, bfpm,
                      &MFMFilterProxyModel::setMaterialFilter);
     // interface filter
     auto* const isl = new QLabel(QObject::tr("Interface"));

@@ -355,7 +355,7 @@ namespace qemacs {
   void MTestMajorMode::showImportMFMBehaviourDialog() {
    using tfel::material::ModellingHypothesis;
    using tfel::system::ExternalLibraryManager;
-   ImportMFMBehaviour w(&(this->textEdit));
+   ImportMFMBehaviour w(this->qemacs,&(this->textEdit));
    if (w.exec() == QDialog::Accepted) {
      insertBehaviour(this->textEdit, w.getSelectedBehaviour());
    }

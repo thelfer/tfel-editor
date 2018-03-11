@@ -22,10 +22,10 @@
 namespace qemacs {
 
   ImportBehaviour::SelectBehaviourPage::SelectBehaviourPage(
-      ImportBehaviour& w)
+      QEmacsWidget& q, ImportBehaviour& w)
       : bl(new QComboBox(this)),
         mh(new QComboBox(this)),
-        le(new QLineEdit(this)),
+        le(new QEmacsLineEdit(q, this)),
         slb(new QPushButton(QObject::tr("Open"), this)),
         wizard(w) {
     this->setTitle("Select a behaviour");
@@ -72,7 +72,7 @@ namespace qemacs {
         this->slb, &QPushButton::pressed, this,
         &ImportBehaviour::SelectBehaviourPage::selectLibrary);
     QObject::connect(
-        this->le, &QLineEdit::textChanged, this,
+        this->le, &QEmacsLineEdit::textChanged, this,
         &ImportBehaviour::SelectBehaviourPage::updateBehaviourList);
     QObject::connect(this->bl, &QComboBox::currentTextChanged, this,
                      &ImportBehaviour::SelectBehaviourPage::
@@ -183,9 +183,8 @@ namespace qemacs {
   } // end of ImportBehaviour::SelectBehaviourPage::nextId
 
   ImportBehaviour::MaterialPropertyPage::MaterialPropertyPage(
-      ImportBehaviour& w)
-      : wizard(w) {
-  }  // end of
+      QEmacsWidget& q, ImportBehaviour& w)
+      : qemacs(q), wizard(w) {}  // end of
   // ImportBehaviour::MaterialPropertyPage::MaterialPropertyPage
 
   void ImportBehaviour::MaterialPropertyPage::
@@ -220,7 +219,7 @@ namespace qemacs {
     auto mpsws_new = std::vector<MaterialPropertySelectorWidget*>{};
     for (const auto& mp : b->getMaterialPropertiesNames()) {
       auto* const mpsw = new MaterialPropertySelectorWidget(
-          QString::fromStdString(mp), m);
+          this->qemacs, QString::fromStdString(mp), m);
       mpsws_new.push_back(mpsw);
       vl->addWidget(mpsw);
     }
@@ -272,8 +271,8 @@ namespace qemacs {
 
   ImportBehaviour::ImportBehaviour(QEmacsTextEditBase& t)
       : QWizard(&t),
-        sb(new SelectBehaviourPage(*this)),
-        mp(new MaterialPropertyPage(*this)),
+        sb(new SelectBehaviourPage(t.getQEmacsWidget(), *this)),
+        mp(new MaterialPropertyPage(t.getQEmacsWidget(), *this)),
         c(new ConclusionPage(*this)) {
     this->setWindowTitle(QObject::tr("Import Behaviour"));
     this->setPage(0, this->sb);

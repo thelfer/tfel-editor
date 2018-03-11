@@ -6,24 +6,28 @@
  */
 #include <QtGui/QDoubleValidator>
 #include <QtWidgets/QLabel>
-#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QStackedWidget>
+#include "QEmacs/QEmacsLineEdit.hxx"
 #include "QEmacs/ImportMFMMaterialProperty.hxx"
 #include "QEmacs/MaterialPropertySelectorWidget.hxx"
 
 namespace qemacs {
 
   MaterialPropertySelectorWidget::MaterialPropertySelectorWidget(
-      const QString& n, const QString& m, QWidget* const p)
+      QEmacsWidget& q,
+      const QString& n,
+      const QString& m,
+      QWidget* const p)
       : QGroupBox(n, p),
+        qemacs(q),
         name(n),
         material(m),
-        cv(new QLineEdit),
-        cle(new QLineEdit),
-        cfe(new QLineEdit) {
+        cv(new QEmacsLineEdit(q)),
+        cle(new QEmacsLineEdit(q)),
+        cfe(new QEmacsLineEdit(q)) {
     auto* const ml = new QVBoxLayout();
     auto* const mt = new QComboBox();
     mt->addItems(QStringList() << "constant"
@@ -93,7 +97,7 @@ namespace qemacs {
     o.name = this->name;
     o.material = this->material;
     o.minterface = "Castem";
-    ImportMFMMaterialProperty w(o);
+    ImportMFMMaterialProperty w(this->qemacs, o);
     if (w.exec() != QDialog::Accepted) {
       return;
     }

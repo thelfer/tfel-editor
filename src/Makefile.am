@@ -13,6 +13,7 @@ libTFELQEmacs_la_SOURCES = QEmacsResources.cxx        \
 			   VerboseLevel.cxx                      \
 			   SecondaryTask.cxx                     \
 			   SecondaryTaskManager.cxx              \
+			   QEmacsLineEdit.cxx                    \
 			   QEmacsFileDownloader.cxx              \
 			   QEmacsBuildInformation.cxx            \
 			   QEmacsShortCutStyle.cxx               \
@@ -27,7 +28,7 @@ libTFELQEmacs_la_SOURCES = QEmacsResources.cxx        \
 			   QEmacsMajorModeChangeCommand.cxx      \
 			   QEmacsCommandFactory.cxx              \
 			   QEmacsBuffer.cxx                      \
-			   QEmacsLineEdit.cxx                    \
+			   QEmacsCommandLine.cxx                    \
 			   QEmacsProcessLineEdit.cxx             \
 			   QEmacsShellProcessLineEdit.cxx        \
 			   QEmacsTextEditBase.cxx                \
@@ -59,7 +60,7 @@ libTFELQEmacs_la_SOURCES = QEmacsResources.cxx        \
 nodist_libTFELQEmacs_la_SOURCES = moc_QEmacsWidget.cxx      \
 			   	  moc_QEmacsShortCutStyle.cxx               \
 			   	  moc_QEmacsCommand.cxx                     \
-			   	  moc_QEmacsLineEdit.cxx                    \
+			   	  moc_QEmacsCommandLine.cxx                    \
 			      moc_QEmacsProcessLineEdit.cxx             \
 			      moc_QEmacsShellProcessLineEdit.cxx        \
 				  moc_QEmacsBuffer.cxx                      \
@@ -81,6 +82,7 @@ nodist_libTFELQEmacs_la_SOURCES = moc_QEmacsWidget.cxx      \
 				  moc_ProcessOutputMajorModeBase.cxx        \
 			   	  moc_QAbstractScrollAreaWrapper.cxx        \
 			   	  moc_QWebEngineViewWrapper.cxx             \
+			   	  moc_QEmacsLineEdit.cxx                    \
 			   	  moc_QEmacsFileDownloader.cxx              \
 				  moc_ProcessInteractionFrame.cxx           \
 				  moc_DirectoryMajorMode.cxx

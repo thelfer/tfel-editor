@@ -18,9 +18,9 @@
 
 namespace qemacs {
 
-  struct InsertRectangle : public QEmacsLineEdit {
+  struct InsertRectangle : public QEmacsCommandLine {
     InsertRectangle(QEmacsTextEditBase& t, QEmacsWidget& p)
-        : QEmacsLineEdit(QObject::tr("String rectangle"), p),
+        : QEmacsCommandLine(QObject::tr("String rectangle"), p),
           textEdit(t) {
       static QString e("/rectangle-mode/insert/histroy");
       QSettings s;
@@ -105,15 +105,15 @@ namespace qemacs {
   };  // end of InsertRectangle
 
   struct QEmacsRectangleMode::RectangleModeLineEdit
-      : QEmacsLineEdit::CustomLineEdit {
+      : QEmacsCommandLine::CustomLineEdit {
     RectangleModeLineEdit(QEmacsTextEditBase& t,
                           QEmacsWidget& q,
-                          QEmacsLineEdit& p)
+                          QEmacsCommandLine& p)
         : CustomLineEdit(q, p),
           textEdit(t) {}  // end of RectangleModeLineEdit
 
     void keyPressEvent(QKeyEvent* ev) override {
-      auto* qle = qobject_cast<QEmacsLineEdit*>(this->parent());
+      auto* qle = qobject_cast<QEmacsCommandLine*>(this->parent());
       if ((ev->modifiers() == Qt::ControlModifier) &&
           (ev->key() == Qt::Key_G)) {
         if (qle != nullptr) {
@@ -144,7 +144,7 @@ namespace qemacs {
 
   QEmacsRectangleMode::QEmacsRectangleMode(QEmacsTextEditBase& t,
                                            QEmacsWidget& p)
-      : QEmacsLineEdit(QObject::tr("Ctrl-X r "), p, false),
+      : QEmacsCommandLine(QObject::tr("Ctrl-X r "), p, false),
         textEdit(t) {
     this->setLineEdit(new RectangleModeLineEdit(t, p, *this));
   }  // end of QEmacsRectangleMode::QEmacsRectangleMode

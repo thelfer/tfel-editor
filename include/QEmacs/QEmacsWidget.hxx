@@ -13,7 +13,6 @@
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QAction>
 #include <QtWidgets/QWidget>
-#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QStackedWidget>
 #include "QEmacs/Config.hxx"
@@ -25,6 +24,8 @@ namespace qemacs {
   struct QEmacsBuffer;
   //! forward declaration
   struct QEmacsLineEdit;
+  //! forward declaration
+  struct QEmacsCommandLine;
 
   //! \brief a wigdet providing an emacs-inspired editor
   struct QEMACS_VISIBILITY_EXPORT QEmacsWidget
@@ -111,7 +112,7 @@ namespace qemacs {
      * set an user input
      * \param[in] l : the line edit
      */
-    virtual void setUserInput(QEmacsLineEdit *const);
+    virtual void setUserInput(QEmacsCommandLine *const);
 
     virtual QEmacsBuffer *getBufferVisitingFile(const QString &);
 
@@ -121,7 +122,7 @@ namespace qemacs {
 
     virtual void removeUserInput();
 
-    virtual void removeUserInput(QEmacsLineEdit *);
+    virtual void removeUserInput(QEmacsCommandLine *);
 
     /*!
      * \param[in] b : if true, check if the buffer is ok to close
@@ -201,11 +202,11 @@ namespace qemacs {
     //! the minibuffer
     QStackedWidget *minibuffer;
     //! user message
-    QLineEdit *um;
+    QEmacsLineEdit *um;
     //! user input
-    std::vector<QEmacsLineEdit *> ui;
+    std::vector<QEmacsCommandLine *> ui;
     //! empty line edit
-    QLineEdit *eui;
+    QEmacsLineEdit *eui;
     //! the list of tokens pasted/killed
     QStringList killRing;
     //! id of the next buffer

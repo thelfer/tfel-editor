@@ -11,7 +11,7 @@
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/QEmacsPlainTextEdit.hxx"
-#include "QEmacs/QEmacsLineEdit.hxx"
+#include "QEmacs/QEmacsCommandLine.hxx"
 #include "QEmacs/QEmacsMajorModeFactory.hxx"
 #include "QEmacs/ProcessOutputFrame.hxx"
 #include "QEmacs/LaTeXSyntaxHighlighter.hxx"
@@ -43,9 +43,9 @@ namespace qemacs {
     return n;
   }
 
-  struct LaTeXMajorMode::LaTeXInsertBlock : public QEmacsLineEdit {
+  struct LaTeXMajorMode::LaTeXInsertBlock : public QEmacsCommandLine {
     LaTeXInsertBlock(QEmacsWidget& p, QEmacsTextEditBase& t)
-        : QEmacsLineEdit(QObject::tr("insert block :"), p),
+        : QEmacsCommandLine(QObject::tr("insert block :"), p),
           textEdit(t) {
       QStringList n;
       n << "figure"

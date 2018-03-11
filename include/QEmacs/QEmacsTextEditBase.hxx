@@ -14,7 +14,7 @@
 #include <QtGui/QTextCursor>
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QTextEdit>
-#include "QEmacs/QEmacsLineEdit.hxx"
+#include "QEmacs/QEmacsCommandLine.hxx"
 #include "QEmacs/QEmacsTextEditKeyPressEventFilter.hxx"
 
 namespace qemacs {
@@ -108,8 +108,11 @@ namespace qemacs {
     virtual void setMoveMode(QTextCursor::MoveMode);
 
    public:
+    QEmacsWidget &getQEmacsWidget();
+    const QEmacsWidget &getQEmacsWidget() const;
+
     /*!
-     * A QEmacsLineEdit asking the user whether to save
+     * A QEmacsCommandLine asking the user whether to save
      */
     struct SaveInput : public QEmacsYesOrNoUserInput {
       bool isBlocking() const override;
@@ -239,7 +242,7 @@ namespace qemacs {
      * a qemacs user input which asks
      * the user where he wants to go
      */
-    struct GotoLine : public QEmacsLineEdit {
+    struct GotoLine : public QEmacsCommandLine {
       GotoLine(QEmacsTextEditBase &, QEmacsWidget &);
 
       ~GotoLine() override;

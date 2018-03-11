@@ -6,7 +6,7 @@
  */
 
 #include "QEmacs/QEmacsCommand.hxx"
-#include "QEmacs/QEmacsLineEdit.hxx"
+#include "QEmacs/QEmacsCommandLine.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/QEmacsPlainTextEdit.hxx"

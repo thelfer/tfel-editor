@@ -20,7 +20,7 @@ namespace qemacs {
                                                const QString& c,
                                                const QString& m,
                                                QEmacsWidget& p)
-      : QEmacsLineEdit(l, p), mode(m) {
+      : QEmacsCommandLine(l, p), mode(m) {
     if (!c.isEmpty()) {
       this->input->setText(c);
     }

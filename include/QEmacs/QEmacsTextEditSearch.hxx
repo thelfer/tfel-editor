@@ -11,7 +11,7 @@
 #include <QtGui/QTextCursor>
 #include <QtGui/QTextDocument>
 
-#include "QEmacs/QEmacsLineEdit.hxx"
+#include "QEmacs/QEmacsCommandLine.hxx"
 #include "QEmacs/QEmacsTextEditKeyPressEventFilter.hxx"
 
 namespace qemacs {
@@ -54,7 +54,7 @@ namespace qemacs {
   };  // end of QEmacsTextEditSearchFilter
 
   struct QEMACS_VISIBILITY_EXPORT QEmacsTextEditSearch
-      : public QEmacsLineEdit {
+      : public QEmacsCommandLine {
 
     QEmacsTextEditSearch(QEmacsTextEditBase&,
                          QEmacsWidget&,

@@ -19,7 +19,7 @@ namespace qemacs
       textEdit(t)
   {
     auto *mlayout = new QVBoxLayout;
-    auto *s = new MaterialPropertySelector(this);
+    auto* s = new MaterialPropertySelector(t.getQEmacsWidget(), this);
     mlayout->addWidget(s);  
     this->setLayout(mlayout);
     QObject::connect(s,&MaterialPropertySelector::materialPropertiesSelected,

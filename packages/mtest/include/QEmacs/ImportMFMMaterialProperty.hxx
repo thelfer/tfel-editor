@@ -18,6 +18,9 @@
 
 namespace qemacs {
 
+  // forward declaration
+  struct QEmacsWidget;
+
   /*!
    * \brief a dialog box used to import material properties from the
    * MFrontMaterials project.
@@ -45,10 +48,12 @@ namespace qemacs {
     };
     /*!
      * \brief constructor
+     * \param[in] q: qemacs widget
      * \param[in] o: options
      * \param[in] p: parent
      */
-    ImportMFMMaterialProperty(const Options& o,
+    ImportMFMMaterialProperty(QEmacsWidget&,
+                              const Options& o,
                               QWidget* const p = nullptr);
     //! \return the selected library
     QString getLibrary() const;

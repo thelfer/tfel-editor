@@ -6,21 +6,22 @@
  */
 
 #include <QtWidgets/QLabel>
-#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QDateEdit>
 #include <QtWidgets/QGridLayout>
+#include "QEmacs/QEmacsLineEdit.hxx"
 #include "QEmacs/ImplicitDSLWizard.hxx"
 
 namespace qemacs {
 
-  BehaviourMetaDataPage::BehaviourMetaDataPage(QWizard *const p)
+  BehaviourMetaDataPage::BehaviourMetaDataPage(QEmacsWidget &q,
+                                               QWizard *const p)
       : QWizardPage(p) {
     // main grid layout
     auto *const mgl = new QGridLayout;
     auto *const bnl = new QLabel(QObject::tr("Behaviour name"));
-    auto *const bne = new QLineEdit;
+    auto *const bne = new QEmacsLineEdit(q);
     auto *const anl = new QLabel(QObject::tr("Author name"));
-    auto *const ane = new QLineEdit;
+    auto *const ane = new QEmacsLineEdit(q);
     auto *const dl = new QLabel(QObject::tr("Date"));
     auto *const de = new QDateEdit(QDate::currentDate());
     mgl->addWidget(bnl, 0, 0);
@@ -38,8 +39,8 @@ namespace qemacs {
 
   BehaviourMetaDataPage::~BehaviourMetaDataPage() = default;
 
-  ImplicitDSLWizard::ImplicitDSLWizard(QWidget *const p)
-      : QWizard(p), md(new BehaviourMetaDataPage(this)) {
+  ImplicitDSLWizard::ImplicitDSLWizard(QEmacsWidget& q,QWidget *const p)
+      : QWizard(p), md(new BehaviourMetaDataPage(q,this)) {
     this->setWindowTitle(QObject::tr("Implicit DSL Wizard"));
     this->setPage(0, this->md);
     this->setStartId(0);

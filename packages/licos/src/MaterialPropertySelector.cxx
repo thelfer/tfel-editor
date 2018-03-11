@@ -15,14 +15,14 @@
 #include<QtWidgets/QHeaderView>
 #include<QtWidgets/QVBoxLayout>
 #include<QtWidgets/QHBoxLayout>
-#include<QtWidgets/QLineEdit>
 #include<QtWidgets/QPushButton>
 #include<QtWidgets/QFileDialog>
 #include<QtWidgets/QDialogButtonBox>
 #include<QtWidgets/QDialog>
 
-#include"QEmacs/Utilities.hxx"
-#include"QEmacs/MaterialPropertySelector.hxx"
+#include "QEmacs/Utilities.hxx"
+#include "QEmacs/QEmacsLineEdit.hxx"
+#include "QEmacs/MaterialPropertySelector.hxx"
 
 namespace qemacs
 {
@@ -129,13 +129,14 @@ namespace qemacs
     this->endResetModel();
   }
 
-  MaterialPropertySelector::MaterialPropertySelector(QWidget* const p)
-    : QWidget(p),
-      model(new MaterialPropertyModel(this)),
-      view(new QTableView(this)),
-      l(new QLabel(QObject::tr("<b>Material properties available in MFrontMaterials:</b>"))),
-      lf(new QLineEdit)
-  {
+  MaterialPropertySelector::MaterialPropertySelector(QEmacsWidget& q,
+                                                     QWidget* const p)
+      : QWidget(p),
+        model(new MaterialPropertyModel(this)),
+        view(new QTableView(this)),
+        l(new QLabel(QObject::tr("<b>Material properties available in "
+                                 "MFrontMaterials:</b>"))),
+        lf(new QEmacsLineEdit(q)) {
     auto *mlayout = new QVBoxLayout;
     auto *flayout = new QHBoxLayout;
     // MFrontMaterials
@@ -165,7 +166,7 @@ namespace qemacs
 		     this,&MaterialPropertySelector::openLibrary);
     QObject::connect(add,&QPushButton::pressed,
 		     this,&MaterialPropertySelector::addMaterialProperties);
-    QObject::connect(lf,&QLineEdit::textChanged,
+    QObject::connect(lf,&QEmacsLineEdit::textChanged,
 		     this,&MaterialPropertySelector::updateMFMModel);
   } // end of MaterialPropertySelector::MaterialPropertySelector
 

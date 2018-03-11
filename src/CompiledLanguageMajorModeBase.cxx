@@ -9,7 +9,7 @@
 #include<QtCore/QSettings>
 
 #include"QEmacs/QEmacsWidget.hxx"
-#include"QEmacs/QEmacsLineEdit.hxx"
+#include"QEmacs/QEmacsCommandLine.hxx"
 #include"QEmacs/QEmacsShellProcessLineEdit.hxx"
 #include"QEmacs/QEmacsTextEdit.hxx"
 #include"QEmacs/CompiledLanguageMajorModeBase.hxx"

@@ -18,13 +18,16 @@
 
 namespace qemacs {
 
+  // forward declaration
+  struct QEmacsWidget;
 
   struct ImportMFMBehaviour : QDialog {
     /*!
      * \brief constructor
+     * \param[in] q: qemacs widget
      * \param[in] p: parent
      */
-    ImportMFMBehaviour(QWidget* const p = nullptr);
+    ImportMFMBehaviour(QEmacsWidget& q, QWidget* const p = nullptr);
     //! \return the selected behaviour.
     BehaviourDescription getSelectedBehaviour() const;
     //! destructor

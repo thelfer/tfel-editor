@@ -8,7 +8,7 @@
 #ifndef LIB_QEMACS_QEMACSRECTANGLEMODE_HXX
 #define LIB_QEMACS_QEMACSRECTANGLEMODE_HXX
 
-#include "QEmacs/QEmacsLineEdit.hxx"
+#include "QEmacs/QEmacsCommandLine.hxx"
 
 namespace qemacs {
 
@@ -17,7 +17,7 @@ namespace qemacs {
   /*!
    *
    */
-  struct QEmacsRectangleMode : public QEmacsLineEdit {
+  struct QEmacsRectangleMode : public QEmacsCommandLine {
     QEmacsRectangleMode(QEmacsTextEditBase&, QEmacsWidget&);
 
     virtual bool isBlocking() const override;

@@ -10,14 +10,18 @@
 
 #include <QtWidgets/QWizard>
 
-namespace qemacs{
+namespace qemacs {
+
+  // forward declaration
+  struct QEmacsWidget;
 
   struct BehaviourMetaDataPage : public QWizardPage {
     /*!
      * \brief constructor
+     * \param[in] q: qemacs widget
      * \param[in] p: parent
      */
-    BehaviourMetaDataPage(QWizard *const);
+    BehaviourMetaDataPage(QEmacsWidget&, QWizard *const);
 
     bool validatePage() override;
     //!
@@ -32,9 +36,10 @@ namespace qemacs{
   struct ImplicitDSLWizard : public QWizard {
     /*!
      * \brief constructor
+     * \param[in] q: qemacs widget
      * \param[in] p: parent
      */
-    ImplicitDSLWizard(QWidget *const p = nullptr);
+    ImplicitDSLWizard(QEmacsWidget &, QWidget *const p = nullptr);
     //! destructor
     ~ImplicitDSLWizard() override;
 

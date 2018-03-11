@@ -8,7 +8,7 @@
 #ifndef LIB_QEMACS_QEMACSTEXTEDITQUERYREPLACE_HXX
 #define LIB_QEMACS_QEMACSTEXTEDITQUERYREPLACE_HXX 
 
-#include"QEmacs/QEmacsLineEdit.hxx"
+#include"QEmacs/QEmacsCommandLine.hxx"
 
 namespace qemacs{
 
@@ -18,7 +18,7 @@ namespace qemacs{
   struct QEmacsTextEdit;
 
   struct QEmacsTextEditQueryReplace
-    : public QEmacsLineEdit
+    : public QEmacsCommandLine
   {
     QEmacsTextEditQueryReplace(QEmacsTextEditBase&, QEmacsWidget&);
     //! desctructor

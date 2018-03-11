@@ -12,8 +12,8 @@
 #include <vector>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QPushButton>
-#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QWizard>
+#include "QEmacs/QEmacsLineEdit.hxx"
 #include "QEmacs/BehaviourDescription.hxx"
 #include "QEmacs/MaterialPropertyDescription.hxx"
 #include "QEmacs/MaterialPropertySelectorWidget.hxx"
@@ -44,7 +44,7 @@ namespace qemacs {
   };  // end of struct ImportBehaviour
 
   struct ImportBehaviour::SelectBehaviourPage : public QWizardPage {
-    SelectBehaviourPage(ImportBehaviour &);
+    SelectBehaviourPage(QEmacsWidget &, ImportBehaviour &);
 
    private slots:
 
@@ -75,7 +75,7 @@ namespace qemacs {
     //! list of modelling hypothesis for the selected behaviour
     QComboBox *mh;
     //! the library location
-    QLineEdit *le;
+    QEmacsLineEdit *le;
     //! select library button
     QPushButton *slb;
     //! the calling wizard
@@ -84,7 +84,7 @@ namespace qemacs {
   };
 
   struct ImportBehaviour::MaterialPropertyPage : public QWizardPage {
-    MaterialPropertyPage(ImportBehaviour &);
+    MaterialPropertyPage(QEmacsWidget &, ImportBehaviour &);
 
     int nextId() const override;
     //! return the list of selected material properties
@@ -97,6 +97,7 @@ namespace qemacs {
     void updateMaterialPropertiesList();
 
    private:
+    QEmacsWidget &qemacs;
     //! the calling wizard
     ImportBehaviour &wizard;
     //! list of material property selectors

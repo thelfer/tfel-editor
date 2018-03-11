@@ -471,7 +471,7 @@ namespace qemacs {
   }
 
   void MFrontMajorMode::runImplicitDSLWizard() {
-    ImplicitDSLWizard w;
+    ImplicitDSLWizard w(this->qemacs);
     if (w.exec() == QDialog::Accepted) {
     }
   }  // end of MFrontMajorMode::runImplicitDSLWizard
