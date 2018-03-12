@@ -35,4 +35,5 @@ endif(CMAKE_CONFIGURATION_TYPES)
 
 add_subdirectory(include)
 add_subdirectory(src)
+add_subdirectory(utils)
 add_subdirectory(packages)

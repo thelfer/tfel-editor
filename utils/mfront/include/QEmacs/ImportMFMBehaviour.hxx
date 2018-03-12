@@ -8,20 +8,17 @@
 #ifndef LIB_QEMACS_IMPORTMFMBEHAVIOUR_HXX
 #define LIB_QEMACS_IMPORTMFMBEHAVIOUR_HXX
 
-#include <memory>
-#include <utility>
-#include <QtCore/QString>
 #include <QtWidgets/QDialog>
-#include <QtWidgets/QComboBox>
-#include <QtWidgets/QTreeView>
 #include "QEmacs/BehaviourDescription.hxx"
 
 namespace qemacs {
 
   // forward declaration
   struct QEmacsWidget;
+  // forward declaration
+  struct SelectMFMBehaviour;
 
-  struct ImportMFMBehaviour : QDialog {
+  struct QEMACS_MIW_VISIBILITY_EXPORT ImportMFMBehaviour : QDialog {
     /*!
      * \brief constructor
      * \param[in] q: qemacs widget
@@ -34,11 +31,7 @@ namespace qemacs {
     ~ImportMFMBehaviour() override;
 
    protected:
-    QTreeView* view;
-    // interface
-    QComboBox* isb;
-    // hypothesis
-    QComboBox* hsb;
+    SelectMFMBehaviour* b;
 
    private:
     Q_OBJECT

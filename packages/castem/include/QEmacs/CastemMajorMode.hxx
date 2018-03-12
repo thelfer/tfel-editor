@@ -83,9 +83,9 @@ namespace qemacs {
 
     virtual void openWebHelp(const QString &);
 
-    virtual void sendToCastem(const QString &);
+    virtual bool sendToCastem(const QString &);
 
-    virtual void startCastem();
+    virtual bool startCastem();
 
     // completer
     QCompleter *c;

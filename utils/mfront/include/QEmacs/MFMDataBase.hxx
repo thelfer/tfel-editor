@@ -10,6 +10,7 @@
 
 #include <QtCore/QStringList>
 #include <QtCore/QAbstractItemModel>
+#include "QEmacs/QEmacsMFrontImportWidgetsConfig.hxx"
 
 namespace qemacs {
 
@@ -18,7 +19,7 @@ namespace qemacs {
    * in the `lib` (or `bin` on Windows) subdirectories of directories
    * listed in the `MFMHOME` environment variable.
    */
-  struct MFMDataBase {
+  struct QEMACS_MIW_VISIBILITY_EXPORT  MFMDataBase {
     //! \brief constructor
     MFMDataBase();
     /*!

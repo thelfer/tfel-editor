@@ -13,13 +13,15 @@
 #include "TFEL/Utilities/GenTypeBase.hxx"
 #include "QEmacs/QEmacsLineEdit.hxx"
 #include "QEmacs/MaterialPropertyDescription.hxx"
+#include "QEmacs/QEmacsMFrontImportWidgetsConfig.hxx"
 
 namespace qemacs {
 
   /*!
    * \brief a widget aiming at selecting material property
    */
-  struct MaterialPropertySelectorWidget : QGroupBox {
+  struct QEMACS_MIW_VISIBILITY_EXPORT MaterialPropertySelectorWidget
+      : QGroupBox {
     /*!
      * \brief constructor
      * \param[in] q: qemacs widget

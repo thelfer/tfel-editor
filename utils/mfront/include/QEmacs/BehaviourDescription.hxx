@@ -13,11 +13,12 @@
 #include <QtCore/QString>
 #include "MTest/Behaviour.hxx"
 #include "QEmacs/MaterialPropertyDescription.hxx"
+#include "QEmacs/QEmacsMFrontImportWidgetsConfig.hxx"
 
 namespace qemacs {
 
   //! \brief structure describing a behaviour
-  struct BehaviourDescription {
+  struct QEMACS_MIW_VISIBILITY_EXPORT BehaviourDescription {
     //! default constructor
     BehaviourDescription();
     //! move constructor

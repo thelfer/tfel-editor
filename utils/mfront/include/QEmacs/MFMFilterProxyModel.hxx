@@ -11,13 +11,15 @@
 #include <QtCore/QString>
 #include <QtCore/QRegExp>
 #include <QtCore/QSortFilterProxyModel>
+#include "QEmacs/QEmacsMFrontImportWidgetsConfig.hxx"
 
 namespace qemacs {
 
   /*!
    * \brief A simple proxy model to filter MFrontMaterials entries.
    */
-  struct MFMFilterProxyModel : public QSortFilterProxyModel {
+  struct QEMACS_MIW_VISIBILITY_EXPORT MFMFilterProxyModel
+      : public QSortFilterProxyModel {
     MFMFilterProxyModel(QObject* parent = nullptr);
 
    public slots:

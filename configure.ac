@@ -186,6 +186,10 @@ AC_CONFIG_FILES([Makefile
 		 include/Makefile
 		 src/Makefile
 		 src/QEmacsBuildInformation.cxx
+		 utils/Makefile
+		 utils/mfront/Makefile
+		 utils/mfront/src/Makefile
+		 utils/mfront/include/Makefile
 		 packages/Makefile
 		 packages/castem/Makefile
 		 packages/castem/src/Makefile

@@ -9,6 +9,7 @@
 #define LIB_MATERIALPROPERTYDESCRIPTION_HXX
 
 #include <QtCore/QString>
+#include "TFEL/Utilities/GenTypeBase.hxx"
 
 namespace qemacs{
 

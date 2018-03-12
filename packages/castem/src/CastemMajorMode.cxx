@@ -311,25 +311,28 @@ namespace qemacs {
                      &CastemMajorMode::sendBufferToCastem);
   }  // end of CastemMajorMode
 
-  void CastemMajorMode::sendToCastem(const QString& l) {
-    this->startCastem();
+  bool CastemMajorMode::sendToCastem(const QString& l) {
+    if (!this->startCastem()) {
+      return false;
+    }
     if (this->co == nullptr) {
-      return;
+      return false;
     }
     auto& p = this->co->getProcess();
     if (p.state() != QProcess::Running) {
-      return;
+      return false;
     }
     p.write((l + '\n').toLatin1());
+    return true;
   }  // end of CastemMajorMode::sendToCastem
 
-  void CastemMajorMode::startCastem() {
+  bool CastemMajorMode::startCastem() {
     if (this->co == nullptr) {
       this->co =
           new ProcessInteractionFrame(this->qemacs, this->buffer);
       this->co->setMajorMode("castem-output");
       if (this->co == nullptr) {
-        return;
+        return false;
       }
       this->co->setAttribute( Qt::WA_DeleteOnClose );
       QObject::connect(this->co, &QObject::destroyed, this,
@@ -348,14 +351,14 @@ namespace qemacs {
 #endif
       p.waitForStarted();
       this->buffer.attachSecondaryTask("* castem *", this->co);
-      //       QObject::connect(this->co, &QWidget::closed(), this,
-      //                        [this] { this->co == nullptr; });
-    } else {
-      auto& p = co->getProcess();
       if (p.state() != QProcess::Running) {
-        this->co=nullptr;
-        this->startCastem();
+        return false;
       }
+    }
+    auto& p = co->getProcess();
+    if (p.state() != QProcess::Running) {
+      this->co = nullptr;
+      return this->startCastem();
     }
   }
 
@@ -546,8 +549,7 @@ namespace qemacs {
   bool CastemMajorMode::sendLineToCastem() {
     auto tc = this->textEdit.textCursor();
     tc.select(QTextCursor::LineUnderCursor);
-    this->sendToCastem(tc.selectedText());
-    return true;
+    return this->sendToCastem(tc.selectedText());
   }  // end of CastemMajorMode::sendLineToCastem
 
   bool CastemMajorMode::sendRegionToCastem() {
@@ -561,7 +563,9 @@ namespace qemacs {
     e.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
     while (b < e) {
       b.select(QTextCursor::LineUnderCursor);
-      this->sendToCastem(b.selectedText());
+      if (!this->sendToCastem(b.selectedText())) {
+        return false;
+      }
       b.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor);
     }
     return true;
@@ -574,7 +578,9 @@ namespace qemacs {
     e.movePosition(QTextCursor::End, QTextCursor::MoveAnchor);
     while (b < e) {
       b.select(QTextCursor::LineUnderCursor);
-      this->sendToCastem(b.selectedText());
+      if (!this->sendToCastem(b.selectedText())) {
+        return false;
+      }
       b.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor);
     }
     return true;
@@ -583,11 +589,11 @@ namespace qemacs {
   CastemMajorMode::~CastemMajorMode() {
     delete this->ha1;
     delete this->ha2;
-    }
-
-    static StandardQEmacsMajorModeProxy<CastemMajorMode> proxy(
-        "Cast3M",
-        QVector<QRegExp>() << QRegExp("^.+\\.dgibi$"),
-        ":/Cast3MIcon.png");
+  }
+  
+  static StandardQEmacsMajorModeProxy<CastemMajorMode> proxy(
+      "Cast3M",
+      QVector<QRegExp>() << QRegExp("^.+\\.dgibi$"),
+      ":/Cast3MIcon.png");
 
 }  // end of namespace qemacs

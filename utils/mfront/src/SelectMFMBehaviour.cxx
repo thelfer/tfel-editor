@@ -1,27 +1,26 @@
 /*!
- * \file   ImportMFMBehaviour.cxx
- * \brief
+ * \file   SelectMFMBehaviour.cxx
+ * \brief    
  * \author Thomas Helfer
- * \date   19/02/2018
+ * \date   12/03/2018
  */
 
 #include <stdexcept>
 #include <QtCore/QRegExp>
 #include <QtGui/QStandardItemModel>
 #include <QtWidgets/QCheckBox>
-#include <QtWidgets/QDialogButtonBox>
 #include "TFEL/System/ExternalLibraryManager.hxx"
 #include "QEmacs/QEmacsLineEdit.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
 #include "QEmacs/MFMDataBase.hxx"
 #include "QEmacs/MFMFilterProxyModel.hxx"
-#include "QEmacs/ImportMFMBehaviour.hxx"
+#include "QEmacs/SelectMFMBehaviour.hxx"
 
 namespace qemacs {
 
-  ImportMFMBehaviour::ImportMFMBehaviour(QEmacsWidget& q,
+  SelectMFMBehaviour::SelectMFMBehaviour(QEmacsWidget& q,
                                          QWidget* const p)
-      : QDialog(p),
+      : QWidget(p),
         view(new QTreeView),
         isb(new QComboBox),
         hsb(new QComboBox) {
@@ -110,22 +109,15 @@ namespace qemacs {
                          this->view->hideColumn(3);
                        }
                      });
-    /* buttons */
-    auto* bb = new QDialogButtonBox(QDialogButtonBox::Ok |
-                                    QDialogButtonBox::Cancel);
-    connect(bb, &QDialogButtonBox::accepted, this,
-            &QDialog::accept);
-    connect(bb, &QDialogButtonBox::rejected, this, &QDialog::reject);
     // main layout
     lv->addWidget(this->view);
     lv->addLayout(fg);
     lv->addWidget(sl);
-    lv->addWidget(bb);
     this->setLayout(lv);
-  }  // end of ImportMFMBehaviour::ImportMFMBehaviour
+  }  // end of SelectMFMBehaviour::SelectMFMBehaviour
 
   BehaviourDescription
-  ImportMFMBehaviour::getSelectedBehaviour() const {
+  SelectMFMBehaviour::getSelectedBehaviour() const {
     const auto indexes =
         this->view->selectionModel()->selectedRows();
     if (indexes.size() != 1) {
@@ -141,8 +133,9 @@ namespace qemacs {
     b.minterface = m->data(ii).toString();
     b.hypothesis = this->hsb->currentText();
     return b;
-  }  // end of ImportMFMBehaviour::getSelectedBehaviour
+  }  // end of SelectMFMBehaviour::getSelectedBehaviour
 
-  ImportMFMBehaviour::~ImportMFMBehaviour() = default;
+  SelectMFMBehaviour::~SelectMFMBehaviour() = default;
 
 }  // end of namespace qemacs
+

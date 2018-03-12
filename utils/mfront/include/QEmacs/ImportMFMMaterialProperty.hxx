@@ -14,7 +14,7 @@
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QTreeView>
-// #include "QEmacs/MaterialPropertyDescription.hxx"
+#include "QEmacs/QEmacsMFrontImportWidgetsConfig.hxx"
 
 namespace qemacs {
 
@@ -26,7 +26,8 @@ namespace qemacs {
    * MFrontMaterials project.
    * \see the MFMDataBase class.
    */
-  struct ImportMFMMaterialProperty : QDialog {
+  struct QEMACS_MIW_VISIBILITY_EXPORT ImportMFMMaterialProperty
+      : QDialog {
     //! option of the dialog box
     struct Options {
       /*!
