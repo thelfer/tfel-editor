@@ -11,14 +11,312 @@
 #include <QtCore/QTemporaryFile>
 #include <QtGui/QSyntaxHighlighter>
 #include <QtGui/QDesktopServices>
+#include "TFEL/Glossary/Glossary.hxx"
+#include "TFEL/Glossary/GlossaryEntry.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/ProcessOutputFrame.hxx"
 #include "QEmacs/QEmacsTextEditBase.hxx"
+#include "QEmacs/ImportBehaviour.hxx"
+#include "QEmacs/ImportMFMBehaviour.hxx"
 #include "QEmacs/CastemMajorMode.hxx"
 #include "QEmacs/CastemSyntaxHighlighter.hxx"
 #include "QEmacs/QEmacsMajorModeFactory.hxx"
 
 namespace qemacs {
+
+  static QString getCastemName(const std::string& n) {
+    using tfel::glossary::Glossary;
+    static std::map<std::string, const char*> cns = {
+        {Glossary::Temperature, "T"},
+        {Glossary::KelvinTemperature, "TK"},
+        {Glossary::MeanTemperature, "<T>"},
+        {Glossary::IrradiationTemperature, "TIRR"},
+        {Glossary::MeanIrradiationTemperature, "<TI>"},
+        {Glossary::ThermalConductivity, "K"},
+        {Glossary::ThermalConductivity1, "K1"},
+        {Glossary::ThermalConductivity2, "K2"},
+        {Glossary::ThermalConductivity3, "K3"},
+        {Glossary::ConvectiveHeatTransferCoefficient, "H"},
+        {Glossary::YoungModulus, "YOUN"},
+        {Glossary::YoungModulus1, "YG1"},
+        {Glossary::YoungModulus2, "YG2"},
+        {Glossary::YoungModulus3, "YG3"},
+        {Glossary::PoissonRatio, "NU"},
+        {Glossary::PoissonRatio12, "NU12"},
+        {Glossary::PoissonRatio23, "NU23"},
+        {Glossary::PoissonRatio13, "NU13"},
+        {Glossary::ShearModulus12, "G12"},
+        {Glossary::ShearModulus23, "G23"},
+        {Glossary::ShearModulus13, "G13"},
+        {Glossary::MassDensity, "RHO"},
+        {Glossary::SpecificHeat, "C"},
+        {Glossary::ThermalExpansion, "ALPH"},
+        {Glossary::ThermalExpansion1, "ALP1"},
+        {Glossary::ThermalExpansion2, "ALP2"},
+        {Glossary::ThermalExpansion3, "ALP3"},
+        {Glossary::PlateWidth, "DIM3"},
+        {Glossary::PowerDensity, "Q"},
+        {Glossary::Porosity, "PORO"},
+        {Glossary::GrainSize, "GRSI"},
+        {Glossary::FissionDensity, "DFIS"},
+        {Glossary::BurnUp_AtPercent, "FIMA"},
+        {Glossary::IrradiationDamage, "DOSE"},
+        {Glossary::Pressure, "PRES"},
+        /* name of neutron flux and fluence */
+        {Glossary::NeutronFlux, "FLUX"},
+        {Glossary::NeutronFluence, "FLUE"},
+        {Glossary::FastNeutronFlux_01MeV, "FFLX"},
+        {Glossary::FastNeutronFluence_01MeV, "FFLE"},
+        {Glossary::FastNeutronFlux_1MeV, "FFX2"},
+        {Glossary::FastNeutronFluence_1MeV, "FFE2"},
+        /* name of orthotropic axis */
+        {Glossary::OrthotropicAxisX1, "V1X"},
+        {Glossary::OrthotropicAxisY1, "V1Y"},
+        {Glossary::OrthotropicAxisZ1, "V1Z"},
+        {Glossary::OrthotropicAxisX2, "V2X"},
+        {Glossary::OrthotropicAxisY2, "V2Y"},
+        {Glossary::OrthotropicAxisZ2, "V2Z"},
+        /* beam properties */
+        {Glossary::CrossSectionArea, "SECT"},
+        {Glossary::FirstAxisSecondMomentArea, "INRY"},
+        {Glossary::SecondAxisSecondMomentArea, "INRZ"},
+        {Glossary::TorsionConstant, "TORS"}};
+    const auto p = cns.find(n);
+    if (p != cns.end()) {
+      return p->second;
+    }
+    return QString::fromStdString(n).left(4).toUpper();
+  }  // end of getCastemNames
+
+  static void insertText(QTextCursor& tc, const QStringList& words) {
+    auto pw = words.begin();
+    auto t = QString();
+    while (pw != words.end()) {
+      const auto w = pw->trimmed();
+      if (t.isEmpty()) {
+        t += w;
+      } else {
+        if (t.size() + 1 + w.size() < 72) {
+          if (w != ";") {
+            t += " ";
+          }
+          t += w;
+        } else {
+          tc.insertText(t + '\n');
+          t.clear();
+          t += w;
+        }
+      }
+      ++pw;
+    }
+    if (!t.isEmpty()) {
+      tc.insertText(t + '\n');
+    }
+  }  // end of insertText
+
+  static void insertBehaviour(QEmacsTextEditBase& textEdit,
+                              const BehaviourDescription& bd) {
+    using tfel::glossary::Glossary;
+    using tfel::material::MechanicalBehaviourBase;
+    using tfel::material::ModellingHypothesis;
+    auto b = bd.generate();
+    if (!b) {
+      return;
+    }
+    const auto fs =
+        ((b->getBehaviourType() ==
+          MechanicalBehaviourBase::STANDARDFINITESTRAINBEHAVIOUR) &&
+         (b->getBehaviourKinematic() ==
+          MechanicalBehaviourBase::FINITESTRAINKINEMATIC_F_CAUCHY));
+    const auto orthotropic = b->getSymmetryType() == 1;
+    auto tc = textEdit.textCursor();
+    tc.beginEditBlock();
+    // material properties
+    if (!b->getMaterialPropertiesNames().empty()) {
+      tc.insertText("* material properties for behaviour '" +
+                    bd.behaviour + "'\n");
+      tc.insertText("MPROPS = 'TABLE';\n");
+      for (const auto& m : b->getMaterialPropertiesNames()) {
+        if ((m == Glossary::OrthotropicAxisX1) ||
+            (m == Glossary::OrthotropicAxisY1) ||
+            (m == Glossary::OrthotropicAxisZ1) ||
+            (m == Glossary::OrthotropicAxisX2) ||
+            (m == Glossary::OrthotropicAxisY2) ||
+            (m == Glossary::OrthotropicAxisZ2)) {
+          continue;
+        }
+      if (((m == Glossary::ThermalExpansion) ||
+           (m == Glossary::ThermalExpansion1) ||
+           (m == Glossary::ThermalExpansion2) ||
+           (m == Glossary::ThermalExpansion3)) &&
+          (fs)) {
+        continue;
+      }
+      const auto mp = QString::fromStdString(m);
+      auto mp_compare = [&mp](const MaterialPropertyDescription& mpd) {
+        if (mpd.is<ConstantMaterialPropertyDescription>()) {
+          const auto& cmpd =
+              mpd.get<ConstantMaterialPropertyDescription>();
+          return mp == cmpd.name;
+        } else if (mpd.is<CastemMaterialPropertyDescription>()) {
+          const auto& cmpd =
+              mpd.get<CastemMaterialPropertyDescription>();
+          return mp == cmpd.name;
+        }
+        return false;
+      };
+      const auto pmpd =
+          std::find_if(bd.material_properties.begin(),
+                       bd.material_properties.end(), mp_compare);
+      if (pmpd != bd.material_properties.end()) {
+        if (pmpd->is<ConstantMaterialPropertyDescription>()) {
+          const auto& cmpd =
+              pmpd->get<ConstantMaterialPropertyDescription>();
+          tc.insertText("MPROPS. '" + mp + "' = " +
+                        QString::number(cmpd.value) + ";\n");
+        } else if (pmpd->is<CastemMaterialPropertyDescription>()) {
+          const auto& cmpd =
+              pmpd->get<CastemMaterialPropertyDescription>();
+          tc.insertText("MPROPS. '" + mp + "' = 'TABLE';\n");
+          tc.insertText("MPROPS. '" + mp + "'. 'MODELE' = '" +
+                        cmpd.function + "';\n");
+          tc.insertText("MPROPS. '" + mp + "'. 'LIBRAIRIE' = '" +
+                        cmpd.library + "';\n");
+          auto args = QStringList{};
+          args.append("MPROPS. '" + mp + "'. 'VARIABLES' = ");
+          for (const auto& a : cmpd.arguments) {
+            args.append("'" + getCastemName(a.toStdString()) + "'");
+          }
+          args.append(";");
+          insertText(tc, args);
+        } else {
+          tc.insertText("MPROPS. '" + mp + "' = ...;\n");
+        }
+        } else {
+          tc.insertText("MPROPS. '" + mp + "' = ...;\n");
+        }
+      }
+      tc.insertText("\n");
+    }
+    auto mprops = QStringList();
+    mprops.append("MPNAMES =");
+    for (const auto& n : b->getMaterialPropertiesNames()) {
+      mprops.append("'" +getCastemName(n)+"'");
+    }
+    mprops.append(";");
+    insertText(tc, mprops);
+    if (!b->getInternalStateVariablesNames().empty()) {
+      auto isvs = QStringList();
+      isvs.append("ISVNAMES = 'MOTS'");
+      for (const auto& isvn : b->getInternalStateVariablesNames()) {
+        auto n = getCastemName(isvn);
+        const auto isvtype = b->getInternalStateVariableType(isvn);
+        if (isvtype == 0) {
+          // scalar
+          isvs.append("'" + n + "'");
+        } else if (isvtype == 1) {
+          // symmetric tensor
+          if (n.size() > 2) {
+            n = n.left(2);
+          }
+          for (const auto& s : b->getStensorComponentsSuffixes()) {
+            isvs.append("'" + n + QString::fromStdString(s) + "'");
+          }
+        } else if (isvtype == 3) {
+          // unsymmetric tensor
+          if (n.size() > 2) {
+            n = n.left(2);
+          }
+          for (const auto& s : b->getTensorComponentsSuffixes()) {
+            isvs.append("'" + n + QString::fromStdString(s) + "'");
+          }
+        } else {
+          isvs.clear();
+          isvs.append(QObject::tr("* error: unsupported internal "
+                                  "state variable type for "
+                                  "variable '%1''")
+                          .arg(QString::fromStdString(isvn)));
+          break;
+        }
+      }
+      isvs.append(";");
+      insertText(tc, isvs);
+    }
+    if (!b->getExternalStateVariablesNames().empty()) {
+      auto esvs = QStringList();
+      esvs.append("ESVNAMES = 'MOTS'");
+      for (const auto& esvn : b->getExternalStateVariablesNames()) {
+        esvs.append("'" + getCastemName(esvn) + "'");
+      }
+      esvs.append(";");
+      insertText(tc,esvs);
+    }
+    auto modl = QStringList();
+    modl.append("??? = 'MODELISER' ???? 'MECANIQUE' 'ELASTIQUE'");
+    if (!orthotropic) {
+      modl.append(" 'ISOTROPE'");
+    } else {
+      modl.append(" 'ORTHOTROPE'");
+    }
+    if (fs) {
+      modl.append(" 'EPSILON' 'UTILISATEUR'");
+    }
+    modl.append("'LIB_LOI' '" + bd.library + "'");
+    modl.append("'FCT_LOI' '" + bd.behaviour + "'");
+    modl.append("'C_MATERIAU' MPNAMES");
+    if (!b->getInternalStateVariablesNames().empty()) {
+      modl.append("'C_VARINTER' ISVNAMES");
+    }
+    if (!b->getExternalStateVariablesNames().empty()) {
+      modl.append("'PARA_LOI' ESVNAMES");
+    }
+    const auto h = b->getHypothesis();
+    if ((h ==
+         ModellingHypothesis::AXISYMMETRICALGENERALISEDPLANESTRAIN) ||
+        (h == ModellingHypothesis::GENERALISEDPLANESTRAIN)) {
+      modl.append("'DPGE' ????");
+    }
+    modl.append(";");
+    insertText(tc, modl);
+    // call to MATERIAU
+    auto mate = QStringList();
+    mate.append("??? = 'MATERIAU' ???? ");
+    for (const auto& n : b->getMaterialPropertiesNames()) {
+      if ((n == Glossary::OrthotropicAxisX1) ||
+          (n == Glossary::OrthotropicAxisY1) ||
+          (n == Glossary::OrthotropicAxisZ1) ||
+          (n == Glossary::OrthotropicAxisX2) ||
+          (n == Glossary::OrthotropicAxisY2) ||
+          (n == Glossary::OrthotropicAxisZ2)) {
+        continue;
+      }
+      if (((n == Glossary::ThermalExpansion) ||
+           (n == Glossary::ThermalExpansion1) ||
+           (n == Glossary::ThermalExpansion2) ||
+           (n == Glossary::ThermalExpansion3)) &&
+          (fs)) {
+        mate.append("'" + getCastemName(n) + "' 0");
+      } else {
+        const auto mp = QString::fromStdString(n);
+        mate.append("'" + getCastemName(n) + "' (MPROPS. '" + mp +
+                    "')");
+      }
+    }
+    if (orthotropic) {
+      if ((h == ModellingHypothesis::GENERALISEDPLANESTRAIN) ||
+          (h == ModellingHypothesis::PLANESTRAIN) ||
+          (h == ModellingHypothesis::PLANESTRESS) ||
+          (h == ModellingHypothesis::AXISYMMETRICAL)) {
+        mate.append("'DIRECTION' (1 0) 'PARALLELE'");
+      } else if (h == ModellingHypothesis::TRIDIMENSIONAL) {
+        mate.append("'DIRECTION' (1 0 0) (0 1 0) 'PARALLELE'");
+      }
+    }
+    mate.append(";");
+    insertText(tc, mate);
+    tc.endEditBlock();
+    textEdit.setTextCursor(tc);
+  }  // end of insertBehaviour
 
   QStringList CastemMajorMode::buildKeysList() {
     return {"DROITE",       "MOT",
@@ -305,11 +603,35 @@ namespace qemacs {
     this->src->setIcon(QIcon::fromTheme("system-run"));
     QObject::connect(this->src, &QAction::triggered, this,
                      &CastemMajorMode::sendRegionToCastem);
-    this->sbc = new QAction(QObject::tr("Send buffert to Cast3M"), this);
+    this->sbc =
+        new QAction(QObject::tr("Send buffert to Cast3M"), this);
     this->sbc->setIcon(QIcon::fromTheme("system-run"));
     QObject::connect(this->sbc, &QAction::triggered, this,
                      &CastemMajorMode::sendBufferToCastem);
+    this->iba = new QAction(QObject::tr("Import Behaviour"), this);
+    QObject::connect(this->iba, &QAction::triggered, this,
+                     &CastemMajorMode::showImportBehaviourWizard);
+    this->imfmba =
+        new QAction(QObject::tr("Import MFM behaviour"), this);
+    QObject::connect(this->imfmba, &QAction::triggered, this,
+                     &CastemMajorMode::showImportMFMBehaviourWizard);
   }  // end of CastemMajorMode
+
+  void CastemMajorMode::showImportBehaviourWizard() {
+    ImportBehaviour w(this->textEdit);
+    if (w.exec() == QDialog::Accepted) {
+      insertBehaviour(this->textEdit, w.getSelectedBehaviour());
+    }
+  }  // end of CastemMajorMode::showImportBehaviourWizard
+
+  void CastemMajorMode::showImportMFMBehaviourWizard() {
+    using tfel::material::ModellingHypothesis;
+    using tfel::system::ExternalLibraryManager;
+    ImportMFMBehaviour w(this->qemacs, &(this->textEdit));
+    if (w.exec() == QDialog::Accepted) {
+      insertBehaviour(this->textEdit, w.getSelectedBehaviour());
+    }
+  }  // end of CastemMajorMode::showImportMFMBehaviourDialog
 
   bool CastemMajorMode::sendToCastem(const QString& l) {
     if (!this->startCastem()) {
@@ -334,7 +656,7 @@ namespace qemacs {
       if (this->co == nullptr) {
         return false;
       }
-      this->co->setAttribute( Qt::WA_DeleteOnClose );
+      this->co->setAttribute(Qt::WA_DeleteOnClose);
       QObject::connect(this->co, &QObject::destroyed, this,
                        [this] { this->co = nullptr; });
       QDir d(this->textEdit.getDirectory());
@@ -360,6 +682,7 @@ namespace qemacs {
       this->co = nullptr;
       return this->startCastem();
     }
+    return true;
   }
 
   QString CastemMajorMode::getName() const { return "Cast3M"; }
@@ -411,6 +734,9 @@ namespace qemacs {
     m->addAction(this->slc);
     m->addAction(this->src);
     m->addAction(this->sbc);
+    m->addSeparator();
+    m->addAction(this->iba);
+    m->addAction(this->imfmba);
     return m;
   }  // end of CastemMajorMode::getSpecificMenu
 
@@ -590,7 +916,7 @@ namespace qemacs {
     delete this->ha1;
     delete this->ha2;
   }
-  
+
   static StandardQEmacsMajorModeProxy<CastemMajorMode> proxy(
       "Cast3M",
       QVector<QRegExp>() << QRegExp("^.+\\.dgibi$"),

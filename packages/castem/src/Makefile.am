@@ -1,4 +1,5 @@
 AM_CPPFLAGS = -I$(top_srcdir)/packages/castem/include \
+	      -I$(top_srcdir)/utils/mfront/include        \
 	      -I$(top_srcdir)/include                 \
 	      @QT_CXXFLAGS@                            \
 	      `@TFELCONFIG@ --includes --cppflags`
@@ -13,8 +14,11 @@ CastemModeResources.cxx : CastemModeResources.qrc $(CASTEMMODERESOURCES)
 libCastemQEmacsMode_la_SOURCES        = CastemMajorMode.cxx          \
 					CastemOutputMajorMode.cxx    \
 					CastemSyntaxHighlighter.cxx
-
 nodist_libCastemQEmacsMode_la_SOURCES = moc_CastemMajorMode.cxx
+libCastemQEmacsMode_la_LIBADD   = -L@top_builddir@/utils/mfront/src \
+			         -L@TFELHOME@/lib                              \
+			         -lQEmacsMFrontImportWidgets                   \
+                      -lTFELGlossary
 
 clean-local:
 	$(RM) $(nodist_libCastemQEmacsMode_la_SOURCES)

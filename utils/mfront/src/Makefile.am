@@ -16,6 +16,7 @@ libQEmacsMFrontImportWidgets_la_SOURCES =              \
 				ImportBehaviour.cxx                  \
 				ImportMFMMaterialProperty.cxx        \
 				ImportMFMBehaviour.cxx               \
+				MaterialPropertyDescription.cxx      \
 				MaterialPropertySelectorWidget.cxx
 
 libQEmacsMFrontImportWidgets_la_CPPFLAGS = $(AM_CPPFLAGS) -DQEmacsMFrontImportQWidgets_EXPORTS

@@ -19,6 +19,7 @@ qt_sources(QEmacsMFrontImportWidgets_SOURCES
 
 qemacs_package(QEmacsMFrontImportWidgets
   MFMDataBase.cxx
+  MaterialPropertyDescription.cxx
   BehaviourDescription.cxx
   ${QEmacsMFrontImportWidgets_SOURCES})
 

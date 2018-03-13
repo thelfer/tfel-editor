@@ -34,15 +34,22 @@ namespace qemacs {
                                << "castem");
     ml->addWidget(mt);
     auto * mpd = new QStackedWidget;
+    mpd->setStyleSheet("QGroupBox{padding-top:15px; margin-top:-15px}");
     // a line edit to set the constant value
+    auto* const cvw = new QGroupBox;
+    cvw->setAlignment(Qt::AlignHCenter);
+    auto* const cvl = new QHBoxLayout;
     this->cv->setFixedHeight(QFontMetrics(cv->font()).lineSpacing());
     auto* const vv = new QDoubleValidator;
     vv->setNotation(QDoubleValidator::ScientificNotation);
     vv->setLocale(QLocale(QLocale::C));
     this->cv->setValidator(vv);
-    mpd->addWidget(this->cv);
+    cvl->addWidget(this->cv);
+    cvw->setLayout(cvl);
+    mpd->addWidget(cvw);
     // a widget to set a castem material property
     auto* const cw = new QGroupBox;
+    cw->setAlignment(Qt::AlignHCenter);
     auto* const gl = new QGridLayout;
     // library
     gl->addWidget(new QLabel(QObject::tr("Library")), 0, 0);

@@ -75,7 +75,11 @@ namespace qemacs {
     virtual bool sendRegionToCastem();
 
     virtual bool sendBufferToCastem();
-    
+
+    virtual void showImportBehaviourWizard();
+
+    virtual void showImportMFMBehaviourWizard();
+
    protected:
     static QStringList buildKeysList();
 
@@ -93,15 +97,19 @@ namespace qemacs {
     ProcessInteractionFrame *co;
 
     // help action
-    QAction *ha1;
+    QAction *ha1 = nullptr;
     // help action
-    QAction *ha2;
+    QAction *ha2 = nullptr;
     // send the current line to Cast3M
-    QAction *slc;
+    QAction *slc = nullptr;
     // send the current region to Cast3M
-    QAction *src;
+    QAction *src = nullptr;
     // send the current buffer to Cast3M
-    QAction *sbc;
+    QAction *sbc = nullptr;
+    //! \brief import behaviour action
+    QAction *iba = nullptr;
+    //! \brief import mfm behaviour action
+    QAction *imfmba = nullptr;
 
    private:
     Q_OBJECT
