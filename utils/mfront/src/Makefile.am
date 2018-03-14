@@ -13,7 +13,9 @@ libQEmacsMFrontImportWidgets_la_SOURCES =              \
 				MaterialPropertiesSelectionPage.cxx  \
 		         SelectMFMBehaviour.cxx               \
 				SelectBehaviourPage.cxx              \
-				ImportBehaviour.cxx                  \
+				SelectMFMBehaviourPage.cxx           \
+				ImportBehaviourWizard.cxx            \
+				ImportMFMBehaviourWizard.cxx         \
 				ImportMFMMaterialProperty.cxx        \
 				ImportMFMBehaviour.cxx               \
 				MaterialPropertyDescription.cxx      \
@@ -29,6 +31,7 @@ nodist_libQEmacsMFrontImportWidgets_la_SOURCES =                 \
 				       moc_MFMFilterProxyModel.cxx             \
 				       moc_SelectMFMBehaviour.cxx              \
 				       moc_SelectBehaviourPage.cxx             \
+				       moc_SelectMFMBehaviourPage.cxx          \
 				       moc_MaterialPropertiesSelectionPage.cxx \
 				       moc_ImportMFMMaterialProperty.cxx       \
 				       moc_ImportMFMBehaviour.cxx              \

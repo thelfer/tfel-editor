@@ -11,7 +11,9 @@ qt_sources(QEmacsMFrontImportWidgets_SOURCES
   MFMFilterProxyModel
   MaterialPropertiesSelectionPage
   SelectBehaviourPage
-  ImportBehaviour
+  SelectMFMBehaviourPage
+  ImportBehaviourWizard
+  ImportMFMBehaviourWizard
   ImportMFMMaterialProperty
   SelectMFMBehaviour
   ImportMFMBehaviour

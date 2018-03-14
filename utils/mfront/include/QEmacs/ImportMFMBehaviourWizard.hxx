@@ -1,12 +1,12 @@
 /*!
- * \file   ImportBehaviour.hxx
+ * \file   ImportMFMBehaviourWizard.hxx
  * \brief
  * \author THOMAS HELFER
  * \date   02/05/2017
  */
 
-#ifndef LIB_QEMACS_MTEST_IMPORTBEHAVIOUR_HXX
-#define LIB_QEMACS_MTEST_IMPORTBEHAVIOUR_HXX
+#ifndef LIB_QEMACS_MTEST_IMPORTMFMBEHAVIOURWIZARD_HXX
+#define LIB_QEMACS_MTEST_IMPORTMFMBEHAVIOURWIZARD_HXX
 
 #include <memory>
 #include <vector>
@@ -21,40 +21,40 @@ namespace qemacs {
   // forward declaration
   struct QEmacsTextEditBase;
   // forward declaration
-  struct SelectBehaviourPage;
+  struct SelectMFMBehaviourPage;
   // forward declaration
   struct MaterialPropertiesSelectionPage;
 
-  struct QEMACS_MIW_VISIBILITY_EXPORT ImportBehaviour : public QWizard {
-    ImportBehaviour(QEmacsTextEditBase &);
+  struct QEMACS_MIW_VISIBILITY_EXPORT ImportMFMBehaviourWizard : public QWizard {
+    ImportMFMBehaviourWizard(QEmacsTextEditBase &);
     //! \return the descrioption of the selected
     BehaviourDescription getSelectedBehaviour() const;
     //! destructor
-    ~ImportBehaviour() override;
+    ~ImportMFMBehaviourWizard() override;
 
    protected:
 
     struct ConclusionPage;
 
-    SelectBehaviourPage *sb;
+    SelectMFMBehaviourPage *sb;
     MaterialPropertiesSelectionPage *mp;
     ConclusionPage *c;
 
    private:
     Q_OBJECT
-  };  // end of struct ImportBehaviour
+  };  // end of struct ImportMFMBehaviourWizard
 
-  struct ImportBehaviour::ConclusionPage : public QWizardPage {
-    ConclusionPage(ImportBehaviour &);
+  struct ImportMFMBehaviourWizard::ConclusionPage : public QWizardPage {
+    ConclusionPage(ImportMFMBehaviourWizard &);
 
     int nextId() const override;
 
    private:
     //! the calling wizard
-    ImportBehaviour &wizard;
+    ImportMFMBehaviourWizard &wizard;
     Q_OBJECT
-  };  // end of ImportBehaviour::ConclusionPage
+  };  // end of ImportMFMBehaviourWizard::ConclusionPage
 
 }  // end of namespace qemacs
 
-#endif /* LIB_QEMACS_MTEST_IMPORTBEHAVIOUR_HXX */
+#endif /* LIB_QEMACS_MTEST_IMPORTMFMBEHAVIOURWIZARD_HXX */

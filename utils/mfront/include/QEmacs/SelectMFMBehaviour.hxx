@@ -29,12 +29,18 @@ namespace qemacs {
     //! destructor
     ~SelectMFMBehaviour() override;
 
+   signals:
+
+    void behaviourDescriptionChanged(const BehaviourDescription &);
+    
    protected:
     QTreeView* view;
     // interface
     QComboBox* isb;
     // hypothesis
     QComboBox* hsb;
+
+    BehaviourDescription getSelectedBehaviour(const QModelIndex) const;
 
    private:
     Q_OBJECT

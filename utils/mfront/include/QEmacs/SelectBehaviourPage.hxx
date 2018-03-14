@@ -26,6 +26,8 @@ namespace qemacs {
     int nextId() const override;
 
     bool validatePage() override;
+    //! \return the current behaviour description
+    BehaviourDescription getBehaviourDescription() const;
     //! destructor
     ~SelectBehaviourPage();
 
@@ -48,10 +50,7 @@ namespace qemacs {
 
     void behaviourDescriptionChanged(const BehaviourDescription &);
 
-   private:
-    //! \return the current behaviour description
-    BehaviourDescription getBehaviourDescription() const;
-
+  protected:
     //! list of behaviours declared in the selected library
     QComboBox *bl;
     //! list of modelling hypothesis for the selected behaviour
@@ -60,6 +59,7 @@ namespace qemacs {
     QEmacsLineEdit *le;
     //! select library button
     QPushButton *slb;
+  private:
     Q_OBJECT
   };  // end of struct SelectBehaviourPage
 

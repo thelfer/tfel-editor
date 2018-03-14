@@ -49,7 +49,7 @@ namespace qemacs {
     //! \brief launch the import behaviour wizard
     virtual void showImportBehaviourWizard();
     //! \brief launch the import MFM behaviour dialog
-    virtual void showImportMFMBehaviourDialog();
+    virtual void showImportMFMBehaviourWizard();
     //! \brief method called when the `Show Results with TPlot` menu is
     //! called
     virtual void showResults();

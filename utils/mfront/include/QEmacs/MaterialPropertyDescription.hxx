@@ -11,7 +11,7 @@
 #include <QtCore/QString>
 #include <QtCore/QStringList>
 #include "TFEL/Utilities/GenTypeBase.hxx"
-#include "QEmacs/QEmacsMFrontImportConfig.hxx"
+#include "QEmacs/QEmacsMFrontImportWidgetsConfig.hxx"
 
 namespace qemacs{
 
@@ -58,8 +58,6 @@ namespace qemacs{
     //! list of arguments
     QStringList arguments;
   };  // end of struct CastemMaterialPropertyDescription
-
-
 
   //! a simple alias
   using MaterialPropertyDescription =

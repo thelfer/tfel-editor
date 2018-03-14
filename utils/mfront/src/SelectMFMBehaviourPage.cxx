@@ -1,0 +1,56 @@
+/*!
+ * \file   SelectMFMBehaviourPage.cxx
+ * \brief    
+ * \author Thomas Helfer
+ * \date   11/03/2018
+ */
+
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QGridLayout>
+#include <QtWidgets/QFileDialog>
+#include "TFEL/System/ExternalLibraryManager.hxx"
+#include "MFront/TargetsDescription.hxx"
+#include "QEmacs/Debug.hxx"
+#include "QEmacs/SelectMFMBehaviour.hxx"
+#include "QEmacs/SelectMFMBehaviourPage.hxx"
+
+namespace qemacs {
+
+  SelectMFMBehaviourPage::SelectMFMBehaviourPage(QEmacsWidget& q)
+    : sb(new SelectMFMBehaviour(q)) {
+    this->setTitle("Select a behaviour");
+    auto* l = new QVBoxLayout;
+    l->addWidget(this->sb);
+    QObject::connect(this->sb,
+                     &SelectMFMBehaviour::behaviourDescriptionChanged,
+                     this, [this](const BehaviourDescription& bd) {
+                       emit behaviourDescriptionChanged(bd);
+                     });
+    this->setLayout(l);
+  }
+
+  BehaviourDescription SelectMFMBehaviourPage::getBehaviourDescription()
+      const {
+    return this->sb->getSelectedBehaviour();
+  } // end of SelectMFMBehaviourPage::getSelectedBehaviour
+
+  bool SelectMFMBehaviourPage::validatePage() {
+    const auto b = this->sb->getSelectedBehaviour();
+    return b.generate() != nullptr;
+  }  // end of SelectLibrary::validatePage
+
+  int SelectMFMBehaviourPage::nextId() const {
+    auto b = this->sb->getSelectedBehaviour().generate();
+    if (b) {
+      if(b->getMaterialPropertiesNames().empty()){
+        return 2;
+      }
+      return 1;
+    }
+    return 2;
+  } // end of SelectBehaviourPage::nextId
+  
+  SelectMFMBehaviourPage::~SelectMFMBehaviourPage() = default;
+
+}  // end of namespace qemacs

@@ -1,5 +1,5 @@
 /*!
- * \file   ImportBehaviour.cxx
+ * \file   ImportBehaviourWizard.cxx
  * \brief
  * \author Thomas Helfer
  * \date   02/06/2017
@@ -19,19 +19,19 @@
 #include "QEmacs/QEmacsTextEditBase.hxx"
 #include "QEmacs/SelectBehaviourPage.hxx"
 #include "QEmacs/MaterialPropertiesSelectionPage.hxx"
-#include "QEmacs/ImportBehaviour.hxx"
+#include "QEmacs/ImportBehaviourWizard.hxx"
 
 namespace qemacs {
 
-  ImportBehaviour::ConclusionPage::ConclusionPage(ImportBehaviour& w)
+  ImportBehaviourWizard::ConclusionPage::ConclusionPage(ImportBehaviourWizard& w)
       : wizard(w) {}  // end of
-  // ImportBehaviour::ConclusionPage::ConclusionPage
+  // ImportBehaviourWizard::ConclusionPage::ConclusionPage
 
-  int ImportBehaviour::ConclusionPage::nextId() const {
+  int ImportBehaviourWizard::ConclusionPage::nextId() const {
     return -1;
   }
 
-  ImportBehaviour::ImportBehaviour(QEmacsTextEditBase& t)
+  ImportBehaviourWizard::ImportBehaviourWizard(QEmacsTextEditBase& t)
       : QWizard(&t),
         sb(new SelectBehaviourPage(t.getQEmacsWidget())),
         mp(new MaterialPropertiesSelectionPage(t.getQEmacsWidget())),
@@ -44,10 +44,11 @@ namespace qemacs {
         this->sb, &SelectBehaviourPage::behaviourDescriptionChanged,
         this->mp,
         &MaterialPropertiesSelectionPage::updateMaterialPropertiesList);
+    this->mp->updateMaterialPropertiesList(this->sb->getBehaviourDescription());
     this->setStartId(0);
-  }  // end of ImportBehaviour::ImportBehaviour
+  }  // end of ImportBehaviourWizard::ImportBehaviourWizard
 
-  BehaviourDescription ImportBehaviour::getSelectedBehaviour() const {
+  BehaviourDescription ImportBehaviourWizard::getSelectedBehaviour() const {
     using tfel::system::ExternalLibraryManager;
     auto& elm = ExternalLibraryManager::getExternalLibraryManager();
     BehaviourDescription b;
@@ -65,8 +66,8 @@ namespace qemacs {
     }
     b.material_properties = this->mp->getMaterialPropertyDescriptions();
     return b;
-  }  // end of ImportBehaviour::getBehaviour
+  }  // end of ImportBehaviourWizard::getBehaviour
 
-  ImportBehaviour::~ImportBehaviour() = default;
+  ImportBehaviourWizard::~ImportBehaviourWizard() = default;
 
 }  // end of namespace qemacs

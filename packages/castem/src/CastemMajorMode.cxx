@@ -16,8 +16,8 @@
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/ProcessOutputFrame.hxx"
 #include "QEmacs/QEmacsTextEditBase.hxx"
-#include "QEmacs/ImportBehaviour.hxx"
-#include "QEmacs/ImportMFMBehaviour.hxx"
+#include "QEmacs/ImportBehaviourWizard.hxx"
+#include "QEmacs/ImportMFMBehaviourWizard.hxx"
 #include "QEmacs/CastemMajorMode.hxx"
 #include "QEmacs/CastemSyntaxHighlighter.hxx"
 #include "QEmacs/QEmacsMajorModeFactory.hxx"
@@ -618,7 +618,7 @@ namespace qemacs {
   }  // end of CastemMajorMode
 
   void CastemMajorMode::showImportBehaviourWizard() {
-    ImportBehaviour w(this->textEdit);
+    ImportBehaviourWizard w(this->textEdit);
     if (w.exec() == QDialog::Accepted) {
       insertBehaviour(this->textEdit, w.getSelectedBehaviour());
     }
@@ -627,7 +627,7 @@ namespace qemacs {
   void CastemMajorMode::showImportMFMBehaviourWizard() {
     using tfel::material::ModellingHypothesis;
     using tfel::system::ExternalLibraryManager;
-    ImportMFMBehaviour w(this->qemacs, &(this->textEdit));
+    ImportMFMBehaviourWizard w(this->textEdit);
     if (w.exec() == QDialog::Accepted) {
       insertBehaviour(this->textEdit, w.getSelectedBehaviour());
     }

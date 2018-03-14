@@ -90,6 +90,12 @@ namespace qemacs {
           } catch (...) {
           }
         });
+    QObject::connect(this->view->selectionModel(),
+                     &QItemSelectionModel::currentChanged, this,
+                     [this](const QModelIndex& c, const QModelIndex&) {
+                       const auto b = this->getSelectedBehaviour(c);
+                       emit behaviourDescriptionChanged(b);
+                     });
     fg->addWidget(nfl, 0, 0);
     fg->addWidget(nfe,0,1);
     fg->addWidget(mfl,1,0);
@@ -116,23 +122,27 @@ namespace qemacs {
     this->setLayout(lv);
   }  // end of SelectMFMBehaviour::SelectMFMBehaviour
 
-  BehaviourDescription
-  SelectMFMBehaviour::getSelectedBehaviour() const {
-    const auto indexes =
-        this->view->selectionModel()->selectedRows();
-    if (indexes.size() != 1) {
-      return {};
-    }
+  BehaviourDescription SelectMFMBehaviour::getSelectedBehaviour(
+      const QModelIndex i) const {
     auto* const m = this->view->model();
-    const auto il = m->index(indexes[0].row(), 3);
-    const auto ib = m->index(indexes[0].row(), 1);
-    const auto ii = m->index(indexes[0].row(), 4);
+    const auto il = m->index(i.row(), 3);
+    const auto ib = m->index(i.row(), 1);
+    const auto ii = m->index(i.row(), 4);
     BehaviourDescription b;
     b.behaviour = m->data(ib).toString();
     b.library = m->data(il).toString();
     b.minterface = m->data(ii).toString();
     b.hypothesis = this->hsb->currentText();
     return b;
+  }  // end of SelectMFMBehaviour::getSelectedBehaviour
+
+  BehaviourDescription SelectMFMBehaviour::getSelectedBehaviour()
+      const {
+    const auto indexes = this->view->selectionModel()->selectedRows();
+    if (indexes.size() != 1) {
+      return {};
+    }
+    return this->getSelectedBehaviour(indexes[0]);
   }  // end of SelectMFMBehaviour::getSelectedBehaviour
 
   SelectMFMBehaviour::~SelectMFMBehaviour() = default;

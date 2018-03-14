@@ -18,8 +18,8 @@
 #include "QEmacs/MTestStudyOptions.hxx"
 #include "QEmacs/MTestSyntaxHighlighter.hxx"
 #include "QEmacs/QEmacsMajorModeFactory.hxx"
-#include "QEmacs/ImportBehaviour.hxx"
-#include "QEmacs/ImportMFMBehaviour.hxx"
+#include "QEmacs/ImportBehaviourWizard.hxx"
+#include "QEmacs/ImportMFMBehaviourWizard.hxx"
 #include "QEmacs/MTestMajorMode.hxx"
 
 namespace qemacs {
@@ -201,7 +201,7 @@ namespace qemacs {
                      &MTestMajorMode::showImportBehaviourWizard);
     this->imfmba = new QAction(QObject::tr("Import MFM behaviour"), this);
     QObject::connect(this->imfmba, &QAction::triggered, this,
-                     &MTestMajorMode::showImportMFMBehaviourDialog);
+                     &MTestMajorMode::showImportMFMBehaviourWizard);
     this->tpa =
         new QAction(QObject::tr("Plot results using TPlot"), this);
     QObject::connect(this->tpa, &QAction::triggered, this,
@@ -346,20 +346,20 @@ namespace qemacs {
   } // end of MTestMajorMode::getCompletionPrefix
 
   void MTestMajorMode::showImportBehaviourWizard() {
-    ImportBehaviour w(this->textEdit);
+    ImportBehaviourWizard w(this->textEdit);
     if (w.exec() == QDialog::Accepted) {
       insertBehaviour(this->textEdit, w.getSelectedBehaviour());
     }
   }  // end of MTestMajorMode::showImportBehaviourWizard
 
-  void MTestMajorMode::showImportMFMBehaviourDialog() {
+  void MTestMajorMode::showImportMFMBehaviourWizard() {
    using tfel::material::ModellingHypothesis;
    using tfel::system::ExternalLibraryManager;
-   ImportMFMBehaviour w(this->qemacs,&(this->textEdit));
+   ImportMFMBehaviourWizard w(this->textEdit);
    if (w.exec() == QDialog::Accepted) {
      insertBehaviour(this->textEdit, w.getSelectedBehaviour());
    }
-  }  // end of MTestMajorMode::showImportMFMBehaviourDialog
+  }  // end of MTestMajorMode::showImportMFMBehaviourWizard
 
   void MTestMajorMode::showResults() {
     const auto n = this->textEdit.getCompleteFileName();
