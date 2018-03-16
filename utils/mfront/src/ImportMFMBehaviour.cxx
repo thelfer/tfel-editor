@@ -13,8 +13,9 @@
 namespace qemacs {
 
   ImportMFMBehaviour::ImportMFMBehaviour(QEmacsWidget& q,
+                                         const Options& o,
                                          QWidget* const p)
-      : QDialog(p), b(new SelectMFMBehaviour(q)) {
+      : QDialog(p), b(new SelectMFMBehaviour(q,o)) {
     auto* const lv = new QVBoxLayout;
     /* buttons */
     auto* bb = new QDialogButtonBox(QDialogButtonBox::Ok |

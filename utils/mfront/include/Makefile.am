@@ -11,6 +11,7 @@ nobase_include_HEADERS =                                 \
 			 QEmacs/MaterialPropertiesSelectionPage.hxx \
 			 QEmacs/SelectBehaviourPage.hxx             \
 			 QEmacs/SelectMFMBehaviourPage.hxx          \
+			 QEmacs/BehaviourSummaryPage.hxx            \
 			 QEmacs/ImportBehaviourWizard.hxx           \
 			 QEmacs/ImportMFMBehaviourWizard.hxx
 

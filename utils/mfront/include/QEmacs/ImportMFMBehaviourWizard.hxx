@@ -15,45 +15,37 @@
 #include <QtWidgets/QWizard>
 #include "QEmacs/QEmacsLineEdit.hxx"
 #include "QEmacs/BehaviourDescription.hxx"
+#include "QEmacs/SelectMFMBehaviourPage.hxx"
 
 namespace qemacs {
 
   // forward declaration
   struct QEmacsTextEditBase;
   // forward declaration
-  struct SelectMFMBehaviourPage;
-  // forward declaration
   struct MaterialPropertiesSelectionPage;
+  // forward declaration
+  struct BehaviourSummaryPage;
 
-  struct QEMACS_MIW_VISIBILITY_EXPORT ImportMFMBehaviourWizard : public QWizard {
-    ImportMFMBehaviourWizard(QEmacsTextEditBase &);
+  struct QEMACS_MIW_VISIBILITY_EXPORT ImportMFMBehaviourWizard
+      : public QWizard {
+    //! a simple alias
+    using Options = SelectMFMBehaviourPage::Options;
+
+    ImportMFMBehaviourWizard(QEmacsTextEditBase &,
+                             const Options & = Options());
     //! \return the descrioption of the selected
     BehaviourDescription getSelectedBehaviour() const;
     //! destructor
     ~ImportMFMBehaviourWizard() override;
 
    protected:
-
-    struct ConclusionPage;
-
     SelectMFMBehaviourPage *sb;
     MaterialPropertiesSelectionPage *mp;
-    ConclusionPage *c;
+    BehaviourSummaryPage*c;
 
    private:
     Q_OBJECT
   };  // end of struct ImportMFMBehaviourWizard
-
-  struct ImportMFMBehaviourWizard::ConclusionPage : public QWizardPage {
-    ConclusionPage(ImportMFMBehaviourWizard &);
-
-    int nextId() const override;
-
-   private:
-    //! the calling wizard
-    ImportMFMBehaviourWizard &wizard;
-    Q_OBJECT
-  };  // end of ImportMFMBehaviourWizard::ConclusionPage
 
 }  // end of namespace qemacs
 

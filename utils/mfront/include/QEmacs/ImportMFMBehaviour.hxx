@@ -10,21 +10,25 @@
 
 #include <QtWidgets/QDialog>
 #include "QEmacs/BehaviourDescription.hxx"
+#include "QEmacs/SelectMFMBehaviour.hxx"
 
 namespace qemacs {
 
   // forward declaration
   struct QEmacsWidget;
-  // forward declaration
-  struct SelectMFMBehaviour;
 
   struct QEMACS_MIW_VISIBILITY_EXPORT ImportMFMBehaviour : QDialog {
+    //! a simple alias
+    using Options = SelectMFMBehaviour::Options;
     /*!
      * \brief constructor
      * \param[in] q: qemacs widget
+     * \param[in] o: options
      * \param[in] p: parent
      */
-    ImportMFMBehaviour(QEmacsWidget& q, QWidget* const p = nullptr);
+    ImportMFMBehaviour(QEmacsWidget& q,
+                       const Options& o,
+                       QWidget* const p = nullptr);
     //! \return the selected behaviour.
     BehaviourDescription getSelectedBehaviour() const;
     //! destructor

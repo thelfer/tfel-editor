@@ -19,35 +19,32 @@
 #include "QEmacs/QEmacsTextEditBase.hxx"
 #include "QEmacs/SelectMFMBehaviourPage.hxx"
 #include "QEmacs/MaterialPropertiesSelectionPage.hxx"
+#include "QEmacs/BehaviourSummaryPage.hxx"
 #include "QEmacs/ImportMFMBehaviourWizard.hxx"
 
 namespace qemacs {
 
-  ImportMFMBehaviourWizard::ConclusionPage::ConclusionPage(
-      ImportMFMBehaviourWizard& w)
-      : wizard(w) {}  // end of
-  // ImportMFMBehaviourWizard::ConclusionPage::ConclusionPage
-
-  int ImportMFMBehaviourWizard::ConclusionPage::nextId() const {
-    return -1;
-  }
-
   ImportMFMBehaviourWizard::ImportMFMBehaviourWizard(
-      QEmacsTextEditBase& t)
+      QEmacsTextEditBase& t, const Options& o)
       : QWizard(&t),
-        sb(new SelectMFMBehaviourPage(t.getQEmacsWidget())),
+        sb(new SelectMFMBehaviourPage(t.getQEmacsWidget(), o)),
         mp(new MaterialPropertiesSelectionPage(t.getQEmacsWidget())),
-        c(new ConclusionPage(*this)) {
+        c(new BehaviourSummaryPage) {
     this->setWindowTitle(QObject::tr("Import MFMBehaviour"));
     this->setPage(0, this->sb);
     this->setPage(1, this->mp);
     this->setPage(2, this->c);
     QObject::connect(
-        this->sb,
-        &SelectMFMBehaviourPage::behaviourDescriptionChanged,
+        this->sb, &SelectMFMBehaviourPage::behaviourDescriptionChanged,
         this->mp,
         &MaterialPropertiesSelectionPage::updateMaterialPropertiesList);
-    this->mp->updateMaterialPropertiesList(this->sb->getBehaviourDescription());
+    QObject::connect(this->sb, &SelectMFMBehaviourPage::doubleClicked,
+                     this, [this](const BehaviourDescription& bd) {
+                       this->mp->updateMaterialPropertiesList(bd);
+                       this->next();
+                     });
+    this->mp->updateMaterialPropertiesList(
+        this->sb->getBehaviourDescription());
     this->setStartId(0);
   }  // end of ImportMFMBehaviourWizard::ImportMFMBehaviourWizard
 

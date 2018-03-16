@@ -20,6 +20,14 @@
 
 namespace qemacs {
 
+  ImportMFMMaterialProperty::Options::Options() = default;
+  ImportMFMMaterialProperty::Options::Options(Options&&) = default;
+  ImportMFMMaterialProperty::Options::Options(const Options&) = default;
+  ImportMFMMaterialProperty::Options& ImportMFMMaterialProperty::Options::operator=(
+      Options&&) = default;
+  ImportMFMMaterialProperty::Options& ImportMFMMaterialProperty::Options::operator=(
+      const Options&) = default;
+
   ImportMFMMaterialProperty::ImportMFMMaterialProperty(QEmacsWidget& q,
                                                        const Options& o,
                                                        QWidget* const p)
@@ -107,8 +115,12 @@ namespace qemacs {
     /* buttons */
     auto* bb = new QDialogButtonBox(QDialogButtonBox::Ok |
                                     QDialogButtonBox::Cancel);
-    connect(bb, &QDialogButtonBox::accepted, this, &QDialog::accept);
-    connect(bb, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    QObject::connect(bb, &QDialogButtonBox::accepted, this,
+                     &QDialog::accept);
+    QObject::connect(bb, &QDialogButtonBox::rejected, this,
+                     &QDialog::reject);
+    QObject::connect(this->view, &QTreeView::doubleClicked, this,
+                     &QDialog::accept);
     // main layout
     lv->addWidget(this->view);
     lv->addLayout(fg);

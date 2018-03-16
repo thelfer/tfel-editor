@@ -12,6 +12,7 @@ qt_sources(QEmacsMFrontImportWidgets_SOURCES
   MaterialPropertiesSelectionPage
   SelectBehaviourPage
   SelectMFMBehaviourPage
+  BehaviourSummaryPage
   ImportBehaviourWizard
   ImportMFMBehaviourWizard
   ImportMFMMaterialProperty

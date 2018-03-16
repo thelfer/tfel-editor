@@ -24,6 +24,9 @@ namespace qemacs {
     auto *const ane = new QEmacsLineEdit(q);
     auto *const dl = new QLabel(QObject::tr("Date"));
     auto *const de = new QDateEdit(QDate::currentDate());
+    //    auto *const bd = new QGroupBox(QObject::tr("Description"));
+    //     bd->addWidget();
+    //     auto *const de = new QDateEdit(QDate::currentDate());
     mgl->addWidget(bnl, 0, 0);
     mgl->addWidget(bne, 0, 1);
     mgl->addWidget(anl, 1, 0);

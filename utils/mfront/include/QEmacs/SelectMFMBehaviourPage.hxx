@@ -10,13 +10,12 @@
 
 #include <QtWidgets/QWizardPage>
 #include "QEmacs/BehaviourDescription.hxx"
+#include "QEmacs/SelectMFMBehaviour.hxx"
 
 namespace qemacs {
 
   // forward declaration
   struct QEmacsWidget;
-  // forward declaration
-  struct SelectMFMBehaviour;
 
   /*!
    * \brief a wizard page used to select a behaviour from a shared
@@ -24,7 +23,10 @@ namespace qemacs {
    */
   struct QEMACS_MIW_VISIBILITY_EXPORT SelectMFMBehaviourPage
       : public QWizardPage {
-    SelectMFMBehaviourPage(QEmacsWidget &);
+    //! a simple alias
+    using Options = SelectMFMBehaviour::Options;
+
+    SelectMFMBehaviourPage(QEmacsWidget &, const Options &);
 
     int nextId() const override;
 
@@ -33,11 +35,13 @@ namespace qemacs {
     BehaviourDescription getBehaviourDescription() const;
     
     //! destructor
-    ~SelectMFMBehaviourPage();
+    ~SelectMFMBehaviourPage() override;
 
    signals:
 
     void behaviourDescriptionChanged(const BehaviourDescription &);
+
+    void doubleClicked(const BehaviourDescription &);
 
    private:
     SelectMFMBehaviour *sb;

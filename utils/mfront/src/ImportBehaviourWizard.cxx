@@ -19,23 +19,16 @@
 #include "QEmacs/QEmacsTextEditBase.hxx"
 #include "QEmacs/SelectBehaviourPage.hxx"
 #include "QEmacs/MaterialPropertiesSelectionPage.hxx"
+#include "QEmacs/BehaviourSummaryPage.hxx"
 #include "QEmacs/ImportBehaviourWizard.hxx"
 
 namespace qemacs {
-
-  ImportBehaviourWizard::ConclusionPage::ConclusionPage(ImportBehaviourWizard& w)
-      : wizard(w) {}  // end of
-  // ImportBehaviourWizard::ConclusionPage::ConclusionPage
-
-  int ImportBehaviourWizard::ConclusionPage::nextId() const {
-    return -1;
-  }
 
   ImportBehaviourWizard::ImportBehaviourWizard(QEmacsTextEditBase& t)
       : QWizard(&t),
         sb(new SelectBehaviourPage(t.getQEmacsWidget())),
         mp(new MaterialPropertiesSelectionPage(t.getQEmacsWidget())),
-        c(new ConclusionPage(*this)) {
+        c(new BehaviourSummaryPage) {
     this->setWindowTitle(QObject::tr("Import Behaviour"));
     this->setPage(0, this->sb);
     this->setPage(1, this->mp);

@@ -24,6 +24,8 @@ namespace qemacs {
   struct SelectBehaviourPage;
   // forward declaration
   struct MaterialPropertiesSelectionPage;
+  // forward declaration
+  struct BehaviourSummaryPage;
 
   struct QEMACS_MIW_VISIBILITY_EXPORT ImportBehaviourWizard : public QWizard {
     ImportBehaviourWizard(QEmacsTextEditBase &);
@@ -32,28 +34,13 @@ namespace qemacs {
     //! destructor
     ~ImportBehaviourWizard() override;
 
-   protected:
-
-    struct ConclusionPage;
-
     SelectBehaviourPage *sb;
     MaterialPropertiesSelectionPage *mp;
-    ConclusionPage *c;
+    BehaviourSummaryPage*c;
 
    private:
     Q_OBJECT
   };  // end of struct ImportBehaviourWizard
-
-  struct ImportBehaviourWizard::ConclusionPage : public QWizardPage {
-    ConclusionPage(ImportBehaviourWizard &);
-
-    int nextId() const override;
-
-   private:
-    //! the calling wizard
-    ImportBehaviourWizard &wizard;
-    Q_OBJECT
-  };  // end of ImportBehaviourWizard::ConclusionPage
 
 }  // end of namespace qemacs
 

@@ -9,6 +9,7 @@
 #define LIB_QEMACS_QEMACSTEXTEDITBASE_HXX
 
 #include <map>
+#include <functional>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
 #include <QtGui/QTextCursor>
@@ -81,9 +82,9 @@ namespace qemacs {
     /*!
      * \param[in] n : mode name
      */
-    virtual QEmacsMajorMode* setMajorMode(const QString &);
+    virtual QEmacsMajorMode *setMajorMode(const QString &);
 
-    virtual QEmacsMajorMode* setMajorMode();
+    virtual QEmacsMajorMode *setMajorMode();
 
     virtual void setMajorMode(QEmacsMajorMode *const);
 
@@ -108,12 +109,15 @@ namespace qemacs {
     virtual void setMoveMode(QTextCursor::MoveMode);
 
    public:
+    //! return the underlying qemacs widget
     QEmacsWidget &getQEmacsWidget();
+    //! return the underlying qemacs widget
     const QEmacsWidget &getQEmacsWidget() const;
 
     /*!
-     * A QEmacsCommandLine asking the user whether to save
-     */
+     * \brief a `QEmacsCommandLine` asking the user whether to save the
+     * current buffer
+    */
     struct SaveInput : public QEmacsYesOrNoUserInput {
       bool isBlocking() const override;
 

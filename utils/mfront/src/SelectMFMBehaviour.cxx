@@ -18,7 +18,16 @@
 
 namespace qemacs {
 
+  SelectMFMBehaviour::Options::Options() = default;
+  SelectMFMBehaviour::Options::Options(Options&&) = default;
+  SelectMFMBehaviour::Options::Options(const Options&) = default;
+  SelectMFMBehaviour::Options& SelectMFMBehaviour::Options::operator=(
+      Options&&) = default;
+  SelectMFMBehaviour::Options& SelectMFMBehaviour::Options::operator=(
+      const Options&) = default;
+
   SelectMFMBehaviour::SelectMFMBehaviour(QEmacsWidget& q,
+                                         const Options& o,
                                          QWidget* const p)
       : QWidget(p),
         view(new QTreeView),
@@ -49,21 +58,32 @@ namespace qemacs {
     nfl->setBuddy(nfe);
     QObject::connect(nfe, &QEmacsLineEdit::textChanged, bfpm,
                      &MFMFilterProxyModel::setNameFilter);
+    if (!o.name.isEmpty()) {
+      nfe->setText(o.name);
+    }
     // material filter
     auto* const mfl = new QLabel(QObject::tr("Material filter"));
     auto* const mfe = new QEmacsLineEdit(q);
     mfl->setBuddy(mfe);
     QObject::connect(mfe, &QEmacsLineEdit::textChanged, bfpm,
                      &MFMFilterProxyModel::setMaterialFilter);
+    if (!o.material.isEmpty()) {
+      mfe->setText(o.material);
+    }
     // interface filter
     auto* const isl = new QLabel(QObject::tr("Interface"));
-    isl->setBuddy(this->isb);
-    this->isb->addItem(".+");
-    this->isb->addItems(db.getBehavioursInterfaces());
-    QObject::connect(this->isb,
-                     static_cast<void (QComboBox::*)(const QString&)>(
-                         &QComboBox::activated),
-                     bfpm, &MFMFilterProxyModel::setInterfaceFilter);
+    if (!o.minterface.isEmpty()) {
+      bfpm->setInterfaceFilter(o.minterface);
+      this->view->hideColumn(4);
+    } else {
+      isl->setBuddy(this->isb);
+      this->isb->addItem(".+");
+      this->isb->addItems(db.getBehavioursInterfaces());
+      QObject::connect(this->isb,
+                       static_cast<void (QComboBox::*)(const QString&)>(
+                           &QComboBox::activated),
+                       bfpm, &MFMFilterProxyModel::setInterfaceFilter);
+    }
     // hypothesis
     auto* const hsl = new QLabel(QObject::tr("Hypothesis"));
     QObject::connect(
@@ -96,14 +116,21 @@ namespace qemacs {
                        const auto b = this->getSelectedBehaviour(c);
                        emit behaviourDescriptionChanged(b);
                      });
+    QObject::connect(this->view, &QTreeView::doubleClicked, this,
+                     [this](const QModelIndex& c) {
+                       const auto b = this->getSelectedBehaviour(c);
+                       emit doubleClicked(b);
+                     });
     fg->addWidget(nfl, 0, 0);
     fg->addWidget(nfe,0,1);
     fg->addWidget(mfl,1,0);
     fg->addWidget(mfe,1,1);
-    fg->addWidget(isl,2,0);
-    fg->addWidget(this->isb,2,1);
-    fg->addWidget(hsl,3,0);
-    fg->addWidget(this->hsb,3,1);
+    if (o.minterface.isEmpty()) {
+      fg->addWidget(isl, 2, 0);
+      fg->addWidget(this->isb, 2, 1);
+    }
+    fg->addWidget(hsl, 3, 0);
+    fg->addWidget(this->hsb, 3, 1);
     // advanced options
     auto* const sl = new QCheckBox(QObject::tr("Show library path"));
     sl->setChecked(false);

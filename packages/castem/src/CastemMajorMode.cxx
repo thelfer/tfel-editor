@@ -627,7 +627,9 @@ namespace qemacs {
   void CastemMajorMode::showImportMFMBehaviourWizard() {
     using tfel::material::ModellingHypothesis;
     using tfel::system::ExternalLibraryManager;
-    ImportMFMBehaviourWizard w(this->textEdit);
+    ImportMFMBehaviourWizard::Options o;
+    o.minterface = "Castem";
+    ImportMFMBehaviourWizard w(this->textEdit, o);
     if (w.exec() == QDialog::Accepted) {
       insertBehaviour(this->textEdit, w.getSelectedBehaviour());
     }

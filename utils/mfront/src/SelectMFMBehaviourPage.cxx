@@ -17,8 +17,9 @@
 
 namespace qemacs {
 
-  SelectMFMBehaviourPage::SelectMFMBehaviourPage(QEmacsWidget& q)
-    : sb(new SelectMFMBehaviour(q)) {
+  SelectMFMBehaviourPage::SelectMFMBehaviourPage(QEmacsWidget& q,
+                                                 const Options& o)
+      : sb(new SelectMFMBehaviour(q, o)) {
     this->setTitle("Select a behaviour");
     auto* l = new QVBoxLayout;
     l->addWidget(this->sb);
@@ -26,6 +27,11 @@ namespace qemacs {
                      &SelectMFMBehaviour::behaviourDescriptionChanged,
                      this, [this](const BehaviourDescription& bd) {
                        emit behaviourDescriptionChanged(bd);
+                     });
+    QObject::connect(this->sb, &SelectMFMBehaviour::doubleClicked,
+                     [this](const BehaviourDescription& bd) {
+                       emit behaviourDescriptionChanged(bd);
+                       emit doubleClicked(bd);
                      });
     this->setLayout(l);
   }

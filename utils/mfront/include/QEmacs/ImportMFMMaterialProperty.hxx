@@ -30,6 +30,16 @@ namespace qemacs {
       : QDialog {
     //! option of the dialog box
     struct Options {
+      //! \brief constructor
+      Options();
+      //! \brief move constructor
+      Options(Options&&);
+      //! \brief copy constructor
+      Options(const Options&);
+      //! \brief move assignement
+      Options& operator=(Options&&);
+      //! \brief constructor
+      Options& operator=(const Options&);
       /*!
        * \brief name of the material property. This is used to
        * initialize the name filter.
