@@ -135,6 +135,16 @@ namespace qemacs {
     virtual void closeBuffer(QEmacsBuffer &, const bool = true);
 
     virtual void saveCurrentBuffer();
+    /*!
+     * \brief go to the next buffer. If the current buffer is the
+     * last one, cycle the first one (index 0).
+     */
+    virtual void nextBuffer();
+    /*!
+     * \brief go to the previous buffer. If the current buffer is the
+     * first one (index 0), cycle the last one.
+     */
+    virtual void previousBuffer();
 
    signals:
 

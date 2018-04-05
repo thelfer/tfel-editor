@@ -10,6 +10,7 @@ libMFrontQEmacsMode_la_SOURCES = MFrontInitializer.cxx \
                  MFrontMajorMode.cxx                   \
 				 MFrontSyntaxHighlighter.cxx           \
 				 MFrontOptions.cxx                   \
+				 MFrontOptionsDialog.cxx                   \
 				 ImplicitDSLWizard.cxx
 libMFrontQEmacsMode_la_LIBADD  = -L@TFELHOME@/lib      \
 			         -lTFELUtilities       \
@@ -17,7 +18,7 @@ libMFrontQEmacsMode_la_LIBADD  = -L@TFELHOME@/lib      \
 
 nodist_libMFrontQEmacsMode_la_SOURCES = moc_MFrontMajorMode.cxx   \
 				        moc_MFrontSyntaxHighlighter.cxx          \
-				        moc_MFrontOptions.cxx                    \
+				        moc_MFrontOptionsDialog.cxx              \
 				        moc_ImplicitDSLWizard.cxx                \
 				        MFrontModeResources.cxx
 

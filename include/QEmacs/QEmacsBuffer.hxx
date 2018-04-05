@@ -102,6 +102,10 @@ namespace qemacs {
 
     virtual bool isOkToClose() const;
 
+    bool eventFilter(QObject *, QEvent *) override;
+    //! destructor
+    ~QEmacsBuffer() override;
+
    public slots:
 
     virtual void showSecondaryTasks();

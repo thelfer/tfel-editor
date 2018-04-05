@@ -184,7 +184,7 @@ namespace qemacs {
     if (f.isEmpty()) {
       return;
     }
-    QStringList& files = QEmacsWidget::getRecentFiles();
+    auto& files = QEmacsWidget::getRecentFiles();
     files.append(f);
     if (files.size() > 100) {
       files.pop_front();
@@ -322,6 +322,24 @@ namespace qemacs {
     }
     emit bufferNameChanged();
   }
+
+  void QEmacsWidget::nextBuffer() {
+    if (this->buffers->count() == 1) {
+      return;
+    }
+    const auto i = this->buffers->currentIndex();
+    const auto n = i + 1 >= this->buffers->count() ? 0 : i + 1;
+    this->buffers->setCurrentIndex(n);
+  }  // end of QEmacsWidget::nextBuffer
+
+  void QEmacsWidget::previousBuffer() {
+    if (this->buffers->count() == 1) {
+      return;
+    }
+    const auto i = this->buffers->currentIndex();
+    const auto n = i == 0 ? this->buffers->count() - 1 : i - 1;
+    this->buffers->setCurrentIndex(n);
+  }  // end of QEmacsWidget::previousBuffer
 
   void QEmacsWidget::saveAllBuffers() {
     int i;

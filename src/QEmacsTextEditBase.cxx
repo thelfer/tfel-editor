@@ -922,6 +922,14 @@ namespace qemacs {
         }
         return true;
       }
+      if ((m == Qt::ControlModifier) && (k == Qt::Key_Left)) {
+        this->qemacs.previousBuffer();
+        return true;
+      }
+      if ((m == Qt::ControlModifier) && (k == Qt::Key_Right)) {
+        this->qemacs.nextBuffer();
+        return true;
+      }
       if (!(((m == Qt::ControlModifier) && (k == Qt::Key_P)) ||
             ((m == Qt::ControlModifier) && (k == Qt::Key_N)))) {
         this->positions.clear();
@@ -1121,14 +1129,14 @@ namespace qemacs {
         this->setTextCursor(c);
       } else if ((m == Qt::ControlModifier) && (k == Qt::Key_Down)) {
         QKeyEvent nev(QEvent::None, Qt::Key_PageDown, Qt::NoModifier);
-        QWidget* w = this->widget();
+        auto* const w = this->widget();
         w->removeEventFilter(this);
         QCoreApplication::sendEvent(w, &nev);
         w->installEventFilter(this);
         return true;
       } else if ((m == Qt::ControlModifier) && (k == Qt::Key_Up)) {
         QKeyEvent nev(QEvent::None, Qt::Key_PageUp, Qt::NoModifier);
-        QWidget* w = this->widget();
+        auto* const w = this->widget();
         w->removeEventFilter(this);
         QCoreApplication::sendEvent(w, &nev);
         w->installEventFilter(this);

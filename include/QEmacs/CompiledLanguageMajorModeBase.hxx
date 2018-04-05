@@ -32,8 +32,8 @@ namespace qemacs {
     virtual QString getLanguageName() const = 0;
     
     virtual QString getDefaultCompilationCommand() const;
-    
-    void runCompilation();
+
+    virtual void runCompilation();
 
     ProcessOutputFrame *po;
 

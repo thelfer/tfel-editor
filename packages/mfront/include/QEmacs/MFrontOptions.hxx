@@ -6,9 +6,9 @@
  */
 
 #ifndef LIB_QEMACS_MFRONTOPTIONS_HXX
-#define LIB_QEMACS_MFRONTOPTIONS_HXX 
+#define LIB_QEMACS_MFRONTOPTIONS_HXX
 
-#include<QtWidgets/QDialog>
+#include <QtCore/QString>
 
 namespace qemacs {
 
@@ -16,26 +16,32 @@ namespace qemacs {
   struct MFrontOptions {
     //! default constructor
     MFrontOptions();
+    //! destructor
+    ~MFrontOptions();
+    //! dsl name
+    QString dsl;
+    //! path to the MFront file
+    QString file;
     /*!
-     * analysis type
+     * \brief analysis type
      * Valid values are :
      * - Build
      * - Analyse
      * - Generate
      * Default value is "build"
      */
-    QString analysis_type;
+    QString analysis_type = "Build";
     /*!
-     * optimisation level.
+     * \brief optimisation level.
      * Valid values are :
      * - level0
      * - level1
      * - level2
      * Default value is "level1"
      */
-    QString olvl;
+    QString olvl = "level1";
     /*!
-     * Verbose level.
+     * \brief verbose level.
      * Valid values are :
      * - quiet
      * - level0
@@ -46,7 +52,7 @@ namespace qemacs {
      * - full
      * Default value is "level1"
      */
-    QString vlvl;
+    QString vlvl = "level1";
     //! interface to be used
     QString i;
     //! build the libraries
@@ -59,27 +65,12 @@ namespace qemacs {
     bool pedantic = false;
     //! pedantic checks
     bool profiling = false;
+    /* options for the Implicit DSL */
+    bool compare_to_numerical_jacobian = false;
+    QString numerical_jacobian_criterion;
+    QString numerical_jacobian_perturbation;
+
   }; // end of MFrontOptions
-
-  //! \brief a dialog used to choose the options passed to `MTest`
-  struct MFrontOptionsDialog : public QDialog {
-    //! type of material knowlegde treated
-    enum MaterialKnowledgeType { MATERIALPROPERTY, BEHAVIOUR, MODEL };
-    /*!
-     * \param[in] o: options to be modified
-     * \param[in] t: material knowledge type
-     * \param[in] p: parent
-     */
-    MFrontOptionsDialog(MFrontOptions &,
-                        const MaterialKnowledgeType,
-                        QWidget *const);
-
-   protected:
-    MFrontOptions& opts;
-
-   private:
-    Q_OBJECT
-  };
 
 } // end of namespace qemacs
 

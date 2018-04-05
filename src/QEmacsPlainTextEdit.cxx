@@ -136,6 +136,9 @@ namespace qemacs {
     this->e->setWordWrapMode(QTextOption::WrapAnywhere);
     this->e->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     this->setLayout(hl);
+    QObject::connect(
+        this->e->document(), &QTextDocument::modificationChanged,
+        [this](const bool b) { emit modificationChanged(b); });
   }  // end of QEmacsPlainTextEdit::QEmacsPlainTextEdit()
 
   QEmacsPlainTextEdit::QEmacsPlainTextEdit(const QString& f,

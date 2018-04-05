@@ -86,11 +86,27 @@ namespace qemacs {
     this->emitNewTreatedFile(this->e->getCompleteFileName());
   }  // end of QEmacsBuffer::QEmacsBuffer
 
+  bool QEmacsBuffer::eventFilter(QObject *o, QEvent *ev) {
+    if (!this->isVisible()) {
+      return false;
+    }
+    auto *const w = qobject_cast<QWidget *>(o);
+    if (!((w == this->e->widget()) ||
+          (this->stw->indexOf(w) != -1))) {
+      return false;
+    }
+    if (ev->type() == QEvent::KeyPress) {
+    }
+    return QObject::eventFilter(o, ev);
+  }  // end of QEmacsBuffer::eventFilter
+
   void QEmacsBuffer::initialize() {
     // setting
     this->e->setMainFrame(true);
     this->e->setFocus();
-    // without SecondaryTasks, the SecondaryTasks tab widget is hidden
+    this->e->widget()->installEventFilter(this);
+    // without SecondaryTasks, the SecondaryTasks tab widget is
+    // hidden
     this->stw->setTabPosition(QTabWidget::South);
     this->stw->setDocumentMode(true);
     this->stw->setTabsClosable(true);
@@ -175,8 +191,9 @@ namespace qemacs {
     QObject::connect(this->e, &QEmacsPlainTextEdit::majorModeChanged,
                      this,
                      [this] { emit mainFrameMajorModeChanged(); });
-    QObject::connect(this->stw, &SecondaryTaskTabWidget::tabCloseRequested,
-                     this, &QEmacsBuffer::closeSecondaryTask);
+    QObject::connect(this->stw,
+                     &SecondaryTaskTabWidget::tabCloseRequested, this,
+                     &QEmacsBuffer::closeSecondaryTask);
     QObject::connect(this->stw, &SecondaryTaskTabWidget::currentChanged,
                      this, [this]() {
                        this->qemacs.setCurrentSecondaryTask(
@@ -228,7 +245,7 @@ namespace qemacs {
     this->updateBufferInformations();
     const auto n = this->getBufferName();
     emit bufferNameChanged(this, o, n);
-  } // end of QEmacsBuffer::updateBufferName()
+  }  // end of QEmacsBuffer::updateBufferName()
 
   std::vector<QMenu *> QEmacsBuffer::getSpecificMenus() {
     return this->e->getSpecificMenus();
@@ -312,9 +329,10 @@ namespace qemacs {
     return *(this->e);
   }  // end of QEmacsBuffer::getQEmacsTextEdit
 
-  //! \return the current active SecondaryTask if any, nullptr otherwise
+  //! \return the current active SecondaryTask if any, nullptr
+  //! otherwise
   QWidget *QEmacsBuffer::getCurrentSecondaryTask() {
-    if(this->stw->isVisible()){
+    if (this->stw->isVisible()) {
       return this->stw->currentWidget();
     }
     return nullptr;
@@ -332,7 +350,8 @@ namespace qemacs {
     return this->stw->count() != 0;
   }
 
-  QWidget *QEmacsBuffer::attachSecondaryTask(const QString &t, QWidget *const s) {
+  QWidget *QEmacsBuffer::attachSecondaryTask(const QString &t,
+                                             QWidget *const s) {
     if (s == nullptr) {
       return nullptr;
     }
@@ -341,7 +360,7 @@ namespace qemacs {
 #endif /* QEMACS_HAVE_WEBENGINE */
     auto *p = qobject_cast<QAbstractScrollArea *>(s);
     SecondaryTask st;
-    if(t.size()>8){
+    if (t.size() > 8) {
       st.title = t.left(8);
     } else {
       st.title = t;
@@ -359,12 +378,12 @@ namespace qemacs {
       }
       return w;
     } else if (p != nullptr) {
-#else /* QEMACS_HAVE_WEBENGINE */
-      if (p != nullptr) {
+#else  /* QEMACS_HAVE_WEBENGINE */
+    if (p != nullptr) {
 #endif /* QEMACS_HAVE_WEBENGINE */
       auto *w = new QAbstractScrollAreaWrapper(p, this);
       st.w = s;
-      this->qemacs.attachSecondaryTask(this,st);
+      this->qemacs.attachSecondaryTask(this, st);
       if (this->isVisible()) {
         this->stw->addTab(w, st.title);
         this->stw->setCurrentWidget(w);
@@ -373,7 +392,7 @@ namespace qemacs {
       return w;
     }
     st.w = s;
-    this->qemacs.attachSecondaryTask(this,st);
+    this->qemacs.attachSecondaryTask(this, st);
     if (this->isVisible()) {
       this->stw->addTab(s, st.title);
       this->stw->setCurrentWidget(s);
@@ -383,16 +402,14 @@ namespace qemacs {
   }  // end of QEmacsBuffer::attachSecondaryTask
 
   void QEmacsBuffer::attachSecondaryTask(QWidget *const p) {
-    if(this->getSecondaryTaskIndex(p)!=-1){
+    if (this->getSecondaryTaskIndex(p) != -1) {
       return;
     }
-    const auto& st = this->qemacs.attachSecondaryTask(this, p);
-    if(st.w!=nullptr){
-      if(this->isVisible()){
-        this->stw->addTab(st.w, st.icon, st.title);
-        this->stw->setCurrentWidget(st.w);
-        this->stw->show();
-      }
+    const auto &st = this->qemacs.attachSecondaryTask(this, p);
+    if (st.w != nullptr) {
+      this->stw->addTab(st.w, st.icon, st.title);
+      this->stw->setCurrentWidget(st.w);
+      this->stw->show();
     }
   }  // end of QEmacsBuffer::attachSecondaryTask
 
@@ -421,15 +438,17 @@ namespace qemacs {
     return n;
   }
 
-  void QEmacsBuffer::setSecondaryTaskIcon(QWidget *const p, const QIcon &i) {
+  void QEmacsBuffer::setSecondaryTaskIcon(QWidget *const p,
+                                          const QIcon &i) {
     const auto sid = this->getSecondaryTaskIndex(p);
     if (sid != -1) {
-      this->qemacs.setSecondaryTaskIcon(p,i);
+      this->qemacs.setSecondaryTaskIcon(p, i);
       this->stw->setTabIcon(sid, i);
     }
   }
 
-  void QEmacsBuffer::setSecondaryTaskTitle(QWidget *const p, const QString &n) {
+  void QEmacsBuffer::setSecondaryTaskTitle(QWidget *const p,
+                                           const QString &n) {
     const auto i = this->getSecondaryTaskIndex(p);
     if (i != -1) {
       this->qemacs.setSecondaryTaskTitle(p, n);
@@ -439,11 +458,11 @@ namespace qemacs {
 
   void QEmacsBuffer::refreshSecondaryTaskTabWidget() {
     this->stw->clear();
-    const auto& tasks = this->qemacs.getSecondaryTasks(this);
-    if(tasks.empty()){
+    const auto &tasks = this->qemacs.getSecondaryTasks(this);
+    if (tasks.empty()) {
       return;
     }
-    auto current = [&tasks] () -> QWidget* {
+    auto current = [&tasks]() -> QWidget * {
       for (const auto &t : tasks) {
         if (t.current) {
           return t.w;
@@ -470,7 +489,7 @@ namespace qemacs {
     for (int i = 0; i != this->stw->count(); ++i) {
       if (s == this->stw->widget(i)) {
         this->stw->removeTab(i);
-        this->qemacs.detachSecondaryTask(this,s);
+        this->qemacs.detachSecondaryTask(this, s);
         if (this->stw->count() == 0) {
           this->stw->hide();
         }
@@ -481,7 +500,7 @@ namespace qemacs {
 
   void QEmacsBuffer::showSecondaryTask(QWidget *const s) {
     // look if all secondary tasks are hidden
-    this->qemacs.showSecondaryTask(this,s);
+    this->qemacs.showSecondaryTask(this, s);
     for (int i = 0; i != this->stw->count(); ++i) {
       auto *w = this->stw->widget(i);
       if (s == w) {
@@ -494,7 +513,7 @@ namespace qemacs {
   void QEmacsBuffer::hideSecondaryTask(QWidget *const s) {
     // look if all secondary tasks are hidden
     auto h = true;
-    this->qemacs.hideSecondaryTask(this,s);
+    this->qemacs.hideSecondaryTask(this, s);
     for (int i = 0; i != this->stw->count(); ++i) {
       auto *w = this->stw->widget(i);
       if (s == w) {
@@ -546,7 +565,7 @@ namespace qemacs {
   }  // end of QEmacsBuffer::hideSecondaryTasks
 
   void QEmacsBuffer::closeSecondaryTask(int i) {
-    debug("QEmacsBuffer::closeSecondaryTask: removing tab",i);
+    debug("QEmacsBuffer::closeSecondaryTask: removing tab", i);
     this->qemacs.detachSecondaryTask(this, this->stw->widget(i));
     this->stw->removeTab(i);
     if (this->stw->count() == 0) {
@@ -567,5 +586,7 @@ namespace qemacs {
   void QEmacsBuffer::updateMenu() {
     emit updatedMenu();
   }  // end of QEmacsBuffer::updateMenu(){
+
+  QEmacsBuffer::~QEmacsBuffer() = default;
 
 }  // end of namespace qemacs

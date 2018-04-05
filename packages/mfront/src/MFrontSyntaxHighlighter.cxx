@@ -6,7 +6,6 @@
  */
 
 #include <stdexcept>
-
 #include "MFront/AbstractDSL.hxx"
 #include "MFront/DSLFactory.hxx"
 #include "MFront/SupportedTypes.hxx"
@@ -14,11 +13,10 @@
 
 namespace qemacs
 {
-  
-  MFrontSyntaxHighlighter::MFrontSyntaxHighlighter(QTextDocument *p,
-						   const QString& n)
-    : CxxSyntaxHighlighter(p)
-  {
+
+  MFrontSyntaxHighlighter::MFrontSyntaxHighlighter(QTextDocument* p,
+                                                   const QString& n)
+      : CxxSyntaxHighlighter(p) {
     std::vector<std::string> keys;
     try{
       auto& f = mfront::DSLFactory::getDSLFactory();

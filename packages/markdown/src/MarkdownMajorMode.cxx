@@ -12,6 +12,7 @@
 #include <QtCore/QTimer>
 #include <QtWidgets/QAbstractItemView>
 #include "TFEL/Utilities/CxxTokenizer.hxx"
+#include "QEmacs/Utilities.hxx"
 #include "QEmacs/MarkdownSyntaxHighlighter.hxx"
 #include "QEmacs/ProcessOutputFrame.hxx"
 #include "QEmacs/QEmacsShellProcessLineEdit.hxx"
@@ -370,7 +371,7 @@ namespace qemacs {
 
   static StandardQEmacsMajorModeProxy<MarkdownMajorMode> proxy(
       "Markdown",
-      QVector<QRegExp>() << QRegExp("^[\\w-0-9_\\.]+\\.md"),
+      QVector<QRegExp>() << QRegExp("^" + fileNameRegExp() + ".md"),
       "x-office-document");
 
 }  // end of namespace qemacs

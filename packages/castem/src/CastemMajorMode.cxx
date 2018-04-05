@@ -13,6 +13,7 @@
 #include <QtGui/QDesktopServices>
 #include "TFEL/Glossary/Glossary.hxx"
 #include "TFEL/Glossary/GlossaryEntry.hxx"
+#include "QEmacs/Utilities.hxx"
 #include "QEmacs/QEmacsBuffer.hxx"
 #include "QEmacs/ProcessOutputFrame.hxx"
 #include "QEmacs/QEmacsTextEditBase.hxx"
@@ -604,7 +605,7 @@ namespace qemacs {
     QObject::connect(this->src, &QAction::triggered, this,
                      &CastemMajorMode::sendRegionToCastem);
     this->sbc =
-        new QAction(QObject::tr("Send buffert to Cast3M"), this);
+        new QAction(QObject::tr("Send buffer to Cast3M"), this);
     this->sbc->setIcon(QIcon::fromTheme("system-run"));
     QObject::connect(this->sbc, &QAction::triggered, this,
                      &CastemMajorMode::sendBufferToCastem);
@@ -625,8 +626,6 @@ namespace qemacs {
   }  // end of CastemMajorMode::showImportBehaviourWizard
 
   void CastemMajorMode::showImportMFMBehaviourWizard() {
-    using tfel::material::ModellingHypothesis;
-    using tfel::system::ExternalLibraryManager;
     ImportMFMBehaviourWizard::Options o;
     o.minterface = "Castem";
     ImportMFMBehaviourWizard w(this->textEdit, o);
@@ -921,7 +920,8 @@ namespace qemacs {
 
   static StandardQEmacsMajorModeProxy<CastemMajorMode> proxy(
       "Cast3M",
-      QVector<QRegExp>() << QRegExp("^.+\\.dgibi$"),
+      QVector<QRegExp>() << QRegExp("^" + fileNameRegExp() + ".dgibi")
+                         << QRegExp("^" + fileNameRegExp() + ".procedur"),
       ":/Cast3MIcon.png");
 
 }  // end of namespace qemacs

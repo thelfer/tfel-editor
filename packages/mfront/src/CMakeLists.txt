@@ -10,7 +10,7 @@ qt_sources(MFrontQEmacsMode_SOURCES
   "${PROJECT_SOURCE_DIR}/packages/mfront/include/QEmacs"
   MFrontMajorMode
   MFrontSyntaxHighlighter
-  MFrontOptions
+  MFrontOptionsDialog
   ImplicitDSLWizard)
 
 qt_add_resources(MFrontQEmacsResources_RCC
@@ -19,12 +19,13 @@ qt_add_resources(MFrontQEmacsResources_RCC
 qemacs_package(MFrontQEmacsMode
   ${MFrontQEmacsResources_RCC}
   ${MFrontQEmacsMode_SOURCES}
+  MFrontOptions.cxx
   MFrontInitializer.cxx)
 
 target_link_libraries(MFrontQEmacsMode
   TFELQEmacs
   TFELMFront
-    TFELUtilities
+  TFELUtilities
   Qt5::Core
   Qt5::Widgets
   )

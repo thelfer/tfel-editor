@@ -13,8 +13,10 @@
 
 namespace qemacs {
 
-  //! forward declaration
+  // forward declaration
   struct QEmacsTextEditBase;
+  // forward declaration
+  struct MFrontSyntaxHighlighter;
 
   //! \brief a major mode for editing `MFront` input files
   struct MFrontMajorMode : public CxxMajorMode {
@@ -57,6 +59,7 @@ namespace qemacs {
    protected:
     //! return the list of MTest keywords
     virtual QStringList getKeyWordsList();
+    void runCompilation() override;
     /*!
      * \brief a timer to refresh syntax highlighting
      * This is mandatory since the value after `@DSL` can change with
@@ -69,6 +72,8 @@ namespace qemacs {
     QCompleter *c = nullptr;
     //! help action
     QAction *ha = nullptr;
+    // current syntax highlighter
+    MFrontSyntaxHighlighter *highlighter = nullptr;
 
    private:
     Q_OBJECT

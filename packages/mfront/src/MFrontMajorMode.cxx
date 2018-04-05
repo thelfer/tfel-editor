@@ -31,6 +31,7 @@
 #include "QEmacs/QEmacsTextEditBase.hxx"
 #include "QEmacs/ImplicitDSLWizard.hxx"
 #include "QEmacs/MFrontOptions.hxx"
+#include "QEmacs/MFrontOptionsDialog.hxx"
 #include "QEmacs/MFrontMajorMode.hxx"
 
 namespace qemacs {
@@ -42,13 +43,13 @@ namespace qemacs {
     std::map<QString, QStringList> behaviours;
     //! file implementing models, sorted by material
     std::map<QString, QStringList> models;
-  }; // end of struct MFrontExamples
+  };  // end of struct MFrontExamples
 
-  static MFrontExamples buildMFrontExamplesList(const char* const src) {
+  static MFrontExamples buildMFrontExamplesList(const char *const src) {
     auto r = MFrontExamples();
     const auto mfm = ::getenv(src);
     if (mfm == nullptr) {
-      debug("variable",src,"is not defined");
+      debug("variable", src, "is not defined");
       return r;
     }
 #ifdef Q_OS_WIN
@@ -56,7 +57,7 @@ namespace qemacs {
 #else  /* Q_OS_WIN */
     const auto paths = QString(mfm).split(":", QString::SkipEmptyParts);
 #endif /* Q_OS_WIN */
-    for (const auto& path : paths) {
+    for (const auto &path : paths) {
 #ifdef Q_OS_WIN
       QDir d(path + "\\share\\mfm\\materials");
 #else  /* Q_OS_WIN */
@@ -66,7 +67,7 @@ namespace qemacs {
         continue;
       }
       for (const auto &md : d.entryInfoList()) {
-        if(!md.isDir()){
+        if (!md.isDir()) {
           continue;
         }
         const auto amp = md.absoluteFilePath();
@@ -74,11 +75,11 @@ namespace qemacs {
         auto append = [&m, &amp](std::map<QString, QStringList> &mfs,
                                  const QString &n) {
           QDir sd(amp + QDir::separator() + n);
-          if(!sd.exists()){
+          if (!sd.exists()) {
             return;
           }
           for (const auto &f : sd.entryInfoList()) {
-            if(f.suffix()=="mfront"){
+            if (f.suffix() == "mfront") {
               mfs[m].append(f.absoluteFilePath());
             }
           }
@@ -89,7 +90,7 @@ namespace qemacs {
       }
     }
     return r;
-  } // end of buildMFrontExamplesList
+  }  // end of buildMFrontExamplesList
 
   static const MFrontExamples &getMFrontGalleryExamples() {
     static const MFrontExamples e(
@@ -98,8 +99,7 @@ namespace qemacs {
   }
 
   static const MFrontExamples &getMFrontMaterialsExamples() {
-    static const MFrontExamples e(
-        buildMFrontExamplesList("MFMHOME"));
+    static const MFrontExamples e(buildMFrontExamplesList("MFMHOME"));
     return e;
   }
 
@@ -143,88 +143,106 @@ namespace qemacs {
           QObject::tr("runMFront: no file name"));
       return;
     }
-    auto mkt = [&qemacs, &t] {
+    QFileInfo fn(n);
+    if ((!fn.exists()) || (!fn.isFile())) {
+      qemacs.displayInformativeMessage(
+          QObject::tr("invalid file name"));
+      return;
+    }
+    // no structured binding yet
+    const auto dsln_mkt = [&qemacs, &t] {
       auto &f = mfront::DSLFactory::getDSLFactory();
       const auto name = getDSLName(qemacs, t);
       const auto dsl =
           f.createNewDSL(name.toStdString())->getTargetType();
       if (dsl == mfront::AbstractDSL::MATERIALPROPERTYDSL) {
-        return MFrontOptionsDialog::MATERIALPROPERTY;
+        return std::make_pair(name,
+                              MFrontOptionsDialog::MATERIALPROPERTY);
       } else if (dsl == mfront::AbstractDSL::BEHAVIOURDSL) {
-        return MFrontOptionsDialog::BEHAVIOUR;
+        return std::make_pair(name, MFrontOptionsDialog::BEHAVIOUR);
       }
-      return MFrontOptionsDialog::MODEL;
+      return std::make_pair(name, MFrontOptionsDialog::MODEL);
     }();
+    const auto &mkt = dsln_mkt.second;
     QSettings s;
     MFrontOptions o;
+    o.dsl = dsln_mkt.first;
+    o.file = fn.absoluteFilePath();
     if (mkt == MFrontOptionsDialog::MATERIALPROPERTY) {
       if (s.contains(mpli)) {
         o.i = s.value(mpli).toString();
       }
     } else if (mkt == MFrontOptionsDialog::BEHAVIOUR) {
-     if (s.contains(bli)) {
+      if (s.contains(bli)) {
         o.i = s.value(bli).toString();
-     }
+      }
     } else {
-     if (s.contains(mli)) {
-       o.i = s.value(mli).toString();
-     }
+      if (s.contains(mli)) {
+        o.i = s.value(mli).toString();
+      }
     }
-    MFrontOptionsDialog od(o, mkt, &t);
+    MFrontOptionsDialog od(qemacs, o, mkt, &t);
     if (od.exec() == QDialog::Rejected) {
       return;
+    }
+    auto nf = new ProcessOutputFrame(qemacs, b);
+    b.attachSecondaryTask(QObject::tr("MFront output"), nf);
+    auto &p = nf->getProcess();
+    p.setWorkingDirectory(fn.dir().absolutePath());
+    auto args = QStringList{};
+    args << "--no-gui";
+    args << ("--verbose=" + o.vlvl);
+    if (o.analysis_type == "Build") {
+      args << ("--obuild=" + o.vlvl);
+    } else if (o.analysis_type == "Generate") {
+      args << ("--omake=" + o.vlvl);
+    }
+    if (!o.i.isEmpty()) {
+      if (mkt == MFrontOptionsDialog::MATERIALPROPERTY) {
+        s.setValue(mpli, o.i);
+      } else if (mkt == MFrontOptionsDialog::BEHAVIOUR) {
+        s.setValue(bli, o.i);
+      } else {
+        s.setValue(mli, o.i);
       }
-      QFileInfo fn(n);
-      if ((!fn.exists()) || (!fn.isFile())) {
-        qemacs.displayInformativeMessage(
-            QObject::tr("invalid file name"));
-        return;
+      args << ("--interface=" + o.i);
+    }
+    auto optional_argument = [&args](const bool bvalue,
+                                     const char *const opt) {
+      if (bvalue) {
+        args << opt;
       }
-      auto nf = new ProcessOutputFrame(qemacs, b);
-      b.attachSecondaryTask(QObject::tr("MFront output"), nf);
-      auto &p = nf->getProcess();
-      p.setWorkingDirectory(fn.dir().absolutePath());
-      auto args = QStringList{};
-      args << "--no-gui";
-      args << ("--verbose=" + o.vlvl);
-      if (o.analysis_type == "Build") {
-        args << ("--obuild=" + o.vlvl);
-      } else if (o.analysis_type == "Generate") {
-        args << ("--omake=" + o.vlvl);
+    };
+    optional_argument(o.debug, "--debug");
+    optional_argument(o.warning, "--warning");
+    optional_argument(o.pedantic, "--pedantic");
+    if (mkt == MFrontOptionsDialog::BEHAVIOUR) {
+      optional_argument(o.profiling, "--@Profiling=true");
+    }
+    if (o.compare_to_numerical_jacobian) {
+      if (!o.numerical_jacobian_criterion.isEmpty()) {
+        args << "--@"
+                "JacobianComparisonCriterion=" +
+                    o.numerical_jacobian_criterion;
       }
-      if (!o.i.isEmpty()) {
-        if (mkt == MFrontOptionsDialog::MATERIALPROPERTY) {
-          s.setValue(mpli, o.i);
-        } else if (mkt == MFrontOptionsDialog::BEHAVIOUR) {
-          s.setValue(bli, o.i);
-        } else {
-          s.setValue(mli, o.i);
-        }
-        args << ("--interface=" + o.i);
+      if (!o.numerical_jacobian_perturbation.isEmpty()) {
+        args << "--@"
+                "PerturbationValueForNumericalJacobianComputation=" +
+                    o.numerical_jacobian_perturbation;
       }
-      auto optional_argument = [&args](const bool bvalue,
-                                       const char *const opt) {
-        if (bvalue) {
-          args << opt;
-        }
-      };
-      optional_argument(o.debug, "--debug");
-      optional_argument(o.warning, "--warning");
-      optional_argument(o.pedantic, "--pedantic");
-      if (mkt == MFrontOptionsDialog::BEHAVIOUR) {
-        optional_argument(o.profiling, "--@Profiling=true");
-      }
-      args << fn.absoluteFilePath();
-      auto *m = qobject_cast<ProcessOutputMajorModeBase *>(
-          nf->setMajorMode("compilation-output"));
-      if (m != nullptr) {
-        m->setDirectory(p.workingDirectory());
-        m->setCommand("mfront");
-        m->setArguments(args);
-        m->setMajorMode("compilation-output");
-      }
-      p.start("mfront", args);
-      p.waitForStarted();
+      args << "--@CompareToNumericalJacobian=true";
+    }
+    args << fn.absoluteFilePath();
+    auto *m = qobject_cast<ProcessOutputMajorModeBase *>(
+        nf->setMajorMode("compilation-output"));
+    if (m != nullptr) {
+      m->setDirectory(p.workingDirectory());
+      m->setCommand("mfront");
+      m->setArguments(args);
+      m->setMajorMode("compilation-output");
+    }
+    p.start("mfront", args);
+    p.waitForStarted();
   }  // end of runMFront
 
   static void startMFront(QEmacsWidget &qemacs,
@@ -257,7 +275,7 @@ namespace qemacs {
     this->rt = new QTimer(this);
     connect(this->rt, &QTimer::timeout, this,
             &MFrontMajorMode::updateSyntaxHighlighterAndCompleter);
-    this->rt->start(500);
+    this->rt->start(1000);
     this->rm = new QAction(QObject::tr("Run MFront"), this);
     this->rm->setIcon(this->getIcon());
     QObject::connect(this->rm, &QAction::triggered, this, [this] {
@@ -275,7 +293,7 @@ namespace qemacs {
 
   QMenu *MFrontMajorMode::getSpecificMenu() {
     auto online_ressource = [this](QMenu *const m, const QString &t,
-				   const QString &url) {
+                                   const QString &url) {
       auto *const a = m->addAction(t);
       QObject::connect(a, &QAction::triggered,
                        [url] { QDesktopServices::openUrl(QUrl(url)); });
@@ -381,7 +399,14 @@ namespace qemacs {
   }  // end of MFrontMajorMode::getIcon()
 
   void MFrontMajorMode::setSyntaxHighlighter(QTextDocument *const d) {
-    new MFrontSyntaxHighlighter(
+    if (this->highlighter != nullptr) {
+      // the previous highlighter must be deleted, otherwise the
+      // highlighters accumulate and memory is only freed when the
+      // document is closed. This can seriously impact the performance
+      // of qemacs.
+      this->highlighter->deleteLater();
+    }
+    this->highlighter = new MFrontSyntaxHighlighter(
         d, getDSLName(this->qemacs, this->textEdit));
   }  // end of MFrontMajorMode::setSyntaxHighlighter
 
@@ -391,7 +416,7 @@ namespace qemacs {
       this->setSyntaxHighlighter(this->textEdit.document());
       this->c->setModel(new QStringListModel(this->getKeyWordsList()));
     }
-    this->rt->start(500);
+    this->rt->start(1000);
   }  // end of MFrontMajorMode::updateSyntaxHighlighterAndCompleter
 
   void MFrontMajorMode::completeContextMenu(QMenu *const m,
@@ -475,6 +500,10 @@ namespace qemacs {
     if (w.exec() == QDialog::Accepted) {
     }
   }  // end of MFrontMajorMode::runImplicitDSLWizard
+
+  void MFrontMajorMode::runCompilation() {
+      startMFront(this->qemacs, this->buffer, this->textEdit);
+  }  // end of MFrontMajorMode::runCompilation
 
   MFrontMajorMode::~MFrontMajorMode() = default;
 

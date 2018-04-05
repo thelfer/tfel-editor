@@ -93,6 +93,10 @@ namespace qemacs {
 
     QAbstractScrollArea* widget() override;
 
+   signals:
+
+    void modificationChanged(const bool);
+
    protected:
     void readTemplateFile(const QString&);
 
