@@ -19,7 +19,7 @@ namespace qemacs {
 
   struct QEMACS_MIW_VISIBILITY_EXPORT SelectMFMBehaviour : QWidget {
     //! option of the dialog box
-    struct Options {
+    struct QEMACS_MIW_VISIBILITY_EXPORT Options {
       //! \brief constructor
       Options();
       //! \brief move constructor
