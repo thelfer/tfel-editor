@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  QEmacsMainWindow.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,98 +6,62 @@
  */
 
 #ifndef LIB_QEMACS_QEMACSMAINWINDOW_HXX
-#define LIB_QEMACS_QEMACSMAINWINDOW_HXX 
+#define LIB_QEMACS_QEMACSMAINWINDOW_HXX
 
-#include<QtCore/QStringList>
-#include<QtWidgets/QMainWindow>
-#include"QEmacs/Config.hxx"
+#include <QtCore/QStringList>
+#include <QtWidgets/QMainWindow>
+#include "QEmacs/Config.hxx"
 
-namespace qemacs
-{
-  
-  struct QEmacsMainWindow
-    : public QMainWindow
-  {
-    QEmacsMainWindow(const QStringList& = QStringList(),
-		     QWidget * const = nullptr);
+namespace qemacs {
 
-    virtual QSize
-    sizeHint() const override;
+  struct QEmacsMainWindow : public QMainWindow {
+    QEmacsMainWindow(const QStringList & = QStringList(),
+                     QWidget *const = nullptr);
 
-  protected:
+    virtual QSize sizeHint() const override;
 
-    virtual void
-    closeEvent(QCloseEvent *) override;
+   protected:
+    virtual void closeEvent(QCloseEvent *) override;
 
-  protected slots:
+   protected slots:
 
-    virtual void
-    about();
+    virtual void about();
 
-    virtual void
-    undo();
+    virtual void undo();
 
-    virtual void
-    redo();
+    virtual void redo();
 
-    virtual void
-    cut();
+    virtual void cut();
 
-    virtual void
-    copy();
+    virtual void copy();
 
-    virtual void
-    paste();
+    virtual void paste();
 
-    virtual void
-    selectAll();
+    virtual void selectAll();
 
-    virtual void
-    print();
-    
-    virtual void
-    updateBuffersMenu();
+    virtual void print();
 
-    virtual void
-    updateOptionsMenu();
+    virtual void updateBuffersMenu();
 
-    virtual void
-    bufferMenuActionTriggered(QAction *);
+    virtual void updateOptionsMenu();
 
-    virtual void
-    createMainMenu();
+    virtual void createMainMenu();
 
-    virtual void
-    openFile();
+    virtual void openFile();
 
-    virtual void
-    selectFont();
+    virtual void selectFont();
 
-    virtual void
-    useEmacsShortCuts();
+    virtual void useEmacsShortCuts();
 
-    virtual void
-    useQtShortCuts();
+    virtual void useQtShortCuts();
 
-    virtual void
-    openRecentFileActionTriggered(QAction *);
+    virtual void addToRecentFiles(const QString &);
 
-    virtual void
-    spellCheckLanguageActionTriggered(QAction*);
+   protected:
+    virtual void createActions();
 
-    virtual void
-    addToRecentFiles(const QString&);
-
-  protected:
-
-    virtual void
-    createActions();
-
-    virtual void
-    createRecentFilesMenu(QMenu * const,
-			  const QStringList&);
-
-    QVector<QAction *> changeSpellCheckLanguageActions;
+    virtual void createRecentFilesMenu(QMenu *const,
+                                       const QStringList &);
 
     QAction *na;
     QAction *oa;
@@ -106,7 +70,7 @@ namespace qemacs
     QAction *ka;
     QAction *pra;
     QAction *ea;
-    
+
     QAction *ua;
     QAction *ra;
     QAction *ca;
@@ -126,12 +90,11 @@ namespace qemacs
     QMenu *bm;
     QMenu *hm;
 
-  private:
+   private:
     Q_OBJECT
 
-  }; // end of class QEmacsMainWindow
-  
-} // end of namespace qemacs
+  };  // end of class QEmacsMainWindow
+
+}  // end of namespace qemacs
 
 #endif /* LIB_QEMACS_QEMACSMAINWINDOW_HXX */
-

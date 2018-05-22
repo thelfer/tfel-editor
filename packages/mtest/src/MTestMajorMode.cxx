@@ -66,7 +66,7 @@ namespace qemacs {
                          QEmacsTextEditBase& t,
                          const QString& scheme) {
     if (t.isModified()) {
-      auto *input = t.getSaveInput();
+      auto* input = t.getSaveInput();
       QObject::connect(input, &QEmacsTextEditBase::SaveInput::finished,
                        [&qemacs, &b, &t, scheme] {
                          runMTest(qemacs, b, t, scheme);
@@ -75,103 +75,106 @@ namespace qemacs {
       return;
     }
     runMTest(qemacs, b, t, scheme);
-  } // end of  startMTest
+  }  // end of  startMTest
 
   static void insertBehaviour(QEmacsTextEditBase& textEdit,
                               const BehaviourDescription& bd) {
-   auto b = bd.generate();
-   if (!b) {
-     return;
-   }
-   auto tc = textEdit.textCursor();
-   tc.beginEditBlock();
-   tc.insertText("@ModellingHypothesis '" + bd.hypothesis + "';\n");
-   tc.insertText("@Behaviour<" + bd.minterface + "> '" + bd.library +
-                 "' '" + bd.getFunction() + "';\n\n");
-   if (!b->getMaterialPropertiesNames().empty()) {
-     tc.insertText("// material properties\n");
-     for (const auto& m : b->getMaterialPropertiesNames()) {
-       const auto mp = QString::fromStdString(m);
-       const auto pmpd = std::find_if(
-           bd.material_properties.begin(), bd.material_properties.end(),
-           [&mp](const MaterialPropertyDescription& mpd) {
-             if (mpd.is<ConstantMaterialPropertyDescription>()) {
-               const auto& cmpd =
-                   mpd.get<ConstantMaterialPropertyDescription>();
-               return mp == cmpd.name;
-             } else if (mpd.is<CastemMaterialPropertyDescription>()) {
-               const auto& cmpd =
-                   mpd.get<CastemMaterialPropertyDescription>();
-               return mp == cmpd.name;
-             }
-             return false;
-           });
-       if (pmpd != bd.material_properties.end()) {
-         if (pmpd->is<ConstantMaterialPropertyDescription>()) {
-           const auto& cmpd = pmpd->get<ConstantMaterialPropertyDescription>();
-           tc.insertText("@MaterialProperty<constant> '" + mp + "' " +
-                         QString::number(cmpd.value) + ";\n");
-         } else if (pmpd->is<CastemMaterialPropertyDescription>()) {
-           const auto& cmpd = pmpd->get<CastemMaterialPropertyDescription>();
-           tc.insertText("@MaterialProperty<castem> '" + mp + "' " +
-                         "'" + cmpd.library + "' '" + cmpd.function +
-                         "';\n");
-         } else {
-           tc.insertText("@MaterialProperty<...> '" + mp + "' ...;\n");
-         }
-       } else {
-         tc.insertText("@MaterialProperty<...> '" + mp + "' ...;\n");
-       }
-     }
-     tc.insertText("\n");
-   }
-   if (!b->getParametersNames().empty()) {
-     tc.insertText("// parameters\n");
-     for (const auto& p : b->getParametersNames()) {
-       const auto v = b->getRealParameterDefaultValue(p);
-       tc.insertText("// @Parameter' " + QString::fromStdString(p) +
-                     "' " + QString::number(v) + ";\n");
-     }
-     tc.insertText("\n");
-   }
-   if (!b->getIntegerParametersNames().empty()) {
-     tc.insertText("// integer parameters\n");
-     for (const auto& p : b->getIntegerParametersNames()) {
-       const auto v = b->getIntegerParameterDefaultValue(p);
-       tc.insertText("// @IntegerParameter' " +
-                     QString::fromStdString(p) + "' " +
-                     QString::number(v) + ";\n");
-     }
-     tc.insertText("\n");
-   }
-   if (!b->getUnsignedShortParametersNames().empty()) {
-     tc.insertText("// UnsignedShort parameters\n");
-     for (const auto& p : b->getUnsignedShortParametersNames()) {
-       const auto v = b->getUnsignedShortParameterDefaultValue(p);
-       tc.insertText("// @UnsignedIntegerParameter' " +
-                     QString::fromStdString(p) + "' " +
-                     QString::number(v) + ";\n");
-     }
-     tc.insertText("\n");
-   }
-   if (!b->getInternalStateVariablesNames().empty()) {
-     tc.insertText("// internal state variable initialisations\n");
-     for (const auto& iv : b->getInternalStateVariablesNames()) {
-       tc.insertText("// @InternalStateVariable '" +
-                     QString::fromStdString(iv) + "';\n");
-     }
-     tc.insertText("\n");
-   }
-   if (!b->getExternalStateVariablesNames().empty()) {
-     tc.insertText("// external state variable\n");
-     for (const auto& ev : b->getExternalStateVariablesNames()) {
-       tc.insertText("// @ExternalStateVariable '" +
-                     QString::fromStdString(ev) + "' ... ;\n");
-     }
-     tc.insertText("\n");
-   }
-   tc.endEditBlock();
-   textEdit.setTextCursor(tc);
+    auto b = bd.generate();
+    if (!b) {
+      return;
+    }
+    auto tc = textEdit.textCursor();
+    tc.beginEditBlock();
+    tc.insertText("@ModellingHypothesis '" + bd.hypothesis + "';\n");
+    tc.insertText("@Behaviour<" + bd.minterface + "> '" + bd.library +
+                  "' '" + bd.getFunction() + "';\n\n");
+    if (!b->getMaterialPropertiesNames().empty()) {
+      tc.insertText("// material properties\n");
+      for (const auto& m : b->getMaterialPropertiesNames()) {
+        const auto mp = QString::fromStdString(m);
+        const auto pmpd = std::find_if(
+            bd.material_properties.begin(),
+            bd.material_properties.end(),
+            [&mp](const MaterialPropertyDescription& mpd) {
+              if (mpd.is<ConstantMaterialPropertyDescription>()) {
+                const auto& cmpd =
+                    mpd.get<ConstantMaterialPropertyDescription>();
+                return mp == cmpd.name;
+              } else if (mpd.is<CastemMaterialPropertyDescription>()) {
+                const auto& cmpd =
+                    mpd.get<CastemMaterialPropertyDescription>();
+                return mp == cmpd.name;
+              }
+              return false;
+            });
+        if (pmpd != bd.material_properties.end()) {
+          if (pmpd->is<ConstantMaterialPropertyDescription>()) {
+            const auto& cmpd =
+                pmpd->get<ConstantMaterialPropertyDescription>();
+            tc.insertText("@MaterialProperty<constant> '" + mp + "' " +
+                          QString::number(cmpd.value) + ";\n");
+          } else if (pmpd->is<CastemMaterialPropertyDescription>()) {
+            const auto& cmpd =
+                pmpd->get<CastemMaterialPropertyDescription>();
+            tc.insertText("@MaterialProperty<castem> '" + mp + "' " +
+                          "'" + cmpd.library + "' '" + cmpd.function +
+                          "';\n");
+          } else {
+            tc.insertText("@MaterialProperty<...> '" + mp + "' ...;\n");
+          }
+        } else {
+          tc.insertText("@MaterialProperty<...> '" + mp + "' ...;\n");
+        }
+      }
+      tc.insertText("\n");
+    }
+    if (!b->getParametersNames().empty()) {
+      tc.insertText("// parameters\n");
+      for (const auto& p : b->getParametersNames()) {
+        const auto v = b->getRealParameterDefaultValue(p);
+        tc.insertText("// @Parameter' " + QString::fromStdString(p) +
+                      "' " + QString::number(v) + ";\n");
+      }
+      tc.insertText("\n");
+    }
+    if (!b->getIntegerParametersNames().empty()) {
+      tc.insertText("// integer parameters\n");
+      for (const auto& p : b->getIntegerParametersNames()) {
+        const auto v = b->getIntegerParameterDefaultValue(p);
+        tc.insertText("// @IntegerParameter' " +
+                      QString::fromStdString(p) + "' " +
+                      QString::number(v) + ";\n");
+      }
+      tc.insertText("\n");
+    }
+    if (!b->getUnsignedShortParametersNames().empty()) {
+      tc.insertText("// UnsignedShort parameters\n");
+      for (const auto& p : b->getUnsignedShortParametersNames()) {
+        const auto v = b->getUnsignedShortParameterDefaultValue(p);
+        tc.insertText("// @UnsignedIntegerParameter' " +
+                      QString::fromStdString(p) + "' " +
+                      QString::number(v) + ";\n");
+      }
+      tc.insertText("\n");
+    }
+    if (!b->getInternalStateVariablesNames().empty()) {
+      tc.insertText("// internal state variable initialisations\n");
+      for (const auto& iv : b->getInternalStateVariablesNames()) {
+        tc.insertText("// @InternalStateVariable '" +
+                      QString::fromStdString(iv) + "';\n");
+      }
+      tc.insertText("\n");
+    }
+    if (!b->getExternalStateVariablesNames().empty()) {
+      tc.insertText("// external state variable\n");
+      for (const auto& ev : b->getExternalStateVariablesNames()) {
+        tc.insertText("// @ExternalStateVariable '" +
+                      QString::fromStdString(ev) + "' ... ;\n");
+      }
+      tc.insertText("\n");
+    }
+    tc.endEditBlock();
+    textEdit.setTextCursor(tc);
   }  // end of insertBehaviour
 
   MTestMajorMode::MTestMajorMode(QEmacsWidget& w,
@@ -190,22 +193,6 @@ namespace qemacs {
                      static_cast<void (QCompleter::*)(const QString&)>(
                          &QCompleter::activated),
                      &t, &QEmacsTextEditBase::insertCompletion);
-    // creating actions
-    this->ra = new QAction(QObject::tr("Run mtest"), this);
-    QObject::connect(this->ra, &QAction::triggered, this, [this] {
-      startMTest(this->qemacs, this->buffer, this->textEdit,
-                 this->getScheme());
-    });
-    this->iba = new QAction(QObject::tr("Import Behaviour"), this);
-    QObject::connect(this->iba, &QAction::triggered, this,
-                     &MTestMajorMode::showImportBehaviourWizard);
-    this->imfmba = new QAction(QObject::tr("Import MFM behaviour"), this);
-    QObject::connect(this->imfmba, &QAction::triggered, this,
-                     &MTestMajorMode::showImportMFMBehaviourWizard);
-    this->tpa =
-        new QAction(QObject::tr("Plot results using TPlot"), this);
-    QObject::connect(this->tpa, &QAction::triggered, this,
-                     &MTestMajorMode::showResults);
   }  // end of MTestMajorMode::MTestMajorMode
 
   QString MTestMajorMode::getName() const {
@@ -220,7 +207,8 @@ namespace qemacs {
     const auto k = e->key();
     const auto m = e->modifiers();
     if ((m == Qt::AltModifier) && (k == Qt::Key_M)) {
-      startMTest(this->qemacs,this->buffer,this->textEdit,this->getScheme());
+      startMTest(this->qemacs, this->buffer, this->textEdit,
+                 this->getScheme());
       return true;
     }
     return CxxMajorMode::keyPressEvent(e);
@@ -232,11 +220,24 @@ namespace qemacs {
       return nullptr;
     }
     auto* m = new QMenu(this->getName(), t);
-    m->addAction(this->ra);
-    m->addAction(this->tpa);
+    // creating actions
+    auto* const ra = m->addAction(QObject::tr("Run mtest"));
+    QObject::connect(ra, &QAction::triggered, this, [this] {
+      startMTest(qemacs, this->buffer, this->textEdit,
+                 this->getScheme());
+    });
+    auto* const tpa =
+        m->addAction(QObject::tr("Plot results using TPlot"));
+    QObject::connect(tpa, &QAction::triggered, this,
+                     &MTestMajorMode::showResults);
     m->addSeparator();
-    m->addAction(this->iba);
-    m->addAction(this->imfmba);
+    auto* const iba = m->addAction(QObject::tr("Import Behaviour"));
+    QObject::connect(iba, &QAction::triggered, this,
+                     &MTestMajorMode::showImportBehaviourWizard);
+    auto* const imfmba =
+        m->addAction(QObject::tr("Import MFM behaviour"));
+    QObject::connect(imfmba, &QAction::triggered, this,
+                     &MTestMajorMode::showImportMFMBehaviourWizard);
     m->addSeparator();
     auto* km = m->addMenu(QObject::tr("Keywords"));
     auto keys = this->getKeyWordsList();
@@ -254,8 +255,6 @@ namespace qemacs {
         km->addAction(ka);
       }
     }
-    QObject::connect(km, &QMenu::triggered, this,
-                     &MTestMajorMode::insertKeyword);
     QObject::connect(km, &QMenu::triggered, this,
                      &MTestMajorMode::insertKeyword);
     return m;
@@ -288,18 +287,29 @@ namespace qemacs {
       const auto k = r.cap(1);
       if (std::find(keys.begin(), keys.end(), k.toStdString()) !=
           keys.end()) {
-        delete this->ha;
-        this->ha = new QAction(QObject::tr("Help on %1").arg(k), this);
-        this->ha->setData(k);
+        auto* const ha =
+            new QAction(QObject::tr("Help on %1").arg(k), m);
         const auto cactions = m->actions();
         if (cactions.isEmpty()) {
-          m->addAction(this->ha);
+          m->addAction(ha);
         } else {
           m->insertSeparator(*(cactions.begin()));
-          m->insertAction(*(cactions.begin()), this->ha);
+          m->insertAction(*(cactions.begin()), ha);
         }
-        QObject::connect(m, &QMenu::triggered, this,
-                         &MTestMajorMode::actionTriggered);
+        QObject::connect(ha, &QAction::triggered, this, [k, this] {
+          auto nf = new ProcessOutputFrame(this->qemacs, this->buffer);
+          this->buffer.attachSecondaryTask(
+              QObject::tr("help on '%1'").arg(k), nf);
+          auto& p = nf->getProcess();
+          if (p.state() != QProcess::Running) {
+            p.start("mtest", QStringList()
+                                 << ("--scheme=" + this->getScheme())
+                                 << ("--help-keyword=" + k));
+            p.waitForStarted();
+            p.waitForFinished(1000);
+          }
+          nf->moveCursor(QTextCursor::Start, QTextCursor::MoveAnchor);
+        });
       }
     }
   }
@@ -310,23 +320,6 @@ namespace qemacs {
   }
 
   QString MTestMajorMode::getScheme() const { return "mtest"; }
-
-  void MTestMajorMode::actionTriggered(QAction* a) {
-    if (a == this->ha) {
-      const auto k = this->ha->data().toString();
-      auto nf = new ProcessOutputFrame(this->qemacs, this->buffer);
-      this->buffer.attachSecondaryTask(QObject::tr("help on '%1'").arg(k), nf);
-      auto& p = nf->getProcess();
-      if (p.state() != QProcess::Running) {
-        p.start("mtest", QStringList()
-                             << ("--scheme=" + this->getScheme())
-                             << ("--help-keyword=" + k));
-        p.waitForStarted();
-        p.waitForFinished(1000);
-      }
-      nf->moveCursor(QTextCursor::Start, QTextCursor::MoveAnchor);
-    }
-  } // end of MTestMajorMode::actionTriggered
 
   QCompleter* MTestMajorMode::getCompleter() {
     return this->c;
@@ -343,7 +336,7 @@ namespace qemacs {
       }
     }
     return CxxMajorMode::getCompletionPrefix();
-  } // end of MTestMajorMode::getCompletionPrefix
+  }  // end of MTestMajorMode::getCompletionPrefix
 
   void MTestMajorMode::showImportBehaviourWizard() {
     ImportBehaviourWizard w(this->textEdit);
@@ -353,12 +346,12 @@ namespace qemacs {
   }  // end of MTestMajorMode::showImportBehaviourWizard
 
   void MTestMajorMode::showImportMFMBehaviourWizard() {
-   using tfel::material::ModellingHypothesis;
-   using tfel::system::ExternalLibraryManager;
-   ImportMFMBehaviourWizard w(this->textEdit);
-   if (w.exec() == QDialog::Accepted) {
-     insertBehaviour(this->textEdit, w.getSelectedBehaviour());
-   }
+    using tfel::material::ModellingHypothesis;
+    using tfel::system::ExternalLibraryManager;
+    ImportMFMBehaviourWizard w(this->textEdit);
+    if (w.exec() == QDialog::Accepted) {
+      insertBehaviour(this->textEdit, w.getSelectedBehaviour());
+    }
   }  // end of MTestMajorMode::showImportMFMBehaviourWizard
 
   void MTestMajorMode::showResults() {
@@ -377,15 +370,15 @@ namespace qemacs {
 
   MTestMajorMode::~MTestMajorMode() = default;
 
-  void runMTest(QEmacsWidget &qemacs) {
+  void runMTest(QEmacsWidget& qemacs) {
     auto& b = qemacs.getCurrentBuffer();
-    auto &t = b.getMainFrame();
+    auto& t = b.getMainFrame();
     startMTest(qemacs, b, t, "mtest");
   }  // end of runMTest
 
-  void runPTest(QEmacsWidget &qemacs) {
+  void runPTest(QEmacsWidget& qemacs) {
     auto& b = qemacs.getCurrentBuffer();
-    auto &t = b.getMainFrame();
+    auto& t = b.getMainFrame();
     startMTest(qemacs, b, t, "ptest");
   }  // end of runPTest
 

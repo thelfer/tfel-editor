@@ -66,7 +66,13 @@ namespace qemacs {
 
     virtual void completeCurrentWord(QEmacsTextEditBase&,
                                      const QString&) = 0;
-    //! \return a menu specific to the current mode
+    /*!
+     * \return a menu specific to the current mode
+     * \note the caller will take ownership of the menu
+     * and may free the memory associated, including the
+     * underlying QAction' objects. Therefore, the
+     * returned menu shall not reference a member. 
+     */
     virtual QMenu* getSpecificMenu() = 0;
     //! \return the icon associated to the current mode
     virtual QIcon getIcon() const = 0;

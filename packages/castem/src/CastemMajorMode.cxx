@@ -583,10 +583,7 @@ namespace qemacs {
   CastemMajorMode::CastemMajorMode(QEmacsWidget& w,
                                    QEmacsBuffer& b,
                                    QEmacsTextEditBase& t)
-      : QEmacsMajorModeBase(w, b, t, &t),
-        co(nullptr),
-        ha1(nullptr),
-        ha2(nullptr) {
+      : QEmacsMajorModeBase(w, b, t, &t), co(nullptr) {
     this->c = new QCompleter(CastemMajorMode::getKeysList(), &t);
     this->c->setWidget(&t);
     this->c->setCaseSensitivity(Qt::CaseInsensitive);
@@ -595,27 +592,6 @@ namespace qemacs {
                      static_cast<void (QCompleter::*)(const QString&)>(
                          &QCompleter::activated),
                      &t, &QEmacsTextEditBase::insertCompletion);
-    // creating actions
-    this->slc = new QAction(QObject::tr("Send line to Cast3M"), this);
-    this->slc->setIcon(QIcon::fromTheme("system-run"));
-    QObject::connect(this->slc, &QAction::triggered, this,
-                     &CastemMajorMode::sendLineToCastem);
-    this->src = new QAction(QObject::tr("Send region to Cast3M"), this);
-    this->src->setIcon(QIcon::fromTheme("system-run"));
-    QObject::connect(this->src, &QAction::triggered, this,
-                     &CastemMajorMode::sendRegionToCastem);
-    this->sbc =
-        new QAction(QObject::tr("Send buffer to Cast3M"), this);
-    this->sbc->setIcon(QIcon::fromTheme("system-run"));
-    QObject::connect(this->sbc, &QAction::triggered, this,
-                     &CastemMajorMode::sendBufferToCastem);
-    this->iba = new QAction(QObject::tr("Import Behaviour"), this);
-    QObject::connect(this->iba, &QAction::triggered, this,
-                     &CastemMajorMode::showImportBehaviourWizard);
-    this->imfmba =
-        new QAction(QObject::tr("Import MFM behaviour"), this);
-    QObject::connect(this->imfmba, &QAction::triggered, this,
-                     &CastemMajorMode::showImportMFMBehaviourWizard);
   }  // end of CastemMajorMode
 
   void CastemMajorMode::showImportBehaviourWizard() {
@@ -731,13 +707,29 @@ namespace qemacs {
     if (t == nullptr) {
       return nullptr;
     }
-    auto* m = new QMenu(this->getName(), t);
-    m->addAction(this->slc);
-    m->addAction(this->src);
-    m->addAction(this->sbc);
+    auto* const m = new QMenu(this->getName(), t);
+    auto* const slc = m->addAction(QObject::tr("Send line to Cast3M"));
+    slc->setIcon(QIcon::fromTheme("system-run"));
+    QObject::connect(slc, &QAction::triggered, this,
+                     &CastemMajorMode::sendLineToCastem);
+    auto* const src =
+        m->addAction(QObject::tr("Send region to Cast3M"));
+    src->setIcon(QIcon::fromTheme("system-run"));
+    QObject::connect(src, &QAction::triggered, this,
+                     &CastemMajorMode::sendRegionToCastem);
+    auto* const sbc =
+        m->addAction(QObject::tr("Send buffer to Cast3M"));
+    sbc->setIcon(QIcon::fromTheme("system-run"));
+    QObject::connect(sbc, &QAction::triggered, this,
+                     &CastemMajorMode::sendBufferToCastem);
     m->addSeparator();
-    m->addAction(this->iba);
-    m->addAction(this->imfmba);
+    auto* const iba = m->addAction(QObject::tr("Import Behaviour"));
+    QObject::connect(iba, &QAction::triggered, this,
+                     &CastemMajorMode::showImportBehaviourWizard);
+    auto* const imfmba =
+        m->addAction(QObject::tr("Import MFM behaviour"));
+    QObject::connect(imfmba, &QAction::triggered, this,
+                     &CastemMajorMode::showImportMFMBehaviourWizard);
     return m;
   }  // end of CastemMajorMode::getSpecificMenu
 
@@ -780,36 +772,24 @@ namespace qemacs {
     mtc.select(QTextCursor::WordUnderCursor);
     const auto w = mtc.selectedText();
     if (this->isCastemKeyWord(w.left(4))) {
-      delete this->ha1;
-      delete this->ha2;
-      this->ha1 =
-          new QAction(QObject::tr("Help on %1 (notice)").arg(w), this);
-      this->ha1->setData(w);
-      this->ha2 =
-          new QAction(QObject::tr("Help on %1 (web)").arg(w), this);
-      this->ha2->setData(w);
+      auto* const ha1 =
+          new QAction(QObject::tr("Help on %1 (notice)").arg(w), m);
+      auto* const ha2 =
+          new QAction(QObject::tr("Help on %1 (web)").arg(w), m);
       const auto& cactions = m->actions();
       if (cactions.isEmpty()) {
-        m->addAction(this->ha1);
-        m->addAction(this->ha2);
+        m->addAction(ha1);
+        m->addAction(ha2);
       } else {
-        m->insertAction(*(cactions.begin()), this->ha1);
-        m->insertAction(*(cactions.begin()), this->ha2);
+        m->insertAction(*(cactions.begin()), ha1);
+        m->insertAction(*(cactions.begin()), ha2);
       }
-      QObject::connect(m, &QMenu::triggered, this,
-                       &CastemMajorMode::actionTriggered);
+      QObject::connect(ha1, &QAction::triggered, this,
+                       [this, w] { this->displayHelp(w, w.left(4)); });
+      QObject::connect(ha2, &QAction::triggered, this,
+                       [this, w] { this->openWebHelp(w.left(4)); });
     }
   }  // end of CastemMajorMode::completeContextMenu
-
-  void CastemMajorMode::actionTriggered(QAction* a) {
-    if (a == this->ha1) {
-      const auto w = this->ha1->data().toString();
-      this->displayHelp(w, w.left(4));
-    } else if (a == this->ha2) {
-      const auto w = this->ha2->data().toString();
-      this->openWebHelp(w.left(4));
-    }
-  }
 
   void CastemMajorMode::displayHelp(const QString& w,
                                     const QString& w2) {
@@ -913,10 +893,7 @@ namespace qemacs {
     return true;
   }  // end of CastemMajorMode::sendBufferToCastem
 
-  CastemMajorMode::~CastemMajorMode() {
-    delete this->ha1;
-    delete this->ha2;
-  }
+  CastemMajorMode::~CastemMajorMode() = default;
 
   static StandardQEmacsMajorModeProxy<CastemMajorMode> proxy(
       "Cast3M",

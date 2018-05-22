@@ -56,6 +56,13 @@ namespace qemacs {
   void QEmacsTextEditBase::mouseMoveEvent(QMouseEvent*) {
   }  // end of QEmacsTextEditBase::mouseMoveEvent
 
+  void QEmacsTextEditBase::format() {
+    if (this->mode == nullptr) {
+      return;
+    }
+    this->mode->format();
+  }  // end of QEmacsTextEditBase::format
+
   void QEmacsTextEditBase::setFocus() {
     auto w = this->widget();
     if (w != nullptr) {

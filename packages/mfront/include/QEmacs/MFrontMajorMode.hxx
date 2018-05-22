@@ -51,8 +51,6 @@ namespace qemacs {
     //! method called periodically to refresh the syntax highlighter
     //! and the completer
     virtual void updateSyntaxHighlighterAndCompleter();
-    //! method called when the Help menu is called
-    virtual void actionTriggered(QAction *);
     //! run the Implicit DSL wizard
     void runImplicitDSLWizard();
 
@@ -66,12 +64,10 @@ namespace qemacs {
      * the user inputs.
      */
     QTimer *rt = nullptr;
-    //! action associated with the action of running MFront
-    QAction *rm = nullptr;
     //! completer
     QCompleter *c = nullptr;
-    //! help action
-    QAction *ha = nullptr;
+    //! current dsl
+    QString current_dsl;
     // current syntax highlighter
     MFrontSyntaxHighlighter *highlighter = nullptr;
 

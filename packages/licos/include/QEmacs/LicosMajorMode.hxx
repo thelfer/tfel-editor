@@ -197,60 +197,60 @@ namespace qemacs {
 
     QRegExp rlib;
 
-    //! run licos
-    QAction *ra;
-    //! run licos in dry-run mode
-    QAction *dra;
-
-    //! add material property
-    QAction *ampa;
-
-    //! material wizard action
-    QAction *mwa;
-    //! thermal behaviour wizard action
-    QAction *tbwa;
-    //! mechanical behaviour wizard action
-    QAction *mbwa;
-
-    //! open data file in tplot
-    QAction *ta1;
-    //! open licos curve in tplot
-    QAction *ta2;
-
-    //! analyse a library using mfm
-    QAction *mfma;
-
-    //! open mfront source
-    QAction *msrca;
-
-    //! search in licos input files in Licos
-    QAction *lsil;
-    //! search in licos input files in MFrontMaterials
-    QAction *lsim;
-    //! search in licos input files in LicosStudies
-    QAction *lsis;
-    //! search in licos input files in
-    //  Licos+MFrontMaterials+LicosStudies
-    QAction *lsia;
-
-    //! search in mfront input files in Licos
-    QAction *msil;
-    //! search in mfront input files in MFrontMaterials
-    QAction *msim;
-    //! search in mfront input files in LicosStudies
-    QAction *msis;
-    //! search in mfront input files in
-    //  Licos+MFrontMaterials+LicosStudies
-    QAction *msia;
-
-    QAction *ddoca;
-    QAction *udoca;
-    QAction *tdoca;
-    QAction *l10doca;
-    QAction *l11doca;
-    QAction *idoca;
-    QAction *mdoca;
-    QVector<QAction *> tudoca;
+    //     //! run licos
+    //     QAction *ra;
+    //     //! run licos in dry-run mode
+    //     QAction *dra;
+    //
+    //     //! add material property
+    //     QAction *ampa;
+    //
+    //     //! material wizard action
+    //     QAction *mwa;
+    //     //! thermal behaviour wizard action
+    //     QAction *tbwa;
+    //     //! mechanical behaviour wizard action
+    //     QAction *mbwa;
+    //
+    //     //! open data file in tplot
+    //     QAction *ta1;
+    //     //! open licos curve in tplot
+    //     QAction *ta2;
+    //
+    //     //! analyse a library using mfm
+    //     QAction *mfma;
+    //
+    //     //! open mfront source
+    //     QAction *msrca;
+    //
+    //     //! search in licos input files in Licos
+    //     QAction *lsil;
+    //     //! search in licos input files in MFrontMaterials
+    //     QAction *lsim;
+    //     //! search in licos input files in LicosStudies
+    //     QAction *lsis;
+    //     //! search in licos input files in
+    //     //  Licos+MFrontMaterials+LicosStudies
+    //     QAction *lsia;
+    //
+    //     //! search in mfront input files in Licos
+    //     QAction *msil;
+    //     //! search in mfront input files in MFrontMaterials
+    //     QAction *msim;
+    //     //! search in mfront input files in LicosStudies
+    //     QAction *msis;
+    //     //! search in mfront input files in
+    //     //  Licos+MFrontMaterials+LicosStudies
+    //     QAction *msia;
+    //
+    //     QAction *ddoca;
+    //     QAction *udoca;
+    //     QAction *tdoca;
+    //     QAction *l10doca;
+    //     QAction *l11doca;
+    //     QAction *idoca;
+    //     QAction *mdoca;
+    //     QVector<QAction *> tudoca;
 
    private:
     Q_OBJECT

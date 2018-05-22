@@ -53,8 +53,6 @@ namespace qemacs {
     //! \brief method called when the `Show Results with TPlot` menu is
     //! called
     virtual void showResults();
-    //! \brief method called when the Help menu is called
-    virtual void actionTriggered(QAction *);
     /*!
      * \param[in] a: action
      */
@@ -67,16 +65,6 @@ namespace qemacs {
     virtual QString getScheme() const;
     //! \brief completer
     QCompleter *c = nullptr;
-    //! \brief help action
-    QAction *ha = nullptr;
-    //! \brief import behaviour action
-    QAction *iba = nullptr;
-    //! \brief import mfm behaviour action
-    QAction *imfmba = nullptr;
-    //! \brief run mtest
-    QAction *ra = nullptr;
-    //! \brief show results with TPlot
-    QAction *tpa = nullptr;
 
    private:
     Q_OBJECT

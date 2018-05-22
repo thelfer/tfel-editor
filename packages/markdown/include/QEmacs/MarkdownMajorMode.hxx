@@ -60,16 +60,14 @@ namespace qemacs {
     ~MarkdownMajorMode() override;
 
    protected slots:
-    //! method called when the Help menu is called
-    virtual void actionTriggered(QAction *);
+
     //! slot called to prepare a Markdown analysis
     virtual void runPandoc();
     //! slot called to start a new Markdown analysis
     virtual void startPandoc();
 
    protected:
-    //! action associated with the runMarkdown method
-    QAction *rm = nullptr;
+
     //! checking
     SpellChecker spellChecker;
     QSyntaxHighlighter *highlighter = nullptr;

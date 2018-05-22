@@ -1,5 +1,5 @@
 /*!
- * \file  QEmacsMainWindow.cxx
+ * \file   src/QEmacsMainWindow.cxx
  * \brief
  * \author Helfer Thomas
  * \date   27/06/2012
@@ -15,6 +15,7 @@
 #include <QtWidgets/QApplication>
 #include <QtGui/QCloseEvent>
 #include "QEmacs/Debug.hxx"
+#include "QEmacs/Utilities.hxx"
 #include "QEmacs/QEmacsHunspellDictionariesManager.hxx"
 #include "QEmacs/QEmacsShortCutStyle.hxx"
 #include "QEmacs/QEmacsWidget.hxx"
@@ -33,7 +34,6 @@ namespace qemacs {
     // this->setStyleSheet("background: rgba(255,255,255,100%)");
     auto *e = new QEmacsWidget(this);
     this->setCentralWidget(e);
-    this->createActions();
     this->createMainMenu();
     QObject::connect(&s, &QEmacsShortCutStyle::shortCutStyleChanged,
                      this, &QEmacsMainWindow::updateOptionsMenu);
@@ -45,9 +45,11 @@ namespace qemacs {
                      &QEmacsMainWindow::updateBuffersMenu);
     QObject::connect(e, &QEmacsWidget::bufferRemoved, this,
                      &QEmacsMainWindow::updateBuffersMenu);
+    QObject::connect(e, &QEmacsWidget::currentBufferChanged,
+                     this, &QEmacsMainWindow::createMainMenu);
     QObject::connect(e, &QEmacsWidget::currentBufferMajorModeChanged,
                      this, &QEmacsMainWindow::createMainMenu);
-    QObject::connect(e, &QEmacsWidget::currentBufferChanged, this,
+    QObject::connect(e, &QEmacsWidget::updatedMenu, this,
                      &QEmacsMainWindow::createMainMenu);
     QObject::connect(e, &QEmacsWidget::newTreatedFile, this,
                      &QEmacsMainWindow::addToRecentFiles);
@@ -246,18 +248,20 @@ namespace qemacs {
     auto &dm =
         HunspellDictionaries::getQEmacsHunspellDictionariesManager();
     const auto dicts = dm.getAvailableDictionnaries();
-    this->changeSpellCheckLanguageActions.clear();
     if (!dicts.isEmpty()) {
       auto *const d = this->om->addMenu(QObject::tr("Dictionaries"));
       d->setIcon(QIcon::fromTheme("accessories-dictionary"));
       for (const auto& di : dicts) {
         auto *a = d->addAction(di);
         a->setData(di);
-        this->changeSpellCheckLanguageActions.push_back(a);
+	QObject::connect(a, &QAction::triggered, this,[di,this](){
+	    auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
+	    if (e != nullptr) {
+	      auto&t = e->getCurrentBuffer().getMainFrame();
+	      t.setSpellCheckLanguage(di);
+	    }
+	  });
       }
-      QObject::connect(
-          d, &QMenu::triggered, this,
-          &QEmacsMainWindow::spellCheckLanguageActionTriggered);
     }
 #endif /* QEMACS_HUNSPELL_SUPPORT */
     // short cuts
@@ -269,18 +273,8 @@ namespace qemacs {
     }
   }  // end of QEmacsMainWindow::updateOptionsMenu
 
-  void QEmacsMainWindow::spellCheckLanguageActionTriggered(QAction *a) {
-    if (this->changeSpellCheckLanguageActions.indexOf(a) != -1) {
-      auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
-      if (e != nullptr) {
-        auto&t = e->getCurrentBuffer().getMainFrame();
-        t.setSpellCheckLanguage(a->data().toString());
-      }
-    }
-  }  // end of QEmacsMainWindow::spellCheckLanguageActionTriggered
-
   void QEmacsMainWindow::updateBuffersMenu() {
-    this->bm->clear();
+    clearMenu(this->bm);
     auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     if (e != nullptr) {
       const auto &bnames = e->getBuffersNames();
@@ -294,23 +288,20 @@ namespace qemacs {
         const auto &n = bnames[i];
         const auto &ic = bicons[i];
         const int id = bids[i];
-        QAction *a = this->bm->addAction(n);
+	auto *a = this->bm->addAction(n);
         if (!ic.isNull()) {
           a->setIcon(ic);
           a->setIconVisibleInMenu(true);
         }
-        a->setData(id);
+	QObject::connect(a, &QAction::triggered, this,[this,id](){
+	    auto *qw = qobject_cast<QEmacsWidget *>(this->centralWidget());
+	    if (qw != nullptr) {
+	      qw->changeBuffer(id);
+	    }
+	  });
       }
     }
   }  // end of QEmacsMainWindow::updateBuffersMenu
-
-  void QEmacsMainWindow::bufferMenuActionTriggered(QAction *a) {
-    auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
-    if (e != nullptr) {
-      int id = a->data().toInt();
-      e->changeBuffer(id);
-    }
-  } // end of QEmacsMainWindow::bufferMenuActionTriggered
 
   void QEmacsMainWindow::useEmacsShortCuts() {
     auto &s = QEmacsShortCutStyle::getQEmacsShortCutStyle();
@@ -327,7 +318,8 @@ namespace qemacs {
   void QEmacsMainWindow::createMainMenu() {
     auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
     QSettings settings;
-    this->menuBar()->clear();
+    clearMenuBar(this->menuBar());
+    this->createActions();
 #if QT_VERSION < QT_VERSION_CHECK(5, 8, 0)
 // https://bugreports.qt.io/browse/QTBUG-46812
 // https://codereview.qt-project.org/#/c/170352/
@@ -365,8 +357,6 @@ namespace qemacs {
     // buffer menu
     this->bm = this->menuBar()->addMenu(QObject::tr("Buffers"));
     this->updateBuffersMenu();
-    QObject::connect(this->bm, &QMenu::triggered, this,
-                     &QEmacsMainWindow::bufferMenuActionTriggered);
     // qemacs menu
     this->bm = this->menuBar()->addMenu(QObject::tr("QEmacs"));
     auto *const qcmds = this->bm->addMenu(QObject::tr("Commands"));
@@ -384,7 +374,7 @@ namespace qemacs {
       });
     }
     // menu associated with the current major mode
-    for (const auto& m : e->getCurrentBufferSpecificMenus()) {
+    for (const auto &m : e->getCurrentBufferSpecificMenus()) {
       this->menuBar()->addMenu(m);
     }
     // options
@@ -411,19 +401,16 @@ namespace qemacs {
         auto *rf = m->addAction(fi.fileName());
         const auto mn = mf.getQEmacsMajorModeNameForFile(fi.fileName());
         rf->setIcon(mf.getQEmacsMajorModeIcon(mn));
-        rf->setData(fi.absoluteFilePath());
+        const auto path = fi.absoluteFilePath();
+	QObject::connect(rf,&QAction::triggered,this,[this,path]{
+	    auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
+	    if (e != nullptr) {
+	      e->openFile(path);
+	    }
+	  });
       }
     }
-    QObject::connect(m, &QMenu::triggered, this,
-                     &QEmacsMainWindow::openRecentFileActionTriggered);
   }  // end of QEmacsMainWindow::createRecentFilesMenu
-
-  void QEmacsMainWindow::openRecentFileActionTriggered(QAction *a) {
-    auto *e = qobject_cast<QEmacsWidget *>(this->centralWidget());
-    if (e != nullptr) {
-      e->openFile(a->data().toString());
-    }
-  }  // end of QEmacsMainWindow::openRecentFileActionTriggered
 
   void QEmacsMainWindow::about() {
     QMessageBox::about(this, tr("About QEmacs"),

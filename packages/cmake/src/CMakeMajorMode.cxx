@@ -54,37 +54,31 @@ namespace qemacs {
     if(r.indexIn(l) >= 0) {
       QString k = r.cap(1).toLower();
       if(cmds.indexOf(k) != -1) {
-        delete this->ha;
-        this->ha = new QAction(QObject::tr("Help on %1").arg(k), this);
-        this->ha->setIcon(QIcon::fromTheme("dialog-question"));
-        this->ha->setData(k);
+        auto* const ha =
+            new QAction(QObject::tr("Help on %1").arg(k), m);
+        ha->setIcon(QIcon::fromTheme("dialog-question"));
         const auto cactions = m->actions();
         if(cactions.isEmpty()) {
-          m->addAction(this->ha);
+          m->addAction(ha);
         } else {
           m->insertSeparator(*(cactions.begin()));
-          m->insertAction(*(cactions.begin()), this->ha);
+          m->insertAction(*(cactions.begin()), ha);
         }
-        QObject::connect(m, &QMenu::triggered, this,
-                         &CMakeMajorMode::actionTriggered);
+        QObject::connect(ha, &QAction::triggered, this, [k, this] {
+          auto nf = new ProcessOutputFrame(this->qemacs, this->buffer);
+          this->buffer.attachSecondaryTask(
+              QObject::tr("help on '%1'").arg(k), nf);
+          auto& p = nf->getProcess();
+          if (p.state() != QProcess::Running) {
+            p.start("cmake", QStringList() << "--help-command" << k);
+            p.waitForStarted();
+            p.waitForFinished(1000);
+          }
+          nf->moveCursor(QTextCursor::Start, QTextCursor::MoveAnchor);
+        });
       }
     }
   } // end of CMakeMajorMode::completeContextMenu
-
-  void CMakeMajorMode::actionTriggered(QAction *a) {
-    if(a == this->ha) {
-      const auto k = this->ha->data().toString();
-      auto nf = new ProcessOutputFrame(this->qemacs, this->buffer);
-      this->buffer.attachSecondaryTask(QObject::tr("help on '%1'").arg(k), nf);
-      auto &p = nf->getProcess();
-      if(p.state() != QProcess::Running) {
-        p.start("cmake", QStringList() << "--help-command" << k);
-        p.waitForStarted();
-        p.waitForFinished(1000);
-      }
-      nf->moveCursor(QTextCursor::Start, QTextCursor::MoveAnchor);
-    }
-  } // end of CMakeMajorMode::actionTriggered
 
   QString CMakeMajorMode::getCommentSyntax() {
     return "#";

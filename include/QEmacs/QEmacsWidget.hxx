@@ -160,6 +160,8 @@ namespace qemacs {
 
     void currentBufferMajorModeChanged();
 
+    void updatedMenu();
+
     void newTreatedFile(const QString &);
 
    protected slots:

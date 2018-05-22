@@ -68,8 +68,6 @@ namespace qemacs {
 
    protected slots:
 
-    virtual void actionTriggered(QAction *);
-
     virtual bool sendLineToCastem();
 
     virtual bool sendRegionToCastem();
@@ -95,21 +93,6 @@ namespace qemacs {
     QCompleter *c;
 
     ProcessInteractionFrame *co;
-
-    // help action
-    QAction *ha1 = nullptr;
-    // help action
-    QAction *ha2 = nullptr;
-    // send the current line to Cast3M
-    QAction *slc = nullptr;
-    // send the current region to Cast3M
-    QAction *src = nullptr;
-    // send the current buffer to Cast3M
-    QAction *sbc = nullptr;
-    //! \brief import behaviour action
-    QAction *iba = nullptr;
-    //! \brief import mfm behaviour action
-    QAction *imfmba = nullptr;
 
    private:
     Q_OBJECT

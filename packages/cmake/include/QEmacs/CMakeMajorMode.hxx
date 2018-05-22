@@ -39,13 +39,8 @@ namespace qemacs {
    protected:
     virtual void runCompilation();
 
-    virtual void actionTriggered(QAction *);
-
     void completeContextMenu(QMenu *const,
                              const QTextCursor &) override;
-
-    //! help action
-    QAction *ha = nullptr;
 
    private:
     Q_OBJECT

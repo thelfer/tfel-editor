@@ -7,8 +7,10 @@
 
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
-#include <QtWidgets/QLabel>
 #include <QtWidgets/QWidget>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QMenuBar>
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QAbstractScrollArea>
@@ -109,5 +111,31 @@ namespace qemacs {
   QString fileNameRegExp() {
     return "[\\w-0-9_\\./]+";
   }  // end of fileNameRegExp
+
+  void clearMenu(QMenu* const m) {
+    for (auto a : m->actions()) {
+      if (a->isSeparator()) {
+      } else if (a->menu()) {
+        clearMenu(a->menu());
+        delete a->menu();
+      } else {
+        delete a;
+      }
+    }
+//    m->clear();
+  }  // end of clearMenu
+
+  void clearMenuBar(QMenuBar* const m) {
+    for (auto a : m->actions()) {
+      if (a->isSeparator()) {
+      } else if (a->menu()) {
+        clearMenu(a->menu());
+        delete a->menu();
+      } else {
+        delete a;
+      }
+    }
+//    m->clear();
+  }  // end of clearMenuBar
 
 }  // end of namespace qemacs

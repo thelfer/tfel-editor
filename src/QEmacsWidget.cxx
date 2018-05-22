@@ -279,6 +279,11 @@ namespace qemacs {
                          emit currentBufferMajorModeChanged();
                        }
                      });
+    QObject::connect(b, &QEmacsBuffer::updatedMenu, this, [this, b] {
+      if (&(this->getCurrentBuffer()) == b) {
+        emit updatedMenu();
+      }
+    });
     return b;
   }  // end of QEmacsWidget::createNewBuffer
 

@@ -197,26 +197,7 @@ namespace qemacs {
                                  QEmacsBuffer &b,
                                  QEmacsTextEditBase &t)
       : QEmacsMajorModeBase(w, b, t, &t),
-        rlib("'(" + fileNameRegExp() + "\\.so)'"),
-        ta1(nullptr),
-        ta2(nullptr),
-        mfma(nullptr),
-        msrca(nullptr),
-        lsil(nullptr),
-        lsim(nullptr),
-        lsis(nullptr),
-        lsia(nullptr),
-        msil(nullptr),
-        msim(nullptr),
-        msis(nullptr),
-        msia(nullptr),
-        ddoca(nullptr),
-        udoca(nullptr),
-        tdoca(nullptr),
-        l10doca(nullptr),
-        l11doca(nullptr),
-        idoca(nullptr),
-        mdoca(nullptr) {
+        rlib("'(" + fileNameRegExp() + "\\.so)'") {
     QStringList keys;
     for (const auto &k : LicosSyntaxHighlighter::getKeys()) {
       keys << QString::fromStdString(k);
@@ -283,169 +264,181 @@ namespace qemacs {
   } // end of LicosMajorMode::addMaterialProperties
 
   void LicosMajorMode::createActions() {
-    this->ra = new QAction(QObject::tr("Run Licos"), this);
-    QObject::connect(this->ra, &QAction::triggered, this,
-                     &LicosMajorMode::runLicos);
-    this->dra = new QAction(QObject::tr("Dry-run Licos"), this);
-    QObject::connect(this->dra, &QAction::triggered, this,
-                     &LicosMajorMode::dryrunLicos);
-    this->ampa = new QAction(QObject::tr("Add material properties"), this);
-    QObject::connect(this->ampa, &QAction::triggered, this,
-                     &LicosMajorMode::addMaterialProperties);
-    this->mwa = new QAction(QObject::tr("Material Wizard"), this);
-    QObject::connect(this->mwa, &QAction::triggered, this,
-                     &LicosMajorMode::showMaterialWizard);
-    this->tbwa = new QAction(QObject::tr("ThermalBehaviour Wizard"), this);
-    QObject::connect(this->tbwa, &QAction::triggered, this,
-                     &LicosMajorMode::showThermalBehaviourWizard);
-    this->mbwa = new QAction(QObject::tr("MechanicalBehaviour Wizard"), this);
-    QObject::connect(this->mbwa, &QAction::triggered, this,
-                     &LicosMajorMode::showMechanicalBehaviourWizard);
-    this->msrca = new QAction(QObject::tr("Open mfront source"), this);
-    // documentations
-    const QString &p1 = this->getLicosPath();
-    const QString &p2 = this->getMFrontMaterialsPath();
-    if (!p1.isEmpty()) {
-      QFileInfo fi;
-      fi.setFile(p1 + QDir::separator()
-                 + "share/doc/licos/description/description.pdf");
-      if ((fi.exists()) && (fi.isReadable())) {
-        this->ddoca = new QAction(QObject::tr("licos's description"), this);
-        this->ddoca->setData(p1 + QDir::separator()
-                             + "share/doc/licos/description/description.pdf");
-        this->ddoca->setIcon(QIcon(":/LicosPDFIcon.png"));
-        this->ddoca->setIconVisibleInMenu(true);
-      }
-      fi.setFile(p1 + QDir::separator()
-                 + "share/doc/licos/user-guide/user-guide.pdf");
-      if ((fi.exists()) && (fi.isReadable())) {
-        this->udoca = new QAction(QObject::tr("licos's user guide"), this);
-        this->udoca->setData(p1 + QDir::separator()
-                             + "share/doc/licos/user-guide/user-guide.pdf");
-        this->udoca->setIcon(QIcon(":/LicosPDFIcon.png"));
-        this->udoca->setIconVisibleInMenu(true);
-      }
-      fi.setFile(p1 + QDir::separator()
-                 + "share/doc/licos/tests/TestCaseDocumentation.pdf");
-      if ((fi.exists()) && (fi.isReadable())) {
-        this->tdoca =
-            new QAction(QObject::tr("licos's tests documentation"), this);
-        this->tdoca->setData(
-            p1 + QDir::separator()
-            + "share/doc/licos/tests/TestCaseDocumentation.pdf");
-        this->tdoca->setIcon(QIcon(":/LicosPDFIcon.png"));
-        this->tdoca->setIconVisibleInMenu(true);
-      }
-      fi.setFile(p1 + QDir::separator()
-                 + "share/doc/licos/release-notes-1.0/licos-1.0.pdf");
-      if ((fi.exists()) && (fi.isReadable())) {
-        this->l10doca =
-            new QAction(QObject::tr("licos's release note 1.0"), this);
-        this->l10doca->setData(
-            p1 + QDir::separator()
-            + "share/doc/licos/release-notes-1.0/licos-1.0.pdf");
-        this->l10doca->setIcon(QIcon(":/LicosPDFIcon.png"));
-        this->l10doca->setIconVisibleInMenu(true);
-      }
-      fi.setFile(p1 + QDir::separator()
-                 + "share/doc/licos/release-notes-1.1/licos-1.1.pdf");
-      if ((fi.exists()) && (fi.isReadable())) {
-        this->l11doca =
-            new QAction(QObject::tr("licos's release note 1.1"), this);
-        this->l11doca->setData(
-            p1 + QDir::separator()
-            + "share/doc/licos/release-notes-1.1/licos-1.1.pdf");
-        this->l11doca->setIcon(QIcon(":/LicosPDFIcon.png"));
-        this->l11doca->setIconVisibleInMenu(true);
-      }
-      fi.setFile(p1 + QDir::separator() + "share/doc/licos/html/index.html");
-      if ((fi.exists()) && (fi.isReadable())) {
-        this->idoca =
-            new QAction(QObject::tr("licos's doxygen documentation"), this);
-        this->idoca->setData(p1 + QDir::separator()
-                             + "share/doc/licos/html/index.html");
-        // this->ddoca->setIcon(QIcon(":/LicosHTMLIcon.png"));
-        // this->ddoca->setIconVisibleInMenu(true);
-      }
-      // tutorials
-      std::map<QString, QString> tutorials = {
-          {QObject::tr("Coupling schemes"), "licos-coupling.pdf"},
-          {QObject::tr("Postprocessings"), "licos-postprocessings.pdf"},
-          {QObject::tr("Gaz Management"), "licos-gas.pdf"},
-          {QObject::tr("Basic principles"), "licos-principes.pdf"},
-          {QObject::tr("Introduction"), "licos-introduction.pdf"},
-          {QObject::tr("Python extensions"), "licos-python.pdf"},
-          {QObject::tr("Loadings"), "licos-loadings.pdf"},
-          {QObject::tr("Heat transfer and mechanics"),
-           "licos-thermomechanicalmodel.pdf"},
-          {QObject::tr("Meshing"), "licos-mesh.pdf"},
-          {QObject::tr("Time"), "licos-times.pdf"},
-          {QObject::tr("Misc"), "licos-misc.pdf"},
-          {QObject::tr("User guide"), "licos-userguide.pdf"},
-          {QObject::tr("Multiple systems"), "licos-multitranches.pdf"},
-          {QObject::tr("Workspace"), "licos-workspace.pdf"}};
-      for (const auto& t : tutorials) {
-        fi.setFile(p1 + QDir::separator() +
-                   "share/doc/licos/tutorial/" + t.second);
-        if ((fi.exists()) && (fi.isReadable())) {
-          this->tudoca.push_back(new QAction(t.first, this));
-          this->tudoca.back()->setData(p1 + QDir::separator() +
-                                       "share/doc/licos/tutorial/" +
-                                       t.second);
-          this->tudoca.back()->setIcon(QIcon(":/LicosPDFIcon.png"));
-          this->tudoca.back()->setIconVisibleInMenu(true);
-        }
-      }
-    }
-    if (!p2.isEmpty()) {
-      QFileInfo fi;
-      fi.setFile(p2 + QDir::separator()
-                 + "share/doc/mfrontmaterials/description/mfm.pdf");
-      if ((fi.exists()) && (fi.isReadable())) {
-        this->mdoca =
-            new QAction(QObject::tr("MFrontMaterials's description"), this);
-        this->mdoca->setData(p2 + QDir::separator()
-                             + "mfrontmaterials/description/mfm.pdf");
-        this->mdoca->setIcon(QIcon(":/LicosPDFIcon.png"));
-        this->mdoca->setIconVisibleInMenu(true);
-      }
-    }
-  } // end of   LicosMajorMode::createActions()
+    //     this->msrca = new QAction(QObject::tr("Open mfront source"),
+    //     this);
+    //     // documentations
+    //     const QString &p1 = this->getLicosPath();
+    //     const QString &p2 = this->getMFrontMaterialsPath();
+    //     if (!p1.isEmpty()) {
+    //       QFileInfo fi;
+    //       fi.setFile(p1 + QDir::separator()
+    //                  +
+    //                  "share/doc/licos/description/description.pdf");
+    //       if ((fi.exists()) && (fi.isReadable())) {
+    //         this->ddoca = new QAction(QObject::tr("licos's
+    //         description"), this);
+    //         this->ddoca->setData(p1 + QDir::separator()
+    //                              +
+    //                              "share/doc/licos/description/description.pdf");
+    //         this->ddoca->setIcon(QIcon(":/LicosPDFIcon.png"));
+    //         this->ddoca->setIconVisibleInMenu(true);
+    //       }
+    //       fi.setFile(p1 + QDir::separator()
+    //                  + "share/doc/licos/user-guide/user-guide.pdf");
+    //       if ((fi.exists()) && (fi.isReadable())) {
+    //         this->udoca = new QAction(QObject::tr("licos's user
+    //         guide"), this);
+    //         this->udoca->setData(p1 + QDir::separator()
+    //                              +
+    //                              "share/doc/licos/user-guide/user-guide.pdf");
+    //         this->udoca->setIcon(QIcon(":/LicosPDFIcon.png"));
+    //         this->udoca->setIconVisibleInMenu(true);
+    //       }
+    //       fi.setFile(p1 + QDir::separator()
+    //                  +
+    //                  "share/doc/licos/tests/TestCaseDocumentation.pdf");
+    //       if ((fi.exists()) && (fi.isReadable())) {
+    //         this->tdoca =
+    //             new QAction(QObject::tr("licos's tests
+    //             documentation"), this);
+    //         this->tdoca->setData(
+    //             p1 + QDir::separator()
+    //             + "share/doc/licos/tests/TestCaseDocumentation.pdf");
+    //         this->tdoca->setIcon(QIcon(":/LicosPDFIcon.png"));
+    //         this->tdoca->setIconVisibleInMenu(true);
+    //       }
+    //       fi.setFile(p1 + QDir::separator()
+    //                  +
+    //                  "share/doc/licos/release-notes-1.0/licos-1.0.pdf");
+    //       if ((fi.exists()) && (fi.isReadable())) {
+    //         this->l10doca =
+    //             new QAction(QObject::tr("licos's release note 1.0"),
+    //             this);
+    //         this->l10doca->setData(
+    //             p1 + QDir::separator()
+    //             + "share/doc/licos/release-notes-1.0/licos-1.0.pdf");
+    //         this->l10doca->setIcon(QIcon(":/LicosPDFIcon.png"));
+    //         this->l10doca->setIconVisibleInMenu(true);
+    //       }
+    //       fi.setFile(p1 + QDir::separator()
+    //                  +
+    //                  "share/doc/licos/release-notes-1.1/licos-1.1.pdf");
+    //       if ((fi.exists()) && (fi.isReadable())) {
+    //         this->l11doca =
+    //             new QAction(QObject::tr("licos's release note 1.1"),
+    //             this);
+    //         this->l11doca->setData(
+    //             p1 + QDir::separator()
+    //             + "share/doc/licos/release-notes-1.1/licos-1.1.pdf");
+    //         this->l11doca->setIcon(QIcon(":/LicosPDFIcon.png"));
+    //         this->l11doca->setIconVisibleInMenu(true);
+    //       }
+    //       fi.setFile(p1 + QDir::separator() +
+    //       "share/doc/licos/html/index.html");
+    //       if ((fi.exists()) && (fi.isReadable())) {
+    //         this->idoca =
+    //             new QAction(QObject::tr("licos's doxygen
+    //             documentation"), this);
+    //         this->idoca->setData(p1 + QDir::separator()
+    //                              +
+    //                              "share/doc/licos/html/index.html");
+    //         // this->ddoca->setIcon(QIcon(":/LicosHTMLIcon.png"));
+    //         // this->ddoca->setIconVisibleInMenu(true);
+    //       }
+    //       // tutorials
+    //       std::map<QString, QString> tutorials = {
+    //           {QObject::tr("Coupling schemes"),
+    //           "licos-coupling.pdf"},
+    //           {QObject::tr("Postprocessings"),
+    //           "licos-postprocessings.pdf"},
+    //           {QObject::tr("Gaz Management"), "licos-gas.pdf"},
+    //           {QObject::tr("Basic principles"),
+    //           "licos-principes.pdf"},
+    //           {QObject::tr("Introduction"),
+    //           "licos-introduction.pdf"},
+    //           {QObject::tr("Python extensions"), "licos-python.pdf"},
+    //           {QObject::tr("Loadings"), "licos-loadings.pdf"},
+    //           {QObject::tr("Heat transfer and mechanics"),
+    //            "licos-thermomechanicalmodel.pdf"},
+    //           {QObject::tr("Meshing"), "licos-mesh.pdf"},
+    //           {QObject::tr("Time"), "licos-times.pdf"},
+    //           {QObject::tr("Misc"), "licos-misc.pdf"},
+    //           {QObject::tr("User guide"), "licos-userguide.pdf"},
+    //           {QObject::tr("Multiple systems"),
+    //           "licos-multitranches.pdf"},
+    //           {QObject::tr("Workspace"), "licos-workspace.pdf"}};
+    //       for (const auto& t : tutorials) {
+    //         fi.setFile(p1 + QDir::separator() +
+    //                    "share/doc/licos/tutorial/" + t.second);
+    //         if ((fi.exists()) && (fi.isReadable())) {
+    //           this->tudoca.push_back(new QAction(t.first, this));
+    //           this->tudoca.back()->setData(p1 + QDir::separator() +
+    //                                        "share/doc/licos/tutorial/"
+    //                                        +
+    //                                        t.second);
+    //           this->tudoca.back()->setIcon(QIcon(":/LicosPDFIcon.png"));
+    //           this->tudoca.back()->setIconVisibleInMenu(true);
+    //         }
+    //       }
+    //     }
+    //     if (!p2.isEmpty()) {
+    //       QFileInfo fi;
+    //       fi.setFile(p2 + QDir::separator()
+    //                  +
+    //                  "share/doc/mfrontmaterials/description/mfm.pdf");
+    //       if ((fi.exists()) && (fi.isReadable())) {
+    //         this->mdoca =
+    //             new QAction(QObject::tr("MFrontMaterials's
+    //             description"), this);
+    //         this->mdoca->setData(p2 + QDir::separator()
+    //                              +
+    //                              "mfrontmaterials/description/mfm.pdf");
+    //         this->mdoca->setIcon(QIcon(":/LicosPDFIcon.png"));
+    //         this->mdoca->setIconVisibleInMenu(true);
+    //       }
+    //     }
+  }  // end of   LicosMajorMode::createActions()
 
   void LicosMajorMode::createSearchActions() {
-    const QString &mpath = this->getMFrontMaterialsPath();
-    const QString &lpath = this->getLicosStudiesPath();
-    QString l1 = QObject::tr("Search in *.ple from Licos");
-    QString l2 = QObject::tr("Search in *.mfront from Licos");
-    if (!mpath.isEmpty()) {
-      l1 += "+MFrontMaterials";
-      l2 += "+MFrontMaterials";
-    }
-    if (!lpath.isEmpty()) {
-      l1 += "+LicosStudies";
-      l2 += "+LicosStudies";
-    }
-    delete this->lsil;
-    delete this->lsim;
-    delete this->lsis;
-    delete this->lsia;
-    delete this->msil;
-    delete this->msim;
-    delete this->msis;
-    delete this->msia;
-    this->lsil = new QAction(QObject::tr("Search in *.ple from Licos"), this);
-    this->lsim =
-        new QAction(QObject::tr("Search in *.ple from MFrontMaterials"), this);
-    this->lsis =
-        new QAction(QObject::tr("Search in *.ple from LicosStudies"), this);
-    this->lsia = new QAction(l1, this);
-    this->msil =
-        new QAction(QObject::tr("Search in *.mfront from Licos"), this);
-    this->msim = new QAction(
-        QObject::tr("Search in *.mfront from MFrontMaterials"), this);
-    this->msis =
-        new QAction(QObject::tr("Search in *.mfront from LicosStudies"), this);
-    this->msia = new QAction(l2, this);
+    //     const QString &mpath = this->getMFrontMaterialsPath();
+    //     const QString &lpath = this->getLicosStudiesPath();
+    //     QString l1 = QObject::tr("Search in *.ple from Licos");
+    //     QString l2 = QObject::tr("Search in *.mfront from Licos");
+    //     if (!mpath.isEmpty()) {
+    //       l1 += "+MFrontMaterials";
+    //       l2 += "+MFrontMaterials";
+    //     }
+    //     if (!lpath.isEmpty()) {
+    //       l1 += "+LicosStudies";
+    //       l2 += "+LicosStudies";
+    //     }
+    //     delete this->lsil;
+    //     delete this->lsim;
+    //     delete this->lsis;
+    //     delete this->lsia;
+    //     delete this->msil;
+    //     delete this->msim;
+    //     delete this->msis;
+    //     delete this->msia;
+    //     this->lsil = new QAction(QObject::tr("Search in *.ple from
+    //     Licos"), this);
+    //     this->lsim =
+    //         new QAction(QObject::tr("Search in *.ple from
+    //         MFrontMaterials"), this);
+    //     this->lsis =
+    //         new QAction(QObject::tr("Search in *.ple from
+    //         LicosStudies"), this);
+    //     this->lsia = new QAction(l1, this);
+    //     this->msil =
+    //         new QAction(QObject::tr("Search in *.mfront from Licos"),
+    //         this);
+    //     this->msim = new QAction(
+    //         QObject::tr("Search in *.mfront from MFrontMaterials"),
+    //         this);
+    //     this->msis =
+    //         new QAction(QObject::tr("Search in *.mfront from
+    //         LicosStudies"), this);
+    //     this->msia = new QAction(l2, this);
   }
 
   void LicosMajorMode::runLicos() {
@@ -528,38 +521,70 @@ namespace qemacs {
 
   QMenu *LicosMajorMode::getSpecificMenu() {
     QWidget *t = qobject_cast<QWidget *>(this->parent());
-    if (t == nullptr) { return nullptr; }
-    QMenu *m(new QMenu(QObject::tr("Licos"), t));
-    m->addAction(this->ra);
-    m->addAction(this->dra);
-    m->addSeparator();
-    m->addAction(this->ampa);
-    QMenu *im = m->addMenu(QObject::tr("Wizards"));
-    im->addAction(this->mwa);
-    im->addAction(this->tbwa);
-    im->addAction(this->mbwa);
-    if ((this->ddoca != nullptr) || (this->udoca != nullptr)
-        || (this->tdoca != nullptr) || (this->l10doca != nullptr)
-        || (this->l11doca != nullptr) || (this->idoca != nullptr)
-        || (this->mdoca != nullptr) || (!this->tudoca.isEmpty())) {
-      QMenu *dm = m->addMenu(QObject::tr("Documentations"));
-      if (this->ddoca != nullptr) { dm->addAction(this->ddoca); }
-      if (this->udoca != nullptr) { dm->addAction(this->udoca); }
-      if (this->tdoca != nullptr) { dm->addAction(this->tdoca); }
-      if (this->l10doca != nullptr) { dm->addAction(this->l10doca); }
-      if (this->l11doca != nullptr) { dm->addAction(this->l11doca); }
-      if (this->idoca != nullptr) { dm->addAction(this->idoca); }
-      if (this->mdoca != nullptr) { dm->addAction(this->mdoca); }
-      if (!this->tudoca.isEmpty()) {
-        QMenu *tm = dm->addMenu(QObject::tr("Tutorial"));
-        QVector<QAction *>::const_iterator pt;
-        for (pt = this->tudoca.begin(); pt != this->tudoca.end(); ++pt) {
-          tm->addAction(*pt);
-        }
-      }
-      QObject::connect(dm, &QMenu::triggered, this,
-                       &LicosMajorMode::openDocumentation);
+    if (t == nullptr) {
+      return nullptr;
     }
+    QMenu *m = new QMenu(QObject::tr("Licos"), t);
+    auto *const ra = m->addAction(QObject::tr("Run Licos"));
+    QObject::connect(ra, &QAction::triggered, this,
+                     &LicosMajorMode::runLicos);
+    auto *const dra = m->addAction(QObject::tr("Dry-run Licos"));
+    QObject::connect(dra, &QAction::triggered, this,
+                     &LicosMajorMode::dryrunLicos);
+    m->addSeparator();
+    auto *const ampa =
+        m->addAction(QObject::tr("Add material properties"));
+    QObject::connect(ampa, &QAction::triggered, this,
+                     &LicosMajorMode::addMaterialProperties);
+    QMenu *im = m->addMenu(QObject::tr("Wizards"));
+    auto *const mwa = im->addAction(QObject::tr("Material Wizard"));
+    QObject::connect(mwa, &QAction::triggered, this,
+                     &LicosMajorMode::showMaterialWizard);
+    auto *const tbwa =
+        im->addAction(QObject::tr("ThermalBehaviour Wizard"));
+    QObject::connect(tbwa, &QAction::triggered, this,
+                     &LicosMajorMode::showThermalBehaviourWizard);
+    auto *const mbwa =
+        im->addAction(QObject::tr("MechanicalBehaviour Wizard"));
+    QObject::connect(mbwa, &QAction::triggered, this,
+                     &LicosMajorMode::showMechanicalBehaviourWizard);
+    //     if ((this->ddoca != nullptr) || (this->udoca != nullptr) ||
+    //         (this->tdoca != nullptr) || (this->l10doca != nullptr) ||
+    //         (this->l11doca != nullptr) || (this->idoca != nullptr) ||
+    //         (this->mdoca != nullptr) || (!this->tudoca.isEmpty())) {
+    //       QMenu *dm = m->addMenu(QObject::tr("Documentations"));
+    //       if (this->ddoca != nullptr) {
+    //         dm->addAction(this->ddoca);
+    //       }
+    //       if (this->udoca != nullptr) {
+    //         dm->addAction(this->udoca);
+    //       }
+    //       if (this->tdoca != nullptr) {
+    //         dm->addAction(this->tdoca);
+    //       }
+    //       if (this->l10doca != nullptr) {
+    //         dm->addAction(this->l10doca);
+    //       }
+    //       if (this->l11doca != nullptr) {
+    //         dm->addAction(this->l11doca);
+    //       }
+    //       if (this->idoca != nullptr) {
+    //         dm->addAction(this->idoca);
+    //       }
+    //       if (this->mdoca != nullptr) {
+    //         dm->addAction(this->mdoca);
+    //       }
+    //       if (!this->tudoca.isEmpty()) {
+    //         QMenu *tm = dm->addMenu(QObject::tr("Tutorial"));
+    //         QVector<QAction *>::const_iterator pt;
+    //         for (pt = this->tudoca.begin(); pt != this->tudoca.end();
+    //              ++pt) {
+    //           tm->addAction(*pt);
+    //         }
+    //       }
+    //       QObject::connect(dm, &QMenu::triggered, this,
+    //                        &LicosMajorMode::openDocumentation);
+    //     }
     return m;
   } // end of LicosMajorMode::getSpecificMenu
 
@@ -574,81 +599,87 @@ namespace qemacs {
   } // end of LicosMajorMode::getIcon()
 
   void LicosMajorMode::actionTriggered(QAction *a) {
-    if (a == nullptr) { return; }
-    // open in tplot
-    if (a == this->ta1) {
-      QString data = this->ta1->data().toString();
-      if (!data.isEmpty()) {
-        if (!QProcess::startDetached("tplot", QStringList() << data)) {
-          this->qemacs.displayInformativeMessage(
-              QObject::tr("launching tplot failed"));
-        }
-      }
-    }
-    if (a == this->ta2) {
-      QString data = this->ta2->data().toString();
-      if (!data.isEmpty()) {
-        if (!QProcess::startDetached("tplot", QStringList()
-                                                  << ("lc:" + data))) {
-          this->qemacs.displayInformativeMessage(
-              QObject::tr("launching tplot failed"));
-        }
-      }
-    }
-    // analyse using mfma
-    if (a == this->mfma) {
-      this->analyseUsingMFM(this->mfma->data().toString());
-    }
-    // open mfront source file
-    if (a == this->msrca) {
-      this->openMFrontSource(this->msrca->data().toString());
-    }
-    // licos file
-    if (a == this->lsil) {
-      const QString &w = this->getLicosPath();
-      this->search(this->lsil->data().toString(), w, "ple");
-    }
-    if (a == this->lsim) {
-      const QString &w = this->getMFrontMaterialsPath();
-      this->search(this->lsim->data().toString(), w, "ple");
-    }
-    if (a == this->lsis) {
-      const QString &w = this->getLicosStudiesPath();
-      this->search(this->lsis->data().toString(), w, "ple");
-    }
-    if (a == this->lsia) {
-      const QString &w1 = this->getLicosPath();
-      const QString &w2 = this->getMFrontMaterialsPath();
-      const QString &w3 = this->getLicosStudiesPath();
-      this->search(this->lsia->data().toString(), w1, "ple");
-      if (w2 != w1) { this->search(this->lsia->data().toString(), w2, "ple"); }
-      if (w3 != w1) { this->search(this->lsia->data().toString(), w3, "ple"); }
-    }
-    // mfront files
-    if (a == this->msil) {
-      const QString &w = this->getLicosPath();
-      this->search(this->msil->data().toString(), w, "mfront");
-    }
-    if (a == this->msim) {
-      const QString &w = this->getMFrontMaterialsPath();
-      this->search(this->msim->data().toString(), w, "mfront");
-    }
-    if (a == this->msis) {
-      const QString &w = this->getLicosStudiesPath();
-      this->search(this->msis->data().toString(), w, "mfront");
-    }
-    if (a == this->msia) {
-      const QString &w1 = this->getLicosPath();
-      const QString &w2 = this->getMFrontMaterialsPath();
-      const QString &w3 = this->getLicosStudiesPath();
-      this->search(this->msia->data().toString(), w1, "mfront");
-      if ((!w2.isEmpty()) && (w2 != w1)) {
-        this->search(this->msia->data().toString(), w2, "mfront");
-      }
-      if ((!w3.isEmpty()) && (w3 != w1)) {
-        this->search(this->msia->data().toString(), w3, "mfront");
-      }
-    }
+    //     if (a == nullptr) { return; }
+    //     // open in tplot
+    //     if (a == this->ta1) {
+    //       QString data = this->ta1->data().toString();
+    //       if (!data.isEmpty()) {
+    //         if (!QProcess::startDetached("tplot", QStringList() <<
+    //         data)) {
+    //           this->qemacs.displayInformativeMessage(
+    //               QObject::tr("launching tplot failed"));
+    //         }
+    //       }
+    //     }
+    //     if (a == this->ta2) {
+    //       QString data = this->ta2->data().toString();
+    //       if (!data.isEmpty()) {
+    //         if (!QProcess::startDetached("tplot", QStringList()
+    //                                                   << ("lc:" +
+    //                                                   data))) {
+    //           this->qemacs.displayInformativeMessage(
+    //               QObject::tr("launching tplot failed"));
+    //         }
+    //       }
+    //     }
+    //     // analyse using mfma
+    //     if (a == this->mfma) {
+    //       this->analyseUsingMFM(this->mfma->data().toString());
+    //     }
+    //     // open mfront source file
+    //     if (a == this->msrca) {
+    //       this->openMFrontSource(this->msrca->data().toString());
+    //     }
+    //     // licos file
+    //     if (a == this->lsil) {
+    //       const QString &w = this->getLicosPath();
+    //       this->search(this->lsil->data().toString(), w, "ple");
+    //     }
+    //     if (a == this->lsim) {
+    //       const QString &w = this->getMFrontMaterialsPath();
+    //       this->search(this->lsim->data().toString(), w, "ple");
+    //     }
+    //     if (a == this->lsis) {
+    //       const QString &w = this->getLicosStudiesPath();
+    //       this->search(this->lsis->data().toString(), w, "ple");
+    //     }
+    //     if (a == this->lsia) {
+    //       const QString &w1 = this->getLicosPath();
+    //       const QString &w2 = this->getMFrontMaterialsPath();
+    //       const QString &w3 = this->getLicosStudiesPath();
+    //       this->search(this->lsia->data().toString(), w1, "ple");
+    //       if (w2 != w1) { this->search(this->lsia->data().toString(),
+    //       w2, "ple"); }
+    //       if (w3 != w1) { this->search(this->lsia->data().toString(),
+    //       w3, "ple"); }
+    //     }
+    //     // mfront files
+    //     if (a == this->msil) {
+    //       const QString &w = this->getLicosPath();
+    //       this->search(this->msil->data().toString(), w, "mfront");
+    //     }
+    //     if (a == this->msim) {
+    //       const QString &w = this->getMFrontMaterialsPath();
+    //       this->search(this->msim->data().toString(), w, "mfront");
+    //     }
+    //     if (a == this->msis) {
+    //       const QString &w = this->getLicosStudiesPath();
+    //       this->search(this->msis->data().toString(), w, "mfront");
+    //     }
+    //     if (a == this->msia) {
+    //       const QString &w1 = this->getLicosPath();
+    //       const QString &w2 = this->getMFrontMaterialsPath();
+    //       const QString &w3 = this->getLicosStudiesPath();
+    //       this->search(this->msia->data().toString(), w1, "mfront");
+    //       if ((!w2.isEmpty()) && (w2 != w1)) {
+    //         this->search(this->msia->data().toString(), w2,
+    //         "mfront");
+    //       }
+    //       if ((!w3.isEmpty()) && (w3 != w1)) {
+    //         this->search(this->msia->data().toString(), w3,
+    //         "mfront");
+    //       }
+    //     }
   }
 
   void LicosMajorMode::openMFrontSource(const QString &f) {
@@ -737,10 +768,10 @@ namespace qemacs {
   } // end of LicosMajorMode::search
 
   void LicosMajorMode::createAnalyseUsingMFMAction(const QString &l) {
-    delete this->mfma;
-    this->mfma = new QAction(QObject::tr("Analyse using mfm"), this);
-    this->mfma->setData(l);
-  } // end of LicosMajorMode::createAnalyseUsingMFMAction
+    //     this->mfma = new QAction(QObject::tr("Analyse using mfm"),
+    //     this);
+    //     this->mfma->setData(l);
+  }  // end of LicosMajorMode::createAnalyseUsingMFMAction
 
   void LicosMajorMode::completeContextMenu(QMenu *const m,
                                            const QTextCursor &tc) {
@@ -749,152 +780,161 @@ namespace qemacs {
     using ELM = ExternalLibraryManager;
     auto bConnect = false; // connect
     QEmacsMajorModeBase::completeContextMenu(m, tc);
-    // looking for a word
-    QTextCursor mtc(tc);
-    mtc.select(QTextCursor::WordUnderCursor);
-    const auto w = mtc.selectedText();
-    if (!w.isEmpty()) {
-      const auto &cactions = m->actions();
-      const auto &lpath = this->getLicosPath();
-      const auto &mpath = this->getMFrontMaterialsPath();
-      const auto &spath = this->getLicosStudiesPath();
-      if (!lpath.isEmpty()) {
-        this->createSearchActions();
-        this->lsil->setData(w);
-        this->msil->setData(w);
-        if (((lpath == mpath) && (lpath == spath))
-            || ((mpath.isEmpty()) && (spath.isEmpty()))) {
-          if (cactions.isEmpty()) {
-            m->addAction(this->lsil);
-            m->addAction(this->msil);
-          } else {
-            m->insertAction(*(cactions.begin()), this->lsil);
-            m->insertAction(*(cactions.begin()), this->msil);
-            m->insertSeparator(*(cactions.begin()));
-          }
-          bConnect = true;
-        } else {
-          // search menu for licos files
-          auto *lsm = m->addMenu(QObject::tr("Search in Licos  Input Files"));
-          auto *msm = m->addMenu(QObject::tr("Search in MFront Input Files"));
-          lsm->addAction(this->lsil);
-          msm->addAction(this->msil);
-          if (!mpath.isEmpty()) {
-            this->lsim->setData(w);
-            this->msim->setData(w);
-            lsm->addAction(this->lsim);
-            msm->addAction(this->msim);
-          }
-          if (!spath.isEmpty()) {
-            this->lsis->setData(w);
-            this->msis->setData(w);
-            lsm->addAction(this->lsis);
-            msm->addAction(this->msis);
-          }
-          this->lsia->setData(w);
-          this->msia->setData(w);
-          lsm->addAction(this->lsia);
-          msm->addAction(this->msia);
-          if (cactions.isEmpty()) {
-            m->insertMenu(nullptr, lsm);
-            m->insertMenu(nullptr, msm);
-          } else {
-            m->insertMenu(*(cactions.begin()), lsm);
-            m->insertMenu(*(cactions.begin()), msm);
-            m->insertSeparator(*(cactions.begin()));
-          }
-          QObject::connect(lsm, &QMenu::triggered, this,
-                           &LicosMajorMode::actionTriggered);
-          QObject::connect(msm, &QMenu::triggered, this,
-                           &LicosMajorMode::actionTriggered);
-        }
-      }
-    }
-    // special treatment for txt files
-    QString data;
-    QStringList exts;
-    exts << "txt"
-         << "data"
-         << "dat";
-    data = this->getLicosFile(this->getFileNameUnderCursor(tc, exts));
-    if (!data.isEmpty()) {
-      QTextCursor b(tc);
-      b.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
-      b.select(QTextCursor::WordUnderCursor);
-      if ((b.selectedText() == "Curve")
-          || (b.selectedText() == "MultipleCurves")) {
-        delete this->ta2;
-        this->ta2 = new QAction(QObject::tr("Plot using tplot"), this);
-        const QList<QAction *> &cactions = m->actions();
-        this->ta2->setData(data);
-        if (cactions.isEmpty()) {
-          m->addAction(this->ta2);
-        } else {
-          m->insertAction(*(cactions.begin()), this->ta2);
-          m->insertSeparator(*(cactions.begin()));
-        }
-        bConnect = true;
-      } else {
-        delete this->ta1;
-        this->ta1 = new QAction(QObject::tr("Plot using tplot"), this);
-        const QList<QAction *> &cactions = m->actions();
-        this->ta1->setData(data);
-        if (cactions.isEmpty()) {
-          m->addAction(this->ta1);
-        } else {
-          m->insertAction(*(cactions.begin()), this->ta1);
-          m->insertSeparator(*(cactions.begin()));
-        }
-        bConnect = true;
-      }
-    }
-    // special treatment for libraries
-    QString l = this->libraryNameUnderCursor(tc);
-    if (!l.isEmpty()) {
-      this->createAnalyseUsingMFMAction(l);
-      const QList<QAction *> &cactions = m->actions();
-      if (cactions.isEmpty()) {
-        m->addAction(this->mfma);
-      } else {
-        m->insertAction(*(cactions.begin()), this->mfma);
-        m->insertSeparator(*(cactions.begin()));
-      }
-      bConnect = true;
-    }
-    // special treatment for functions
-    auto *ld = static_cast<LicosData *>(tc.block().userData());
-    if (ld != nullptr) {
-      const auto p = this->positionInCurrentBlock(tc);
-      if ((p >= ld->pos) && (ld->pos + ld->function.size() >= p)) {
-        auto &elm = ELM::getExternalLibraryManager();
-        QString src;
-        auto lib = ld->library;
-        QFileInfo lfi(lib);
-        if (!lfi.isAbsolute()) { lib = lfi.fileName(); }
-        try {
-          src = QString::fromStdString(
-              elm.getSource(lib.toStdString(), ld->function.toStdString()));
-        } catch (exception &e) {
-          this->qemacs.displayInformativeMessage(
-              QObject::tr("getSource failed : '%1'").arg(e.what()));
-        }
-        if (!src.isEmpty()) {
-          const auto &cactions = m->actions();
-          this->msrca->setData(src);
-          if (cactions.isEmpty()) {
-            m->addAction(this->msrca);
-          } else {
-            m->insertAction(*(cactions.begin()), this->msrca);
-            m->insertSeparator(*(cactions.begin()));
-          }
-          bConnect = true;
-        }
-      }
-    }
-    if (bConnect) {
-      QObject::connect(m, &QMenu::triggered, this,
-                       &LicosMajorMode::actionTriggered);
-    }
+    //     // looking for a word
+    //     QTextCursor mtc(tc);
+    //     mtc.select(QTextCursor::WordUnderCursor);
+    //     const auto w = mtc.selectedText();
+    //     if (!w.isEmpty()) {
+    //       const auto &cactions = m->actions();
+    //       const auto &lpath = this->getLicosPath();
+    //       const auto &mpath = this->getMFrontMaterialsPath();
+    //       const auto &spath = this->getLicosStudiesPath();
+    //       if (!lpath.isEmpty()) {
+    //         this->createSearchActions();
+    //         this->lsil->setData(w);
+    //         this->msil->setData(w);
+    //         if (((lpath == mpath) && (lpath == spath))
+    //             || ((mpath.isEmpty()) && (spath.isEmpty()))) {
+    //           if (cactions.isEmpty()) {
+    //             m->addAction(this->lsil);
+    //             m->addAction(this->msil);
+    //           } else {
+    //             m->insertAction(*(cactions.begin()), this->lsil);
+    //             m->insertAction(*(cactions.begin()), this->msil);
+    //             m->insertSeparator(*(cactions.begin()));
+    //           }
+    //           bConnect = true;
+    //         } else {
+    //           // search menu for licos files
+    //           auto *lsm = m->addMenu(QObject::tr("Search in Licos
+    //           Input Files"));
+    //           auto *msm = m->addMenu(QObject::tr("Search in MFront
+    //           Input Files"));
+    //           lsm->addAction(this->lsil);
+    //           msm->addAction(this->msil);
+    //           if (!mpath.isEmpty()) {
+    //             this->lsim->setData(w);
+    //             this->msim->setData(w);
+    //             lsm->addAction(this->lsim);
+    //             msm->addAction(this->msim);
+    //           }
+    //           if (!spath.isEmpty()) {
+    //             this->lsis->setData(w);
+    //             this->msis->setData(w);
+    //             lsm->addAction(this->lsis);
+    //             msm->addAction(this->msis);
+    //           }
+    //           this->lsia->setData(w);
+    //           this->msia->setData(w);
+    //           lsm->addAction(this->lsia);
+    //           msm->addAction(this->msia);
+    //           if (cactions.isEmpty()) {
+    //             m->insertMenu(nullptr, lsm);
+    //             m->insertMenu(nullptr, msm);
+    //           } else {
+    //             m->insertMenu(*(cactions.begin()), lsm);
+    //             m->insertMenu(*(cactions.begin()), msm);
+    //             m->insertSeparator(*(cactions.begin()));
+    //           }
+    //           QObject::connect(lsm, &QMenu::triggered, this,
+    //                            &LicosMajorMode::actionTriggered);
+    //           QObject::connect(msm, &QMenu::triggered, this,
+    //                            &LicosMajorMode::actionTriggered);
+    //         }
+    //       }
+    //     }
+    //     // special treatment for txt files
+    //     QString data;
+    //     QStringList exts;
+    //     exts << "txt"
+    //          << "data"
+    //          << "dat";
+    //     data = this->getLicosFile(this->getFileNameUnderCursor(tc,
+    //     exts));
+    //     if (!data.isEmpty()) {
+    //       QTextCursor b(tc);
+    //       b.movePosition(QTextCursor::StartOfBlock,
+    //       QTextCursor::MoveAnchor);
+    //       b.select(QTextCursor::WordUnderCursor);
+    //       if ((b.selectedText() == "Curve")
+    //           || (b.selectedText() == "MultipleCurves")) {
+    //         delete this->ta2;
+    //         this->ta2 = new QAction(QObject::tr("Plot using tplot"),
+    //         this);
+    //         const QList<QAction *> &cactions = m->actions();
+    //         this->ta2->setData(data);
+    //         if (cactions.isEmpty()) {
+    //           m->addAction(this->ta2);
+    //         } else {
+    //           m->insertAction(*(cactions.begin()), this->ta2);
+    //           m->insertSeparator(*(cactions.begin()));
+    //         }
+    //         bConnect = true;
+    //       } else {
+    //         delete this->ta1;
+    //         this->ta1 = new QAction(QObject::tr("Plot using tplot"),
+    //         this);
+    //         const QList<QAction *> &cactions = m->actions();
+    //         this->ta1->setData(data);
+    //         if (cactions.isEmpty()) {
+    //           m->addAction(this->ta1);
+    //         } else {
+    //           m->insertAction(*(cactions.begin()), this->ta1);
+    //           m->insertSeparator(*(cactions.begin()));
+    //         }
+    //         bConnect = true;
+    //       }
+    //     }
+    //     // special treatment for libraries
+    //     QString l = this->libraryNameUnderCursor(tc);
+    //     if (!l.isEmpty()) {
+    //       this->createAnalyseUsingMFMAction(l);
+    //       const QList<QAction *> &cactions = m->actions();
+    //       if (cactions.isEmpty()) {
+    //         m->addAction(this->mfma);
+    //       } else {
+    //         m->insertAction(*(cactions.begin()), this->mfma);
+    //         m->insertSeparator(*(cactions.begin()));
+    //       }
+    //       bConnect = true;
+    //     }
+    //     // special treatment for functions
+    //     auto *ld = static_cast<LicosData *>(tc.block().userData());
+    //     if (ld != nullptr) {
+    //       const auto p = this->positionInCurrentBlock(tc);
+    //       if ((p >= ld->pos) && (ld->pos + ld->function.size() >= p))
+    //       {
+    //         auto &elm = ELM::getExternalLibraryManager();
+    //         QString src;
+    //         auto lib = ld->library;
+    //         QFileInfo lfi(lib);
+    //         if (!lfi.isAbsolute()) { lib = lfi.fileName(); }
+    //         try {
+    //           src = QString::fromStdString(
+    //               elm.getSource(lib.toStdString(),
+    //               ld->function.toStdString()));
+    //         } catch (exception &e) {
+    //           this->qemacs.displayInformativeMessage(
+    //               QObject::tr("getSource failed :
+    //               '%1'").arg(e.what()));
+    //         }
+    //         if (!src.isEmpty()) {
+    //           const auto &cactions = m->actions();
+    //           this->msrca->setData(src);
+    //           if (cactions.isEmpty()) {
+    //             m->addAction(this->msrca);
+    //           } else {
+    //             m->insertAction(*(cactions.begin()), this->msrca);
+    //             m->insertSeparator(*(cactions.begin()));
+    //           }
+    //           bConnect = true;
+    //         }
+    //       }
+    //     }
+    //     if (bConnect) {
+    //       QObject::connect(m, &QMenu::triggered, this,
+    //                        &LicosMajorMode::actionTriggered);
+    //     }
   }
 
   bool LicosMajorMode::handleShortCut(const int k1,

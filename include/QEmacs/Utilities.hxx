@@ -18,6 +18,10 @@ class QLabel;
 class QHBoxLayout;
 //! forward declaration
 class QAbstractScrollArea;
+//! forward declaration
+class QMenu;
+//! forward declaration
+class QMenuBar;
 
 #ifdef QEMACS_HAVE_WEBENGINE
 //! forward declaration
@@ -49,10 +53,38 @@ namespace qemacs {
   void setQWebEngineViewInLayout(QHBoxLayout* const,
                                  QWebEngineView* const);
 #endif /* QEMACS_HAVE_WEBENGINE */
-  
+
   QString commonPart(const QString&, const QString&);
 
   QString commonPart(const QStringList&);
+
+  /*!
+   * \brief Recursively free the memory associated with the actions
+   * holded by the menu and call `QMenu::clear()`.
+   *
+   * See
+   * https://forum.qt.io/topic/90856/does-qmenubar-clear-release-memory-of-the-action-created-with/12
+   * for details.
+   *
+   * The code is based on:
+   * https://stackoverflow.com/questions/9399840/how-to-iterate-through-a-menus-actions-in-qt
+   * \param[in] m: menu bar
+   */
+  QEMACS_VISIBILITY_EXPORT void clearMenu(QMenu* const);
+
+  /*!
+   * \brief Recursively free the memory associated with the actions
+   * holded by the menu bar and call `QMenuBar::clear()`.
+   *
+   * See
+   * https://forum.qt.io/topic/90856/does-qmenubar-clear-release-memory-of-the-action-created-with/12
+   * for details.
+   *
+   * The code is based on:
+   * https://stackoverflow.com/questions/9399840/how-to-iterate-through-a-menus-actions-in-qt
+   * \param[in] m: menu bar
+   */
+  QEMACS_VISIBILITY_EXPORT void clearMenuBar(QMenuBar* const);
 
 }  // end of namespace qemacs
 

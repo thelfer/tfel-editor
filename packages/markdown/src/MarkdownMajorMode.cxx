@@ -28,7 +28,6 @@ namespace qemacs {
                                        QEmacsBuffer &b,
                                        QEmacsTextEditBase &t)
       : CompiledLanguageMajorModeBase(w, b, t) {
-    this->rm = new QAction(QObject::tr("Run pandoc"), this);
   }  // end of MarkdownMajorMode::MarkdownMajorMode
 
   QString MarkdownMajorMode::getName() const {
@@ -54,9 +53,10 @@ namespace qemacs {
     if (t == nullptr) {
       return nullptr;
     }
-    QMenu *m(new QMenu(QObject::tr("Markdown"), t));
-    m->addAction(this->rm);
-    return m;
+    //     QMenu *m(new QMenu(QObject::tr("Markdown"), t));
+    //     this->rm = new QAction(QObject::tr("Run pandoc"), this);
+    //     m->addAction(this->rm);
+    return nullptr;
   }  // end of
 
   QCompleter *MarkdownMajorMode::getCompleter() {
@@ -78,9 +78,6 @@ namespace qemacs {
   void MarkdownMajorMode::completeContextMenu(QMenu *const,
                                               const QTextCursor &) {
   }  // end of MarkdownMajorMode::completeContextMenu
-
-  void MarkdownMajorMode::actionTriggered(QAction *) {
-  }  // end of MarkdownMajorMode::actionTriggered
 
   void MarkdownMajorMode::runPandoc() {
     if (this->textEdit.isModified()) {

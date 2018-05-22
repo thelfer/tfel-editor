@@ -40,6 +40,8 @@ namespace qemacs {
 
    public slots:
 
+    virtual void format();
+
     virtual void print() = 0;
 
     virtual void clear() = 0;

@@ -21,6 +21,7 @@
 #include "MFront/DSLFactory.hxx"
 #include "MFront/ImplicitDSLBase.hxx"
 #include "MFront/NonLinearSystemSolver.hxx"
+#include "QEmacs/Debug.hxx"
 #include "QEmacs/QEmacsLineEdit.hxx"
 #include "QEmacs/MFrontOptions.hxx"
 #include "QEmacs/MFrontOptionsDialog.hxx"
@@ -154,7 +155,6 @@ namespace qemacs {
           if ((o.dsl == "Implicit") || (o.dsl == "ImplicitII") ||
               (o.dsl == "ImplicitFiniteStrain")) {
             auto &f = mfront::DSLFactory::getDSLFactory();
-            qDebug() << o.dsl;
             auto dsl = f.createNewDSL(o.dsl.toStdString());
             dsl->analyseFile(o.file.toStdString(), {}, {});
             const auto &idsl = dynamic_cast<mfront::ImplicitDSLBase &>(*dsl);
@@ -164,7 +164,7 @@ namespace qemacs {
           }
         }
       } catch (std::exception &e) {
-        qDebug() << e.what();
+        debug(e.what());
       } catch (...) {
       }
       return false;
