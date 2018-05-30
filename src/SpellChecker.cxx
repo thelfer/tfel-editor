@@ -159,11 +159,13 @@ namespace qemacs {
   bool SpellChecker::spell(const QString &word) {
 #ifdef QEMACS_HUNSPELL_SUPPORT
     // Encode from Unicode to the encoding used by current dictionary
-    if(!this->_hunspell){
+    if (!this->_hunspell) {
       return true;
     }
-    return this->_hunspell->spell(
-               this->_codec->fromUnicode(word).constData()) != 0;
+    const auto w = word.toStdString();
+    return this->_hunspell->spell(w.c_str()) != 0;
+//     return this->_hunspell->spell(
+//                this->_codec->fromUnicode(word).constData()) != 0;
 #else  /* QEMACS_HUNSPELL_SUPPORT */
     static_cast<void>(word);
     return true;
@@ -172,13 +174,17 @@ namespace qemacs {
 
   QStringList SpellChecker::suggest(const QString &word) {
 #ifdef QEMACS_HUNSPELL_SUPPORT
-    if(!this->_hunspell){
+    if (!this->_hunspell) {
       return {};
     }
     char **suggestWordList;
     // Encode from Unicode to the encoding used by current dictionary
-    int numSuggestions = this->_hunspell->suggest(
-        &suggestWordList, this->_codec->fromUnicode(word).constData());
+    const auto w = word.toStdString();
+    int numSuggestions =
+        this->_hunspell->suggest(&suggestWordList, w.c_str());
+    //     int numSuggestions = this->_hunspell->suggest(
+    //         &suggestWordList,
+    //         this->_codec->fromUnicode(word).constData());
     QStringList suggestions;
     for (int i = 0; i < numSuggestions; ++i) {
       suggestions << this->_codec->toUnicode(suggestWordList[i]);

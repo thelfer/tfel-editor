@@ -998,7 +998,8 @@ namespace qemacs {
         // the QEmacsTextEditSearch automatically set itself as a filter
         // for this
         this->qemacs.setUserInput(new QEmacsTextEditSearch(
-            *this, this->qemacs, QTextDocument::FindBackward));
+            *this, this->qemacs, QTextDocument::FindCaseSensitively |
+                                     QTextDocument::FindBackward));
         // the current buffer shall have the focus : but default, the
         // QEmacsWidget gives focus to the user input
         this->setFocus();

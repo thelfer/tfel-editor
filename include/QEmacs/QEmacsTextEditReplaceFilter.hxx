@@ -37,6 +37,10 @@ namespace qemacs {
     ~QEmacsTextEditReplaceFilter() override;
 
    protected:
+    /*!
+     * \brief find the next occurrence of s1
+     * \return a boolean stating if a occurrence has been found
+     */
     bool findNext();
 
     QEmacsWidget& qemacs;
@@ -44,20 +48,22 @@ namespace qemacs {
     QEmacsTextEditBase& textEdit;
 
     QEmacsTextEditQueryReplace& qr;
-
+    //! beginning of the working region
     QTextCursor bc;
-
+    //! end of the working region
     QTextCursor ec;
-
+    //! string to be replaced
     const QString s1;
-
+    //! replacement string
     const QString s2;
-
-    int nb;
-
-    bool hasSelection;
-
-    bool bOK;
+    //! number of replacements done
+    int nb = 0;
+    //! options used for searching the replaced string
+    QTextDocument::FindFlag opts = QTextDocument::FindCaseSensitively;
+    //! states if the filter is called on a portion of the file
+    bool hasSelection = false;
+    //! current status
+    bool bOK = true;
 
   };  // end of QEmacsTextEditReplaceFilter
 

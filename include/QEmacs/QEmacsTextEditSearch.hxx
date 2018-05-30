@@ -58,13 +58,14 @@ namespace qemacs {
 
     QEmacsTextEditSearch(QEmacsTextEditBase&,
                          QEmacsWidget&,
-                         const QTextDocument::FindFlags = nullptr);
+                         const QTextDocument::FindFlags =
+                             QTextDocument::FindCaseSensitively);
 
     virtual void findNext();
 
-    virtual void setFlag(const QTextDocument::FindFlags);
+    virtual void setSearchOptions(const QTextDocument::FindFlags);
 
-    virtual QTextDocument::FindFlags getFlag() const;
+    virtual QTextDocument::FindFlags getSearchOptions() const;
     //! destructor
     ~QEmacsTextEditSearch() override;
 
@@ -85,8 +86,8 @@ namespace qemacs {
 
     //! position of the cursor at the beginning of the search
     QTextCursor cursor;
-
-    QTextDocument::FindFlags flag;
+    //! options used for searching
+    QTextDocument::FindFlags opts = QTextDocument::FindFlags();
 
    private:
     Q_OBJECT

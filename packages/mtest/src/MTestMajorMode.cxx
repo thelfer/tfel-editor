@@ -132,7 +132,7 @@ namespace qemacs {
       tc.insertText("// parameters\n");
       for (const auto& p : b->getParametersNames()) {
         const auto v = b->getRealParameterDefaultValue(p);
-        tc.insertText("// @Parameter' " + QString::fromStdString(p) +
+        tc.insertText("// @Parameter '" + QString::fromStdString(p) +
                       "' " + QString::number(v) + ";\n");
       }
       tc.insertText("\n");
@@ -141,7 +141,7 @@ namespace qemacs {
       tc.insertText("// integer parameters\n");
       for (const auto& p : b->getIntegerParametersNames()) {
         const auto v = b->getIntegerParameterDefaultValue(p);
-        tc.insertText("// @IntegerParameter' " +
+        tc.insertText("// @IntegerParameter '" +
                       QString::fromStdString(p) + "' " +
                       QString::number(v) + ";\n");
       }
@@ -151,7 +151,7 @@ namespace qemacs {
       tc.insertText("// UnsignedShort parameters\n");
       for (const auto& p : b->getUnsignedShortParametersNames()) {
         const auto v = b->getUnsignedShortParameterDefaultValue(p);
-        tc.insertText("// @UnsignedIntegerParameter' " +
+        tc.insertText("// @UnsignedIntegerParameter '" +
                       QString::fromStdString(p) + "' " +
                       QString::number(v) + ";\n");
       }
