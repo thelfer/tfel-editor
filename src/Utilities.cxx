@@ -117,9 +117,9 @@ namespace qemacs {
       if (a->isSeparator()) {
       } else if (a->menu()) {
         clearMenu(a->menu());
-        delete a->menu();
+        a->menu()->deleteLater();
       } else {
-        delete a;
+        a->deleteLater();
       }
     }
 //    m->clear();
@@ -130,9 +130,9 @@ namespace qemacs {
       if (a->isSeparator()) {
       } else if (a->menu()) {
         clearMenu(a->menu());
-        delete a->menu();
+        a->menu()->deleteLater();
       } else {
-        delete a;
+        a->deleteLater();
       }
     }
 //    m->clear();
