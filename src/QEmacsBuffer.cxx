@@ -555,10 +555,9 @@ namespace qemacs {
     this->stw->show();
   }  // end of QEmacsBuffer::showSecondaryTasks
 
-  void QEmacsBuffer::showSecondaryTasks(const Qt::Orientation o) {
+  void QEmacsBuffer::setSecondaryTasksOrientation(const Qt::Orientation o) {
     this->splitter->setOrientation(o);
-    this->showSecondaryTasks();
-  }  // end of QEmacsBuffer::showSecondaryTasks
+  } // end of QEmacsBuffer::setSecondaryTasksOrientation
 
   void QEmacsBuffer::hideSecondaryTasks() {
     this->stw->hide();

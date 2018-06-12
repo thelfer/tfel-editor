@@ -823,12 +823,14 @@ namespace qemacs {
             return true;
           } else if (k == Qt::Key_2) {
             if (this->isMainFrame()) {
-              this->buffer.showSecondaryTasks(Qt::Vertical);
+	      this->qemacs.setSecondaryTasksOrientation(Qt::Vertical);
+              this->buffer.showSecondaryTasks();
             }
             return true;
           } else if (k == Qt::Key_3) {
             if (this->isMainFrame()) {
-              this->buffer.showSecondaryTasks(Qt::Horizontal);
+	      this->qemacs.setSecondaryTasksOrientation(Qt::Horizontal);
+              this->buffer.showSecondaryTasks();
             }
             return true;
           } else if (k == Qt::Key_O) {

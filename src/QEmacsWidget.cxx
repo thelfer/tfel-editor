@@ -8,6 +8,7 @@
 #include <QtCore/QFile>
 #include <QtCore/QTimer>
 #include <QtCore/QDebug>
+#include <QtCore/QSettings>
 #include <QtCore/QTextStream>
 #include <QtGui/QCloseEvent>
 #include <QtWidgets/QCompleter>
@@ -48,20 +49,20 @@ namespace qemacs {
     }
     return fi.absoluteFilePath();
   }  // end of getRealPath
-  
+
   static void setQLineEditFont(QEmacsLineEdit* l) {
     auto f = l->font();
     f.setPointSize(8);
     l->setFont(f);
     l->setContentsMargins(0, 0, 0, 0);
-  } // end of setQLineEditFont
+  }  // end of setQLineEditFont
 
   static void setQEmacsCommandLineFont(QEmacsCommandLine* l) {
     auto f = l->font();
     f.setPointSize(8);
     l->setFont(f);
     l->setContentsMargins(0, 0, 0, 0);
-  } // end of setQEmacsCommandLineFont
+  }  // end of setQEmacsCommandLineFont
 
   struct QEmacsWidget::OpenFile : public QEmacsFilePathUserInput {
     OpenFile(QEmacsWidget& p, const QString& path)
@@ -253,9 +254,13 @@ namespace qemacs {
   }  // end of QEmacs::createEmptyBuffer()
 
   QEmacsBuffer* QEmacsWidget::createNewBuffer(const QString& f) {
+    QSettings settings;
     QEmacsBuffer* b;
     if (f.isEmpty()) {
       b = new QEmacsBuffer(this->nid, *this);
+      b->setSecondaryTasksOrientation(
+          settings.value("secondary tasks orientation")
+              .value<Qt::Orientation>());
       ++(this->nid);
     } else {
       b = this->getBufferVisitingFile(f);
@@ -266,6 +271,9 @@ namespace qemacs {
         return b;
       }
       b = new QEmacsBuffer(f, this->nid, *this);
+      b->setSecondaryTasksOrientation(
+          settings.value("secondary tasks orientation")
+              .value<Qt::Orientation>());
       ++(this->nid);
       this->emitNewTreatedFile(b->getMainFrame().getCompleteFileName());
     }
@@ -439,7 +447,8 @@ namespace qemacs {
     if (l == nullptr) {
       return;
     }
-    if (std::find(this->ui.begin(),this->ui.end(),l) != this->ui.end()) {
+    if (std::find(this->ui.begin(), this->ui.end(), l) !=
+        this->ui.end()) {
       return;
     }
     if (!this->ui.empty()) {
@@ -473,7 +482,8 @@ namespace qemacs {
     if (this->ui.empty()) {
       return;
     }
-    if (std::find(this->ui.begin(),this->ui.end(),p) == this->ui.end()) {
+    if (std::find(this->ui.begin(), this->ui.end(), p) ==
+        this->ui.end()) {
       return;
     }
     if (p->isBlocking()) {
@@ -481,7 +491,7 @@ namespace qemacs {
       this->buffers->setEnabled(true);
     }
     this->minibuffer->removeWidget(p);
-    this->ui.erase(std::find(this->ui.begin(),this->ui.end(),p));
+    this->ui.erase(std::find(this->ui.begin(), this->ui.end(), p));
     if (this->ui.empty()) {
       this->minibuffer->setCurrentWidget(this->eui);
     } else {
@@ -506,13 +516,13 @@ namespace qemacs {
 
   bool QEmacsWidget::hasUserInput() const {
     return !this->ui.empty();
-  } // end of QEmacsWidget::hasUserInput
+  }  // end of QEmacsWidget::hasUserInput
 
   void QEmacsWidget::focusUserInput() {
     if (!this->ui.empty()) {
       this->ui.back()->setFocus();
     }
-  } // end of QEmacsWidget::focusUserInput
+  }  // end of QEmacsWidget::focusUserInput
 
   void QEmacsWidget::resetUserInput() {
     if (!this->ui.empty()) {
@@ -784,10 +794,24 @@ namespace qemacs {
     }
   }  // end of QEmacsWidget::closeCurrentBuffer
 
-  void QEmacsWidget::print(){
+  void QEmacsWidget::print() {
     auto& t = this->getCurrentBuffer().getMainFrame();
     t.print();
-  } // end of QEmacsWidget::print
+  }  // end of QEmacsWidget::print
+
+  void QEmacsWidget::setSecondaryTasksOrientation(
+      const Qt::Orientation o) {
+    QSettings settings;
+    settings.setValue("secondary tasks orientation", o);
+    for (int i = 0; i != this->buffers->count(); ++i) {
+      auto* const b =
+          qobject_cast<QEmacsBuffer*>(this->buffers->widget(i));
+      if (b == nullptr) {
+        continue;
+      }
+      b->setSecondaryTasksOrientation(o);
+    }
+  }  // end of QEmacsWidget::setSecondaryTasksOrientation
 
   QEmacsWidget::~QEmacsWidget() {
     this->removeUserInputs();

@@ -145,7 +145,13 @@ namespace qemacs {
      * first one (index 0), cycle the last one.
      */
     virtual void previousBuffer();
-
+    /*!
+     * \brief change the orientation of the secondary tasks in all
+     * buffers
+     * \param[in] o: orientation
+     */
+    virtual void setSecondaryTasksOrientation(const Qt::Orientation);
+    
    signals:
 
     void closed();

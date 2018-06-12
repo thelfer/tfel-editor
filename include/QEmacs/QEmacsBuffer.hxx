@@ -110,7 +110,7 @@ namespace qemacs {
 
     virtual void showSecondaryTasks();
 
-    virtual void showSecondaryTasks(const Qt::Orientation);
+    virtual void setSecondaryTasksOrientation(const Qt::Orientation);
 
     virtual void hideSecondaryTasks();
 
