@@ -20,7 +20,9 @@ namespace qemacs {
                      &QEmacsTextEditSearchFilter::lineEditDestroyed);
   }
 
-  void QEmacsTextEditSearchFilter::lineEditDestroyed() { delete this; }
+  void QEmacsTextEditSearchFilter::lineEditDestroyed() {
+    this->deleteLater();
+  }
 
   bool QEmacsTextEditSearchFilter::filterKeyPressEvent(
       QKeyEvent* const e) {

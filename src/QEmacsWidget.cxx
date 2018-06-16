@@ -742,7 +742,7 @@ namespace qemacs {
       return;
     }
     qc->execute();
-    delete qc;
+    qc->deleteLater();
   }  // end of QEmacsWidget::launchCommand
 
   QEmacsBuffer& QEmacsWidget::getCurrentBuffer() {
@@ -815,8 +815,8 @@ namespace qemacs {
 
   QEmacsWidget::~QEmacsWidget() {
     this->removeUserInputs();
-    delete this->buffers;
-    delete this->minibuffer;
+    this->buffers->deleteLater();
+    this->minibuffer->deleteLater();
   }
 
 }  // end of namespace qemacs

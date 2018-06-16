@@ -364,7 +364,7 @@ namespace qemacs {
       }
       if (this->mode != nullptr) {
         QObject::disconnect(this->mode, nullptr, this, nullptr);
-        delete this->mode;
+        this->mode->deleteLater();
         this->mode = nullptr;
       }
       if (this->allowMajorModeChange) {
@@ -382,17 +382,17 @@ namespace qemacs {
     }  // end of QEmacsTextEditBase::setMajorMode
 
     void QEmacsTextEditBase::deleteContextMenuActions() {
-      delete this->ua;
+      this->ua->deleteLater();
       this->ua = nullptr;
-      delete this->ra;
+      this->ra->deleteLater();
       this->ra = nullptr;
-      delete this->ca;
+      this->ca->deleteLater();
       this->ca = nullptr;
-      delete this->coa;
+      this->coa->deleteLater();
       this->coa = nullptr;
-      delete this->pa;
+      this->pa->deleteLater();
       this->pa = nullptr;
-      delete this->sa;
+      this->sa->deleteLater();
       this->sa = nullptr;
     }  // end of QEmacsTextEditBase::deleteContextMenuActions
 
@@ -1483,8 +1483,8 @@ namespace qemacs {
           this, &QEmacsTextEditBase::keyPressEventFilterDestroyed);
     }
     this->deleteContextMenuActions();
-    delete this->filter;
-    delete this->mode;
+    this->filter->deleteLater();
+    this->mode->deleteLater();
   }  // end of QEmacsTextEditBase::~QEmacsTextEditBase
 
 }  // end of namespace qemacs
