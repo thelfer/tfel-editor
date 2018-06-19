@@ -382,18 +382,19 @@ namespace qemacs {
     }  // end of QEmacsTextEditBase::setMajorMode
 
     void QEmacsTextEditBase::deleteContextMenuActions() {
-      this->ua->deleteLater();
-      this->ua = nullptr;
-      this->ra->deleteLater();
-      this->ra = nullptr;
-      this->ca->deleteLater();
-      this->ca = nullptr;
-      this->coa->deleteLater();
-      this->coa = nullptr;
-      this->pa->deleteLater();
-      this->pa = nullptr;
-      this->sa->deleteLater();
-      this->sa = nullptr;
+      using pointer = QAction*;
+      auto exe = [](pointer& p){
+	if(p!=nullptr){
+	  delete p;
+	  p=nullptr;
+	}
+      };
+      exe(this->ua);
+      exe(this->ra);
+      exe(this->ca);
+      exe(this->coa);
+      exe(this->pa);
+      exe(this->sa);
     }  // end of QEmacsTextEditBase::deleteContextMenuActions
 
     void QEmacsTextEditBase::createContextMenuActions() {
@@ -1481,10 +1482,12 @@ namespace qemacs {
       QObject::disconnect(
           this->filter, &QEmacsTextEditKeyPressEventFilter::destroyed,
           this, &QEmacsTextEditBase::keyPressEventFilterDestroyed);
+      this->filter->deleteLater();
     }
     this->deleteContextMenuActions();
-    this->filter->deleteLater();
-    this->mode->deleteLater();
+    if(this->mode!=nullptr){
+      this->mode->deleteLater();
+    }
   }  // end of QEmacsTextEditBase::~QEmacsTextEditBase
 
 }  // end of namespace qemacs
