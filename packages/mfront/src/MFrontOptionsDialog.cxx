@@ -63,6 +63,7 @@ namespace qemacs {
     }
     o.i = interfaces->currentText();
     gl1->addWidget(interfaces, 0, 1);
+    // type of analysis
     auto *atype = new QComboBox;
     atype->addItems(QStringList() << "Build"
                                   << "Analyse"
@@ -70,6 +71,7 @@ namespace qemacs {
     atype->setCurrentIndex(0);
     gl1->addWidget(new QLabel(QObject::tr("Type of analsys")), 1, 0);
     gl1->addWidget(atype, 1, 1);
+    // optimisation level
     auto *olvl = new QComboBox;
     olvl->addItems(QStringList() << "level0"
                                  << "level1"
@@ -77,6 +79,7 @@ namespace qemacs {
     olvl->setCurrentIndex(1);
     gl1->addWidget(new QLabel(QObject::tr("Optimisation level")), 2, 0);
     gl1->addWidget(olvl, 2, 1);
+    // verbose level
     auto *vlv = new QComboBox;
     vlv->addItems(QStringList() << "quiet"
                                 << "level0"

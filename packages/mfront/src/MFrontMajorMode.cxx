@@ -195,9 +195,9 @@ namespace qemacs {
     args << "--no-gui";
     args << ("--verbose=" + o.vlvl);
     if (o.analysis_type == "Build") {
-      args << ("--obuild=" + o.vlvl);
+      args << ("--obuild=" + o.olvl);
     } else if (o.analysis_type == "Generate") {
-      args << ("--omake=" + o.vlvl);
+      args << ("--omake=" + o.olvl);
     }
     if (!o.i.isEmpty()) {
       if (mkt == MFrontOptionsDialog::MATERIALPROPERTY) {
