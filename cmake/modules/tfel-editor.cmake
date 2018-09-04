@@ -44,7 +44,11 @@ if(ENABLE_STATIC)
  # doesn't hurt):
  set_target_properties(${name}        PROPERTIES CLEAN_DIRECT_OUTPUT 1)
  set_target_properties(${name}-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
- install(TARGETS ${name}-static DESTINATION lib)
+ if(WIN32)
+   install(TARGETS ${name}-static DESTINATION bin)
+ else(WIN32)
+   install(TARGETS ${name}-static DESTINATION lib)
+ endif(WIN32)
 endif(ENABLE_STATIC)
 endmacro(tfel_editor_library)
 
