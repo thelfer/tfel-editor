@@ -5,20 +5,20 @@ include_directories("${TFEL_INCLUDE_PATH}")
 link_directories("${PROJECT_BINARY_DIR}/src")
 link_directories("${TFEL_LIBRARY_PATH}")
 
-qt_sources(LaTeXQEmacsMode_SOURCES
-  "${PROJECT_SOURCE_DIR}/packages/latex/include/QEmacs"
+qt_sources(LaTeXMode_SOURCES
+  "${PROJECT_SOURCE_DIR}/packages/latex/include/TFEL/GUI"
   LaTeXMajorMode
   LaTeXSyntaxHighlighter)
 
-qt_add_resources(LaTeXQEmacsResources_RCC
+qt_add_resources(LaTeXResources_RCC
   LaTeXModeResources.qrc)
 
-qemacs_package(LaTeXQEmacsMode
-  ${LaTeXQEmacsMode_SOURCES}
-  ${LaTeXQEmacsResources_RCC}
+tfel_editor_package(LaTeXMode
+  ${LaTeXMode_SOURCES}
+  ${LaTeXResources_RCC}
   LaTeXOutputMajorMode.cxx)
 
-target_link_libraries(LaTeXQEmacsMode
-  TFELQEmacs
+target_link_libraries(TFELEditorLaTeXMode
+  TFELEditor
   Qt5::Core
   Qt5::Widgets)

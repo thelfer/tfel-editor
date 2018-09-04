@@ -1,2 +1,2 @@
-install_header(QEmacs CastemMajorMode.hxx)
-install_header(QEmacs CastemSyntaxHighlighter.hxx)
+install_header(TFEL/GUI CastemMajorMode.hxx)
+install_header(TFEL/GUI CastemSyntaxHighlighter.hxx)

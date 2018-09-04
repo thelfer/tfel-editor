@@ -20,23 +20,25 @@
 #include "MFront/AbstractBehaviourDSL.hxx"
 #include "MFront/BehaviourDSLCommon.hxx"
 #include "MFront/DSLFactory.hxx"
-#include "QEmacs/Debug.hxx"
-#include "QEmacs/MFrontInitializer.hxx"
-#include "QEmacs/MFrontSyntaxHighlighter.hxx"
-#include "QEmacs/ProcessOutputFrame.hxx"
-#include "QEmacs/ProcessOutputMajorModeBase.hxx"
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/QEmacsBuffer.hxx"
-#include "QEmacs/QEmacsCommandFactory.hxx"
-#include "QEmacs/QEmacsStandardFunctionCommand.hxx"
-#include "QEmacs/QEmacsMajorModeFactory.hxx"
-#include "QEmacs/QEmacsTextEditBase.hxx"
-#include "QEmacs/ImplicitDSLWizard.hxx"
-#include "QEmacs/MFrontOptions.hxx"
-#include "QEmacs/MFrontOptionsDialog.hxx"
-#include "QEmacs/MFrontMajorMode.hxx"
+#include "TFEL/GUI/Debug.hxx"
+#include "TFEL/GUI/MFrontInitializer.hxx"
+#include "TFEL/GUI/MFrontSyntaxHighlighter.hxx"
+#include "TFEL/GUI/ProcessOutputFrame.hxx"
+#include "TFEL/GUI/ProcessOutputMajorModeBase.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/CommandFactory.hxx"
+#include "TFEL/GUI/StandardFunctionCommand.hxx"
+#include "TFEL/GUI/MajorModeFactory.hxx"
+#include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/ImplicitDSLWizard.hxx"
+#include "TFEL/GUI/MFrontOptions.hxx"
+#include "TFEL/GUI/MFrontOptionsDialog.hxx"
+#include "TFEL/GUI/MFrontMajorMode.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   struct MFrontExamples {
     //! file implementing material properties, sorted by material
@@ -105,8 +107,8 @@ namespace qemacs {
     return e;
   }
 
-  static QString getDSLName(QEmacsWidget &qemacs,
-                            QEmacsTextEditBase &t) {
+  static QString getDSLName(EditorWidget &editor,
+                            TextEditBase &t) {
     using tfel::utilities::CxxTokenizer;
     try {
       CxxTokenizer tokenizer;
@@ -122,39 +124,39 @@ namespace qemacs {
         }
       }
     } catch (std::exception &e) {
-      qemacs.displayInformativeMessage("getDSLName: " +
+      editor.displayInformativeMessage("getDSLName: " +
                                        QString(e.what()));
     } catch (...) {
-      qemacs.displayInformativeMessage("getDSLName: unknown exception");
+      editor.displayInformativeMessage("getDSLName: unknown exception");
     }
     return "DefaultDSL";
   }  // end of getDSLName
 
-  static void runMFront(QEmacsWidget &qemacs,
-                        QEmacsBuffer &b,
-                        QEmacsTextEditBase &t) {
+  static void runMFront(EditorWidget &editor,
+                        Buffer &b,
+                        TextEditBase &t) {
     static const QString mpli(
-        "/qemacs/packages/mfront/material-property-last-interface");
+        "/tfel/editor/packages/mfront/material-property-last-interface");
     static const QString bli(
-        "/qemacs/packages/mfront/behaviour-last-interface");
+        "/tfel/editor/packages/mfront/behaviour-last-interface");
     static const QString mli(
-        "/qemacs/packages/mfront/model-last-interface");
+        "/tfel/editor/packages/mfront/model-last-interface");
     const auto n = t.getCompleteFileName();
     if (n.isEmpty()) {
-      qemacs.displayInformativeMessage(
+      editor.displayInformativeMessage(
           QObject::tr("runMFront: no file name"));
       return;
     }
     QFileInfo fn(n);
     if ((!fn.exists()) || (!fn.isFile())) {
-      qemacs.displayInformativeMessage(
+      editor.displayInformativeMessage(
           QObject::tr("invalid file name"));
       return;
     }
     // no structured binding yet
-    const auto dsln_mkt = [&qemacs, &t] {
+    const auto dsln_mkt = [&editor, &t] {
       auto &f = mfront::DSLFactory::getDSLFactory();
-      const auto name = getDSLName(qemacs, t);
+      const auto name = getDSLName(editor, t);
       const auto dsl =
           f.createNewDSL(name.toStdString())->getTargetType();
       if (dsl == mfront::AbstractDSL::MATERIALPROPERTYDSL) {
@@ -183,11 +185,11 @@ namespace qemacs {
         o.i = s.value(mli).toString();
       }
     }
-    MFrontOptionsDialog od(qemacs, o, mkt, &t);
+    MFrontOptionsDialog od(editor, o, mkt, &t);
     if (od.exec() == QDialog::Rejected) {
       return;
     }
-    auto nf = new ProcessOutputFrame(qemacs, b);
+    auto nf = new ProcessOutputFrame(editor, b);
     b.attachSecondaryTask(QObject::tr("MFront output"), nf);
     auto &p = nf->getProcess();
     p.setWorkingDirectory(fn.dir().absolutePath());
@@ -247,17 +249,17 @@ namespace qemacs {
     p.waitForStarted();
   }  // end of runMFront
 
-  static void startMFront(QEmacsWidget &qemacs,
-                          QEmacsBuffer &b,
-                          QEmacsTextEditBase &t) {
+  static void startMFront(EditorWidget &editor,
+                          Buffer &b,
+                          TextEditBase &t) {
     if (t.isModified()) {
       auto *input = t.getSaveInput();
-      QObject::connect(input, &QEmacsTextEditBase::SaveInput::finished,
-                       [&qemacs, &b, &t] { runMFront(qemacs, b, t); });
-      qemacs.setUserInput(input);
+      QObject::connect(input, &TextEditBase::SaveInput::finished,
+                       [&editor, &b, &t] { runMFront(editor, b, t); });
+      editor.setUserInput(input);
       return;
     }
-    runMFront(qemacs, b, t);
+    runMFront(editor, b, t);
   }  // end of  startMFront
 
   static void buildAnalyseFileMenu(
@@ -265,9 +267,9 @@ namespace qemacs {
       QMenu *m,
       const mfront::BehaviourDescription &bd,
       const tfel::material::ModellingHypothesis::Hypothesis h,
-      QEmacsWidget &w,
-      QEmacsBuffer &b,
-      QEmacsTextEditBase &t) {
+      EditorWidget &w,
+      Buffer &b,
+      TextEditBase &t) {
     const auto &d = bd.getBehaviourData(h);
     if (!d.getCodeBlockNames().empty()) {
       auto *const vc = m->addMenu(QObject::tr("View code"));
@@ -277,7 +279,7 @@ namespace qemacs {
                                                        h] {
           auto &f = mfront::DSLFactory::getDSLFactory();
           try {
-            auto *const cbb = new QEmacsPlainTextEdit(w, b);
+            auto *const cbb = new PlainTextEdit(w, b);
             auto dsl = f.createNewDSL(getDSLName(w, t).toStdString());
             dsl->analyseString(
                 t.document()->toPlainText().toStdString());
@@ -302,9 +304,9 @@ namespace qemacs {
     }
   }  // end of buildAnalyseFileMenu
 
-  MFrontMajorMode::MFrontMajorMode(QEmacsWidget &w,
-                                   QEmacsBuffer &b,
-                                   QEmacsTextEditBase &t)
+  MFrontMajorMode::MFrontMajorMode(EditorWidget &w,
+                                   Buffer &b,
+                                   TextEditBase &t)
       : CxxMajorMode(w, b, t) {
     MFrontInitializer::init();
     this->c = new QCompleter(this->getKeyWordsList(), &t);
@@ -314,11 +316,11 @@ namespace qemacs {
     QObject::connect(this->c,
                      static_cast<void (QCompleter::*)(const QString &)>(
                          &QCompleter::activated),
-                     &t, &QEmacsTextEditBase::insertCompletion);
+                     &t, &TextEditBase::insertCompletion);
     // timer
     this->rt = new QTimer(this);
     connect(this->rt, &QTimer::timeout, [this] {
-      auto dsl = getDSLName(this->qemacs,this->textEdit);
+      auto dsl = getDSLName(this->editor,this->textEdit);
       if (dsl!=this->current_dsl){
         this->updateSyntaxHighlighterAndCompleter();
         this->buffer.updateMenu();
@@ -359,11 +361,11 @@ namespace qemacs {
     auto *const rm = m->addAction(QObject::tr("Run MFront"));
     rm->setIcon(this->getIcon());
     QObject::connect(rm, &QAction::triggered, this, [this] {
-      startMFront(this->qemacs, this->buffer, this->textEdit);
+      startMFront(this->editor, this->buffer, this->textEdit);
     });
     // wizards
     auto *const w = m->addMenu(QObject::tr("Wizards"));
-    w->setIcon(QIcon(":/qemacs/misc/wizard.png"));
+    w->setIcon(QIcon(":/tfel/editor/misc/wizard.png"));
     auto *const sebw = w->addAction(QObject::tr("Implicit DSL wizard"));
     sebw->setToolTip(
         QObject::tr("Create the basis of a behaviour \n"
@@ -390,7 +392,7 @@ namespace qemacs {
               auto *const a = sem2->addAction(fi.fileName());
               a->setIcon(this->getIcon());
               QObject::connect(a, &QAction::triggered, this,
-                               [f, this] { this->qemacs.openFile(f); });
+                               [f, this] { this->editor.openFile(f); });
             }
           }
         };
@@ -403,7 +405,7 @@ namespace qemacs {
     try {
       auto &f = mfront::DSLFactory::getDSLFactory();
       auto dsl = f.createNewDSL(
-          getDSLName(this->qemacs, this->textEdit).toStdString());
+          getDSLName(this->editor, this->textEdit).toStdString());
       if (dsl->getTargetType() == mfront::AbstractDSL::BEHAVIOURDSL) {
         dsl->analyseString(
             this->textEdit.document()->toPlainText().toStdString());
@@ -415,12 +417,12 @@ namespace qemacs {
         for (const auto h : bd.getDistinctModellingHypotheses()) {
           if (h == tfel::material::ModellingHypothesis::
                        UNDEFINEDHYPOTHESIS) {
-            buildAnalyseFileMenu(this, a, bd, h, this->qemacs,
+            buildAnalyseFileMenu(this, a, bd, h, this->editor,
                                  this->buffer, this->textEdit);
           } else {
             auto *const ah = a->addMenu(QString::fromStdString(
                 tfel::material::ModellingHypothesis::toString(h)));
-            buildAnalyseFileMenu(this, ah, bd, h, this->qemacs,
+            buildAnalyseFileMenu(this, ah, bd, h, this->editor,
                                  this->buffer, this->textEdit);
           }
         }
@@ -489,11 +491,11 @@ namespace qemacs {
       // highlighters accumulate and memory is only freed when the
       // document is closed. This can seriously impact the
       // performance
-      // of qemacs.
+      // of editor.
       this->highlighter->deleteLater();
     }
     this->highlighter = new MFrontSyntaxHighlighter(
-        d, getDSLName(this->qemacs, this->textEdit));
+        d, getDSLName(this->editor, this->textEdit));
   }  // end of MFrontMajorMode::setSyntaxHighlighter
 
   void MFrontMajorMode::updateSyntaxHighlighterAndCompleter() {
@@ -508,7 +510,7 @@ namespace qemacs {
 
   void MFrontMajorMode::completeContextMenu(QMenu *const m,
                                             const QTextCursor &tc) {
-    QEmacsMajorModeBase::completeContextMenu(m, tc);
+    MajorModeBase::completeContextMenu(m, tc);
     const auto keys = this->getKeyWordsList();
     QTextCursor b(tc);
     b.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
@@ -528,12 +530,12 @@ namespace qemacs {
           m->insertAction(*(cactions.begin()), ha);
         }
         QObject::connect(ha, &QAction::triggered, this, [k, this] {
-          auto nf = new ProcessOutputFrame(this->qemacs, this->buffer);
+          auto nf = new ProcessOutputFrame(this->editor, this->buffer);
           this->buffer.attachSecondaryTask(
               QObject::tr("help on '%1'").arg(k), nf);
           auto &p = nf->getProcess();
           if (p.state() != QProcess::Running) {
-            const auto dsl = getDSLName(this->qemacs, this->textEdit);
+            const auto dsl = getDSLName(this->editor, this->textEdit);
             p.start("mfront", QStringList() << ("--help-keyword=" +
                                                 dsl + ":" + k));
             p.waitForStarted();
@@ -549,7 +551,7 @@ namespace qemacs {
     QStringList keys;
     try {
       auto &f = mfront::DSLFactory::getDSLFactory();
-      const auto n = getDSLName(this->qemacs, this->textEdit);
+      const auto n = getDSLName(this->editor, this->textEdit);
       auto dsl = f.createNewParser(n.toStdString());
       std::vector<std::string> mkeys;
       dsl->getKeywordsList(mkeys);
@@ -575,29 +577,30 @@ namespace qemacs {
   }
 
   void MFrontMajorMode::runImplicitDSLWizard() {
-    ImplicitDSLWizard w(this->qemacs);
+    ImplicitDSLWizard w(this->editor);
     if (w.exec() == QDialog::Accepted) {
     }
   }  // end of MFrontMajorMode::runImplicitDSLWizard
 
   void MFrontMajorMode::runCompilation() {
-    startMFront(this->qemacs, this->buffer, this->textEdit);
+    startMFront(this->editor, this->buffer, this->textEdit);
   }  // end of MFrontMajorMode::runCompilation
 
   MFrontMajorMode::~MFrontMajorMode() = default;
 
-  void runMFront(QEmacsWidget &qemacs) {
-    auto &b = qemacs.getCurrentBuffer();
+  void runMFront(EditorWidget &editor) {
+    auto &b = editor.getCurrentBuffer();
     auto &t = b.getMainFrame();
-    startMFront(qemacs, b, t);
+    startMFront(editor, b, t);
   }  // end of runMFront
 
-  static QEmacsStandardFunctionCommandProxy<runMFront> runMFrontProxy(
+  static StandardFunctionCommandProxy<runMFront> runMFrontProxy(
       "run-mfront");
 
-  static StandardQEmacsMajorModeProxy<MFrontMajorMode> proxy(
+  static StandardMajorModeProxy<MFrontMajorMode> proxy(
       "MFront",
       QVector<QRegExp>() << QRegExp("^[\\w-0-9_\\.]+\\.mfront"),
       ":/mfront/MFrontIcon.png");
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

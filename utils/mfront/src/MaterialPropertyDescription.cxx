@@ -6,9 +6,11 @@
  */
 
 #include "TFEL/System/ExternalLibraryManager.hxx"
-#include "QEmacs/MaterialPropertyDescription.hxx"
+#include "TFEL/GUI/MaterialPropertyDescription.hxx"
 
-namespace qemacs{
+namespace tfel{
+
+  namespace gui{
 
   static QStringList buildCastemMaterialPropertyArguments(
       const QString& l, const QString& f) {
@@ -46,4 +48,5 @@ namespace qemacs{
   CastemMaterialPropertyDescription& CastemMaterialPropertyDescription::
   operator=(const CastemMaterialPropertyDescription&) = default;
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

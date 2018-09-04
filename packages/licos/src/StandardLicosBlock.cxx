@@ -5,9 +5,11 @@
  * \date   17/09/2012
  */
 
-#include "QEmacs/StandardLicosBlock.hxx"
+#include "TFEL/GUI/StandardLicosBlock.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   StandardLicosBlock::StandardLicosBlock(const QString& n_) : n(n_) {}
 
@@ -70,4 +72,5 @@ namespace qemacs {
     this->blocks[n_] = QSharedPointer<LicosBlock>(b);
   }
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

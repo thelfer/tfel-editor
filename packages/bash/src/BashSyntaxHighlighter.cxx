@@ -8,9 +8,11 @@
 #include <QtCore/QDebug>
 #include <QtCore/QProcess>
 #include <QtCore/QTextStream>
-#include "QEmacs/BashSyntaxHighlighter.hxx"
+#include "TFEL/GUI/BashSyntaxHighlighter.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   static QStringList callCompgen(const QString& a) {
     QProcess p;
@@ -59,4 +61,5 @@ namespace qemacs {
 
   BashSyntaxHighlighter::~BashSyntaxHighlighter() = default;
   
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

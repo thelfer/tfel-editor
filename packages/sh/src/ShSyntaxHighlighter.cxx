@@ -6,10 +6,12 @@
  */
 
 #include "TFEL/Utilities/CxxTokenizer.hxx"
-#include "QEmacs/Debug.hxx"
-#include "QEmacs/ShSyntaxHighlighter.hxx"
+#include "TFEL/GUI/Debug.hxx"
+#include "TFEL/GUI/ShSyntaxHighlighter.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   static QStringList buildShCommandsList() {
     QStringList commands;
@@ -101,4 +103,5 @@ namespace qemacs {
 
   ShSyntaxHighlighter::~ShSyntaxHighlighter() = default;
   
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

@@ -5,9 +5,11 @@
  * \date   21/02/2018
  */
 
-#include "QEmacs/MFMFilterProxyModel.hxx"
+#include "TFEL/GUI/MFMFilterProxyModel.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   MFMFilterProxyModel::MFMFilterProxyModel(QObject* const p)
       : QSortFilterProxyModel(p) {
@@ -68,4 +70,5 @@ namespace qemacs {
     return b;
   } // end of MFMFilterProxyModel::filterAcceptsRow
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

@@ -8,10 +8,12 @@
 #include <QtCore/QDebug>
 #include <QtCore/QRegExp>
 
-#include "QEmacs/LaTeXMajorMode.hxx"
-#include "QEmacs/LaTeXSyntaxHighlighter.hxx"
+#include "TFEL/GUI/LaTeXMajorMode.hxx"
+#include "TFEL/GUI/LaTeXSyntaxHighlighter.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   int LaTeXSyntaxHighlighter::startOfComment(const QString& l) {
     for (int i = 0; i != l.size(); ++i) {
@@ -175,4 +177,5 @@ namespace qemacs {
     }
   }  // end of LaTeXSyntaxHighlighter::highLightMispellWords
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

@@ -1,1 +1,1 @@
-install_header(QEmacs GnuplotSyntaxHighlighter.hxx)
+install_header(TFEL/GUI GnuplotSyntaxHighlighter.hxx)

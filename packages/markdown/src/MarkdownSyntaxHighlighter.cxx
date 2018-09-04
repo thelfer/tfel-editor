@@ -12,10 +12,12 @@
 #include <stdexcept>
 #include <QtCore/QDebug>
 #include "TFEL/Utilities/CxxTokenizer.hxx"
-#include "QEmacs/MarkdownMajorMode.hxx"
-#include "QEmacs/MarkdownSyntaxHighlighter.hxx"
+#include "TFEL/GUI/MarkdownMajorMode.hxx"
+#include "TFEL/GUI/MarkdownSyntaxHighlighter.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   MarkdownSyntaxHighlighter::MarkdownSyntaxHighlighter(
       MarkdownMajorMode &m, QTextDocument *p)
@@ -195,4 +197,5 @@ namespace qemacs {
 
   MarkdownSyntaxHighlighter::~MarkdownSyntaxHighlighter() = default;
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

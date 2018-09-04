@@ -6,9 +6,11 @@
  */
 
 #include"MTest/MTestParser.hxx"
-#include"QEmacs/MTestSyntaxHighlighter.hxx"
+#include"TFEL/GUI/MTestSyntaxHighlighter.hxx"
 
-namespace qemacs
+namespace tfel{
+
+  namespace gui
 {
 
   static std::vector<std::string>
@@ -45,5 +47,6 @@ namespace qemacs
 
   MTestSyntaxHighlighter::~MTestSyntaxHighlighter() = default;
   
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel
 

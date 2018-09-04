@@ -8,19 +8,21 @@
 #include<QtCore/QDebug>
 #include<QtCore/QDir>
 #include<QtGui/QKeyEvent>
-#include"QEmacs/QEmacsWidget.hxx"
-#include"QEmacs/QEmacsBuffer.hxx"
-#include"QEmacs/ProcessOutputFrame.hxx"
-#include"QEmacs/ProcessOutputMajorModeBase.hxx"
+#include"TFEL/GUI/EditorWidget.hxx"
+#include"TFEL/GUI/Buffer.hxx"
+#include"TFEL/GUI/ProcessOutputFrame.hxx"
+#include"TFEL/GUI/ProcessOutputMajorModeBase.hxx"
 
-namespace qemacs{
+namespace tfel{
+
+  namespace gui{
 
   ProcessOutputMajorModeBase::ProcessOutputMajorModeBase(
-      QEmacsWidget& w,
-      QEmacsBuffer& b,
-      QEmacsTextEditBase& t,
+      EditorWidget& w,
+      Buffer& b,
+      TextEditBase& t,
       QWidget* const p)
-      : QEmacsMajorModeBase(w, b, t, p) {}
+      : MajorModeBase(w, b, t, p) {}
   // end of ProcessOutputMajorModeBase::ProcessOutputMajorModeBase
 
   void ProcessOutputMajorModeBase::setDirectory(const QString& c) {
@@ -41,10 +43,10 @@ namespace qemacs{
 
   void ProcessOutputMajorModeBase::completeContextMenu(
       QMenu* const m, const QTextCursor& tc) {
-    QEmacsMajorModeBase::completeContextMenu(m, tc);
+    MajorModeBase::completeContextMenu(m, tc);
     auto* a = m->addAction("Restart");
     a->setStatusTip(tr("Restart the process"));
-    a->setIcon(QIcon(":/qemacs/restart.png"));
+    a->setIcon(QIcon(":/tfel/editor/restart.png"));
     a->setIconVisibleInMenu(true);
     QObject::connect(a, &QAction::triggered, this,
                      &ProcessOutputMajorModeBase::restart);
@@ -63,7 +65,7 @@ namespace qemacs{
       this->restart();
       return true;
     }
-    return QEmacsMajorModeBase::keyPressEvent(e);
+    return MajorModeBase::keyPressEvent(e);
   }  // end of ProcessOutputMajorModeBase::keyPressEvent
 
   void ProcessOutputMajorModeBase::restart(){
@@ -86,7 +88,7 @@ namespace qemacs{
     } else {
       p.start(this->command);
     }
-    this->qemacs.setSecondaryTaskIcon(po,QIcon::fromTheme("system-run"));
+    this->editor.setSecondaryTaskIcon(po,QIcon::fromTheme("system-run"));
   } // end of ProcessOutputMajorModeBase::restart
 
   void ProcessOutputMajorModeBase::stop(){
@@ -104,4 +106,5 @@ namespace qemacs{
   
   ProcessOutputMajorModeBase::~ProcessOutputMajorModeBase() = default;
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

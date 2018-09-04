@@ -12,9 +12,11 @@
 #include<QtWidgets/QCheckBox>
 #include<QtWidgets/QGroupBox>
 #include<QtWidgets/QDialogButtonBox>
-#include"QEmacs/MTestStudyOptions.hxx"
+#include"TFEL/GUI/MTestStudyOptions.hxx"
 
-namespace qemacs
+namespace tfel{
+
+  namespace gui
 {
 
   MTestStudyOptions::MTestStudyOptions()
@@ -94,4 +96,5 @@ namespace qemacs
     o.printBackTrace = b;
   }
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

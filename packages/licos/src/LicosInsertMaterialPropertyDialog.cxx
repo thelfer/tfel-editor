@@ -7,19 +7,21 @@
 
 #include<QtGui/QTextBlock>
 #include<QtWidgets/QVBoxLayout>
-#include"QEmacs/QEmacsTextEditBase.hxx"
-#include"QEmacs/MaterialPropertySelector.hxx"
-#include"QEmacs/LicosInsertMaterialPropertyDialog.hxx"
+#include"TFEL/GUI/TextEditBase.hxx"
+#include"TFEL/GUI/MaterialPropertySelector.hxx"
+#include"TFEL/GUI/LicosInsertMaterialPropertyDialog.hxx"
 
-namespace qemacs
+namespace tfel{
+
+  namespace gui
 {
   
-  LicosInsertMaterialPropertyDialog::LicosInsertMaterialPropertyDialog(QEmacsTextEditBase& t)
+  LicosInsertMaterialPropertyDialog::LicosInsertMaterialPropertyDialog(TextEditBase& t)
     : QDialog(&t),
       textEdit(t)
   {
     auto *mlayout = new QVBoxLayout;
-    auto* s = new MaterialPropertySelector(t.getQEmacsWidget(), this);
+    auto* s = new MaterialPropertySelector(t.getEditorWidget(), this);
     mlayout->addWidget(s);  
     this->setLayout(mlayout);
     QObject::connect(s,&MaterialPropertySelector::materialPropertiesSelected,
@@ -44,4 +46,5 @@ namespace qemacs
     tc.endEditBlock();
   } // end of LicosInsertMaterialPropertyDialog::insertMaterialProperties
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

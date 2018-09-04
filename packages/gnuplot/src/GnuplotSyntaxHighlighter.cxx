@@ -5,9 +5,11 @@
  * \date   23/01/2016
  */
 
-#include"QEmacs/GnuplotSyntaxHighlighter.hxx"
+#include"TFEL/GUI/GnuplotSyntaxHighlighter.hxx"
 
-namespace qemacs{
+namespace tfel{
+
+  namespace gui{
 
   GnuplotSyntaxHighlighter::GnuplotSyntaxHighlighter(QTextDocument *p)
     : CSyntaxHighlighterBase(p)
@@ -39,4 +41,5 @@ namespace qemacs{
 
   GnuplotSyntaxHighlighter::~GnuplotSyntaxHighlighter() = default;
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

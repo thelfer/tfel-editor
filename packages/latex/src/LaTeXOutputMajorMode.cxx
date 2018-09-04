@@ -10,16 +10,18 @@
 
 #include <QtGui/QSyntaxHighlighter>
 
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/QEmacsBuffer.hxx"
-#include "QEmacs/QEmacsTextEditBase.hxx"
-#include "QEmacs/ProcessOutputFrame.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/ProcessOutputFrame.hxx"
 
-#include "QEmacs/QEmacsMajorMode.hxx"
-#include "QEmacs/QEmacsMajorModeBase.hxx"
-#include "QEmacs/QEmacsMajorModeFactory.hxx"
+#include "TFEL/GUI/MajorMode.hxx"
+#include "TFEL/GUI/MajorModeBase.hxx"
+#include "TFEL/GUI/MajorModeFactory.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   struct LaTeXUserData : public QTextBlockUserData {
     ~LaTeXUserData() override = default;
@@ -117,11 +119,11 @@ namespace qemacs {
   /*!
    * A major mode to display the results of the grepOutput unix command
    */
-  struct LaTeXOutputMajorMode : public QEmacsMajorModeBase {
-    LaTeXOutputMajorMode(QEmacsWidget &w,
-                         QEmacsBuffer &b,
-                         QEmacsTextEditBase &t)
-        : QEmacsMajorModeBase(w, b, t, &t) {}
+  struct LaTeXOutputMajorMode : public MajorModeBase {
+    LaTeXOutputMajorMode(EditorWidget &w,
+                         Buffer &b,
+                         TextEditBase &t)
+        : MajorModeBase(w, b, t, &t) {}
 
     QString getName() const override {
       return "latex-output";
@@ -162,11 +164,11 @@ namespace qemacs {
         }
         fi.setFile(file);
         if (fi.exists()) {
-          this->qemacs.openFile(file);
-          auto &t = this->qemacs.getCurrentBuffer().getMainFrame();
+          this->editor.openFile(file);
+          auto &t = this->editor.getCurrentBuffer().getMainFrame();
           t.gotoLine(d->line);
         } else {
-          this->qemacs.displayInformativeMessage(
+          this->editor.displayInformativeMessage(
               QObject::tr("file named '%1'").arg(file));
         }
       }
@@ -189,12 +191,12 @@ namespace qemacs {
       // 	LaTeXUserData *d = static_cast<LaTeXUserData *>(ud);
       // 	const QString wd = po->getProcess().workingDirectory();
       // 	if(!wd.isEmpty()){
-      // 	  this->qemacs.openFile(wd+QDir::separator()+d->file);
+      // 	  this->editor.openFile(wd+QDir::separator()+d->file);
       // 	} else {
-      // 	  this->qemacs.openFile(d->file);
+      // 	  this->editor.openFile(d->file);
       // 	}
-      // 	QEmacsPlainTextEdit& t =
-      // this->qemacs.getCurrentBuffer().getMainFrame();
+      // 	PlainTextEdit& t =
+      // this->editor.getCurrentBuffer().getMainFrame();
       // 	t.gotoLine(d->line);
       // 	return true;
       // }
@@ -209,7 +211,8 @@ namespace qemacs {
 
   };  // end of LaTeXOutputMajorMode
 
-  static StandardQEmacsMajorModeProxy<LaTeXOutputMajorMode> proxy(
+  static StandardMajorModeProxy<LaTeXOutputMajorMode> proxy(
       "latex-output");
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

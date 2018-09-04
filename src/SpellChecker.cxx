@@ -33,9 +33,9 @@
   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.  */
 
-#ifdef QEMACS_HUNSPELL_SUPPORT
+#ifdef TFEL_GUI_HUNSPELL_SUPPORT
 #include "hunspell/hunspell.hxx"
-#endif /* QEMACS_HUNSPELL_SUPPORT */
+#endif /* TFEL_GUI_HUNSPELL_SUPPORT */
 
 #include <QtCore/QDir>
 #include <QtCore/QFile>
@@ -47,19 +47,21 @@
 
 #include <QtGui/QDesktopServices>
 
-#include "QEmacs/SpellChecker.hxx"
-#ifdef QEMACS_HUNSPELL_SUPPORT
-#include "QEmacs/QEmacsHunspellDictionariesManager.hxx"
-#endif /* QEMACS_HUNSPELL_SUPPORT */
+#include "TFEL/GUI/SpellChecker.hxx"
+#ifdef TFEL_GUI_HUNSPELL_SUPPORT
+#include "TFEL/GUI/HunspellDictionariesManager.hxx"
+#endif /* TFEL_GUI_HUNSPELL_SUPPORT */
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   SpellChecker::SpellChecker() : _hunspell(nullptr) {}
 
   void SpellChecker::setSpellCheckLanguage(const QString &l) {
-#ifdef QEMACS_HUNSPELL_SUPPORT
-    auto &dicts = QEmacsHunspellDictionariesManager::
-        getQEmacsHunspellDictionariesManager();
+#ifdef TFEL_GUI_HUNSPELL_SUPPORT
+    auto &dicts = HunspellDictionariesManager::
+        getHunspellDictionariesManager();
     const auto dictionaryPath = dicts.getDictionaryPath(l);
     delete this->_hunspell;
     if (dictionaryPath.isEmpty()) {
@@ -72,11 +74,11 @@ namespace qemacs {
         return QStandardPaths::writableLocation(
                    QStandardPaths::GenericDataLocation) +
                "/data/" + a->organizationName() + "/" +
-               a->applicationName() + "/qemacs";
+               a->applicationName() + "/editor";
       } else {
         return QStandardPaths::writableLocation(
                    QStandardPaths::GenericDataLocation) +
-               "/data/CEA/qemacs";
+               "/data/CEA/editor";
       }
     }();
     bool dataDirExists = true;
@@ -147,17 +149,17 @@ namespace qemacs {
     }
 #else
     static_cast<void>(l);
-#endif /* QEMACS_HUNSPELL_SUPPORT */
+#endif /* TFEL_GUI_HUNSPELL_SUPPORT */
   }    // end of SpellChecker::setSpellCheckLanguage
 
   SpellChecker::~SpellChecker() {
-#ifdef QEMACS_HUNSPELL_SUPPORT
+#ifdef TFEL_GUI_HUNSPELL_SUPPORT
     delete this->_hunspell;
-#endif /* QEMACS_HUNSPELL_SUPPORT */
+#endif /* TFEL_GUI_HUNSPELL_SUPPORT */
   }
 
   bool SpellChecker::spell(const QString &word) {
-#ifdef QEMACS_HUNSPELL_SUPPORT
+#ifdef TFEL_GUI_HUNSPELL_SUPPORT
     // Encode from Unicode to the encoding used by current dictionary
     if (!this->_hunspell) {
       return true;
@@ -166,14 +168,14 @@ namespace qemacs {
     return this->_hunspell->spell(w.c_str()) != 0;
 //     return this->_hunspell->spell(
 //                this->_codec->fromUnicode(word).constData()) != 0;
-#else  /* QEMACS_HUNSPELL_SUPPORT */
+#else  /* TFEL_GUI_HUNSPELL_SUPPORT */
     static_cast<void>(word);
     return true;
-#endif /* QEMACS_HUNSPELL_SUPPORT */
+#endif /* TFEL_GUI_HUNSPELL_SUPPORT */
   }
 
   QStringList SpellChecker::suggest(const QString &word) {
-#ifdef QEMACS_HUNSPELL_SUPPORT
+#ifdef TFEL_GUI_HUNSPELL_SUPPORT
     if (!this->_hunspell) {
       return {};
     }
@@ -191,10 +193,10 @@ namespace qemacs {
       free(suggestWordList[i]);
     }
     return suggestions;
-#else  /* QEMACS_HUNSPELL_SUPPORT */
+#else  /* TFEL_GUI_HUNSPELL_SUPPORT */
     static_cast<void>(word);
     return {};
-#endif /* QEMACS_HUNSPELL_SUPPORT */
+#endif /* TFEL_GUI_HUNSPELL_SUPPORT */
   }
 
   std::vector<std::pair<int, int>> SpellChecker::spellLine(
@@ -223,15 +225,15 @@ namespace qemacs {
   }  // end of SpellChecker::ignoreWord
 
   void SpellChecker::put_word(const QString &word) {
-#ifdef QEMACS_HUNSPELL_SUPPORT
+#ifdef TFEL_GUI_HUNSPELL_SUPPORT
     this->_hunspell->add(_codec->fromUnicode(word).constData());
 #else
     static_cast<void>(word);
-#endif /* QEMACS_HUNSPELL_SUPPORT */
+#endif /* TFEL_GUI_HUNSPELL_SUPPORT */
   }    // end of SpellChecker::put_word
 
   void SpellChecker::addToUserWordlist(const QString &word) {
-#ifdef QEMACS_HUNSPELL_SUPPORT
+#ifdef TFEL_GUI_HUNSPELL_SUPPORT
     this->put_word(word);
     if (!this->_userDictionary.isEmpty()) {
       QFile userDictonaryFile(this->_userDictionary);
@@ -248,7 +250,8 @@ namespace qemacs {
     }
 #else
     static_cast<void>(word);
-#endif /* QEMACS_HUNSPELL_SUPPORT */
+#endif /* TFEL_GUI_HUNSPELL_SUPPORT */
   }    // end of SpellChecker::addToUserWordlist
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

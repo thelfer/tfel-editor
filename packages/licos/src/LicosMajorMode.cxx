@@ -20,28 +20,30 @@
 #include "TFEL/Raise.hxx"
 #include "TFEL/System/ExternalLibraryManager.hxx"
 
-#include "QEmacs/LicosInsertMaterialPropertyDialog.hxx"
-#include "QEmacs/LicosMainBlock.hxx"
-#include "QEmacs/LicosMajorMode.hxx"
-#include "QEmacs/LicosMaterialWizard.hxx"
-#include "QEmacs/LicosOutputFrame.hxx"
-#include "QEmacs/LicosStudyOptions.hxx"
-#include "QEmacs/LicosSyntaxHighlighter.hxx"
-#include "QEmacs/LicosTokenizer.hxx"
-#include "QEmacs/ProcessOutputFrame.hxx"
-#include "QEmacs/QEmacsBuffer.hxx"
-#include "QEmacs/QEmacsCommandLine.hxx"
-#include "QEmacs/QEmacsMajorModeFactory.hxx"
-#include "QEmacs/QEmacsPlainTextEdit.hxx"
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/Utilities.hxx"
+#include "TFEL/GUI/LicosInsertMaterialPropertyDialog.hxx"
+#include "TFEL/GUI/LicosMainBlock.hxx"
+#include "TFEL/GUI/LicosMajorMode.hxx"
+#include "TFEL/GUI/LicosMaterialWizard.hxx"
+#include "TFEL/GUI/LicosOutputFrame.hxx"
+#include "TFEL/GUI/LicosStudyOptions.hxx"
+#include "TFEL/GUI/LicosSyntaxHighlighter.hxx"
+#include "TFEL/GUI/LicosTokenizer.hxx"
+#include "TFEL/GUI/ProcessOutputFrame.hxx"
+#include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/CommandLine.hxx"
+#include "TFEL/GUI/MajorModeFactory.hxx"
+#include "TFEL/GUI/PlainTextEdit.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/Utilities.hxx"
 
-namespace qemacs {
+namespace tfel{
 
-  struct LicosMajorMode::LicosInsertBlock : public QEmacsCommandLine {
+  namespace gui{
 
-    LicosInsertBlock(QEmacsWidget &p, QEmacsTextEditBase &t)
-        : QEmacsCommandLine(QObject::tr("insert block :"), p), textEdit(t) {
+  struct LicosMajorMode::LicosInsertBlock : public CommandLine {
+
+    LicosInsertBlock(EditorWidget &p, TextEditBase &t)
+        : CommandLine(QObject::tr("insert block :"), p), textEdit(t) {
       QStringList blocks;
       for (const auto &b : LicosSyntaxHighlighter::getBlocks()) {
         blocks << QString::fromStdString(b);
@@ -78,9 +80,9 @@ namespace qemacs {
       }
     }
 
-    QEmacsTextEditBase &textEdit;
+    TextEditBase &textEdit;
 
-  }; // end of struct QEmacsTextEdit::LicosInsertBlock
+  }; // end of struct TextEdit::LicosInsertBlock
 
   QStringList LicosMajorMode::buildLicosExtensionsSuffix() {
     QStringList e;
@@ -105,7 +107,7 @@ namespace qemacs {
     r.clear();
     if ((fi.exists()) && (fi.isFile())) {
       if (!fi.isReadable()) {
-        this->qemacs.displayInformativeMessage(
+        this->editor.displayInformativeMessage(
             QObject::tr("file %1 is not readable").arg(fi.absoluteFilePath()));
         return false;
       }
@@ -153,7 +155,7 @@ namespace qemacs {
       if (checkFile(r, root + "scripts/" + f)) { return r; }
       if (checkFile(r, root + "data/" + f)) { return r; }
     }
-    this->qemacs.displayInformativeMessage(
+    this->editor.displayInformativeMessage(
         QObject::tr("file %1 not found").arg(f));
     return "";
   } // end of LicosMajorMode::getLicosFile
@@ -193,10 +195,10 @@ namespace qemacs {
     Loader l;
   };
 
-  LicosMajorMode::LicosMajorMode(QEmacsWidget &w,
-                                 QEmacsBuffer &b,
-                                 QEmacsTextEditBase &t)
-      : QEmacsMajorModeBase(w, b, t, &t),
+  LicosMajorMode::LicosMajorMode(EditorWidget &w,
+                                 Buffer &b,
+                                 TextEditBase &t)
+      : MajorModeBase(w, b, t, &t),
         rlib("'(" + fileNameRegExp() + "\\.so)'") {
     QStringList keys;
     for (const auto &k : LicosSyntaxHighlighter::getKeys()) {
@@ -212,7 +214,7 @@ namespace qemacs {
     QObject::connect(this->c,
                      static_cast<void (QCompleter::*)(const QString &)>(
                          &QCompleter::activated),
-                     &t, &QEmacsTextEditBase::insertCompletion);
+                     &t, &TextEditBase::insertCompletion);
     // QWidget *vp = t.widget()->viewport();
     // vp->setCursor(Qt::PointingHandCursor);
     t.setMouseTracking(true);
@@ -242,9 +244,9 @@ namespace qemacs {
     return this->c;
   } // end of LicosMajorMode::getCompleter
 
-  void LicosMajorMode::completeCurrentWord(QEmacsTextEditBase &t,
+  void LicosMajorMode::completeCurrentWord(TextEditBase &t,
                                            const QString &w) {
-    QEmacsMajorModeBase::completeCurrentWord(t, w);
+    MajorModeBase::completeCurrentWord(t, w);
     const auto &pblocks = LicosSyntaxHighlighter::getBlocks();
     if (std::find(pblocks.begin(), pblocks.end(), w.toStdString())
         != pblocks.end()) {
@@ -444,9 +446,9 @@ namespace qemacs {
   void LicosMajorMode::runLicos() {
     if (this->textEdit.isModified()) {
       auto *input = this->textEdit.getSaveInput();
-      QObject::connect(input, &QEmacsTextEditBase::SaveInput::finished, this,
+      QObject::connect(input, &TextEditBase::SaveInput::finished, this,
                        &LicosMajorMode::startLicos);
-      this->qemacs.setUserInput(input);
+      this->editor.setUserInput(input);
       return;
     }
     this->startLicos();
@@ -484,7 +486,7 @@ namespace qemacs {
     LicosStudyOptionsDialog od(o, &(this->textEdit));
     if (od.exec() == QDialog::Rejected) { return; }
     const auto &af = QFileInfo(n).absoluteFilePath();
-    auto *s = new LicosOutputFrame(this->qemacs, this->buffer, af, o);
+    auto *s = new LicosOutputFrame(this->editor, this->buffer, af, o);
     QObject::connect(s, &LicosOutputFrame::finished, this,
                      &LicosMajorMode::studyFinished);
     this->buffer.attachSecondaryTask(QObject::tr("Licos Output"), s);
@@ -513,8 +515,8 @@ namespace qemacs {
         }
       }
       if (!file.isEmpty()) {
-        this->qemacs.openFile(file);
-        this->qemacs.getCurrentBuffer().getMainFrame().gotoLine(line);
+        this->editor.openFile(file);
+        this->editor.getCurrentBuffer().getMainFrame().gotoLine(line);
       }
     }
   } // end of LicosMajorMode::studyFinished
@@ -606,7 +608,7 @@ namespace qemacs {
     //       if (!data.isEmpty()) {
     //         if (!QProcess::startDetached("tplot", QStringList() <<
     //         data)) {
-    //           this->qemacs.displayInformativeMessage(
+    //           this->editor.displayInformativeMessage(
     //               QObject::tr("launching tplot failed"));
     //         }
     //       }
@@ -617,7 +619,7 @@ namespace qemacs {
     //         if (!QProcess::startDetached("tplot", QStringList()
     //                                                   << ("lc:" +
     //                                                   data))) {
-    //           this->qemacs.displayInformativeMessage(
+    //           this->editor.displayInformativeMessage(
     //               QObject::tr("launching tplot failed"));
     //         }
     //       }
@@ -686,31 +688,31 @@ namespace qemacs {
     QFileInfo fi(f);
     if (fi.exists()) {
       if (fi.isReadable()) {
-        this->qemacs.openFile(f);
+        this->editor.openFile(f);
       } else {
-        this->qemacs.displayInformativeMessage(
+        this->editor.displayInformativeMessage(
             QObject::tr("file '%1' is not readable").arg(f));
         return;
       }
     }
     if (fi.isAbsolute()) {
-      this->qemacs.displayInformativeMessage(
+      this->editor.displayInformativeMessage(
           QObject::tr("file '%1' is not found").arg(f));
       return;
     }
     fi.setFile("mfront/properties/" + f);
     if ((fi.exists()) && (fi.isReadable())) {
-      this->qemacs.openFile(f);
+      this->editor.openFile(f);
       return;
     }
     fi.setFile("mfront/behaviours/" + f);
     if ((fi.exists()) && (fi.isReadable())) {
-      this->qemacs.openFile(f);
+      this->editor.openFile(f);
       return;
     }
     fi.setFile("mfront/models/" + f);
     if ((fi.exists()) && (fi.isReadable())) {
-      this->qemacs.openFile(f);
+      this->editor.openFile(f);
       return;
     }
     const QString &mpath = this->getMFrontMaterialsPath();
@@ -718,28 +720,28 @@ namespace qemacs {
       QStringList mfiles = this->findFiles(mpath, f);
       QStringList::const_iterator p;
       for (p = mfiles.begin(); p != mfiles.end(); ++p) {
-        this->qemacs.openFile(*p);
+        this->editor.openFile(*p);
       }
     }
-    this->qemacs.displayInformativeMessage(
+    this->editor.displayInformativeMessage(
         QObject::tr("file '%1' not found").arg(f));
   } // end of LicosMajorMode::openMFrontSource
 
   void LicosMajorMode::analyseUsingMFM(const QString &l) {
     const char *libpath = ::getenv("LD_LIBRARY_PATH");
     if (libpath == nullptr) {
-      this->qemacs.displayInformativeMessage(
+      this->editor.displayInformativeMessage(
           QObject::tr("LD_LIBRARY_PATH not set"));
       return;
     }
     const QString lib = this->getFileInPath(l, libpath);
     if (lib.isEmpty()) {
-      this->qemacs.displayInformativeMessage(
+      this->editor.displayInformativeMessage(
           QObject::tr("library %1 not found").arg(l));
       return;
     }
-    auto &b = this->qemacs.getCurrentBuffer();
-    auto *po = new ProcessOutputFrame(this->qemacs, b);
+    auto &b = this->editor.getCurrentBuffer();
+    auto *po = new ProcessOutputFrame(this->editor, b);
     auto &p = po->getProcess();
     QStringList args;
     args << lib;
@@ -753,10 +755,10 @@ namespace qemacs {
     if (w.isEmpty()) { return; }
     const auto shell = ::getenv("SHELL");
     if (shell == nullptr) {
-      this->qemacs.displayInformativeMessage(QObject::tr("no shell defined"));
+      this->editor.displayInformativeMessage(QObject::tr("no shell defined"));
     }
-    auto &b = this->qemacs.getCurrentBuffer();
-    auto *po = new ProcessOutputFrame(this->qemacs, b);
+    auto &b = this->editor.getCurrentBuffer();
+    auto *po = new ProcessOutputFrame(this->editor, b);
     po->setMajorMode("grep output");
     auto &p = po->getProcess();
     p.setWorkingDirectory(w);
@@ -779,7 +781,7 @@ namespace qemacs {
     using namespace tfel::system;
     using ELM = ExternalLibraryManager;
     auto bConnect = false; // connect
-    QEmacsMajorModeBase::completeContextMenu(m, tc);
+    MajorModeBase::completeContextMenu(m, tc);
     //     // looking for a word
     //     QTextCursor mtc(tc);
     //     mtc.select(QTextCursor::WordUnderCursor);
@@ -914,7 +916,7 @@ namespace qemacs {
     //               elm.getSource(lib.toStdString(),
     //               ld->function.toStdString()));
     //         } catch (exception &e) {
-    //           this->qemacs.displayInformativeMessage(
+    //           this->editor.displayInformativeMessage(
     //               QObject::tr("getSource failed :
     //               '%1'").arg(e.what()));
     //         }
@@ -941,8 +943,8 @@ namespace qemacs {
                                       const Qt::KeyboardModifiers m,
                                       const int k2) {
     if ((k1 == Qt::Key_C) && (m == Qt::ControlModifier) && (k2 == Qt::Key_E)) {
-      this->qemacs.setUserInput(
-          new LicosInsertBlock(this->qemacs, this->textEdit));
+      this->editor.setUserInput(
+          new LicosInsertBlock(this->editor, this->textEdit));
       return true;
     }
     if ((k1 == Qt::Key_C) && (m == Qt::ControlModifier) && (k2 == Qt::Key_M)) {
@@ -955,7 +957,7 @@ namespace qemacs {
   QString LicosMajorMode::getLicosPath() const {
     const char *w = ::getenv("LICOSHOME");
     if (w == nullptr) {
-      this->qemacs.displayInformativeMessage(
+      this->editor.displayInformativeMessage(
           QObject::tr("no LICOSHOME "
                       "environment defined"));
       return "";
@@ -966,7 +968,7 @@ namespace qemacs {
   QString LicosMajorMode::getMFrontMaterialsPath() const {
     const char *w = getenv("MFRONTMATERIALSHOME");
     if (w == nullptr) {
-      this->qemacs.displayInformativeMessage(
+      this->editor.displayInformativeMessage(
           QObject::tr("no MFRONTMATERIALSHOME "
                       "environment defined"));
       return "";
@@ -977,7 +979,7 @@ namespace qemacs {
   QString LicosMajorMode::getLicosStudiesPath() const {
     const char *w = getenv("LICOSSTUDIESHOME");
     if (w == nullptr) {
-      this->qemacs.displayInformativeMessage(
+      this->editor.displayInformativeMessage(
           QObject::tr("no LICOSSTUDIESHOME "
                       "environment defined"));
       return "";
@@ -1019,7 +1021,7 @@ namespace qemacs {
           const char *pypath = ::getenv("PYTHONPATH");
           if (pypath != nullptr) {
             const QString file = this->getFileInPath(f, pypath);
-            if (!file.isEmpty()) { this->qemacs.openFile(file); }
+            if (!file.isEmpty()) { this->editor.openFile(file); }
           }
         } else if (e == "mfront") {
           this->openMFrontSource(f);
@@ -1027,7 +1029,7 @@ namespace qemacs {
           //	  QDesktopServices::openUrl(QUrl::fromLocalFile(f));
         } else {
           const QString file = this->getLicosFile(f);
-          if (!file.isEmpty()) { this->qemacs.openFile(file); }
+          if (!file.isEmpty()) { this->editor.openFile(file); }
         }
         return true;
       }
@@ -1289,7 +1291,7 @@ namespace qemacs {
       }
       // here we have the state of the beginning of the selection
       if (tokenizer.getState() == LicosTokenizer::FAILED) {
-        this->qemacs.displayInformativeMessage(QObject::tr("parsing failed"));
+        this->editor.displayInformativeMessage(QObject::tr("parsing failed"));
         return;
       }
       LicosTokenizer::TokensContainer stokens; // selected tokens
@@ -1301,7 +1303,7 @@ namespace qemacs {
         for (const QString &line : lines) {
           tokenizer.parseString(line);
           if (tokenizer.getState() == LicosTokenizer::FAILED) {
-            this->qemacs.displayInformativeMessage(
+            this->editor.displayInformativeMessage(
                 QObject::tr("parsing failed"));
             return;
           }
@@ -1416,7 +1418,7 @@ namespace qemacs {
           QString cl = b.block().text();
           tokenizer.parseString(cl);
           if (tokenizer.getState() == LicosTokenizer::FAILED) {
-            this->qemacs.displayInformativeMessage(
+            this->editor.displayInformativeMessage(
                 QObject::tr("parsing failed : %1 (%2)")
                     .arg(tokenizer.getErrorMessage())
                     .arg(cl));
@@ -1426,7 +1428,7 @@ namespace qemacs {
         }
         tokenizer.parseString(l);
         if (tokenizer.getState() == LicosTokenizer::FAILED) {
-          this->qemacs.displayInformativeMessage(
+          this->editor.displayInformativeMessage(
               QObject::tr("parsing failed : %1 (%2)")
                   .arg(tokenizer.getErrorMessage())
                   .arg(l));
@@ -1435,7 +1437,7 @@ namespace qemacs {
         tc.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
       }
       if (tokenizer.getState() == LicosTokenizer::FAILED) {
-        this->qemacs.displayInformativeMessage(
+        this->editor.displayInformativeMessage(
             QObject::tr("parsing failed : %1")
                 .arg(tokenizer.getErrorMessage()));
         return;
@@ -1467,9 +1469,10 @@ namespace qemacs {
   void LicosMajorMode::format() {
   } // end of LicosMajorMode::format
 
-  static StandardQEmacsMajorModeProxy<LicosMajorMode> proxy(
+  static StandardMajorModeProxy<LicosMajorMode> proxy(
       "licos",
       QVector<QRegExp>() << QRegExp("^" + fileNameRegExp() + "\\.ple"),
       ":/LicosIcon.png");
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

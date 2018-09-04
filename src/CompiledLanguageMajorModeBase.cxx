@@ -8,17 +8,19 @@
 #include<QtCore/QDebug>
 #include<QtCore/QSettings>
 
-#include"QEmacs/QEmacsWidget.hxx"
-#include"QEmacs/QEmacsCommandLine.hxx"
-#include"QEmacs/QEmacsShellProcessLineEdit.hxx"
-#include"QEmacs/QEmacsTextEdit.hxx"
-#include"QEmacs/CompiledLanguageMajorModeBase.hxx"
+#include"TFEL/GUI/EditorWidget.hxx"
+#include"TFEL/GUI/CommandLine.hxx"
+#include"TFEL/GUI/ShellProcessLineEdit.hxx"
+#include"TFEL/GUI/TextEdit.hxx"
+#include"TFEL/GUI/CompiledLanguageMajorModeBase.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   CompiledLanguageMajorModeBase::CompiledLanguageMajorModeBase(
-      QEmacsWidget& w, QEmacsBuffer& b, QEmacsTextEditBase& t)
-      : QEmacsMajorModeBase(w, b, t, &t) {
+      EditorWidget& w, Buffer& b, TextEditBase& t)
+      : MajorModeBase(w, b, t, &t) {
   }  // end of
      // CompiledLanguageMajorModeBase::CompiledLanguageMajorModeBase
 
@@ -38,12 +40,13 @@ namespace qemacs {
     } else {
       d = ch.back();
     }
-    auto* l = new QEmacsShellProcessLineEdit(
-        "compilation command :", d, "compilation-output", this->qemacs);
+    auto* l = new ShellProcessLineEdit(
+        "compilation command :", d, "compilation-output", this->editor);
     l->setInputHistorySettingAddress(this->getLanguageName()+"/compilation/history");
-    this->qemacs.setUserInput(l);
+    this->editor.setUserInput(l);
   } // end of CompiledLanguageMajorModeBase::runCompilation
   
   CompiledLanguageMajorModeBase::~CompiledLanguageMajorModeBase() = default;
   
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

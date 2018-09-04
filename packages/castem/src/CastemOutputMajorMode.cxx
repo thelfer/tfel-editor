@@ -11,15 +11,17 @@
 
 #include <QtGui/QSyntaxHighlighter>
 
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/QEmacsBuffer.hxx"
-#include "QEmacs/QEmacsTextEditBase.hxx"
-#include "QEmacs/ProcessOutputFrame.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/ProcessOutputFrame.hxx"
 
-#include "QEmacs/ProcessOutputMajorModeBase.hxx"
-#include "QEmacs/QEmacsMajorModeFactory.hxx"
+#include "TFEL/GUI/ProcessOutputMajorModeBase.hxx"
+#include "TFEL/GUI/MajorModeFactory.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   //! \brief syntax highlighter for `Cast3M` output
   struct CastemOutputSyntaxHighlighter : public QSyntaxHighlighter {
@@ -55,9 +57,9 @@ namespace qemacs {
   //! \brief A major mode to display the results of `Cast3M` outputs
   struct CastemOutputMajorMode : public ProcessOutputMajorModeBase {
     //! constructor
-    CastemOutputMajorMode(QEmacsWidget &w,
-                          QEmacsBuffer &b,
-                          QEmacsTextEditBase &t)
+    CastemOutputMajorMode(EditorWidget &w,
+                          Buffer &b,
+                          TextEditBase &t)
         : ProcessOutputMajorModeBase(w, b, t, &t) {
     }  // end of CastemOutputMajorMode
 
@@ -82,7 +84,8 @@ namespace qemacs {
     ~CastemOutputMajorMode() override = default;
   };  // end of CastemOutputMajorMode
 
-  static StandardQEmacsMajorModeProxy<CastemOutputMajorMode> proxy(
+  static StandardMajorModeProxy<CastemOutputMajorMode> proxy(
       "castem-output");
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

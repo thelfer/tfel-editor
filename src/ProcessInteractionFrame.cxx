@@ -5,16 +5,19 @@
  * \date   24/10/2012
  */
 
-#include"QEmacs/ProcessInteractionFrame.hxx"
+#include"TFEL/GUI/ProcessInteractionFrame.hxx"
 
-namespace qemacs {
+namespace tfel{
 
-  ProcessInteractionFrame::ProcessInteractionFrame(QEmacsWidget& w,
-                                                   QEmacsBuffer& b)
+  namespace gui{
+
+  ProcessInteractionFrame::ProcessInteractionFrame(EditorWidget& w,
+                                                   Buffer& b)
       : ProcessOutputFrame(w, b) {}
   // end of ProcessInteractionFrame::ProcessInteractionFrame
 
   ProcessInteractionFrame::~ProcessInteractionFrame() {
   }  // end of ProcessInteractionFrame::~ProcessInteractionFrame
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

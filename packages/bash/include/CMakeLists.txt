@@ -1,3 +1,3 @@
-install_header(QEmacs BashMajorMode.hxx)
-install_header(QEmacs BashSyntaxHighlighter.hxx)
+install_header(TFEL/GUI BashMajorMode.hxx)
+install_header(TFEL/GUI BashSyntaxHighlighter.hxx)
 

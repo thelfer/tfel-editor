@@ -8,10 +8,12 @@
 #include<QtCore/QDebug>
 #include<QtCore/QRegExp>
 #include"TFEL/Utilities/CxxTokenizer.hxx"
-#include"QEmacs/LicosMajorMode.hxx"
-#include"QEmacs/LicosSyntaxHighlighter.hxx"
+#include"TFEL/GUI/LicosMajorMode.hxx"
+#include"TFEL/GUI/LicosSyntaxHighlighter.hxx"
 
-namespace qemacs
+namespace tfel{
+
+  namespace gui
 {
 
   LicosData::~LicosData() = default;
@@ -249,5 +251,6 @@ namespace qemacs
 	"LocalResolution","InputFile","SpecializedTimeStepController"};
   } // end of LicosSyntaxHighlighter::buildBlocksList
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel
 

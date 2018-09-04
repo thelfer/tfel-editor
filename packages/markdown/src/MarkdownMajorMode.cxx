@@ -12,21 +12,23 @@
 #include <QtCore/QTimer>
 #include <QtWidgets/QAbstractItemView>
 #include "TFEL/Utilities/CxxTokenizer.hxx"
-#include "QEmacs/Utilities.hxx"
-#include "QEmacs/MarkdownSyntaxHighlighter.hxx"
-#include "QEmacs/ProcessOutputFrame.hxx"
-#include "QEmacs/QEmacsShellProcessLineEdit.hxx"
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/QEmacsBuffer.hxx"
-#include "QEmacs/QEmacsMajorModeFactory.hxx"
-#include "QEmacs/QEmacsTextEditBase.hxx"
-#include "QEmacs/MarkdownMajorMode.hxx"
+#include "TFEL/GUI/Utilities.hxx"
+#include "TFEL/GUI/MarkdownSyntaxHighlighter.hxx"
+#include "TFEL/GUI/ProcessOutputFrame.hxx"
+#include "TFEL/GUI/ShellProcessLineEdit.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/MajorModeFactory.hxx"
+#include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/MarkdownMajorMode.hxx"
 
-namespace qemacs {
+namespace tfel{
 
-  MarkdownMajorMode::MarkdownMajorMode(QEmacsWidget &w,
-                                       QEmacsBuffer &b,
-                                       QEmacsTextEditBase &t)
+  namespace gui{
+
+  MarkdownMajorMode::MarkdownMajorMode(EditorWidget &w,
+                                       Buffer &b,
+                                       TextEditBase &t)
       : CompiledLanguageMajorModeBase(w, b, t) {
   }  // end of MarkdownMajorMode::MarkdownMajorMode
 
@@ -82,9 +84,9 @@ namespace qemacs {
   void MarkdownMajorMode::runPandoc() {
     if (this->textEdit.isModified()) {
       auto *input = this->textEdit.getSaveInput();
-      QObject::connect(input, &QEmacsTextEditBase::SaveInput::finished,
+      QObject::connect(input, &TextEditBase::SaveInput::finished,
                        this, &MarkdownMajorMode::startPandoc);
-      this->qemacs.setUserInput(input);
+      this->editor.setUserInput(input);
       return;
     }
     this->startPandoc();
@@ -109,7 +111,7 @@ namespace qemacs {
     //     MarkdownAnalysisOptionsDialog od(o, &(this->textEdit));
     //     if (od.exec() == QDialog::Rejected) { return; }
     //     const auto &af = QFileInfo(n).absoluteFilePath();
-    //     auto *s = new MarkdownOutputFrame(this->qemacs, this->buffer,
+    //     auto *s = new MarkdownOutputFrame(this->editor, this->buffer,
     //     af, o);
     //     QObject::connect(s, &MarkdownOutputFrame::finished, this,
     //                      &MarkdownMajorMode::AnalysisFinished);
@@ -121,7 +123,7 @@ namespace qemacs {
                                        const int k2) {
     if ((k1 == Qt::Key_C) && (m == Qt::NoModifier) &&
         (k2 == Qt::Key_Equal)) {
-      auto toc = new QEmacsPlainTextEdit(this->qemacs, this->buffer);
+      auto toc = new PlainTextEdit(this->editor, this->buffer);
       toc->setMajorMode("Markdown");
       auto c = toc->textCursor();
       auto tc = this->textEdit.textCursor();
@@ -351,10 +353,10 @@ namespace qemacs {
         }
         return ch.back();
       }();
-      auto *l = new QEmacsShellProcessLineEdit(
-          "compilation command :", d, "markdown-output", this->qemacs);
+      auto *l = new ShellProcessLineEdit(
+          "compilation command :", d, "markdown-output", this->editor);
       l->setInputHistorySettingAddress("pandoc/compilation/history");
-      this->qemacs.setUserInput(l);
+      this->editor.setUserInput(l);
       return true;
     }
     return CompiledLanguageMajorModeBase::keyPressEvent(ev);
@@ -366,9 +368,10 @@ namespace qemacs {
 
   MarkdownMajorMode::~MarkdownMajorMode() = default;
 
-  static StandardQEmacsMajorModeProxy<MarkdownMajorMode> proxy(
+  static StandardMajorModeProxy<MarkdownMajorMode> proxy(
       "Markdown",
       QVector<QRegExp>() << QRegExp("^" + fileNameRegExp() + ".md"),
       "x-office-document");
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

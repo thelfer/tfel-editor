@@ -8,17 +8,17 @@ link_directories("${PROJECT_BINARY_DIR}/src")
 link_directories("${PROJECT_BINARY_DIR}/packages/sh/src")
 link_directories("${TFEL_LIBRARY_PATH}")
 
-qt_sources(BashQEmacsMode_SOURCES
-  "${PROJECT_SOURCE_DIR}/packages/bash/include/QEmacs"
+qt_sources(BashMode_SOURCES
+  "${PROJECT_SOURCE_DIR}/packages/bash/include/TFEL/GUI"
   BashSyntaxHighlighter
   BashMajorMode)
 
-qemacs_package(BashQEmacsMode
-  ${BashQEmacsMode_SOURCES})
+tfel_editor_package(BashMode
+  ${BashMode_SOURCES})
 
-target_link_libraries(BashQEmacsMode
-  ShQEmacsMode
-  TFELQEmacs
+target_link_libraries(TFELEditorBashMode
+  TFELEditorShMode
+  TFELEditor
   Qt5::Core
   Qt5::Widgets
   )

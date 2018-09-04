@@ -11,15 +11,17 @@
 #include <QtWidgets/QFileDialog>
 #include "TFEL/System/ExternalLibraryManager.hxx"
 #include "MFront/TargetsDescription.hxx"
-#include "QEmacs/Debug.hxx"
-#include "QEmacs/SelectBehaviourPage.hxx"
+#include "TFEL/GUI/Debug.hxx"
+#include "TFEL/GUI/SelectBehaviourPage.hxx"
 
-namespace qemacs {
+namespace tfel{
 
-  SelectBehaviourPage::SelectBehaviourPage(QEmacsWidget& q)
+  namespace gui{
+
+  SelectBehaviourPage::SelectBehaviourPage(EditorWidget& q)
       : bl(new QComboBox(this)),
         mh(new QComboBox(this)),
-        le(new QEmacsLineEdit(q, this)),
+        le(new LineEdit(q, this)),
         slb(new QPushButton(QObject::tr("Open"), this)) {
     this->setTitle("Select a behaviour");
     auto* label = new QLabel(
@@ -65,7 +67,7 @@ namespace qemacs {
         this->slb, &QPushButton::pressed, this,
         &SelectBehaviourPage::selectLibrary);
     QObject::connect(
-        this->le, &QEmacsLineEdit::textChanged, this,
+        this->le, &LineEdit::textChanged, this,
         &SelectBehaviourPage::updateBehaviourList);
     QObject::connect(this->bl, &QComboBox::currentTextChanged, this,
                      &SelectBehaviourPage::
@@ -203,4 +205,5 @@ namespace qemacs {
 
   SelectBehaviourPage::~SelectBehaviourPage() = default;
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

@@ -7,12 +7,14 @@
 
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QDialogButtonBox>
-#include "QEmacs/SelectMFMBehaviour.hxx"
-#include "QEmacs/ImportMFMBehaviour.hxx"
+#include "TFEL/GUI/SelectMFMBehaviour.hxx"
+#include "TFEL/GUI/ImportMFMBehaviour.hxx"
 
-namespace qemacs {
+namespace tfel{
 
-  ImportMFMBehaviour::ImportMFMBehaviour(QEmacsWidget& q,
+  namespace gui{
+
+  ImportMFMBehaviour::ImportMFMBehaviour(EditorWidget& q,
                                          const Options& o,
                                          QWidget* const p)
       : QDialog(p), b(new SelectMFMBehaviour(q,o)) {
@@ -36,4 +38,5 @@ namespace qemacs {
 
   ImportMFMBehaviour::~ImportMFMBehaviour() = default;
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

@@ -7,21 +7,23 @@
 
 #include <QtCore/QDebug>
 #include <QtCore/QSettings>
-#include "QEmacs/Utilities.hxx"
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/QEmacsBuffer.hxx"
-#include "QEmacs/QEmacsTextEditBase.hxx"
-#include "QEmacs/ProcessOutputFrame.hxx"
-#include "QEmacs/QEmacsShellProcessLineEdit.hxx"
-#include "QEmacs/QEmacsMajorModeFactory.hxx"
-#include "QEmacs/BashSyntaxHighlighter.hxx"
-#include "QEmacs/BashMajorMode.hxx"
+#include "TFEL/GUI/Utilities.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/ProcessOutputFrame.hxx"
+#include "TFEL/GUI/ShellProcessLineEdit.hxx"
+#include "TFEL/GUI/MajorModeFactory.hxx"
+#include "TFEL/GUI/BashSyntaxHighlighter.hxx"
+#include "TFEL/GUI/BashMajorMode.hxx"
 
-namespace qemacs {
+namespace tfel{
 
-  BashMajorMode::BashMajorMode(QEmacsWidget& w,
-                               QEmacsBuffer& b,
-                               QEmacsTextEditBase& t)
+  namespace gui{
+
+  BashMajorMode::BashMajorMode(EditorWidget& w,
+                               Buffer& b,
+                               TextEditBase& t)
       : ShMajorMode(w, b, t) {}  // end of BashMajorMode::BashMajorMode
 
   QString BashMajorMode::getName() const {
@@ -38,8 +40,9 @@ namespace qemacs {
 
   BashMajorMode::~BashMajorMode() = default;
 
-  static StandardQEmacsMajorModeProxy<BashMajorMode> proxy(
+  static StandardMajorModeProxy<BashMajorMode> proxy(
       "bash",
       QVector<QRegExp>() << QRegExp("^" + fileNameRegExp() + "\\.bash$"));
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

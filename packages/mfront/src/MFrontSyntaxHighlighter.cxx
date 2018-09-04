@@ -9,9 +9,11 @@
 #include "MFront/AbstractDSL.hxx"
 #include "MFront/DSLFactory.hxx"
 #include "MFront/SupportedTypes.hxx"
-#include "QEmacs/MFrontSyntaxHighlighter.hxx"
+#include "TFEL/GUI/MFrontSyntaxHighlighter.hxx"
 
-namespace qemacs
+namespace tfel{
+
+  namespace gui
 {
 
   MFrontSyntaxHighlighter::MFrontSyntaxHighlighter(QTextDocument* p,
@@ -42,4 +44,5 @@ namespace qemacs
 
   MFrontSyntaxHighlighter::~MFrontSyntaxHighlighter() = default;
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

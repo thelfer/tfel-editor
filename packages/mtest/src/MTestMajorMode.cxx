@@ -10,27 +10,29 @@
 #include <QtCore/QFileInfo>
 #include <QtGui/QTextCursor>
 #include "TFEL/System/ExternalLibraryManager.hxx"
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/QEmacsBuffer.hxx"
-#include "QEmacs/QEmacsCommandFactory.hxx"
-#include "QEmacs/QEmacsStandardFunctionCommand.hxx"
-#include "QEmacs/ProcessOutputFrame.hxx"
-#include "QEmacs/MTestStudyOptions.hxx"
-#include "QEmacs/MTestSyntaxHighlighter.hxx"
-#include "QEmacs/QEmacsMajorModeFactory.hxx"
-#include "QEmacs/ImportBehaviourWizard.hxx"
-#include "QEmacs/ImportMFMBehaviourWizard.hxx"
-#include "QEmacs/MTestMajorMode.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/CommandFactory.hxx"
+#include "TFEL/GUI/StandardFunctionCommand.hxx"
+#include "TFEL/GUI/ProcessOutputFrame.hxx"
+#include "TFEL/GUI/MTestStudyOptions.hxx"
+#include "TFEL/GUI/MTestSyntaxHighlighter.hxx"
+#include "TFEL/GUI/MajorModeFactory.hxx"
+#include "TFEL/GUI/ImportBehaviourWizard.hxx"
+#include "TFEL/GUI/ImportMFMBehaviourWizard.hxx"
+#include "TFEL/GUI/MTestMajorMode.hxx"
 
-namespace qemacs {
+namespace tfel{
 
-  static void runMTest(QEmacsWidget& qemacs,
-                       QEmacsBuffer& b,
-                       QEmacsTextEditBase& t,
+  namespace gui{
+
+  static void runMTest(EditorWidget& editor,
+                       Buffer& b,
+                       TextEditBase& t,
                        const QString& scheme) {
     const auto n = t.getCompleteFileName();
     if (n.isEmpty()) {
-      qemacs.displayInformativeMessage(QObject::tr("no file name"));
+      editor.displayInformativeMessage(QObject::tr("no file name"));
       return;
     }
     MTestStudyOptions o;
@@ -40,11 +42,11 @@ namespace qemacs {
     }
     QFileInfo fn(n);
     if ((!fn.exists()) || (!fn.isFile())) {
-      qemacs.displayInformativeMessage(
+      editor.displayInformativeMessage(
           QObject::tr("invalid file name"));
       return;
     }
-    auto nf = new ProcessOutputFrame(qemacs, b);
+    auto nf = new ProcessOutputFrame(editor, b);
     b.attachSecondaryTask(QObject::tr("MTest output"), nf);
     auto& p = nf->getProcess();
     p.setWorkingDirectory(fn.dir().absolutePath());
@@ -61,23 +63,23 @@ namespace qemacs {
     p.waitForStarted();
   }  // end of runMTest
 
-  static void startMTest(QEmacsWidget& qemacs,
-                         QEmacsBuffer& b,
-                         QEmacsTextEditBase& t,
+  static void startMTest(EditorWidget& editor,
+                         Buffer& b,
+                         TextEditBase& t,
                          const QString& scheme) {
     if (t.isModified()) {
       auto* input = t.getSaveInput();
-      QObject::connect(input, &QEmacsTextEditBase::SaveInput::finished,
-                       [&qemacs, &b, &t, scheme] {
-                         runMTest(qemacs, b, t, scheme);
+      QObject::connect(input, &TextEditBase::SaveInput::finished,
+                       [&editor, &b, &t, scheme] {
+                         runMTest(editor, b, t, scheme);
                        });
-      qemacs.setUserInput(input);
+      editor.setUserInput(input);
       return;
     }
-    runMTest(qemacs, b, t, scheme);
+    runMTest(editor, b, t, scheme);
   }  // end of  startMTest
 
-  static void insertBehaviour(QEmacsTextEditBase& textEdit,
+  static void insertBehaviour(TextEditBase& textEdit,
                               const BehaviourDescription& bd) {
     auto b = bd.generate();
     if (!b) {
@@ -177,9 +179,9 @@ namespace qemacs {
     textEdit.setTextCursor(tc);
   }  // end of insertBehaviour
 
-  MTestMajorMode::MTestMajorMode(QEmacsWidget& w,
-                                 QEmacsBuffer& b,
-                                 QEmacsTextEditBase& t)
+  MTestMajorMode::MTestMajorMode(EditorWidget& w,
+                                 Buffer& b,
+                                 TextEditBase& t)
       : CxxMajorMode(w, b, t) {
     QStringList keys;
     for (const auto& k : this->getKeyWordsList()) {
@@ -192,7 +194,7 @@ namespace qemacs {
     QObject::connect(this->c,
                      static_cast<void (QCompleter::*)(const QString&)>(
                          &QCompleter::activated),
-                     &t, &QEmacsTextEditBase::insertCompletion);
+                     &t, &TextEditBase::insertCompletion);
   }  // end of MTestMajorMode::MTestMajorMode
 
   QString MTestMajorMode::getName() const {
@@ -207,7 +209,7 @@ namespace qemacs {
     const auto k = e->key();
     const auto m = e->modifiers();
     if ((m == Qt::AltModifier) && (k == Qt::Key_M)) {
-      startMTest(this->qemacs, this->buffer, this->textEdit,
+      startMTest(this->editor, this->buffer, this->textEdit,
                  this->getScheme());
       return true;
     }
@@ -223,7 +225,7 @@ namespace qemacs {
     // creating actions
     auto* const ra = m->addAction(QObject::tr("Run mtest"));
     QObject::connect(ra, &QAction::triggered, this, [this] {
-      startMTest(qemacs, this->buffer, this->textEdit,
+      startMTest(editor, this->buffer, this->textEdit,
                  this->getScheme());
     });
     auto* const tpa =
@@ -277,7 +279,7 @@ namespace qemacs {
   void MTestMajorMode::completeContextMenu(QMenu* const m,
                                            const QTextCursor& tc) {
     const auto& keys = this->getKeyWordsList();
-    QEmacsMajorModeBase::completeContextMenu(m, tc);
+    MajorModeBase::completeContextMenu(m, tc);
     QTextCursor b(tc);
     b.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
     b.select(QTextCursor::LineUnderCursor);
@@ -297,7 +299,7 @@ namespace qemacs {
           m->insertAction(*(cactions.begin()), ha);
         }
         QObject::connect(ha, &QAction::triggered, this, [k, this] {
-          auto nf = new ProcessOutputFrame(this->qemacs, this->buffer);
+          auto nf = new ProcessOutputFrame(this->editor, this->buffer);
           this->buffer.attachSecondaryTask(
               QObject::tr("help on '%1'").arg(k), nf);
           auto& p = nf->getProcess();
@@ -357,37 +359,38 @@ namespace qemacs {
   void MTestMajorMode::showResults() {
     const auto n = this->textEdit.getCompleteFileName();
     if (n.isEmpty()) {
-      this->qemacs.displayInformativeMessage(
+      this->editor.displayInformativeMessage(
           QObject::tr("no file name"));
       return;
     };
     const auto f = "mtest:" + n.mid(0, n.lastIndexOf('.')) + ".res";
     if (!QProcess::startDetached("tplot", QStringList() << f)) {
-      this->qemacs.displayInformativeMessage(
+      this->editor.displayInformativeMessage(
           QObject::tr("launching tplot failed"));
     }
   }  // end of MTestMajorMode::showResults
 
   MTestMajorMode::~MTestMajorMode() = default;
 
-  void runMTest(QEmacsWidget& qemacs) {
-    auto& b = qemacs.getCurrentBuffer();
+  void runMTest(EditorWidget& editor) {
+    auto& b = editor.getCurrentBuffer();
     auto& t = b.getMainFrame();
-    startMTest(qemacs, b, t, "mtest");
+    startMTest(editor, b, t, "mtest");
   }  // end of runMTest
 
-  void runPTest(QEmacsWidget& qemacs) {
-    auto& b = qemacs.getCurrentBuffer();
+  void runPTest(EditorWidget& editor) {
+    auto& b = editor.getCurrentBuffer();
     auto& t = b.getMainFrame();
-    startMTest(qemacs, b, t, "ptest");
+    startMTest(editor, b, t, "ptest");
   }  // end of runPTest
 
-  static QEmacsStandardFunctionCommandProxy<runMTest> runMTestProxy(
+  static StandardFunctionCommandProxy<runMTest> runMTestProxy(
       "run-mtest");
-  static QEmacsStandardFunctionCommandProxy<runPTest> runPTestProxy(
+  static StandardFunctionCommandProxy<runPTest> runPTestProxy(
       "run-ptest");
 
-  static StandardQEmacsMajorModeProxy<MTestMajorMode> proxy(
+  static StandardMajorModeProxy<MTestMajorMode> proxy(
       "MTest", QVector<QRegExp>() << QRegExp("^[\\w-]+\\.mtest"));
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

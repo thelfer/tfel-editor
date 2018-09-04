@@ -1,3 +1,3 @@
-install_header(QEmacs MarkdownMajorMode.hxx)
-install_header(QEmacs MarkdownSyntaxHighlighter.hxx)
+install_header(TFEL/GUI MarkdownMajorMode.hxx)
+install_header(TFEL/GUI MarkdownSyntaxHighlighter.hxx)
 

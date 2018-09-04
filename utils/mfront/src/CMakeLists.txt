@@ -6,8 +6,8 @@ include_directories("${TFEL_INCLUDE_PATH}")
 link_directories("${PROJECT_BINARY_DIR}/src")
 link_directories("${TFEL_LIBRARY_PATH}")
 
-qt_sources(QEmacsMFrontImportWidgets_SOURCES
-  "${PROJECT_SOURCE_DIR}/utils/mfront/include/QEmacs"
+qt_sources(MFrontImportWidgets_SOURCES
+  "${PROJECT_SOURCE_DIR}/utils/mfront/include/TFEL/GUI"
   MFMFilterProxyModel
   MaterialPropertiesSelectionPage
   SelectBehaviourPage
@@ -20,14 +20,14 @@ qt_sources(QEmacsMFrontImportWidgets_SOURCES
   ImportMFMBehaviour
   MaterialPropertySelectorWidget)
 
-qemacs_package(QEmacsMFrontImportWidgets
+tfel_editor_package(MFrontImportWidgets
   MFMDataBase.cxx
   MaterialPropertyDescription.cxx
   BehaviourDescription.cxx
-  ${QEmacsMFrontImportWidgets_SOURCES})
+  ${MFrontImportWidgets_SOURCES})
 
-target_link_libraries(QEmacsMFrontImportWidgets
-  TFELQEmacs
+target_link_libraries(TFELEditorMFrontImportWidgets
+  TFELEditor
   TFELMTest
   TFELMFront
   TFELMaterial

@@ -7,17 +7,19 @@
 
 #include<QtCore/QDebug>
 #include<QtWidgets/QPushButton>
-#include"QEmacs/QEmacsLineEdit.hxx"
-#include"QEmacs/QEmacsTextEditBase.hxx"
-#include"QEmacs/LicosThermalBehaviourWizard.hxx"
-#include"QEmacs/LicosMaterialWizard.hxx"
+#include"TFEL/GUI/LineEdit.hxx"
+#include"TFEL/GUI/TextEditBase.hxx"
+#include"TFEL/GUI/LicosThermalBehaviourWizard.hxx"
+#include"TFEL/GUI/LicosMaterialWizard.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   struct LicosMaterialWizard::MaterialPage
     : public QWizardPage
   {
-    explicit MaterialPage(QEmacsWidget &q, LicosMaterialWizard &w)
+    explicit MaterialPage(EditorWidget &q, LicosMaterialWizard &w)
         : tbb(new QPushButton(QObject::tr("Add"))),
           mbb(new QPushButton(QObject::tr("Add"))),
           wizard(w) {
@@ -32,7 +34,7 @@ namespace qemacs {
 					     "A regular expression can be used to select "
 					     "many materials at once\n"
 					     "Exemple : FUEL.+,CLADDING"));
-      auto *classNameLineEdit = new QEmacsLineEdit(q);
+      auto *classNameLineEdit = new LineEdit(q);
       classNameLabel->setBuddy(classNameLineEdit);
 
       auto *parentNameLabel   = new QLabel(QObject::tr("Material description:"));
@@ -41,7 +43,7 @@ namespace qemacs {
 					      "behaviours from thoses material descriptions.\n"
 					      "A comma shall seperate each material description.\n"
 					      "Exemple : UO2"));
-      auto* parentNameLineEdit = new QEmacsLineEdit(q);
+      auto* parentNameLineEdit = new LineEdit(q);
       parentNameLabel->setBuddy(parentNameLineEdit);
       auto *l    = new QVBoxLayout;
       auto *grid = new QGridLayout;
@@ -65,7 +67,7 @@ namespace qemacs {
       this->setLayout(l);
       
      // baseClassLabel = new QLabel(tr("B&ase class:"));
-     // baseClassLineEdit = new QEmacsLineEdit;
+     // baseClassLineEdit = new LineEdit;
      // baseClassLabel->setBuddy(baseClassLineEdit);
 
      // qobjectMacroCheckBox = new QCheckBox(tr("Generate Q_OBJECT &macro"));
@@ -89,10 +91,10 @@ namespace qemacs {
     
   };
 
-  LicosMaterialWizard::LicosMaterialWizard(QEmacsTextEditBase &t)
+  LicosMaterialWizard::LicosMaterialWizard(TextEditBase &t)
       : QWizard(&t),
         textEdit(t),
-        mpage(new MaterialPage(t.getQEmacsWidget(), *this)),
+        mpage(new MaterialPage(t.getEditorWidget(), *this)),
         tbw(nullptr),
         mbw(nullptr) {
     this->setWindowTitle(QObject::tr("Material definition wizard"));
@@ -140,4 +142,5 @@ namespace qemacs {
     tc.insertText("EndOfMaterial\n");
   }
   
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

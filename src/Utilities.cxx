@@ -14,12 +14,14 @@
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QAbstractScrollArea>
-#ifdef QEMACS_HAVE_WEBENGINE
+#ifdef TFEL_GUI_HAVE_WEBENGINE
 #include <QtWebEngineWidgets/QWebEngineView>
-#endif /* QEMACS_HAVE_WEBENGINE */
-#include "QEmacs/Utilities.hxx"
+#endif /* TFEL_GUI_HAVE_WEBENGINE */
+#include "TFEL/GUI/Utilities.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   QString findFileInDirectoryOrParentDirectory(const QString& d,
                                                const QString& f) {
@@ -58,7 +60,7 @@ namespace qemacs {
     hl->setSpacing(0);
   }
 
-#ifdef QEMACS_HAVE_WEBENGINE
+#ifdef TFEL_GUI_HAVE_WEBENGINE
   void setQWebEngineViewInLayout(QHBoxLayout* const hl,
                                  QWebEngineView* const a) {
     // a->page()->setScrollBarPolicy(Qt::Vertical,
@@ -70,7 +72,7 @@ namespace qemacs {
     hl->setContentsMargins(0, 0, 0, 0);
     hl->setSpacing(0);
   }
-#endif /* QEMACS_HAVE_WEBENGINE */
+#endif /* TFEL_GUI_HAVE_WEBENGINE */
   
   QString commonPart(const QString& s1, const QString& s2) {
     QString r;
@@ -138,4 +140,5 @@ namespace qemacs {
 //    m->clear();
   }  // end of clearMenuBar
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

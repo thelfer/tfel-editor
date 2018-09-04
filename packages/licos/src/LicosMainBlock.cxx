@@ -7,9 +7,11 @@
 
 #include <map>
 #include <stdexcept>
-#include "QEmacs/LicosMainBlock.hxx"
+#include "TFEL/GUI/LicosMainBlock.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   struct CouplingItemBlock : public StandardLicosBlock {
     CouplingItemBlock(const QString&);
@@ -778,4 +780,5 @@ namespace qemacs {
                                                    << "Plenums");
   }  // end of LicosMainBlock::LicosMainBlock
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

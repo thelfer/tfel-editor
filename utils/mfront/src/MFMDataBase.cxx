@@ -11,10 +11,12 @@
 #include "TFEL/System/ExternalLibraryManager.hxx"
 #include "MFront/LibraryDescription.hxx"
 #include "MFront/TargetsDescription.hxx"
-#include "QEmacs/Debug.hxx"
-#include "QEmacs/MFMDataBase.hxx"
+#include "TFEL/GUI/Debug.hxx"
+#include "TFEL/GUI/MFMDataBase.hxx"
 
-namespace qemacs{
+namespace tfel{
+
+  namespace gui{
 
   MFMDataBase::MFMDataBase() = default;
 
@@ -133,4 +135,5 @@ namespace qemacs{
 
   MFMDataBase::~MFMDataBase() = default;
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

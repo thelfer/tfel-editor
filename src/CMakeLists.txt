@@ -3,33 +3,33 @@ include_directories("${TFEL_INCLUDE_PATH}")
 link_directories("${PROJECT_BINARY_DIR}/src")
 link_directories("${TFEL_LIBRARY_PATH}")
 
-qt_add_resources(QEmacsResources_RCC
-  QEmacsResources.qrc)
+qt_add_resources(Resources_RCC
+  Resources.qrc)
 
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/QEmacsBuildInformation.cxx.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/QEmacsBuildInformation.cxx" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/BuildInformation.cxx.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/BuildInformation.cxx" @ONLY)
 
-qt_sources(TFELQEmacs_SOURCES
-  "${PROJECT_SOURCE_DIR}/include/QEmacs"
-  QEmacsWidget
-  QEmacsLineEdit
-  QEmacsFileDownloader
-  QEmacsShortCutStyle
-  QEmacsCommand
-  QEmacsCommandLine
-  QEmacsProcessLineEdit
-  QEmacsShellProcessLineEdit
-  QEmacsBuffer
-  QEmacsTextEditSearch
-  QEmacsTextEditKeyPressEventFilter
-  QEmacsTextEditBase
-  QEmacsPlainTextEdit
-  QEmacsTextEdit
-  QEmacsTextBrowser
+qt_sources(TFEL_EDITOR_SOURCES
+  "${PROJECT_SOURCE_DIR}/include/TFEL/GUI"
+  EditorWidget
+  LineEdit
+  FileDownloader
+  ShortCutStyle
+  Command
+  CommandLine
+  ProcessLineEdit
+  ShellProcessLineEdit
+  Buffer
+  TextEditSearch
+  TextEditKeyPressEventFilter
+  TextEditBase
+  PlainTextEdit
+  TextEdit
+  TextBrowser
   CSyntaxHighlighter
   CSyntaxHighlighterBase
-  QEmacsMajorMode
-  QEmacsMajorModeBase
+  MajorMode
+  MajorModeBase
   CompiledLanguageMajorModeBase
   CMajorModeBase
   CxxMajorMode
@@ -41,32 +41,31 @@ qt_sources(TFELQEmacs_SOURCES
   DirectoryMajorMode)
 
 if(WebEngine_FOUND AND WebEngineWidgets_FOUND)
-  qt_sources(TFELQEmacs_SOURCES2
-  "${PROJECT_SOURCE_DIR}/include/QEmacs"
+  qt_sources(TFEL_EDITOR_SOURCES2
+  "${PROJECT_SOURCE_DIR}/include/TFEL/GUI"
   QWebEngineViewWrapper)
 endif(WebEngine_FOUND AND WebEngineWidgets_FOUND)
 
-
-qemacs_library(TFELQEmacs
-  ${CMAKE_CURRENT_BINARY_DIR}/QEmacsBuildInformation.cxx
+tfel_editor_library(TFELEditor
+  ${CMAKE_CURRENT_BINARY_DIR}/BuildInformation.cxx
   VerboseLevel.cxx
   SecondaryTask.cxx
   SecondaryTaskManager.cxx
   Utilities.cxx
   SpellChecker.cxx
-  QEmacsStandardFunctionCommand.cxx
-  QEmacsHunspellDictionariesManager.cxx
-  QEmacsRectangleMode.cxx
-  QEmacsGrepCommand.cxx
-  QEmacsMajorModeChangeCommand.cxx
-  QEmacsCommandFactory.cxx
-  QEmacsTextEditQueryReplace.cxx
-  QEmacsTextEditReplaceFilter.cxx
-  QEmacsMajorModeFactory.cxx
+  StandardFunctionCommand.cxx
+  HunspellDictionariesManager.cxx
+  RectangleMode.cxx
+  GrepCommand.cxx
+  MajorModeChangeCommand.cxx
+  CommandFactory.cxx
+  TextEditQueryReplace.cxx
+  TextEditReplaceFilter.cxx
+  MajorModeFactory.cxx
   GrepOutputMajorMode.cxx
   CompilationOutputMajorMode.cxx
-  ${QEmacsResources_RCC}
-  ${TFELQEmacs_SOURCES})
+  ${Resources_RCC}
+  ${TFEL_EDITOR_SOURCES})
 
 set(QT_LIBRARIES
     Qt5::Core
@@ -83,29 +82,29 @@ endif(WebEngine_FOUND AND WebEngineWidgets_FOUND)
 
   
 if(HUNSPELL_FOUND)
-  target_link_libraries(TFELQEmacs
+  target_link_libraries(TFELEditor
     TFELSystem
     TFELUtilities
     TFELException
     ${QT_LIBRARIES}
     ${HUNSPELL_LIBRARIES})
 else(HUNSPELL_FOUND)
-  target_link_libraries(TFELQEmacs
+  target_link_libraries(TFELEditor
     TFELSystem
     TFELUtilities
     TFELException
     ${QT_LIBRARIES})
 endif(HUNSPELL_FOUND)
 
-qt_sources(qemacs_SOURCES
-  "${PROJECT_SOURCE_DIR}/include/QEmacs"
-  QEmacsMainWindow)
+qt_sources(tfel-editor_SOURCES
+  "${PROJECT_SOURCE_DIR}/include/TFEL/GUI"
+  MainWindow)
 
-qemacs_executable(qemacs
-  qemacs.cxx
-  ${qemacs_SOURCES})
+tfel_editor_executable(tfel-editor
+  tfel-editor.cxx
+  ${tfel-editor_SOURCES})
 
-target_link_libraries(qemacs
-  TFELQEmacs
+target_link_libraries(tfel-editor
+  TFELEditor
   TFELSystem
   TFELException)

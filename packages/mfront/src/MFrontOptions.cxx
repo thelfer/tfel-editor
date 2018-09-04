@@ -5,12 +5,15 @@
  * \date   04/06/2012
  */
 
-#include"QEmacs/MFrontOptions.hxx"
+#include"TFEL/GUI/MFrontOptions.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   MFrontOptions::MFrontOptions() = default;
 
   MFrontOptions::~MFrontOptions() = default;
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

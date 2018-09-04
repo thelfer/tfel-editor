@@ -12,13 +12,15 @@
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QDialogButtonBox>
 #include "TFEL/System/ExternalLibraryManager.hxx"
-#include "QEmacs/QEmacsLineEdit.hxx"
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/MFMDataBase.hxx"
-#include "QEmacs/MFMFilterProxyModel.hxx"
-#include "QEmacs/ImportMFMMaterialProperty.hxx"
+#include "TFEL/GUI/LineEdit.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/MFMDataBase.hxx"
+#include "TFEL/GUI/MFMFilterProxyModel.hxx"
+#include "TFEL/GUI/ImportMFMMaterialProperty.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   ImportMFMMaterialProperty::Options::Options() = default;
   ImportMFMMaterialProperty::Options::Options(Options&&) = default;
@@ -28,7 +30,7 @@ namespace qemacs {
   ImportMFMMaterialProperty::Options& ImportMFMMaterialProperty::Options::operator=(
       const Options&) = default;
 
-  ImportMFMMaterialProperty::ImportMFMMaterialProperty(QEmacsWidget& q,
+  ImportMFMMaterialProperty::ImportMFMMaterialProperty(EditorWidget& q,
                                                        const Options& o,
                                                        QWidget* const p)
       : QDialog(p), view(new QTreeView), isb(new QComboBox) {
@@ -54,18 +56,18 @@ namespace qemacs {
     auto* const fg = new QGridLayout;
     // name filter
     auto* const nfl = new QLabel("Name filter");
-    auto* const nfe = new QEmacsLineEdit(q);
+    auto* const nfe = new LineEdit(q);
     nfl->setBuddy(nfe);
-    QObject::connect(nfe, &QEmacsLineEdit::textChanged, bfpm,
+    QObject::connect(nfe, &LineEdit::textChanged, bfpm,
                      &MFMFilterProxyModel::setNameFilter);
     if (!o.name.isEmpty()) {
       nfe->setText(o.name);
     }
     // material filter
     auto* const mfl = new QLabel(QObject::tr("Material filter"));
-    auto* const mfe = new QEmacsLineEdit(q);
+    auto* const mfe = new LineEdit(q);
     mfl->setBuddy(mfe);
-    QObject::connect(mfe, &QEmacsLineEdit::textChanged, bfpm,
+    QObject::connect(mfe, &LineEdit::textChanged, bfpm,
                      &MFMFilterProxyModel::setMaterialFilter);
     if (!o.material.isEmpty()) {
       mfe->setText(o.material);
@@ -153,4 +155,5 @@ namespace qemacs {
 
   ImportMFMMaterialProperty::~ImportMFMMaterialProperty() = default;
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

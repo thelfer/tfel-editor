@@ -9,9 +9,11 @@
 
 #include<QtCore/QDebug>
 
-#include"QEmacs/LicosTokenizer.hxx"
+#include"TFEL/GUI/LicosTokenizer.hxx"
 
-namespace qemacs
+namespace tfel{
+
+  namespace gui
 {
   
   LicosTokenizer::LicosTokenizer()
@@ -92,5 +94,6 @@ namespace qemacs
     this->error = e;
   } // end of LicosTokenizer::setFailedState
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel
 

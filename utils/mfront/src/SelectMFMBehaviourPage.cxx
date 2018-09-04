@@ -11,13 +11,15 @@
 #include <QtWidgets/QFileDialog>
 #include "TFEL/System/ExternalLibraryManager.hxx"
 #include "MFront/TargetsDescription.hxx"
-#include "QEmacs/Debug.hxx"
-#include "QEmacs/SelectMFMBehaviour.hxx"
-#include "QEmacs/SelectMFMBehaviourPage.hxx"
+#include "TFEL/GUI/Debug.hxx"
+#include "TFEL/GUI/SelectMFMBehaviour.hxx"
+#include "TFEL/GUI/SelectMFMBehaviourPage.hxx"
 
-namespace qemacs {
+namespace tfel{
 
-  SelectMFMBehaviourPage::SelectMFMBehaviourPage(QEmacsWidget& q,
+  namespace gui{
+
+  SelectMFMBehaviourPage::SelectMFMBehaviourPage(EditorWidget& q,
                                                  const Options& o)
       : sb(new SelectMFMBehaviour(q, o)) {
     this->setTitle("Select a behaviour");
@@ -59,4 +61,5 @@ namespace qemacs {
   
   SelectMFMBehaviourPage::~SelectMFMBehaviourPage() = default;
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

@@ -6,16 +6,16 @@ include_directories("${TFEL_INCLUDE_PATH}")
 link_directories("${PROJECT_BINARY_DIR}/src")
 link_directories("${TFEL_LIBRARY_PATH}")
 
-qt_sources(CMakeQEmacsMode_SOURCES
-  "${PROJECT_SOURCE_DIR}/packages/cmake/include/QEmacs"
+qt_sources(CMakeMode_SOURCES
+  "${PROJECT_SOURCE_DIR}/packages/cmake/include/TFEL/GUI"
   CMakeSyntaxHighlighter
   CMakeMajorMode)
 
-qemacs_package(CMakeQEmacsMode
-  ${CMakeQEmacsMode_SOURCES})
+tfel_editor_package(CMakeMode
+  ${CMakeMode_SOURCES})
 
-target_link_libraries(CMakeQEmacsMode
-  TFELQEmacs
+target_link_libraries(TFELEditorCMakeMode
+  TFELEditor
   Qt5::Core
   Qt5::Widgets
   )

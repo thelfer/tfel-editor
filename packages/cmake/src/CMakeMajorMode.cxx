@@ -7,21 +7,23 @@
 
 #include <QtCore/QDebug>
 #include <QtCore/QSettings>
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/QEmacsBuffer.hxx"
-#include "QEmacs/QEmacsTextEditBase.hxx"
-#include "QEmacs/ProcessOutputFrame.hxx"
-#include "QEmacs/QEmacsShellProcessLineEdit.hxx"
-#include "QEmacs/QEmacsMajorModeFactory.hxx"
-#include "QEmacs/CMakeSyntaxHighlighter.hxx"
-#include "QEmacs/CMakeMajorMode.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/ProcessOutputFrame.hxx"
+#include "TFEL/GUI/ShellProcessLineEdit.hxx"
+#include "TFEL/GUI/MajorModeFactory.hxx"
+#include "TFEL/GUI/CMakeSyntaxHighlighter.hxx"
+#include "TFEL/GUI/CMakeMajorMode.hxx"
 
-namespace qemacs {
+namespace tfel{
 
-  CMakeMajorMode::CMakeMajorMode(QEmacsWidget& w,
-                                 QEmacsBuffer& b,
-                                 QEmacsTextEditBase& t)
-      : QEmacsMajorModeBase(w, b, t, &t) {
+  namespace gui{
+
+  CMakeMajorMode::CMakeMajorMode(EditorWidget& w,
+                                 Buffer& b,
+                                 TextEditBase& t)
+      : MajorModeBase(w, b, t, &t) {
   }  // end of CMakeMajorMode::CMakeMajorMode
 
   QString CMakeMajorMode::getName() const {
@@ -44,7 +46,7 @@ namespace qemacs {
 
   void CMakeMajorMode::completeContextMenu(QMenu *const m,
                                             const QTextCursor &tc) {
-    QEmacsMajorModeBase::completeContextMenu(m, tc);
+    MajorModeBase::completeContextMenu(m, tc);
     const auto cmds = CMakeSyntaxHighlighter::getCMakeCommandsList();
     QTextCursor b(tc);
     b.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
@@ -65,7 +67,7 @@ namespace qemacs {
           m->insertAction(*(cactions.begin()), ha);
         }
         QObject::connect(ha, &QAction::triggered, this, [k, this] {
-          auto nf = new ProcessOutputFrame(this->qemacs, this->buffer);
+          auto nf = new ProcessOutputFrame(this->editor, this->buffer);
           this->buffer.attachSecondaryTask(
               QObject::tr("help on '%1'").arg(k), nf);
           auto& p = nf->getProcess();
@@ -100,18 +102,19 @@ namespace qemacs {
     //       }
     //       return ch.back();
     //     }();
-    //     auto* l = new QEmacsShellProcessLineEdit(
+    //     auto* l = new ShellProcessLineEdit(
     //         "compilation command :", d, "compilation-output",
-    //         this->qemacs);
+    //         this->editor);
     //     l->setInputHistorySettingAddress("cmake/compilation/history");
-    //     this->qemacs.setUserInput(l);
+    //     this->editor.setUserInput(l);
   }  // end of CMakeMajorMode::runCompilation
 
   CMakeMajorMode::~CMakeMajorMode() = default;
 
-  static StandardQEmacsMajorModeProxy<CMakeMajorMode> proxy(
+  static StandardMajorModeProxy<CMakeMajorMode> proxy(
       "CMake",
       QVector<QRegExp>() << QRegExp("^CMakeLists\\.txt$")
                          << QRegExp(".*\\.cmake$"));
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

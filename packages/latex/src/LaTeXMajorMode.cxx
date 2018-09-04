@@ -8,16 +8,18 @@
 #include <QtCore/QDebug>
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/QEmacsBuffer.hxx"
-#include "QEmacs/QEmacsPlainTextEdit.hxx"
-#include "QEmacs/QEmacsCommandLine.hxx"
-#include "QEmacs/QEmacsMajorModeFactory.hxx"
-#include "QEmacs/ProcessOutputFrame.hxx"
-#include "QEmacs/LaTeXSyntaxHighlighter.hxx"
-#include "QEmacs/LaTeXMajorMode.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/PlainTextEdit.hxx"
+#include "TFEL/GUI/CommandLine.hxx"
+#include "TFEL/GUI/MajorModeFactory.hxx"
+#include "TFEL/GUI/ProcessOutputFrame.hxx"
+#include "TFEL/GUI/LaTeXSyntaxHighlighter.hxx"
+#include "TFEL/GUI/LaTeXMajorMode.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   static int countNumberOfCurlyBraces(const QString& s) {
     int n = 0;
@@ -43,9 +45,9 @@ namespace qemacs {
     return n;
   }
 
-  struct LaTeXMajorMode::LaTeXInsertBlock : public QEmacsCommandLine {
-    LaTeXInsertBlock(QEmacsWidget& p, QEmacsTextEditBase& t)
-        : QEmacsCommandLine(QObject::tr("insert block :"), p),
+  struct LaTeXMajorMode::LaTeXInsertBlock : public CommandLine {
+    LaTeXInsertBlock(EditorWidget& p, TextEditBase& t)
+        : CommandLine(QObject::tr("insert block :"), p),
           textEdit(t) {
       QStringList n;
       n << "figure"
@@ -95,9 +97,9 @@ namespace qemacs {
       }
     }
 
-    QEmacsTextEditBase& textEdit;
+    TextEditBase& textEdit;
 
-  };  // end of struct QEmacsTextEdit::LaTeXInsertBlock
+  };  // end of struct TextEdit::LaTeXInsertBlock
 
   struct LaTeXMajorModeRessourceLoader {
     LaTeXMajorModeRessourceLoader() : l(getLoader()) {}
@@ -113,10 +115,10 @@ namespace qemacs {
     Loader l;
   };
 
-  LaTeXMajorMode::LaTeXMajorMode(QEmacsWidget& w,
-                                 QEmacsBuffer& b,
-                                 QEmacsTextEditBase& t)
-      : QEmacsMajorModeBase(w, b, t, &t),
+  LaTeXMajorMode::LaTeXMajorMode(EditorWidget& w,
+                                 Buffer& b,
+                                 TextEditBase& t)
+      : MajorModeBase(w, b, t, &t),
         rb("\\\\begin\\{\\w+\\}"),
         re("\\\\end\\{\\w+\\}"),
         rb2("^\\s*\\\\begin\\{\\w+\\}"),
@@ -158,18 +160,18 @@ namespace qemacs {
     return this->c;
   }  // end of LaTeXMajorMode::getCompleter
 
-  void LaTeXMajorMode::completeCurrentWord(QEmacsTextEditBase& t,
+  void LaTeXMajorMode::completeCurrentWord(TextEditBase& t,
                                            const QString& w) {
-    QEmacsMajorModeBase::completeCurrentWord(t, w);
+    MajorModeBase::completeCurrentWord(t, w);
   }  // end of LaTeXMajorModeBase::completeCurrentWord
 
   void LaTeXMajorMode::runLaTeX() {
     if (this->textEdit.isModified()) {
-      QEmacsTextEditBase::SaveInput* input =
+      TextEditBase::SaveInput* input =
           this->textEdit.getSaveInput();
-      QObject::connect(input, &QEmacsTextEditBase::SaveInput::finished,
+      QObject::connect(input, &TextEditBase::SaveInput::finished,
                        this, &LaTeXMajorMode::startLaTeX);
-      this->qemacs.setUserInput(input);
+      this->editor.setUserInput(input);
       return;
     }
     this->startLaTeX();
@@ -181,12 +183,12 @@ namespace qemacs {
       m = this->textEdit.getCompleteFileName();
     }
     if (m.isEmpty()) {
-      this->qemacs.displayInformativeMessage(
+      this->editor.displayInformativeMessage(
           QObject::tr("no file name"));
       return;
     }
     if (this->po == nullptr) {
-      this->po = new ProcessOutputFrame(this->qemacs, this->buffer);
+      this->po = new ProcessOutputFrame(this->editor, this->buffer);
       this->buffer.attachSecondaryTask("*LaTeX* ouput", po);
     } else {
       this->buffer.setSecondaryTaskTitle(po, "*LaTeX* ouput");
@@ -195,7 +197,7 @@ namespace qemacs {
     po->clear();
     QFileInfo fn(m);
     if (!fn.exists()) {
-      this->qemacs.displayInformativeMessage(
+      this->editor.displayInformativeMessage(
           QObject::tr("file '%1' does "
                       "not exist")
               .arg(m));
@@ -221,7 +223,7 @@ namespace qemacs {
   }  // end of CppMajorMode::getSpecificMenu
 
   QIcon LaTeXMajorMode::getIcon() const {
-    static QIcon i(":/qemacs/languages/latex.png");
+    static QIcon i(":/tfel/editor/languages/latex.png");
     return i;
   }  // end of LaTeXMajorMode::getIcon()
 
@@ -229,7 +231,7 @@ namespace qemacs {
                                            const QTextCursor& tc) {
     typedef LaTeXSyntaxHighlighter::HighlightingRule Rule;
     typedef QVector<Rule> Rules;
-    QEmacsMajorModeBase::completeContextMenu(m, tc);
+    MajorModeBase::completeContextMenu(m, tc);
     if (this->highlighter != nullptr) {
       QTextCursor bl(tc);
       bl.movePosition(QTextCursor::StartOfBlock,
@@ -373,8 +375,8 @@ namespace qemacs {
                                       const int k2) {
     if ((k1 == Qt::Key_C) && (m == Qt::ControlModifier) &&
         (k2 == Qt::Key_E)) {
-      this->qemacs.setUserInput(
-          new LaTeXInsertBlock(this->qemacs, this->textEdit));
+      this->editor.setUserInput(
+          new LaTeXInsertBlock(this->editor, this->textEdit));
       return true;
     }
     return false;
@@ -565,9 +567,9 @@ namespace qemacs {
     bool b;
     this->getLineIndentation(tc, i, di, b);
     if (b) {
-      QEmacsMajorModeBase::doIndentLine(tc, 2 * i);
+      MajorModeBase::doIndentLine(tc, 2 * i);
     } else {
-      QEmacsMajorModeBase::doIndentLine(tc, 2 * (i + di));
+      MajorModeBase::doIndentLine(tc, 2 * (i + di));
     }
   }  // end of LaTeXMajorMode::indentLine
 
@@ -692,9 +694,9 @@ namespace qemacs {
         }
       }
       if (bi) {
-        QEmacsMajorModeBase::doIndentLine(b, 2 * i);
+        MajorModeBase::doIndentLine(b, 2 * i);
       } else {
-        QEmacsMajorModeBase::doIndentLine(b, 2 * (i + di));
+        MajorModeBase::doIndentLine(b, 2 * (i + di));
       }
       i += di;
       b.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor);
@@ -714,10 +716,11 @@ namespace qemacs {
     delete this->c;
   }  // end of LaTeXMajorMode::~LaTeXMajorMode()
 
-  static StandardQEmacsMajorModeProxy<LaTeXMajorMode> proxy(
+  static StandardMajorModeProxy<LaTeXMajorMode> proxy(
       "LaTeX",
       QVector<QRegExp>() << QRegExp("^[\\w-0-9_\\.]+\\.tex")
                          << QRegExp("^[\\w-0-9_\\.]+\\.sty"),
-      ":/qemacs/languages/latex.png");
+      ":/tfel/editor/languages/latex.png");
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

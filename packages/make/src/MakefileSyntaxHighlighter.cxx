@@ -7,9 +7,11 @@
 
 #include <QtCore/QDebug>
 #include "TFEL/Utilities/CxxTokenizer.hxx"
-#include "QEmacs/MakefileSyntaxHighlighter.hxx"
+#include "TFEL/GUI/MakefileSyntaxHighlighter.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   MakefileSyntaxHighlighter::MakefileSyntaxHighlighter(
       QTextDocument *const t)
@@ -63,4 +65,5 @@ namespace qemacs {
 
   MakefileSyntaxHighlighter::~MakefileSyntaxHighlighter() = default;
   
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

@@ -9,11 +9,13 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QDateTime>
 #include <QtGui/QSyntaxHighlighter>
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/QEmacsTextEditBase.hxx"
-#include "QEmacs/DirectoryMajorMode.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/DirectoryMajorMode.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   /*!
    * \brief structure in charge document handled by the
@@ -62,10 +64,10 @@ namespace qemacs {
   };  // end of DirectorySyntaxHighlighter
 
   DirectoryMajorMode::DirectoryMajorMode(const QString& d,
-                                         QEmacsWidget& w,
-                                         QEmacsBuffer& b,
-                                         QEmacsTextEditBase& t)
-      : QEmacsMajorModeBase(w, b, t, &t) {
+                                         EditorWidget& w,
+                                         Buffer& b,
+                                         TextEditBase& t)
+      : MajorModeBase(w, b, t, &t) {
     QObject::connect(&(this->watcher),
                      &QFileSystemWatcher::directoryChanged, this,
                      [this] { this->updateDirectoryDescription(); });
@@ -106,13 +108,13 @@ namespace qemacs {
       const auto path = this->directory + QDir::separator() + l[0];
       QFileInfo fi(path);
       if (fi.isFile()) {
-        this->qemacs.openFile(path);
+        this->editor.openFile(path);
       } else if (fi.isDir()) {
         this->updateDirectoryDescription(path);
       }
       return true;
     }
-    return QEmacsMajorModeBase::keyPressEvent(e);
+    return MajorModeBase::keyPressEvent(e);
   }  // end of DirectoryMajorMode::keyPressEvent
 
   void DirectoryMajorMode::updateDirectoryDescription() {
@@ -164,4 +166,5 @@ namespace qemacs {
 
   DirectoryMajorMode::~DirectoryMajorMode() = default;
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

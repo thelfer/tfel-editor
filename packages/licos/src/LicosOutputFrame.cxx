@@ -10,20 +10,22 @@
 #include<QtWidgets/QHBoxLayout>
 #include<QtWidgets/QVBoxLayout>
 
-#include"QEmacs/Utilities.hxx"
-#include"QEmacs/QEmacsWidget.hxx"
-#include"QEmacs/QEmacsPlainTextEdit.hxx"
-#include"QEmacs/LicosStudyThread.hxx"
-#include"QEmacs/LicosOutputFrame.hxx"
+#include"TFEL/GUI/Utilities.hxx"
+#include"TFEL/GUI/EditorWidget.hxx"
+#include"TFEL/GUI/PlainTextEdit.hxx"
+#include"TFEL/GUI/LicosStudyThread.hxx"
+#include"TFEL/GUI/LicosOutputFrame.hxx"
 
-namespace qemacs
+namespace tfel{
+
+  namespace gui
 {
 
-  LicosOutputFrame::LicosOutputFrame(QEmacsWidget &w,
-                                     QEmacsBuffer &b,
+  LicosOutputFrame::LicosOutputFrame(EditorWidget &w,
+                                     Buffer &b,
                                      const QString &f,
                                      const LicosStudyOptions &options)
-      : QWidget(&w), textEdit(new QEmacsPlainTextEdit(w, b)) {
+      : QWidget(&w), textEdit(new PlainTextEdit(w, b)) {
     auto *hl = new QHBoxLayout;
     auto *vl = new QVBoxLayout;
     hl->addWidget(this->textEdit);
@@ -80,4 +82,5 @@ namespace qemacs
     }
   } // end of LicosOutputFrame::closeEvent
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

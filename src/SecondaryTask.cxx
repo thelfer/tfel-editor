@@ -5,9 +5,11 @@
  * \date   13/02/2018
  */
 
-#include"QEmacs/SecondaryTask.hxx"
+#include"TFEL/GUI/SecondaryTask.hxx"
 
-namespace qemacs{
+namespace tfel{
+
+  namespace gui{
 
   SecondaryTask::SecondaryTask() = default;
   SecondaryTask::SecondaryTask(const SecondaryTask&) = default;
@@ -21,4 +23,5 @@ namespace qemacs{
     return a.w < b.w;
   }  // end of operator<
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

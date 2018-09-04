@@ -6,10 +6,12 @@
  */
 
 #include<QtWidgets/QHBoxLayout>
-#include"QEmacs/Utilities.hxx"
-#include"QEmacs/QWebEngineViewWrapper.hxx"
+#include"TFEL/GUI/Utilities.hxx"
+#include"TFEL/GUI/QWebEngineViewWrapper.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   QWebEngineViewWrapper::QWebEngineViewWrapper(QWebEngineView *s,
 				   QWidget *p)
@@ -27,4 +29,5 @@ namespace qemacs {
     this->wrappedObject->setFocus();
   }
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

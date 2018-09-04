@@ -20,11 +20,13 @@
 #include<QtWidgets/QDialogButtonBox>
 #include<QtWidgets/QDialog>
 
-#include "QEmacs/Utilities.hxx"
-#include "QEmacs/QEmacsLineEdit.hxx"
-#include "QEmacs/MaterialPropertySelector.hxx"
+#include "TFEL/GUI/Utilities.hxx"
+#include "TFEL/GUI/LineEdit.hxx"
+#include "TFEL/GUI/MaterialPropertySelector.hxx"
 
-namespace qemacs
+namespace tfel{
+
+  namespace gui
 {
 
   MaterialPropertyModel::MaterialPropertyModel(QObject *const p)
@@ -129,14 +131,14 @@ namespace qemacs
     this->endResetModel();
   }
 
-  MaterialPropertySelector::MaterialPropertySelector(QEmacsWidget& q,
+  MaterialPropertySelector::MaterialPropertySelector(EditorWidget& q,
                                                      QWidget* const p)
       : QWidget(p),
         model(new MaterialPropertyModel(this)),
         view(new QTableView(this)),
         l(new QLabel(QObject::tr("<b>Material properties available in "
                                  "MFrontMaterials:</b>"))),
-        lf(new QEmacsLineEdit(q)) {
+        lf(new LineEdit(q)) {
     auto *mlayout = new QVBoxLayout;
     auto *flayout = new QHBoxLayout;
     // MFrontMaterials
@@ -166,7 +168,7 @@ namespace qemacs
 		     this,&MaterialPropertySelector::openLibrary);
     QObject::connect(add,&QPushButton::pressed,
 		     this,&MaterialPropertySelector::addMaterialProperties);
-    QObject::connect(lf,&QEmacsLineEdit::textChanged,
+    QObject::connect(lf,&LineEdit::textChanged,
 		     this,&MaterialPropertySelector::updateMFMModel);
   } // end of MaterialPropertySelector::MaterialPropertySelector
 
@@ -237,5 +239,6 @@ namespace qemacs
     return mprops;
   }
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel
 

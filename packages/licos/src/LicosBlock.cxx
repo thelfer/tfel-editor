@@ -5,9 +5,11 @@
  * \date   17/09/2012
  */
 
-#include"QEmacs/LicosBlock.hxx"
+#include"TFEL/GUI/LicosBlock.hxx"
 
-namespace qemacs
+namespace tfel{
+
+  namespace gui
 {
 
   static QStringList buildParameterKeys()
@@ -27,4 +29,5 @@ namespace qemacs
   
   LicosBlock::~LicosBlock() = default;
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

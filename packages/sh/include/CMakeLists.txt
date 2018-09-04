@@ -1,3 +1,3 @@
-install_header(QEmacs ShMajorMode.hxx)
-install_header(QEmacs ShSyntaxHighlighter.hxx)
+install_header(TFEL/GUI ShMajorMode.hxx)
+install_header(TFEL/GUI ShSyntaxHighlighter.hxx)
 

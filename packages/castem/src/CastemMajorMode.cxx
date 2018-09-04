@@ -13,17 +13,19 @@
 #include <QtGui/QDesktopServices>
 #include "TFEL/Glossary/Glossary.hxx"
 #include "TFEL/Glossary/GlossaryEntry.hxx"
-#include "QEmacs/Utilities.hxx"
-#include "QEmacs/QEmacsBuffer.hxx"
-#include "QEmacs/ProcessOutputFrame.hxx"
-#include "QEmacs/QEmacsTextEditBase.hxx"
-#include "QEmacs/ImportBehaviourWizard.hxx"
-#include "QEmacs/ImportMFMBehaviourWizard.hxx"
-#include "QEmacs/CastemMajorMode.hxx"
-#include "QEmacs/CastemSyntaxHighlighter.hxx"
-#include "QEmacs/QEmacsMajorModeFactory.hxx"
+#include "TFEL/GUI/Utilities.hxx"
+#include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/ProcessOutputFrame.hxx"
+#include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/ImportBehaviourWizard.hxx"
+#include "TFEL/GUI/ImportMFMBehaviourWizard.hxx"
+#include "TFEL/GUI/CastemMajorMode.hxx"
+#include "TFEL/GUI/CastemSyntaxHighlighter.hxx"
+#include "TFEL/GUI/MajorModeFactory.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   static QString getCastemName(const std::string& n) {
     using tfel::glossary::Glossary;
@@ -115,7 +117,7 @@ namespace qemacs {
     }
   }  // end of insertText
 
-  static void insertBehaviour(QEmacsTextEditBase& textEdit,
+  static void insertBehaviour(TextEditBase& textEdit,
                               const BehaviourDescription& bd) {
     using tfel::glossary::Glossary;
     using tfel::material::MechanicalBehaviourBase;
@@ -580,10 +582,10 @@ namespace qemacs {
     Loader l;
   };
 
-  CastemMajorMode::CastemMajorMode(QEmacsWidget& w,
-                                   QEmacsBuffer& b,
-                                   QEmacsTextEditBase& t)
-      : QEmacsMajorModeBase(w, b, t, &t), co(nullptr) {
+  CastemMajorMode::CastemMajorMode(EditorWidget& w,
+                                   Buffer& b,
+                                   TextEditBase& t)
+      : MajorModeBase(w, b, t, &t), co(nullptr) {
     this->c = new QCompleter(CastemMajorMode::getKeysList(), &t);
     this->c->setWidget(&t);
     this->c->setCaseSensitivity(Qt::CaseInsensitive);
@@ -591,7 +593,7 @@ namespace qemacs {
     QObject::connect(this->c,
                      static_cast<void (QCompleter::*)(const QString&)>(
                          &QCompleter::activated),
-                     &t, &QEmacsTextEditBase::insertCompletion);
+                     &t, &TextEditBase::insertCompletion);
   }  // end of CastemMajorMode
 
   void CastemMajorMode::showImportBehaviourWizard() {
@@ -628,7 +630,7 @@ namespace qemacs {
   bool CastemMajorMode::startCastem() {
     if (this->co == nullptr) {
       this->co =
-          new ProcessInteractionFrame(this->qemacs, this->buffer);
+          new ProcessInteractionFrame(this->editor, this->buffer);
       this->co->setMajorMode("castem-output");
       if (this->co == nullptr) {
         return false;
@@ -682,7 +684,7 @@ namespace qemacs {
     return this->c;
   }  // end of getCompleter
 
-  void CastemMajorMode::completeCurrentWord(QEmacsTextEditBase& t,
+  void CastemMajorMode::completeCurrentWord(TextEditBase& t,
                                             const QString& w) {
     auto tc = t.textCursor();
     tc.movePosition(QTextCursor::StartOfWord, QTextCursor::MoveAnchor);
@@ -767,7 +769,7 @@ namespace qemacs {
 
   void CastemMajorMode::completeContextMenu(QMenu* const m,
                                             const QTextCursor& tc) {
-    QEmacsMajorModeBase::completeContextMenu(m, tc);
+    MajorModeBase::completeContextMenu(m, tc);
     QTextCursor mtc(tc);
     mtc.select(QTextCursor::WordUnderCursor);
     const auto w = mtc.selectedText();
@@ -807,7 +809,7 @@ namespace qemacs {
     QDir dir(path);
     dir.mkdir(path);
     if (dir.exists()) {
-      auto* nf = new ProcessOutputFrame(this->qemacs, this->buffer);
+      auto* nf = new ProcessOutputFrame(this->editor, this->buffer);
       this->buffer.attachSecondaryTask(QObject::tr("notice %1").arg(w),
                                        nf);
       auto& p = nf->getProcess();
@@ -895,10 +897,11 @@ namespace qemacs {
 
   CastemMajorMode::~CastemMajorMode() = default;
 
-  static StandardQEmacsMajorModeProxy<CastemMajorMode> proxy(
+  static StandardMajorModeProxy<CastemMajorMode> proxy(
       "Cast3M",
       QVector<QRegExp>() << QRegExp("^" + fileNameRegExp() + ".dgibi")
                          << QRegExp("^" + fileNameRegExp() + ".procedur"),
       ":/Cast3MIcon.png");
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

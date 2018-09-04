@@ -9,16 +9,18 @@
 #include <QtCore/QDebug>
 #include <QtGui/QSyntaxHighlighter>
 #include "TFEL/Utilities/CxxTokenizer.hxx"
-#include "QEmacs/Debug.hxx"
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/QEmacsBuffer.hxx"
-#include "QEmacs/QEmacsTextEditBase.hxx"
-#include "QEmacs/QEmacsMajorMode.hxx"
-#include "QEmacs/QEmacsMajorModeBase.hxx"
-#include "QEmacs/CSyntaxHighlighterBase.hxx"
-#include "QEmacs/QEmacsMajorModeFactory.hxx"
+#include "TFEL/GUI/Debug.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/MajorMode.hxx"
+#include "TFEL/GUI/MajorModeBase.hxx"
+#include "TFEL/GUI/CSyntaxHighlighterBase.hxx"
+#include "TFEL/GUI/MajorModeFactory.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   struct PythonSyntaxHighlighter : public CSyntaxHighlighterBase {
     explicit PythonSyntaxHighlighter(QTextDocument* p)
@@ -48,11 +50,11 @@ namespace qemacs {
   /*!
    * \brief A major mode for the `Python` programming language
    */
-  struct PythonMajorMode final : public QEmacsMajorModeBase {
-    PythonMajorMode(QEmacsWidget& w,
-                    QEmacsBuffer& b,
-                    QEmacsTextEditBase& t)
-        : QEmacsMajorModeBase(w, b, t, &t) {}
+  struct PythonMajorMode final : public MajorModeBase {
+    PythonMajorMode(EditorWidget& w,
+                    Buffer& b,
+                    TextEditBase& t)
+        : MajorModeBase(w, b, t, &t) {}
 
     QString getName() const override {
       return "Python";
@@ -78,7 +80,8 @@ namespace qemacs {
 
   };  // end of PythonMajorMode
 
-  static StandardQEmacsMajorModeProxy<PythonMajorMode> proxy(
+  static StandardMajorModeProxy<PythonMajorMode> proxy(
       "Python", QVector<QRegExp>() << QRegExp("^[\\w-]+\\.py$"));
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

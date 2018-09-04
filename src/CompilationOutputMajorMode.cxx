@@ -11,15 +11,17 @@
 
 #include <QtGui/QSyntaxHighlighter>
 
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/QEmacsBuffer.hxx"
-#include "QEmacs/QEmacsTextEditBase.hxx"
-#include "QEmacs/ProcessOutputFrame.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/ProcessOutputFrame.hxx"
 
-#include "QEmacs/ProcessOutputMajorModeBase.hxx"
-#include "QEmacs/QEmacsMajorModeFactory.hxx"
+#include "TFEL/GUI/ProcessOutputMajorModeBase.hxx"
+#include "TFEL/GUI/MajorModeFactory.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   struct CompilationOutputUserData : public QTextBlockUserData {
     QString file;
@@ -164,9 +166,9 @@ namespace qemacs {
    * process.
    */
   struct CompilationOutputMajorMode : public ProcessOutputMajorModeBase {
-    CompilationOutputMajorMode(QEmacsWidget &w,
-                               QEmacsBuffer &b,
-                               QEmacsTextEditBase &t)
+    CompilationOutputMajorMode(EditorWidget &w,
+                               Buffer &b,
+                               TextEditBase &t)
         : ProcessOutputMajorModeBase(w, b, t, &t) {
       this->textEdit.setReadOnly(true);
     }  // end of CompilationOutputMajorMode
@@ -202,10 +204,10 @@ namespace qemacs {
                        QTextCursor::MoveAnchor);
         const auto pos = c.position()-b.position();
         if (pos < d->file.size()) {
-          auto &cb = this->qemacs.getCurrentBuffer();
+          auto &cb = this->editor.getCurrentBuffer();
           const auto self  = cb.getCurrentSecondaryTask();
-          this->qemacs.openFile(d->file);
-          auto &nb = this->qemacs.getCurrentBuffer();
+          this->editor.openFile(d->file);
+          auto &nb = this->editor.getCurrentBuffer();
           nb.attachSecondaryTask(self);
           nb.getMainFrame().gotoPosition(d->line, d->column);
           return true;
@@ -230,10 +232,10 @@ namespace qemacs {
                        QTextCursor::MoveAnchor);
         const auto pos = c.position() - b.position();
         if (pos < d->file.size()) {
-          auto &cb = this->qemacs.getCurrentBuffer();
+          auto &cb = this->editor.getCurrentBuffer();
           const auto self = cb.getCurrentSecondaryTask();
-          this->qemacs.openFile(d->file);
-          auto &nb = this->qemacs.getCurrentBuffer();
+          this->editor.openFile(d->file);
+          auto &nb = this->editor.getCurrentBuffer();
           nb.attachSecondaryTask(self);
           nb.getMainFrame().gotoPosition(d->line, d->column);
           return true;
@@ -268,7 +270,8 @@ namespace qemacs {
 
   };  // end of CompilationOutputMajorMode
 
-  static StandardQEmacsMajorModeProxy<CompilationOutputMajorMode> proxy(
+  static StandardMajorModeProxy<CompilationOutputMajorMode> proxy(
       "compilation-output");
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

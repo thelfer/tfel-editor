@@ -8,10 +8,12 @@
 #include <QtCore/QProcess>
 #include <QtCore/QTextStream>
 #include "TFEL/Utilities/CxxTokenizer.hxx"
-#include "QEmacs/Debug.hxx"
-#include "QEmacs/CMakeSyntaxHighlighter.hxx"
+#include "TFEL/GUI/Debug.hxx"
+#include "TFEL/GUI/CMakeSyntaxHighlighter.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   static QStringList buildCMakeCommandsList() {
     QProcess p;
@@ -96,4 +98,5 @@ namespace qemacs {
 
   CMakeSyntaxHighlighter::~CMakeSyntaxHighlighter() = default;
   
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

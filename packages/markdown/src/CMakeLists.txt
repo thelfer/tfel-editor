@@ -6,16 +6,16 @@ include_directories("${TFEL_INCLUDE_PATH}")
 link_directories("${PROJECT_BINARY_DIR}/src")
 link_directories("${TFEL_LIBRARY_PATH}")
 
-qt_sources(MarkdownQEmacsMode_SOURCES
-  "${PROJECT_SOURCE_DIR}/packages/markdown/include/QEmacs"
+qt_sources(MarkdownMode_SOURCES
+  "${PROJECT_SOURCE_DIR}/packages/markdown/include/TFEL/GUI"
   MarkdownMajorMode
   MarkdownSyntaxHighlighter)
 
-qemacs_package(MarkdownQEmacsMode
-  ${MarkdownQEmacsMode_SOURCES})
+tfel_editor_package(MarkdownMode
+  ${MarkdownMode_SOURCES})
 
-target_link_libraries(MarkdownQEmacsMode
-  TFELQEmacs
+target_link_libraries(TFELEditorMarkdownMode
+  TFELEditor
   TFELUtilities
   Qt5::Core
   Qt5::Widgets

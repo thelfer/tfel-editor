@@ -11,9 +11,11 @@
 #include<QtCore/QTextCodec>
 #include<QtCore/QTextDecoder>
 
-#include"QEmacs/LicosStudy.hxx"
+#include"TFEL/GUI/LicosStudy.hxx"
 
-namespace qemacs
+namespace tfel{
+
+  namespace gui
 {
 
   LicosStudy::LicosStudy(const QString& f,
@@ -313,5 +315,6 @@ namespace qemacs
     this->stopComputations();
   } // end of LicosStudy::~LicosStudy
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel
 

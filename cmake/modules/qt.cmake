@@ -9,7 +9,7 @@ find_package(Qt5 5.3 COMPONENTS
   WebEngineWidgets)
 
 if(WebEngine_FOUND AND WebEngineWidgets_FOUND)
-  add_definition("-DQEMACS_HAVE_WEBENGINE")
+  add_definition("-DTFEL_GUI_HAVE_WEBENGINE")
 endif(WebEngine_FOUND AND WebEngineWidgets_FOUND)
 
 macro(moc_source header_directory file)

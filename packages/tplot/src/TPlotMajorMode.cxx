@@ -10,16 +10,18 @@
 
 #include <QtGui/QSyntaxHighlighter>
 
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/QEmacsBuffer.hxx"
-#include "QEmacs/QEmacsTextEditBase.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/TextEditBase.hxx"
 
-#include "QEmacs/QEmacsMajorMode.hxx"
-#include "QEmacs/QEmacsMajorModeBase.hxx"
-#include "QEmacs/GnuplotSyntaxHighlighter.hxx"
-#include "QEmacs/QEmacsMajorModeFactory.hxx"
+#include "TFEL/GUI/MajorMode.hxx"
+#include "TFEL/GUI/MajorModeBase.hxx"
+#include "TFEL/GUI/GnuplotSyntaxHighlighter.hxx"
+#include "TFEL/GUI/MajorModeFactory.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   struct TPlotSyntaxHighlighter : public GnuplotSyntaxHighlighter {
     TPlotSyntaxHighlighter(QTextDocument* p)
@@ -37,11 +39,11 @@ namespace qemacs {
   /*!
    * A major mode to handle the tplot utility
    */
-  struct TPlotMajorMode : public QEmacsMajorModeBase {
-    TPlotMajorMode(QEmacsWidget& w,
-                   QEmacsBuffer& b,
-                   QEmacsTextEditBase& t)
-        : QEmacsMajorModeBase(w, b, t, &t) {}
+  struct TPlotMajorMode : public MajorModeBase {
+    TPlotMajorMode(EditorWidget& w,
+                   Buffer& b,
+                   TextEditBase& t)
+        : MajorModeBase(w, b, t, &t) {}
 
     QString getName() const override {
       return "tplot";
@@ -67,8 +69,9 @@ namespace qemacs {
 
   };  // end of TPlotMajorMode
 
-  static StandardQEmacsMajorModeProxy<TPlotMajorMode> proxy(
+  static StandardMajorModeProxy<TPlotMajorMode> proxy(
       "TPlot",
       QVector<QRegExp>() << QRegExp("^[\\w-0-9_\\.]+\\.tplot"));
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

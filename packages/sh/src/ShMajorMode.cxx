@@ -7,22 +7,24 @@
 
 #include <QtCore/QDebug>
 #include <QtCore/QSettings>
-#include "QEmacs/Utilities.hxx"
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/QEmacsBuffer.hxx"
-#include "QEmacs/QEmacsTextEditBase.hxx"
-#include "QEmacs/ProcessOutputFrame.hxx"
-#include "QEmacs/QEmacsShellProcessLineEdit.hxx"
-#include "QEmacs/QEmacsMajorModeFactory.hxx"
-#include "QEmacs/ShSyntaxHighlighter.hxx"
-#include "QEmacs/ShMajorMode.hxx"
+#include "TFEL/GUI/Utilities.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/ProcessOutputFrame.hxx"
+#include "TFEL/GUI/ShellProcessLineEdit.hxx"
+#include "TFEL/GUI/MajorModeFactory.hxx"
+#include "TFEL/GUI/ShSyntaxHighlighter.hxx"
+#include "TFEL/GUI/ShMajorMode.hxx"
 
-namespace qemacs {
+namespace tfel{
 
-  ShMajorMode::ShMajorMode(QEmacsWidget& w,
-                           QEmacsBuffer& b,
-                           QEmacsTextEditBase& t)
-      : QEmacsMajorModeBase(w, b, t, &t) {
+  namespace gui{
+
+  ShMajorMode::ShMajorMode(EditorWidget& w,
+                           Buffer& b,
+                           TextEditBase& t)
+      : MajorModeBase(w, b, t, &t) {
   }  // end of ShMajorMode::ShMajorMode
 
   QString ShMajorMode::getName() const {
@@ -45,8 +47,9 @@ namespace qemacs {
 
   ShMajorMode::~ShMajorMode() = default;
 
-  static StandardQEmacsMajorModeProxy<ShMajorMode> proxy(
+  static StandardMajorModeProxy<ShMajorMode> proxy(
       "sh",
       QVector<QRegExp>() << QRegExp("^" + fileNameRegExp() + "\\.sh$"));
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

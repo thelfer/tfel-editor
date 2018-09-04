@@ -1,3 +1,3 @@
-install_header(QEmacs CMakeMajorMode.hxx)
-install_header(QEmacs CMakeSyntaxHighlighter.hxx)
+install_header(TFEL/GUI CMakeMajorMode.hxx)
+install_header(TFEL/GUI CMakeSyntaxHighlighter.hxx)
 

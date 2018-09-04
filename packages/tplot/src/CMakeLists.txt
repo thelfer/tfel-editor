@@ -9,12 +9,12 @@ link_directories("${PROJECT_BINARY_DIR}/packages/gnuplot/src")
 link_directories("${TFELPLOT_LIBRARY_PATH}")
 link_directories("${TFEL_LIBRARY_PATH}")
 
-qemacs_package(TPlotQEmacsPackage
+tfel_editor_package(TPlotPackage
   TPlotMajorMode.cxx)
 
-target_link_libraries(TPlotQEmacsPackage
-  GnuplotQEmacsPackage
-  TFELQEmacs
+target_link_libraries(TFELEditorTPlotPackage
+  TFELEditorGnuplotPackage
+  TFELEditor
   TFELPlot
   Qt5::Core
   Qt5::Widgets

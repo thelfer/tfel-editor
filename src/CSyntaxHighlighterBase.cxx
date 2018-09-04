@@ -7,10 +7,12 @@
 
 #include <stdexcept>
 #include <QtCore/QDebug>
-#include "QEmacs/CSyntaxHighlighterBase.hxx"
+#include "TFEL/GUI/CSyntaxHighlighterBase.hxx"
 #include "TFEL/Utilities/CxxTokenizer.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   CSyntaxHighlighterBase::CSyntaxHighlighterBase(QTextDocument *p)
       : QSyntaxHighlighter(p) {
@@ -88,4 +90,5 @@ namespace qemacs {
     }
   }
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

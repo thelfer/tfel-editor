@@ -1,3 +1,3 @@
-install_header(QEmacs MakefileMajorMode.hxx)
-install_header(QEmacs MakefileSyntaxHighlighter.hxx)
+install_header(TFEL/GUI MakefileMajorMode.hxx)
+install_header(TFEL/GUI MakefileSyntaxHighlighter.hxx)
 

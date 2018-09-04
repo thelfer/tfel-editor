@@ -7,17 +7,19 @@
 
 #include<QtCore/QDebug>
 
-#include"QEmacs/Utilities.hxx"
-#include"QEmacs/QEmacsTextEditBase.hxx"
-#include"QEmacs/QEmacsMajorModeFactory.hxx"
-#include"QEmacs/CxxSyntaxHighlighter.hxx"
-#include"QEmacs/CxxMajorMode.hxx"
+#include"TFEL/GUI/Utilities.hxx"
+#include"TFEL/GUI/TextEditBase.hxx"
+#include"TFEL/GUI/MajorModeFactory.hxx"
+#include"TFEL/GUI/CxxSyntaxHighlighter.hxx"
+#include"TFEL/GUI/CxxMajorMode.hxx"
 
-namespace qemacs {
+namespace tfel{
 
-  CxxMajorMode::CxxMajorMode(QEmacsWidget &w,
-                             QEmacsBuffer &b,
-                             QEmacsTextEditBase &t)
+  namespace gui{
+
+  CxxMajorMode::CxxMajorMode(EditorWidget &w,
+                             Buffer &b,
+                             TextEditBase &t)
       : CMajorModeBase(w, b, t) {}  // end of CxxMajorMode::CxxMajorMode
 
   QString CxxMajorMode::getName() const {
@@ -33,7 +35,7 @@ namespace qemacs {
   } // end of CxxMajorMode::CxxMajorMode
 
   QIcon CxxMajorMode::getIcon() const{
-    return QIcon(":/qemacs/languages/cxx.png");
+    return QIcon(":/tfel/editor/languages/cxx.png");
   }  // end of CxxMajorMode::getIcon
 
   bool CxxMajorMode::keyPressEvent(QKeyEvent *const e) {
@@ -52,7 +54,7 @@ namespace qemacs {
 
   CxxMajorMode::~CxxMajorMode() = default;
 
-  static StandardQEmacsMajorModeProxy<CxxMajorMode> proxy(
+  static StandardMajorModeProxy<CxxMajorMode> proxy(
       "C++",
       QVector<QRegExp>() << QRegExp(fileNameRegExp() + "\\.cxx$")
                          << QRegExp(fileNameRegExp() + "\\.hxx$")
@@ -64,6 +66,7 @@ namespace qemacs {
                          << QRegExp(fileNameRegExp() + "\\.hh$")
                          << QRegExp(fileNameRegExp() + "\\.c$")
                          << QRegExp(fileNameRegExp() + "\\.h$"),
-      ":/qemacs/languages/cxx.png");
+      ":/tfel/editor/languages/cxx.png");
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

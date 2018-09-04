@@ -7,9 +7,11 @@
 
 #include "MFront/InitDSLs.hxx"
 #include "MFront/InitInterfaces.hxx"
-#include "QEmacs/MFrontInitializer.hxx"
+#include "TFEL/GUI/MFrontInitializer.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   MFrontInitializer::MFrontInitializer() {
     mfront::initDSLs();
@@ -21,4 +23,5 @@ namespace qemacs {
     return i;
   }  // end of initMFront
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

@@ -12,9 +12,11 @@
 #include<QtWidgets/QCheckBox>
 #include<QtWidgets/QGroupBox>
 #include<QtWidgets/QDialogButtonBox>
-#include"QEmacs/LicosStudyOptions.hxx"
+#include"TFEL/GUI/LicosStudyOptions.hxx"
 
-namespace qemacs
+namespace tfel{
+
+  namespace gui
 {
 
   LicosStudyOptions::LicosStudyOptions()
@@ -115,4 +117,5 @@ namespace qemacs
     o.debugMode = b ? "yes" : "no";
   }
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

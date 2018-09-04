@@ -8,25 +8,27 @@
 #include <QtCore/QDir>
 #include <QtCore/QDebug>
 #include <QtGui/QSyntaxHighlighter>
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/QEmacsBuffer.hxx"
-#include "QEmacs/QEmacsTextEditBase.hxx"
-#include "QEmacs/QEmacsMajorMode.hxx"
-#include "QEmacs/QEmacsMajorModeBase.hxx"
-#include "QEmacs/ProcessInteractionFrame.hxx"
-#include "QEmacs/GnuplotSyntaxHighlighter.hxx"
-#include "QEmacs/QEmacsMajorModeFactory.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/MajorMode.hxx"
+#include "TFEL/GUI/MajorModeBase.hxx"
+#include "TFEL/GUI/ProcessInteractionFrame.hxx"
+#include "TFEL/GUI/GnuplotSyntaxHighlighter.hxx"
+#include "TFEL/GUI/MajorModeFactory.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   /*!
    * A major mode to handle the gnuplot utility
    */
-  struct GnuplotMajorMode final : public QEmacsMajorModeBase {
-    GnuplotMajorMode(QEmacsWidget& w,
-                     QEmacsBuffer& b,
-                     QEmacsTextEditBase& t)
-        : QEmacsMajorModeBase(w, b, t, &t),
+  struct GnuplotMajorMode final : public MajorModeBase {
+    GnuplotMajorMode(EditorWidget& w,
+                     Buffer& b,
+                     TextEditBase& t)
+        : MajorModeBase(w, b, t, &t),
           go(new ProcessInteractionFrame(w, b)) {
       QFileInfo fn(t.getCompleteFileName());
       QDir d(fn.dir());
@@ -73,7 +75,7 @@ namespace qemacs {
         return true;
       }
       return false;
-    }  // end of QEmacsMajorModeBase::handleShortCut
+    }  // end of MajorModeBase::handleShortCut
 
     ~GnuplotMajorMode() override = default;
 
@@ -81,9 +83,10 @@ namespace qemacs {
 
   };  // end of GnuplotMajorMode
 
-  static StandardQEmacsMajorModeProxy<GnuplotMajorMode> proxy(
+  static StandardMajorModeProxy<GnuplotMajorMode> proxy(
       "Gnuplot",
       QVector<QRegExp>() << QRegExp("^[\\w-\\.0-9]+\\.gp")
                          << QRegExp("^[\\w-\\.0-9]+\\.gnuplot"));
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

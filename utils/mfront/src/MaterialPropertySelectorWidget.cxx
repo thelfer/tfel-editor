@@ -10,24 +10,26 @@
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QStackedWidget>
-#include "QEmacs/QEmacsLineEdit.hxx"
-#include "QEmacs/ImportMFMMaterialProperty.hxx"
-#include "QEmacs/MaterialPropertySelectorWidget.hxx"
+#include "TFEL/GUI/LineEdit.hxx"
+#include "TFEL/GUI/ImportMFMMaterialProperty.hxx"
+#include "TFEL/GUI/MaterialPropertySelectorWidget.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   MaterialPropertySelectorWidget::MaterialPropertySelectorWidget(
-      QEmacsWidget& q,
+      EditorWidget& q,
       const QString& n,
       const QString& m,
       QWidget* const p)
       : QGroupBox(n, p),
-        qemacs(q),
+        editor(q),
         name(n),
         material(m),
-        cv(new QEmacsLineEdit(q)),
-        cle(new QEmacsLineEdit(q)),
-        cfe(new QEmacsLineEdit(q)) {
+        cv(new LineEdit(q)),
+        cle(new LineEdit(q)),
+        cfe(new LineEdit(q)) {
     auto* const ml = new QVBoxLayout();
     auto* const mt = new QComboBox();
     mt->addItems(QStringList() << "constant"
@@ -104,7 +106,7 @@ namespace qemacs {
     o.name = this->name;
     o.material = this->material;
     o.minterface = "Castem";
-    ImportMFMMaterialProperty w(this->qemacs, o);
+    ImportMFMMaterialProperty w(this->editor, o);
     if (w.exec() != QDialog::Accepted) {
       return;
     }
@@ -132,4 +134,5 @@ namespace qemacs {
   MaterialPropertySelectorWidget::~MaterialPropertySelectorWidget() =
       default;
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

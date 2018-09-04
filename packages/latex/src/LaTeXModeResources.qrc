@@ -1,5 +1,5 @@
  <!DOCTYPE RCC><RCC version="1.0">
  <qresource>
- <file alias="qemacs/languages/latex.png">images/languages/latex.png</file>
+ <file alias="tfel/editor/languages/latex.png">images/languages/latex.png</file>
  </qresource>
  </RCC>

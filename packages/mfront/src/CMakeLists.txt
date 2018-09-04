@@ -6,24 +6,24 @@ include_directories("${TFEL_INCLUDE_PATH}")
 link_directories("${PROJECT_BINARY_DIR}/src")
 link_directories("${TFEL_LIBRARY_PATH}")
 
-qt_sources(MFrontQEmacsMode_SOURCES
-  "${PROJECT_SOURCE_DIR}/packages/mfront/include/QEmacs"
+qt_sources(MFrontMode_SOURCES
+  "${PROJECT_SOURCE_DIR}/packages/mfront/include/TFEL/GUI"
   MFrontMajorMode
   MFrontSyntaxHighlighter
   MFrontOptionsDialog
   ImplicitDSLWizard)
 
-qt_add_resources(MFrontQEmacsResources_RCC
+qt_add_resources(MFrontResources_RCC
   MFrontModeResources.qrc)
 
-qemacs_package(MFrontQEmacsMode
-  ${MFrontQEmacsResources_RCC}
-  ${MFrontQEmacsMode_SOURCES}
+tfel_editor_package(MFrontMode
+  ${MFrontResources_RCC}
+  ${MFrontMode_SOURCES}
   MFrontOptions.cxx
   MFrontInitializer.cxx)
 
-target_link_libraries(MFrontQEmacsMode
-  TFELQEmacs
+target_link_libraries(TFELEditorMFrontMode
+  TFELEditor
   TFELMFront
   TFELMaterial
   TFELUtilities

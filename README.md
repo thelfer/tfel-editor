@@ -1,4 +1,4 @@
-# The `qemacs` project
+# The `tfel-editor` project
 
 
 

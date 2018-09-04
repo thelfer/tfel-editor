@@ -8,16 +8,18 @@
 #include <QtCore/QDir>
 #include <QtCore/QDebug>
 #include <QtGui/QSyntaxHighlighter>
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/QEmacsBuffer.hxx"
-#include "QEmacs/QEmacsTextEditBase.hxx"
-#include "QEmacs/ProcessOutputFrame.hxx"
-#include "QEmacs/QEmacsMajorMode.hxx"
-#include "QEmacs/QEmacsMajorModeBase.hxx"
-#include "QEmacs/ProcessOutputMajorModeBase.hxx"
-#include "QEmacs/QEmacsMajorModeFactory.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/ProcessOutputFrame.hxx"
+#include "TFEL/GUI/MajorMode.hxx"
+#include "TFEL/GUI/MajorModeBase.hxx"
+#include "TFEL/GUI/ProcessOutputMajorModeBase.hxx"
+#include "TFEL/GUI/MajorModeFactory.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   struct GrepUserData : public QTextBlockUserData {
     //! file name
@@ -70,9 +72,9 @@ namespace qemacs {
     /*!
      * \brief constructor
      */
-    GrepOutputMajorMode(QEmacsWidget &w,
-                        QEmacsBuffer &b,
-                        QEmacsTextEditBase &t)
+    GrepOutputMajorMode(EditorWidget &w,
+                        Buffer &b,
+                        TextEditBase &t)
         : ProcessOutputMajorModeBase(w, b, t, &t) {
     }  // end of GrepOutputMajorMode
 
@@ -106,15 +108,15 @@ namespace qemacs {
                        QTextCursor::MoveAnchor);
         const auto pos = c.position() - b.position();
         if (pos < d->file.size()) {
-          auto &cb = this->qemacs.getCurrentBuffer();
+          auto &cb = this->editor.getCurrentBuffer();
           const auto self = cb.getCurrentSecondaryTask();
           const auto wd = po->getProcess().workingDirectory();
           if (!wd.isEmpty()) {
-            this->qemacs.openFile(wd + QDir::separator() + d->file);
+            this->editor.openFile(wd + QDir::separator() + d->file);
           } else {
-            this->qemacs.openFile(d->file);
+            this->editor.openFile(d->file);
           }
-          auto &nb = this->qemacs.getCurrentBuffer();
+          auto &nb = this->editor.getCurrentBuffer();
           nb.attachSecondaryTask(self);
           nb.getMainFrame().gotoLine(d->line);
           return true;
@@ -144,15 +146,15 @@ namespace qemacs {
                        QTextCursor::MoveAnchor);
         const auto pos = c.position() - b.position();
         if (pos < d->file.size()) {
-          auto &cb = this->qemacs.getCurrentBuffer();
+          auto &cb = this->editor.getCurrentBuffer();
           const auto self = cb.getCurrentSecondaryTask();
           const auto wd = po->getProcess().workingDirectory();
           if (!wd.isEmpty()) {
-            this->qemacs.openFile(wd + QDir::separator() + d->file);
+            this->editor.openFile(wd + QDir::separator() + d->file);
           } else {
-            this->qemacs.openFile(d->file);
+            this->editor.openFile(d->file);
           }
-          auto &nb = this->qemacs.getCurrentBuffer();
+          auto &nb = this->editor.getCurrentBuffer();
           nb.attachSecondaryTask(self);
           nb.getMainFrame().gotoLine(d->line);
         }
@@ -171,7 +173,8 @@ namespace qemacs {
 
   };  // end of GrepOutputMajorMode
 
-  static StandardQEmacsMajorModeProxy<GrepOutputMajorMode> proxy(
+  static StandardMajorModeProxy<GrepOutputMajorMode> proxy(
       "grep-output");
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

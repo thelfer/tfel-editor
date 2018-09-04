@@ -54,5 +54,5 @@ find_package_handle_standard_args(HUNSPELL
 mark_as_advanced(HUNSPELL_INCLUDE_DIRS HUNSPELL_LIBRARIES)
 
 if(HUNSPELL_FOUND)
-  add_definitions("-DQEMACS_HUNSPELL_SUPPORT")
+  add_definitions("-DTFEL_GUI_HUNSPELL_SUPPORT")
 endif(HUNSPELL_FOUND)

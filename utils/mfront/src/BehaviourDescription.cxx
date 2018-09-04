@@ -14,10 +14,12 @@
 #ifdef TFEL_HAS_ANSYS_INTERFACE_SUPPORT
 #include "MTest/AnsysStandardBehaviour.hxx"
 #endif /* TFEL_HAS_ANSYS_INTERFACE_SUPPORT */
-#include "QEmacs/Debug.hxx"
-#include "QEmacs/BehaviourDescription.hxx"
+#include "TFEL/GUI/Debug.hxx"
+#include "TFEL/GUI/BehaviourDescription.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   BehaviourDescription::BehaviourDescription() = default;
   BehaviourDescription::BehaviourDescription(BehaviourDescription&&) =
@@ -93,4 +95,5 @@ namespace qemacs {
     return {};
   }  // end of BehaviourDescription::generate
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

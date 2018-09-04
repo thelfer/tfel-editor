@@ -6,16 +6,16 @@ include_directories("${TFEL_INCLUDE_PATH}")
 link_directories("${PROJECT_BINARY_DIR}/src")
 link_directories("${TFEL_LIBRARY_PATH}")
 
-qt_sources(ShQEmacsMode_SOURCES
-  "${PROJECT_SOURCE_DIR}/packages/sh/include/QEmacs"
+qt_sources(ShMode_SOURCES
+  "${PROJECT_SOURCE_DIR}/packages/sh/include/TFEL/GUI"
   ShSyntaxHighlighter
   ShMajorMode)
 
-qemacs_package(ShQEmacsMode
-  ${ShQEmacsMode_SOURCES})
+tfel_editor_package(ShMode
+  ${ShMode_SOURCES})
 
-target_link_libraries(ShQEmacsMode
-  TFELQEmacs
+target_link_libraries(TFELEditorShMode
+  TFELEditor
   Qt5::Core
   Qt5::Widgets
   )

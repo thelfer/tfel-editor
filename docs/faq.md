@@ -13,8 +13,7 @@ text editor:
 
 - which is inspired by `GNU Emacs` main concepts (such as buffers, major
   modes, etc..).
-- that would make full use of the Qt library (hence the name,
-  `qemacs=Qt+emacs`)
+- that would make full use of the Qt library
 
 This text editor is meant to have the following advantages:
 
@@ -26,7 +25,7 @@ This text editor is meant to have the following advantages:
   have all the power of the editor accessible from the GUI.
 - The ability to integrate this editor into external software. More
   precisely, the projet is decomposed in a shared library caleed
-  `TFELQEmacs` and an executable qemacs. The library provides the main
-  widgets (for example the `QEmacsWidget`) that can be reused out of the
-  box.
+  `TFELEditor` and an executable `tfel-editor`. The library provides
+  the main widgets (for example the `EditorWidget`) that can be reused
+  out of the box.
 - Develop some new ideas.

@@ -8,19 +8,21 @@
 #include <QtCore/QDebug>
 #include <QtCore/QTextCodec>
 #include <QtCore/QTextDecoder>
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/ProcessOutputMajorModeBase.hxx"
-#include "QEmacs/ProcessOutputFrame.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/ProcessOutputMajorModeBase.hxx"
+#include "TFEL/GUI/ProcessOutputFrame.hxx"
 
-namespace qemacs {
+namespace tfel{
 
-  ProcessOutputFrame::ProcessOutputFrame(QEmacsWidget& w,
-                                         QEmacsBuffer& b)
-      : QEmacsPlainTextEdit(w, b), process(new QProcess(this)) {
+  namespace gui{
+
+  ProcessOutputFrame::ProcessOutputFrame(EditorWidget& w,
+                                         Buffer& b)
+      : PlainTextEdit(w, b), process(new QProcess(this)) {
     using QProcessFinished =
         void (QProcess::*)(int, QProcess::ExitStatus);
-    QEmacsPlainTextEdit::setReadOnly(true);
-    QEmacsPlainTextEdit::setUndoRedoEnabled(false);
+    PlainTextEdit::setReadOnly(true);
+    PlainTextEdit::setUndoRedoEnabled(false);
     this->process->setProcessChannelMode(QProcess::MergedChannels);
     QObject::connect(this->process, &QProcess::readyReadStandardOutput,
                      this, &ProcessOutputFrame::displayProcessOutput);
@@ -52,9 +54,9 @@ namespace qemacs {
   void ProcessOutputFrame::processFinished(int s,
                                            QProcess::ExitStatus es) {
     if (s == 0) {
-      this->qemacs.setSecondaryTaskIcon(this, QIcon(":/qemacs/success.png"));
+      this->editor.setSecondaryTaskIcon(this, QIcon(":/tfel/editor/success.png"));
     } else {
-      this->qemacs.setSecondaryTaskIcon(this, QIcon(":/qemacs/failure.png"));
+      this->editor.setSecondaryTaskIcon(this, QIcon(":/tfel/editor/failure.png"));
     };
     auto pom = qobject_cast<ProcessOutputMajorModeBase*>(this->mode);
     if(pom!=nullptr){
@@ -75,4 +77,5 @@ namespace qemacs {
     }
   }  // end of ProcessOutputFrame::~ProcessOutputFrame()
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

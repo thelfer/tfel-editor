@@ -8,16 +8,18 @@
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QScrollArea>
 #include "TFEL/System/ExternalLibraryManager.hxx"
-#include "QEmacs/Debug.hxx"
-#include "QEmacs/BehaviourDescription.hxx"
-#include "QEmacs/MaterialPropertySelectorWidget.hxx"
-#include "QEmacs/MaterialPropertiesSelectionPage.hxx"
+#include "TFEL/GUI/Debug.hxx"
+#include "TFEL/GUI/BehaviourDescription.hxx"
+#include "TFEL/GUI/MaterialPropertySelectorWidget.hxx"
+#include "TFEL/GUI/MaterialPropertiesSelectionPage.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   MaterialPropertiesSelectionPage::MaterialPropertiesSelectionPage(
-      QEmacsWidget& q)
-      : qemacs(q) {}  // end of
+      EditorWidget& q)
+      : editor(q) {}  // end of
   // MaterialPropertiesSelectionPage::MaterialPropertiesSelectionPage
 
   void MaterialPropertiesSelectionPage::updateMaterialPropertiesList(
@@ -51,7 +53,7 @@ namespace qemacs {
     auto mpsws_new = std::vector<MaterialPropertySelectorWidget*>{};
     for (const auto& mp : b->getMaterialPropertiesNames()) {
       auto* const mpsw = new MaterialPropertySelectorWidget(
-          this->qemacs, QString::fromStdString(mp), m);
+          this->editor, QString::fromStdString(mp), m);
       mpsws_new.push_back(mpsw);
       vl->addWidget(mpsw);
     }
@@ -94,4 +96,5 @@ namespace qemacs {
   MaterialPropertiesSelectionPage::~MaterialPropertiesSelectionPage() =
       default;
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

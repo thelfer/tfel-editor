@@ -4,11 +4,11 @@ include_directories("${TFEL_INCLUDE_PATH}")
 link_directories("${PROJECT_BINARY_DIR}/src")
 link_directories("${TFEL_LIBRARY_PATH}")
 
-qemacs_package(PythonQEmacsMode
+tfel_editor_package(PythonMode
   PythonMajorMode.cxx)
 
-target_link_libraries(PythonQEmacsMode
-  TFELQEmacs
+target_link_libraries(TFELEditorPythonMode
+  TFELEditor
   Qt5::Core
   Qt5::Widgets
   )

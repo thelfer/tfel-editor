@@ -15,19 +15,21 @@
 #include "TFEL/System/ExternalLibraryManager.hxx"
 #include "TFEL/Material/ModellingHypothesis.hxx"
 #include "MFront/TargetsDescription.hxx"
-#include "QEmacs/Debug.hxx"
-#include "QEmacs/QEmacsTextEditBase.hxx"
-#include "QEmacs/SelectBehaviourPage.hxx"
-#include "QEmacs/MaterialPropertiesSelectionPage.hxx"
-#include "QEmacs/BehaviourSummaryPage.hxx"
-#include "QEmacs/ImportBehaviourWizard.hxx"
+#include "TFEL/GUI/Debug.hxx"
+#include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/SelectBehaviourPage.hxx"
+#include "TFEL/GUI/MaterialPropertiesSelectionPage.hxx"
+#include "TFEL/GUI/BehaviourSummaryPage.hxx"
+#include "TFEL/GUI/ImportBehaviourWizard.hxx"
 
-namespace qemacs {
+namespace tfel{
 
-  ImportBehaviourWizard::ImportBehaviourWizard(QEmacsTextEditBase& t)
+  namespace gui{
+
+  ImportBehaviourWizard::ImportBehaviourWizard(TextEditBase& t)
       : QWizard(&t),
-        sb(new SelectBehaviourPage(t.getQEmacsWidget())),
-        mp(new MaterialPropertiesSelectionPage(t.getQEmacsWidget())),
+        sb(new SelectBehaviourPage(t.getEditorWidget())),
+        mp(new MaterialPropertiesSelectionPage(t.getEditorWidget())),
         c(new BehaviourSummaryPage) {
     this->setWindowTitle(QObject::tr("Import Behaviour"));
     this->setPage(0, this->sb);
@@ -63,4 +65,5 @@ namespace qemacs {
 
   ImportBehaviourWizard::~ImportBehaviourWizard() = default;
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

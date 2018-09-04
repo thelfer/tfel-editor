@@ -13,16 +13,18 @@
 #include <QtGui/QTextCursor>
 #include <QtGui/QTextDocumentWriter>
 
-#include "QEmacs/CMajorModeBase.hxx"
-#include "QEmacs/QEmacsTextEditBase.hxx"
-#include "QEmacs/QEmacsWidget.hxx"
+#include "TFEL/GUI/CMajorModeBase.hxx"
+#include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/Utilities/CxxTokenizer.hxx"
 
-namespace qemacs {
+namespace tfel{
 
-  CMajorModeBase::CMajorModeBase(QEmacsWidget& w,
-                                 QEmacsBuffer& b,
-                                 QEmacsTextEditBase& t)
+  namespace gui{
+
+  CMajorModeBase::CMajorModeBase(EditorWidget& w,
+                                 Buffer& b,
+                                 TextEditBase& t)
       : CompiledLanguageMajorModeBase(w, b, t) {
   } // end of CMajorModeBase::CMajorModeBase
 
@@ -223,8 +225,8 @@ namespace qemacs {
     }
   } // end of CMajorModeBase::comment
 
-  static void do_indent(QEmacsWidget& qemacs,
-                        QEmacsTextEditBase& textEdit,
+  static void do_indent(EditorWidget& editor,
+                        TextEditBase& textEdit,
                         QTextCursor& c,
                         const QTextCursor& b,
                         const QTextCursor& e) {
@@ -232,7 +234,7 @@ namespace qemacs {
     const auto cf = textEdit.getFileName();
     QTemporaryFile tmp(cf);
     if (!tmp.open()) {
-      qemacs.displayInformativeMessage(
+      editor.displayInformativeMessage(
           QObject::tr("can't open temporary file"));
       return;
     }
@@ -241,7 +243,7 @@ namespace qemacs {
     QFile tmp2(tmp.fileName());
     writer.setDevice(&tmp2);
     if(!writer.write(textEdit.document())) {
-      qemacs.displayInformativeMessage(
+      editor.displayInformativeMessage(
           QObject::tr("can't write buffer in temporary file"));
       return;
     }
@@ -258,20 +260,20 @@ namespace qemacs {
                       << ("-cursor=" + QString::number(c.position()))
                       << tmp.fileName());
     if (!cformat.waitForStarted()) {
-      qemacs.displayInformativeMessage(
+      editor.displayInformativeMessage(
           QObject::tr("call to 'clang-format' failed"));
       return;
     }
     cformat.closeWriteChannel();
     if(!cformat.waitForFinished()) {
-      qemacs.displayInformativeMessage(
+      editor.displayInformativeMessage(
           QObject::tr("call to 'clang-format' failed"));
       return;
     }
     QTextStream in(cformat.readAll());
     auto pr = in.readLine();
     if(rcursor.indexIn(pr, 0) == -1) {
-      qemacs.displayInformativeMessage(
+      editor.displayInformativeMessage(
           QObject::tr("analysis of 'clang-format' output failed"));
       return;
     }
@@ -312,7 +314,7 @@ namespace qemacs {
       }
       tc.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
       tc.beginEditBlock();
-      do_indent(this->qemacs, this->textEdit, tc, tc, tc);
+      do_indent(this->editor, this->textEdit, tc, tc, tc);
       auto tc2 = tc;
       tc2.movePosition(QTextCursor::StartOfBlock,
                       QTextCursor::MoveAnchor);
@@ -346,21 +348,21 @@ namespace qemacs {
       if (tc.selectedText().trimmed().isEmpty()) {
         tc.movePosition(QTextCursor::NextWord, QTextCursor::MoveAnchor);
         tc.beginEditBlock();
-        do_indent(this->qemacs, this->textEdit, tc, tc, tc);
+        do_indent(this->editor, this->textEdit, tc, tc, tc);
         tc.endEditBlock();
         textEdit.setTextCursor(tc);
         return;
       } else {
         tc = c;
         tc.beginEditBlock();
-        do_indent(this->qemacs, this->textEdit, tc, tc, tc);
+        do_indent(this->editor, this->textEdit, tc, tc, tc);
         tc.endEditBlock();
         textEdit.setTextCursor(tc);
       }
     } else {
       auto tc = c;
       tc.beginEditBlock();
-      do_indent(this->qemacs, this->textEdit, tc, b, e);
+      do_indent(this->editor, this->textEdit, tc, b, e);
       tc.endEditBlock();
       textEdit.setTextCursor(tc);
     }
@@ -386,8 +388,9 @@ namespace qemacs {
       e.setPosition(tc.selectionEnd());
     }
     this->indent(b, e, c);
-  } // end of QEmacsMajorModeBase::indentRegion
+  } // end of MajorModeBase::indentRegion
 
   CMajorModeBase::~CMajorModeBase() = default;
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

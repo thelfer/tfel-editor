@@ -5,11 +5,13 @@
  * \date   13/02/2018
  */
 
-#include "QEmacs/Debug.hxx"
-#include "QEmacs/QEmacsBuffer.hxx"
-#include "QEmacs/SecondaryTaskManager.hxx"
+#include "TFEL/GUI/Debug.hxx"
+#include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/SecondaryTaskManager.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   SecondaryTaskManager::SecondaryTaskManager() = default;
   SecondaryTaskManager::SecondaryTaskManager(
@@ -36,7 +38,7 @@ namespace qemacs {
         [w](const SecondaryTask& t) { return t.w == w; });
   }  // end of wfind
 
-  void SecondaryTaskManager::removeBuffer(QEmacsBuffer* const b){
+  void SecondaryTaskManager::removeBuffer(Buffer* const b){
     if (b == nullptr) {
       return;
     }
@@ -66,7 +68,7 @@ namespace qemacs {
   }  // end of SecondaryTaskManager::removeBuffer
 
   void SecondaryTaskManager::setCurrentSecondaryTask(
-      QEmacsBuffer* const b, QWidget* const w) {
+      Buffer* const b, QWidget* const w) {
     const auto pb = this->bufferTasks.find(b);
     if (pb == this->bufferTasks.end()) {
       return;
@@ -114,7 +116,7 @@ namespace qemacs {
   }  // end of SecondaryTaskManager::setSecondaryTaskIcon
 
   void SecondaryTaskManager::attachSecondaryTask(
-      QEmacsBuffer* const b, const SecondaryTask& t) {
+      Buffer* const b, const SecondaryTask& t) {
     if ((t.w == nullptr) || (b == nullptr)) {
       return;
     }
@@ -126,7 +128,7 @@ namespace qemacs {
   }  // end of SecondaryTaskManager::attachSecondaryTask
 
   const SecondaryTask& SecondaryTaskManager::attachSecondaryTask(
-      QEmacsBuffer* const b, QWidget* const w) {
+      Buffer* const b, QWidget* const w) {
     static const SecondaryTask nulltask;
     if ((w == nullptr) || (b == nullptr)) {
       return nulltask;
@@ -154,7 +156,7 @@ namespace qemacs {
   }  // end of SecondaryTaskManager::attachSecondaryTask
 
   void SecondaryTaskManager::detachSecondaryTask(
-      QEmacsBuffer* const b, QWidget* const w) {
+      Buffer* const b, QWidget* const w) {
     if ((w == nullptr) || (b == nullptr)) {
       return;
     }
@@ -193,7 +195,7 @@ namespace qemacs {
   }  // end of SecondaryTaskManager::detachSecondaryTask
 
   void SecondaryTaskManager::showSecondaryTask(
-      QEmacsBuffer* const b, QWidget* const w) {
+      Buffer* const b, QWidget* const w) {
     if ((w == nullptr) || (b == nullptr)) {
       return;
     }
@@ -207,7 +209,7 @@ namespace qemacs {
   }  // end of SecondaryTaskManager::showSecondaryTask
 
   void SecondaryTaskManager::hideSecondaryTask(
-      QEmacsBuffer* const b, QWidget* const w) {
+      Buffer* const b, QWidget* const w) {
     if ((w == nullptr) || (b == nullptr)) {
       return;
     }
@@ -221,7 +223,7 @@ namespace qemacs {
   }  // end of SecondaryTaskManager::hideSecondaryTask
 
   const std::vector<SecondaryTask>&
-  SecondaryTaskManager::getSecondaryTasks(QEmacsBuffer* const b) {
+  SecondaryTaskManager::getSecondaryTasks(Buffer* const b) {
     static const std::vector<SecondaryTask> empty;
     const auto p = this->bufferTasks.find(b);
     if (p != this->bufferTasks.end()) {
@@ -230,4 +232,5 @@ namespace qemacs {
     return empty;
   }  // end of getSecondaryTasks
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

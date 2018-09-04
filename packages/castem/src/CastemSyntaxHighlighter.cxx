@@ -5,10 +5,12 @@
  * \date   05/08/2012
  */
 
-#include"QEmacs/CastemMajorMode.hxx"
-#include"QEmacs/CastemSyntaxHighlighter.hxx"
+#include"TFEL/GUI/CastemMajorMode.hxx"
+#include"TFEL/GUI/CastemSyntaxHighlighter.hxx"
   
-namespace qemacs
+namespace tfel{
+
+  namespace gui
 {
 
   CastemSyntaxHighlighter::CastemSyntaxHighlighter(QTextDocument *p)
@@ -56,4 +58,5 @@ namespace qemacs
     }
   }
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

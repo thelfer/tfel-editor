@@ -7,11 +7,13 @@
 
 #include <QtCore/QDebug>
 
-#include "QEmacs/LicosStudy.hxx"
-#include "QEmacs/LicosStudyThread.hxx"
-#include "QEmacs/LicosOutputFrame.hxx"
+#include "TFEL/GUI/LicosStudy.hxx"
+#include "TFEL/GUI/LicosStudyThread.hxx"
+#include "TFEL/GUI/LicosOutputFrame.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   LicosStudyThread::LicosStudyThread(const QString& f,
                                      const LicosStudyOptions& o,
@@ -61,4 +63,5 @@ namespace qemacs {
     }
   }  // end of LicosStudyThread::~LicosStudyThread()
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

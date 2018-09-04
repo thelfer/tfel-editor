@@ -6,10 +6,12 @@
  */
 
 #include<QtWidgets/QHBoxLayout>
-#include"QEmacs/Utilities.hxx"
-#include"QEmacs/QAbstractScrollAreaWrapper.hxx"
+#include"TFEL/GUI/Utilities.hxx"
+#include"TFEL/GUI/QAbstractScrollAreaWrapper.hxx"
 
-namespace qemacs
+namespace tfel{
+
+  namespace gui
 {
 
   QAbstractScrollAreaWrapper::QAbstractScrollAreaWrapper(QAbstractScrollArea *s,
@@ -34,5 +36,6 @@ namespace qemacs
     this->wrappedObject->setFocus();
   }
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel
 

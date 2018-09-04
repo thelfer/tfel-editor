@@ -5,9 +5,11 @@
  * \date   15/03/2018
  */
 
-#include "QEmacs/BehaviourSummaryPage.hxx"
+#include "TFEL/GUI/BehaviourSummaryPage.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   BehaviourSummaryPage::BehaviourSummaryPage(QWidget *const p)
       : QWizardPage(p) {
@@ -19,4 +21,5 @@ namespace qemacs {
 
   BehaviourSummaryPage::~BehaviourSummaryPage() = default;
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

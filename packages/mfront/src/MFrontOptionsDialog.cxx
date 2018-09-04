@@ -21,15 +21,17 @@
 #include "MFront/DSLFactory.hxx"
 #include "MFront/ImplicitDSLBase.hxx"
 #include "MFront/NonLinearSystemSolver.hxx"
-#include "QEmacs/Debug.hxx"
-#include "QEmacs/QEmacsLineEdit.hxx"
-#include "QEmacs/MFrontOptions.hxx"
-#include "QEmacs/MFrontOptionsDialog.hxx"
+#include "TFEL/GUI/Debug.hxx"
+#include "TFEL/GUI/LineEdit.hxx"
+#include "TFEL/GUI/MFrontOptions.hxx"
+#include "TFEL/GUI/MFrontOptionsDialog.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   MFrontOptionsDialog::MFrontOptionsDialog(
-      QEmacsWidget &q,
+      EditorWidget &q,
       MFrontOptions &o,
       const MaterialKnowledgeType t,
       QWidget *const p)
@@ -173,9 +175,9 @@ namespace qemacs {
       return false;
     }();
     if (uses_analytic_jacobian) {
-      // build a QEmacsLineEdit for double values
+      // build a LineEdit for double values
       auto newDoubleLineEdit = [&q] {
-        auto *const le = new QEmacsLineEdit(q);
+        auto *const le = new LineEdit(q);
         auto *const vv = new QDoubleValidator;
         vv->setNotation(QDoubleValidator::ScientificNotation);
         vv->setBottom(0);
@@ -213,11 +215,11 @@ namespace qemacs {
             }
             this->opts.compare_to_numerical_jacobian = s == Qt::Checked;
           });
-      QObject::connect(cle, &QEmacsLineEdit::textChanged, cle,
+      QObject::connect(cle, &LineEdit::textChanged, cle,
                        [this](const QString &n) {
                          this->opts.numerical_jacobian_criterion = n;
                        });
-      QObject::connect(ple, &QEmacsLineEdit::textChanged, ple,
+      QObject::connect(ple, &LineEdit::textChanged, ple,
                        [this](const QString &n) {
                          this->opts.numerical_jacobian_perturbation = n;
                        });
@@ -238,4 +240,5 @@ namespace qemacs {
     this->setLayout(vl);
   }
 
-}  // end of namespace qemacs
+}  // end of namespace gui
+}// end of namespace tfel

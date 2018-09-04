@@ -5,9 +5,11 @@
  * \date   30/07/2012
  */
 
-#include"QEmacs/CSyntaxHighlighter.hxx"
+#include"TFEL/GUI/CSyntaxHighlighter.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   CSyntaxHighlighter::CSyntaxHighlighter(QTextDocument *p)
       : CSyntaxHighlighterBase(p) {
@@ -22,5 +24,6 @@ namespace qemacs {
 
   CSyntaxHighlighter::~CSyntaxHighlighter() = default;
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel
 

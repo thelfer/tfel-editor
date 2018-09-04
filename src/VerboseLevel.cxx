@@ -5,9 +5,11 @@
  * \date   22/02/2018
  */
 
-#include "QEmacs/VerboseLevel.hxx"
+#include "TFEL/GUI/VerboseLevel.hxx"
 
-namespace qemacs {
+namespace tfel{
+
+  namespace gui{
 
   VerboseLevel& getVerboseMode() {
     static VerboseLevel verboseMode = VERBOSE_LEVEL1;
@@ -18,4 +20,5 @@ namespace qemacs {
     getVerboseMode()=l;
   } // end of setVerboseMode
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

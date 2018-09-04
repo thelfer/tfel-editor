@@ -6,9 +6,11 @@
  */
 
 #include"MTest/PipeTestParser.hxx"
-#include"QEmacs/PipeTestSyntaxHighlighter.hxx"
+#include"TFEL/GUI/PipeTestSyntaxHighlighter.hxx"
 
-namespace qemacs
+namespace tfel{
+
+  namespace gui
 {
 
   static std::vector<std::string>
@@ -45,5 +47,6 @@ namespace qemacs
 
   PipeTestSyntaxHighlighter::~PipeTestSyntaxHighlighter() = default;
   
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel
 

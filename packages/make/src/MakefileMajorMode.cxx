@@ -6,19 +6,21 @@
  */
 
 #include <QtCore/QSettings>
-#include "QEmacs/QEmacsWidget.hxx"
-#include "QEmacs/QEmacsTextEditBase.hxx"
-#include "QEmacs/QEmacsShellProcessLineEdit.hxx"
-#include "QEmacs/QEmacsMajorModeFactory.hxx"
-#include "QEmacs/MakefileSyntaxHighlighter.hxx"
-#include "QEmacs/MakefileMajorMode.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/ShellProcessLineEdit.hxx"
+#include "TFEL/GUI/MajorModeFactory.hxx"
+#include "TFEL/GUI/MakefileSyntaxHighlighter.hxx"
+#include "TFEL/GUI/MakefileMajorMode.hxx"
 
-namespace qemacs {
+namespace tfel{
 
-  MakefileMajorMode::MakefileMajorMode(QEmacsWidget& w,
-                                       QEmacsBuffer& b,
-                                       QEmacsTextEditBase& t)
-      : QEmacsMajorModeBase(w, b, t, &t) {
+  namespace gui{
+
+  MakefileMajorMode::MakefileMajorMode(EditorWidget& w,
+                                       Buffer& b,
+                                       TextEditBase& t)
+      : MajorModeBase(w, b, t, &t) {
   } // end of MakefileMajorMode::MakefileMajorMode
 
   QString MakefileMajorMode::getName() const {
@@ -58,17 +60,18 @@ namespace qemacs {
       }
       return ch.back();
     }();
-    auto* l = new QEmacsShellProcessLineEdit(
-        "compilation command :", d, "compilation-output", this->qemacs);
+    auto* l = new ShellProcessLineEdit(
+        "compilation command :", d, "compilation-output", this->editor);
     l->setInputHistorySettingAddress("make/compilation/history");
-    this->qemacs.setUserInput(l);
+    this->editor.setUserInput(l);
   } // end of MakefileMajorMode::runCompilation
   
   MakefileMajorMode::~MakefileMajorMode() = default;
 
-  static StandardQEmacsMajorModeProxy<MakefileMajorMode> proxy(
+  static StandardMajorModeProxy<MakefileMajorMode> proxy(
       "Makefile",
       QVector<QRegExp>() << QRegExp("^Makefile$")
                          << QRegExp("^Makefile\\.am$"));
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel

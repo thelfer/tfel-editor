@@ -7,21 +7,21 @@ link_directories("${PROJECT_BINARY_DIR}/src")
 link_directories("${PROJECT_BINARY_DIR}/utils/mfront/src")
 link_directories("${TFEL_LIBRARY_PATH}")
 
-qt_sources(CastemQEmacsMode_SOURCES
-  "${PROJECT_SOURCE_DIR}/packages/castem/include/QEmacs"
+qt_sources(CastemMode_SOURCES
+  "${PROJECT_SOURCE_DIR}/packages/castem/include/TFEL/GUI"
   CastemMajorMode)
 
-qt_add_resources(CastemQEmacsResources_RCC
+qt_add_resources(CastemResources_RCC
   CastemModeResources.qrc)
 
-qemacs_package(CastemQEmacsMode
-  ${CastemQEmacsMode_SOURCES}
-  ${CastemQEmacsResources_RCC}
+tfel_editor_package(CastemMode
+  ${CastemMode_SOURCES}
+  ${CastemResources_RCC}
   CastemSyntaxHighlighter.cxx
   CastemOutputMajorMode.cxx)
-target_link_libraries(CastemQEmacsMode
-  QEmacsMFrontImportWidgets
-  TFELQEmacs
+target_link_libraries(TFELEditorCastemMode
+  TFELEditorMFrontImportWidgets
+  TFELEditor
   TFELGlossary
   Qt5::Core
   Qt5::Widgets

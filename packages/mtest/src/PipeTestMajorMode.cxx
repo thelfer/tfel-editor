@@ -8,19 +8,21 @@
 #include<QtCore/QDebug>
 #include<QtGui/QTextCursor>
                 
-#include"QEmacs/QEmacsBuffer.hxx"
-#include"QEmacs/ProcessOutputFrame.hxx"
-#include"QEmacs/PipeTestSyntaxHighlighter.hxx"
-#include"QEmacs/QEmacsMajorModeFactory.hxx"
+#include"TFEL/GUI/Buffer.hxx"
+#include"TFEL/GUI/ProcessOutputFrame.hxx"
+#include"TFEL/GUI/PipeTestSyntaxHighlighter.hxx"
+#include"TFEL/GUI/MajorModeFactory.hxx"
 
-#include"QEmacs/PipeTestMajorMode.hxx"
+#include"TFEL/GUI/PipeTestMajorMode.hxx"
 
-namespace qemacs
+namespace tfel{
+
+  namespace gui
 {
   
-  PipeTestMajorMode::PipeTestMajorMode(QEmacsWidget& w,
-				       QEmacsBuffer& b,
-				       QEmacsTextEditBase& t)
+  PipeTestMajorMode::PipeTestMajorMode(EditorWidget& w,
+				       Buffer& b,
+				       TextEditBase& t)
     : MTestMajorMode(w,b,t)
   {
     QStringList keys;
@@ -32,7 +34,7 @@ namespace qemacs
     this->c->setCaseSensitivity(Qt::CaseInsensitive);
     this->c->setCompletionMode(QCompleter::PopupCompletion);
     QObject::connect(this->c,static_cast<void (QCompleter:: *)(const QString&)>(&QCompleter::activated),
-		     &t,&QEmacsTextEditBase::insertCompletion);
+		     &t,&TextEditBase::insertCompletion);
   } // end of PipeTestMajorMode::PipeTestMajorMode
   
   QString PipeTestMajorMode::getName() const{
@@ -64,8 +66,9 @@ namespace qemacs
   
   PipeTestMajorMode::~PipeTestMajorMode() = default;
   
-  static StandardQEmacsMajorModeProxy<PipeTestMajorMode> proxy("PipeTest",
+  static StandardMajorModeProxy<PipeTestMajorMode> proxy("PipeTest",
 							       QVector<QRegExp>() << QRegExp("^\\w+\\.ptest"));
 
-} // end of namespace qemacs
+} // end of namespace gui
+}// end of namespace tfel
 
