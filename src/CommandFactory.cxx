@@ -23,7 +23,7 @@ namespace tfel{
 
   void CommandFactory::loadLibrary(const QString& lib) {
     using namespace tfel::system;
-    ExternalLibraryManager& lm =
+    auto& lm =
         ExternalLibraryManager::getExternalLibraryManager();
     lm.loadLibrary(lib.toStdString());
   }
@@ -50,7 +50,7 @@ namespace tfel{
     QStringList::const_iterator ps;
     if (this->proxies.find(name) != this->proxies.end()) {
       qDebug()
-          << "CommandFactory::getCommand : "
+          << "CommandFactory::addCommand : "
           << QObject::tr(
                  "a command named '%1' has already been registred.")
                  .arg(name);

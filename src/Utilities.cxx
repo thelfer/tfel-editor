@@ -115,7 +115,7 @@ namespace tfel{
   }  // end of fileNameRegExp
 
   void clearMenu(QMenu* const m) {
-    for (auto a : m->actions()) {
+    for (auto* a : m->actions()) {
       if (a->isSeparator()) {
       } else if (a->menu()) {
         clearMenu(a->menu());
@@ -124,7 +124,7 @@ namespace tfel{
         a->deleteLater();
       }
     }
-//    m->clear();
+    //    m->clear();
   }  // end of clearMenu
 
   void clearMenuBar(QMenuBar* const m) {
@@ -137,7 +137,7 @@ namespace tfel{
         a->deleteLater();
       }
     }
-//    m->clear();
+    //    m->clear();
   }  // end of clearMenuBar
 
 }  // end of namespace gui

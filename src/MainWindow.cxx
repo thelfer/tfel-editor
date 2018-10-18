@@ -247,8 +247,7 @@ namespace tfel{
     this->om->addAction(this->fa);
 #ifdef TFEL_GUI_HUNSPELL_SUPPORT
     // available dictionaries
-    auto &dm =
-        HunspellDictionaries::getHunspellDictionariesManager();
+    auto &dm = HunspellDictionaries::getHunspellDictionariesManager();
     const auto dicts = dm.getAvailableDictionnaries();
     if (!dicts.isEmpty()) {
       auto *const d = this->om->addMenu(QObject::tr("Dictionaries"));
@@ -290,17 +289,18 @@ namespace tfel{
         const auto &n = bnames[i];
         const auto &ic = bicons[i];
         const int id = bids[i];
-	auto *a = this->bm->addAction(n);
+        auto *a = this->bm->addAction(n);
         if (!ic.isNull()) {
           a->setIcon(ic);
           a->setIconVisibleInMenu(true);
         }
-	QObject::connect(a, &QAction::triggered, this,[this,id](){
-	    auto *qw = qobject_cast<EditorWidget *>(this->centralWidget());
-	    if (qw != nullptr) {
-	      qw->changeBuffer(id);
-	    }
-	  });
+        QObject::connect(a, &QAction::triggered, this, [this, id]() {
+          auto *qw =
+              qobject_cast<EditorWidget *>(this->centralWidget());
+          if (qw != nullptr) {
+            qw->changeBuffer(id);
+          }
+        });
       }
     }
   }  // end of MainWindow::updateBuffersMenu
@@ -360,13 +360,13 @@ namespace tfel{
     this->bm = this->menuBar()->addMenu(QObject::tr("Buffers"));
     this->updateBuffersMenu();
     // editor menu
-    this->bm = this->menuBar()->addMenu(QObject::tr(""));
-    auto *const qcmds = this->bm->addMenu(QObject::tr("Commands"));
+    this->cm = this->menuBar()->addMenu(QObject::tr("Editor"));
+    auto *const qcmds = this->cm->addMenu(QObject::tr("Commands"));
     auto *const lqcmd = qcmds->addAction(QObject::tr("Launch"));
     QObject::connect(lqcmd, &QAction::triggered, e,
                      static_cast<void (EditorWidget::*)(void)>(
                          &EditorWidget::launchCommand));
-    auto *const qmm = this->bm->addMenu(QObject::tr("Major Mode"));
+    auto *const qmm = this->cm->addMenu(QObject::tr("Major Mode"));
     auto &mf = MajorModeFactory::getMajorModeFactory();
     for (const auto &mn : mf.getAvailableMajorModesNames()) {
       auto *const qmma = qmm->addAction(mn);
@@ -404,12 +404,12 @@ namespace tfel{
         const auto mn = mf.getMajorModeNameForFile(fi.fileName());
         rf->setIcon(mf.getMajorModeIcon(mn));
         const auto path = fi.absoluteFilePath();
-	QObject::connect(rf,&QAction::triggered,this,[this,path]{
-	    auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
-	    if (e != nullptr) {
-	      e->openFile(path);
-	    }
-	  });
+        QObject::connect(rf, &QAction::triggered, this, [this, path] {
+          auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
+          if (e != nullptr) {
+            e->openFile(path);
+          }
+        });
       }
     }
   }  // end of MainWindow::createRecentFilesMenu

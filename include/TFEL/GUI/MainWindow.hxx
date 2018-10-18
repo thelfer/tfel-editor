@@ -87,10 +87,11 @@ namespace tfel{
     QAction *aa2;
 
     QMenu *fm;
-    QMenu *em;
-    QMenu *om;
-    QMenu *bm;
-    QMenu *hm;
+    QMenu *cm; // command menu
+    QMenu *em; // editor menu
+    QMenu *om; // option menu
+    QMenu *bm; // buffer menu
+    QMenu *hm; // help menu
 
    private:
     Q_OBJECT

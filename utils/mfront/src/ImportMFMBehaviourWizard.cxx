@@ -70,5 +70,6 @@ namespace tfel{
 
   ImportMFMBehaviourWizard::~ImportMFMBehaviourWizard() = default;
 
-}  // end of namespace gui
+  }  // end of namespace gui
+  
 }// end of namespace tfel

@@ -453,9 +453,9 @@ namespace tfel{
       QStringList::const_iterator pw;
       ++pl2;
       for (pw = pl->begin(); pw != pl->end(); ++pw) {
-        QStringList::const_iterator pw2 = pw;
+        auto pw2 = pw;
         ++pw2;
-        const QString& w = *pw;
+        const auto& w = *pw;
         QString indent;
         bool sk = false;
         if (((w == "\\[") || (w == "\\]") || (w == "\\medskip") ||
@@ -467,7 +467,7 @@ namespace tfel{
           }
           sk = true;
         }
-        if ((w == "\\item") && (size != 0)) {
+        if (((w == "\\item")||((w.startsWith("\\item<")&&(w.endsWith('>'))))) && (size != 0)) {
           cc.insertText("\n");
           size = 0;
         }
