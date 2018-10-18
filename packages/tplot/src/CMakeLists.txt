@@ -13,7 +13,7 @@ tfel_editor_package(TPlotPackage
   TPlotMajorMode.cxx)
 
 target_link_libraries(TFELEditorTPlotPackage
-  TFELEditorGnuplotPackage
+  TFELEditorGnuplotMode
   TFELEditor
   TFELPlot
   Qt5::Core

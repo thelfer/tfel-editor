@@ -35,41 +35,40 @@
 #include "TFEL/GUI/HunspellDictionariesManager.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  TextEditBase::TextEditBase(EditorWidget& g,
-                                         Buffer& b)
-      : QWidget(&g), editor(g), buffer(b) {
-    auto& dm = HunspellDictionariesManager::
-        getHunspellDictionariesManager();
-    this->spellCheckLanguage = dm.getDefaultSpellCheckLanguage();
-  }  // end of TextEditBase::TextEditBase
+    TextEditBase::TextEditBase(EditorWidget& g, Buffer& b)
+        : QWidget(&g), editor(g), buffer(b) {
+      auto& dm =
+          HunspellDictionariesManager::getHunspellDictionariesManager();
+      this->spellCheckLanguage = dm.getDefaultSpellCheckLanguage();
+    }  // end of TextEditBase::TextEditBase
 
-  EditorWidget& TextEditBase::getEditorWidget() {
-    return this->editor;
-  }  // end of TextEditBase::getEditorWidget()
+    EditorWidget& TextEditBase::getEditorWidget() {
+      return this->editor;
+    }  // end of TextEditBase::getEditorWidget()
 
-  const EditorWidget& TextEditBase::getEditorWidget() const {
-    return this->editor;
-  }  // end of TextEditBase::getEditorWidget()
+    const EditorWidget& TextEditBase::getEditorWidget() const {
+      return this->editor;
+    }  // end of TextEditBase::getEditorWidget()
 
-  void TextEditBase::mouseMoveEvent(QMouseEvent*) {
-  }  // end of TextEditBase::mouseMoveEvent
+    void TextEditBase::mouseMoveEvent(QMouseEvent*) {
+    }  // end of TextEditBase::mouseMoveEvent
 
-  void TextEditBase::format() {
-    if (this->mode == nullptr) {
-      return;
-    }
-    this->mode->format();
-  }  // end of TextEditBase::format
+    void TextEditBase::format() {
+      if (this->mode == nullptr) {
+        return;
+      }
+      this->mode->format();
+    }  // end of TextEditBase::format
 
-  void TextEditBase::setFocus() {
-    auto w = this->widget();
-    if (w != nullptr) {
-      w->setFocus();
-    }
+    void TextEditBase::setFocus() {
+      auto w = this->widget();
+      if (w != nullptr) {
+        w->setFocus();
+      }
     }  // end of TextEditBase::setFocus
 
     void TextEditBase::setFont(const QFont& f) {
@@ -77,7 +76,7 @@ namespace tfel{
       e->setFont(f);
     }  // end of TextEditBase::setFont
 
-    void TextEditBase::initialize(QAbstractScrollArea * const e) {
+    void TextEditBase::initialize(QAbstractScrollArea* const e) {
       this->ua = nullptr;
       this->ra = nullptr;
       this->ca = nullptr;
@@ -97,23 +96,21 @@ namespace tfel{
       if (auto* te = qobject_cast<QTextEdit*>(e)) {
         QObject::connect(te, &QTextEdit::cursorPositionChanged, this,
                          &TextEditBase::highlightCurrentLine);
-        QObject::connect(
-            te, &QTextEdit::cursorPositionChanged, this,
-            &TextEditBase::emitCursorPositionChanged);
+        QObject::connect(te, &QTextEdit::cursorPositionChanged, this,
+                         &TextEditBase::emitCursorPositionChanged);
       } else if (auto* pte = qobject_cast<QPlainTextEdit*>(e)) {
         QObject::connect(pte, &QPlainTextEdit::cursorPositionChanged,
+                         this, &TextEditBase::highlightCurrentLine);
+        QObject::connect(pte, &QPlainTextEdit::cursorPositionChanged,
                          this,
-                         &TextEditBase::highlightCurrentLine);
-        QObject::connect(
-            pte, &QPlainTextEdit::cursorPositionChanged, this,
-            &TextEditBase::emitCursorPositionChanged);
+                         &TextEditBase::emitCursorPositionChanged);
       }
       // event filter
       e->installEventFilter(this);
       e->viewport()->installEventFilter(this);
     }  // end of TextEditBase::initialize
 
-    bool TextEditBase::eventFilter(QObject * o, QEvent * e) {
+    bool TextEditBase::eventFilter(QObject* o, QEvent* e) {
       if (o == this->widget()) {
         if (e->type() == QEvent::KeyPress) {
           auto* ke = static_cast<QKeyEvent*>(e);
@@ -190,11 +187,8 @@ namespace tfel{
       QString file;
     };
 
-    struct TextEditBase::OverWriteFile
-        : public YesOrNoUserInput {
-      OverWriteFile(EditorWidget& p,
-                    TextEditBase& t,
-                    const QString& f)
+    struct TextEditBase::OverWriteFile : public YesOrNoUserInput {
+      OverWriteFile(EditorWidget& p, TextEditBase& t, const QString& f)
           : YesOrNoUserInput(
                 QObject::tr("overwrite file '%1' :").arg(f), p),
             textEdit(t),
@@ -211,9 +205,8 @@ namespace tfel{
           auto b = this->editor.getBufferVisitingFile(this->file);
           if (b != nullptr) {
             this->editor.removeUserInput(this);
-            auto* l =
-                new TextEditBase::KillOtherBufferAndWriteFile(
-                    this->editor, this->textEdit, *b, this->file);
+            auto* l = new TextEditBase::KillOtherBufferAndWriteFile(
+                this->editor, this->textEdit, *b, this->file);
             this->editor.setUserInput(l);
           } else {
             this->textEdit.writeFile(this->file);
@@ -225,11 +218,8 @@ namespace tfel{
       QString file;
     };  // end of TextEditBase::OverWriteFile
 
-    struct TextEditBase::WriteFile
-        : public FilePathUserInput {
-      WriteFile(EditorWidget& p,
-                TextEditBase& t,
-                const QString& path)
+    struct TextEditBase::WriteFile : public FilePathUserInput {
+      WriteFile(EditorWidget& p, TextEditBase& t, const QString& path)
           : FilePathUserInput(QObject::tr("write file :"), p),
             textEdit(t) {
         QString npath(path);
@@ -281,17 +271,16 @@ namespace tfel{
             return;
           }
           this->editor.removeUserInput(this);
-          auto* l = new TextEditBase::OverWriteFile(
-              this->editor, this->textEdit, f);
+          auto* l = new TextEditBase::OverWriteFile(this->editor,
+                                                    this->textEdit, f);
           this->editor.setUserInput(l);
         } else {
           // check if another buffer does not visit this file
           auto* b = this->editor.getBufferVisitingFile(f);
           if (b != nullptr) {
             this->editor.removeUserInput(this);
-            auto* l =
-                new TextEditBase::KillOtherBufferAndWriteFile(
-                    this->editor, this->textEdit, *b, f);
+            auto* l = new TextEditBase::KillOtherBufferAndWriteFile(
+                this->editor, this->textEdit, *b, f);
             this->editor.setUserInput(l);
           } else {
             this->textEdit.writeFile(f);
@@ -303,14 +292,11 @@ namespace tfel{
 
     };  // end of struct TextEdit::WriteFile
 
-    TextEditBase::SaveInput::SaveInput(EditorWidget & w,
-                                             TextEditBase & p)
+    TextEditBase::SaveInput::SaveInput(EditorWidget& w, TextEditBase& p)
         : YesOrNoUserInput(QObject::tr("save current buffer"), w),
           textEdit(p) {}
 
-    bool TextEditBase::SaveInput::isBlocking() const {
-      return true;
-    }
+    bool TextEditBase::SaveInput::isBlocking() const { return true; }
 
     void TextEditBase::SaveInput::treatUserInput() {
       if (this->input->text() == "y") {
@@ -318,10 +304,8 @@ namespace tfel{
       }
     }  // end of treatUserInput
 
-    TextEditBase::GotoLine::GotoLine(TextEditBase & t,
-                                           EditorWidget & p)
-        : CommandLine(QObject::tr("go to line :"), p),
-          textEdit(t) {
+    TextEditBase::GotoLine::GotoLine(TextEditBase& t, EditorWidget& p)
+        : CommandLine(QObject::tr("go to line :"), p), textEdit(t) {
       this->input->setValidator(new QIntValidator(this->input));
     }
 
@@ -351,16 +335,15 @@ namespace tfel{
       return m;
     }  // end of TextEditBase::setMajorMode
 
-    MajorMode* TextEditBase::setMajorMode(
-        const QString& n) {
+    MajorMode* TextEditBase::setMajorMode(const QString& n) {
       auto& fm = MajorModeFactory::getMajorModeFactory();
-      auto* m = fm.getMajorModeByName(n, this->editor,
-                                            this->buffer, *this);
+      auto* m =
+          fm.getMajorModeByName(n, this->editor, this->buffer, *this);
       this->setMajorMode(m);
       return m;
     }  // end of TextEditBase::setMajorMode
 
-    void TextEditBase::setMajorMode(MajorMode * const m) {
+    void TextEditBase::setMajorMode(MajorMode* const m) {
       if (m == nullptr) {
         return;
       }
@@ -385,11 +368,11 @@ namespace tfel{
 
     void TextEditBase::deleteContextMenuActions() {
       using pointer = QAction*;
-      auto exe = [](pointer& p){
-	if(p!=nullptr){
-	  delete p;
-	  p=nullptr;
-	}
+      auto exe = [](pointer& p) {
+        if (p != nullptr) {
+          delete p;
+          p = nullptr;
+        }
       };
       exe(this->ua);
       exe(this->ra);
@@ -533,8 +516,7 @@ namespace tfel{
       return this->mode->getIcon();
     }  // end of TextEditBase::getIcon
 
-    void TextEditBase::insertCompletion(
-        const QString& completion) {
+    void TextEditBase::insertCompletion(const QString& completion) {
       if (this->mode == nullptr) {
         return;
       }
@@ -544,8 +526,8 @@ namespace tfel{
     void TextEditBase::removeKeyPressEventFilter() {
       if (this->filter != nullptr) {
         QObject::disconnect(
-            this->filter, &TextEditKeyPressEventFilter::destroyed,
-            this, &TextEditBase::keyPressEventFilterDestroyed);
+            this->filter, &TextEditKeyPressEventFilter::destroyed, this,
+            &TextEditBase::keyPressEventFilterDestroyed);
         this->filter->deleteLater();
         this->filter = nullptr;
       }
@@ -556,7 +538,7 @@ namespace tfel{
     }  // end of TextEditBase::keyPressEventFilterDestroyed
 
     bool TextEditBase::setKeyPressEventFilter(
-        TextEditKeyPressEventFilter * const f) {
+        TextEditKeyPressEventFilter* const f) {
       if (f == nullptr) {
         return false;
       }
@@ -569,9 +551,9 @@ namespace tfel{
         return false;
       }
       this->filter = f;
-      QObject::connect(
-          this->filter, &TextEditKeyPressEventFilter::destroyed,
-          this, &TextEditBase::keyPressEventFilterDestroyed);
+      QObject::connect(this->filter,
+                       &TextEditKeyPressEventFilter::destroyed, this,
+                       &TextEditBase::keyPressEventFilterDestroyed);
       return true;
     }  // end of TextEditBase::setKeyPressEventFilter
 
@@ -638,11 +620,10 @@ namespace tfel{
       } else {
         path = QDir::current().absolutePath();
       }
-      auto* l =
-          new TextEditBase::WriteFile(this->editor, *this, path);
+      auto* l = new TextEditBase::WriteFile(this->editor, *this, path);
       l->setInputHistorySettingAddress("recent files");
       this->editor.setUserInput(l);
-    }
+    } // end of TextEditBase::writeFile
 
     void TextEditBase::writeFile(const QString& f) {
       // basic check
@@ -663,7 +644,7 @@ namespace tfel{
       emit cursorPositionChanged();
     }  // end of TextEditBase::emitCursorPositionChanged
 
-    bool TextEditBase::event(QEvent * ev) {
+    bool TextEditBase::event(QEvent* ev) {
       if (ev->type() == QEvent::KeyPress) {
         auto* kev = static_cast<QKeyEvent*>(ev);
         if (kev->key() == Qt::Key_Tab) {
@@ -675,7 +656,7 @@ namespace tfel{
       return QWidget::event(ev);
     }
 
-    void TextEditBase::keyPressEvent(QKeyEvent * e) {
+    void TextEditBase::keyPressEvent(QKeyEvent* e) {
       // This method is called by completers (we can not give the
       // underlying widget to the setWiget, because the completer
       // redirect keyEvent this it, regardless of the event handler we
@@ -693,7 +674,7 @@ namespace tfel{
       }
     }  // end of TextEditBase::keyPressEvent
 
-    bool TextEditBase::handleKeyPressEvent(QKeyEvent * e) {
+    bool TextEditBase::handleKeyPressEvent(QKeyEvent* e) {
       auto& s = ShortCutStyle::getShortCutStyle();
       if (s.getStyle() == ShortCutStyle::QT) {
         return this->handleKeyPressEventWithQtShortCuts(e);
@@ -702,9 +683,9 @@ namespace tfel{
     }
 
     bool TextEditBase::handleKeyPressEventWithQtShortCuts(
-        QKeyEvent * e) {
-      const int k = e->key();
-      const Qt::KeyboardModifiers m = e->modifiers();
+        QKeyEvent* e) {
+      const auto k = e->key();
+      const auto m = e->modifiers();
       // treating standard keys
       QCompleter* completer = nullptr;
       if (this->mode != nullptr) {
@@ -783,7 +764,7 @@ namespace tfel{
     }  // end of TextEditBase::handleKeyPressEventWithQtShortCuts
 
     bool TextEditBase::handleKeyPressEventWithEmacsShortCuts(
-        QKeyEvent * e) {
+        QKeyEvent* e) {
       const auto k = e->key();
       const auto m = e->modifiers();
       auto c = this->textCursor();
@@ -826,13 +807,13 @@ namespace tfel{
             return true;
           } else if (k == Qt::Key_2) {
             if (this->isMainFrame()) {
-	      this->editor.setSecondaryTasksOrientation(Qt::Vertical);
+              this->editor.setSecondaryTasksOrientation(Qt::Vertical);
               this->buffer.showSecondaryTasks();
             }
             return true;
           } else if (k == Qt::Key_3) {
             if (this->isMainFrame()) {
-	      this->editor.setSecondaryTasksOrientation(Qt::Horizontal);
+              this->editor.setSecondaryTasksOrientation(Qt::Horizontal);
               this->buffer.showSecondaryTasks();
             }
             return true;
@@ -1243,8 +1224,8 @@ namespace tfel{
       } else if ((m == Qt::AltModifier) && (k == Qt::Key_X)) {
         this->editor.launchCommand();
       } else if ((m == Qt::AltModifier) && (k == Qt::Key_Exclam)) {
-        auto* l = new ShellProcessLineEdit("shell command:", "",
-                                                 "", this->editor);
+        auto* l = new ShellProcessLineEdit("shell command:", "", "",
+                                           this->editor);
         l->setInputHistorySettingAddress("command/shell/history");
         this->editor.setUserInput(l);
       } else if (((m == Qt::AltModifier) && (k == Qt::Key_Percent)) ||
@@ -1425,7 +1406,7 @@ namespace tfel{
       return true;
     }  // end of TextEdit::handleKeyPressEvent
 
-    bool TextEditBase::handleMousePressEvent(QMouseEvent * e) {
+    bool TextEditBase::handleMousePressEvent(QMouseEvent* e) {
       if (this->filter != nullptr) {
         this->removeKeyPressEventFilter();
       }
@@ -1436,61 +1417,61 @@ namespace tfel{
       }
       if (e->button() == Qt::RightButton) {
 #ifndef QT_NO_CONTEXTMENU
-      QPointer<QMenu> m(new QMenu());
-      this->createContextMenuActions();
-      if (this->isUndoRedoEnabled()) {
-        m->addAction(this->ua);
-        m->addAction(this->ra);
-      }
-      if (!this->isReadOnly()) {
-        m->addAction(this->ca);
-      }
-      m->addAction(this->coa);
-      if (!this->isReadOnly()) {
-        m->addAction(this->pa);
-      }
-      m->addAction(this->sa);
-      if (this->mode != nullptr) {
-        this->mode->completeContextMenu(
-            m, this->cursorForPosition(e->pos()));
-      }
-      m->exec(e->globalPos());
-      e->accept();
-      return true;
+        QPointer<QMenu> m(new QMenu());
+        this->createContextMenuActions();
+        if (this->isUndoRedoEnabled()) {
+          m->addAction(this->ua);
+          m->addAction(this->ra);
+        }
+        if (!this->isReadOnly()) {
+          m->addAction(this->ca);
+        }
+        m->addAction(this->coa);
+        if (!this->isReadOnly()) {
+          m->addAction(this->pa);
+        }
+        m->addAction(this->sa);
+        if (this->mode != nullptr) {
+          this->mode->completeContextMenu(
+              m, this->cursorForPosition(e->pos()));
+        }
+        m->exec(e->globalPos());
+        e->accept();
+        return true;
 #endif
+      }
+      return false;
     }
-    return false;
-  }
 
-  void TextEditBase::setMainFrame(const bool b) {
-    //    this->setMinimumHeight(400);
-    this->mainFrame = b;
-  }  // end of TextEditBase::setMainFrame
+    void TextEditBase::setMainFrame(const bool b) {
+      //    this->setMinimumHeight(400);
+      this->mainFrame = b;
+    }  // end of TextEditBase::setMainFrame
 
-  bool TextEditBase::isMainFrame() const {
-    return this->mainFrame;
-  }  // end of TextEditBase::isMainFrame
+    bool TextEditBase::isMainFrame() const {
+      return this->mainFrame;
+    }  // end of TextEditBase::isMainFrame
 
-  bool TextEditBase::isSecondaryTask() const {
-    return !(this->isMainFrame());
-  }  // end of TextEditBase::isSecondaryTask
+    bool TextEditBase::isSecondaryTask() const {
+      return !(this->isMainFrame());
+    }  // end of TextEditBase::isSecondaryTask
 
-  void TextEditBase::setMoveMode(QTextCursor::MoveMode m) {
-    this->moveMode = m;
-  }  // end of TextEditBase::setMoveMode
+    void TextEditBase::setMoveMode(QTextCursor::MoveMode m) {
+      this->moveMode = m;
+    }  // end of TextEditBase::setMoveMode
 
-  TextEditBase::~TextEditBase() {
-    if (this->filter != nullptr) {
-      QObject::disconnect(
-          this->filter, &TextEditKeyPressEventFilter::destroyed,
-          this, &TextEditBase::keyPressEventFilterDestroyed);
-      this->filter->deleteLater();
-    }
-    this->deleteContextMenuActions();
-    if(this->mode!=nullptr){
-      this->mode->deleteLater();
-    }
-  }  // end of TextEditBase::~TextEditBase
+    TextEditBase::~TextEditBase() {
+      if (this->filter != nullptr) {
+        QObject::disconnect(
+            this->filter, &TextEditKeyPressEventFilter::destroyed, this,
+            &TextEditBase::keyPressEventFilterDestroyed);
+        this->filter->deleteLater();
+      }
+      this->deleteContextMenuActions();
+      if (this->mode != nullptr) {
+        this->mode->deleteLater();
+      }
+    }  // end of TextEditBase::~TextEditBase
 
-}  // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel

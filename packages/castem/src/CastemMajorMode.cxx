@@ -648,7 +648,7 @@ namespace tfel{
 #ifdef _WIN32
       p.start("castem17.bat", QStringList());
 #else
-      p.start("castem2014_PLEIADES", QStringList());
+      p.start("castem2018_PLEIADES", QStringList());
 #endif
       p.waitForStarted();
       this->buffer.attachSecondaryTask("* castem *", this->co);
@@ -815,7 +815,7 @@ namespace tfel{
       auto& p = nf->getProcess();
       p.setWorkingDirectory(dir.absolutePath());
       if (p.state() != QProcess::Running) {
-        p.start("castem2014_PLEIADES", QStringList());
+        p.start("castem2018_PLEIADES", QStringList());
         p.waitForStarted();
         p.write(QString("INFO '%1';\n").arg(w2).toLatin1());
         p.write("FIN;\n");

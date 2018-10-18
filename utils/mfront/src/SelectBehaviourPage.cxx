@@ -102,7 +102,7 @@ namespace tfel{
     const auto f = b.behaviour.toStdString();
     try {
       b.minterface = QString::fromStdString(elm.getInterface(l, f));
-    } catch (std::exception&) {
+    } catch (std::exception& e) {
       return {};
     } catch (...) {
       return {};
