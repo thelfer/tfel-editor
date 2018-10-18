@@ -119,12 +119,19 @@ namespace tfel{
           debug("MFMDataBase::load: looking in ",
                 ei.absoluteFilePath());
           for (const auto& ept : elm.getEntryPoints(l)) {
+          debug("MFMDataBase::load: treating '",QString::fromStdString(ept),"' in ",
+                ei.absoluteFilePath());
             try {
               add(l, ept);
+            } catch (std::exception& e) {
+          debug("MFMDataBase::load: failed to load '",QString::fromStdString(ept),"' in ",
+                ei.absoluteFilePath());
             } catch (...) {
               // ignoring the error...
             }
           }
+        } catch (std::exception& e) {
+          debug("MFMDataBase::load: failed to analyse ",ei.absoluteFilePath());
         } catch (...) {
           // ignoring the error...
         }
