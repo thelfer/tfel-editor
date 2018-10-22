@@ -4,9 +4,20 @@
 - [`qt5` development packages]().
     - On debian system, one shall install `libqt5svg5-dev`
 - hunspell (optional). On debian system, one shall install
-- `tfel` project
+- `TFEL/MFront` project
 - `tfel-plot` project (optional)
 - a decent C++-11 compiler. 
+
+### Ubuntu 18.1
+
+### Mageia 6.1
+
+The following packages are needed to get all the features of
+`TFEL/MFront`, `tfel-plot` and `tfel-editor` on Mageia 6.1:
+
+~~~~{.bash}
+dnf install make git cmake gcc-c++ gcc-gfortran lib64boost-python3_1.60.0.x86_64 lib64boost-devel.x86_64 lib64qt5webengine-devel.x86_64 lib64qt5sql-devel.x86_64 lib64qt5xml-devel.x86_64 lib64qt5svg-devel.x86_64
+~~~~
 
 # Build instructions
 
