@@ -10,6 +10,14 @@
 
 ### Ubuntu 18.1
 
+The following packages are needed to get all the features of
+`TFEL/MFront`, `tfel-plot` and `tfel-editor` on Mageia 18.1:
+
+~~~~{.bash}
+$ sudo apt-get install git cmake g++ gfortran libboost-all-dev
+$ sudo apt-get install libqt5svg5-dev qtwebengine5-dev
+~~~~
+
 ### Mageia 6.1
 
 The following packages are needed to get all the features of
