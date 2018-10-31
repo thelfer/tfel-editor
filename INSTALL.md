@@ -27,6 +27,15 @@ The following packages are needed to get all the features of
 dnf install make git cmake gcc-c++ gcc-gfortran lib64boost-python3_1.60.0.x86_64 lib64boost-devel.x86_64 lib64qt5webengine-devel.x86_64 lib64qt5sql-devel.x86_64 lib64qt5xml-devel.x86_64 lib64qt5svg-devel.x86_64
 ~~~~
 
+### Fedora 29
+
+The following packages are needed to get all the features of
+`TFEL/MFront`, `tfel-plot` and `tfel-editor` on Mageia 6.1:
+
+~~~~{.bash}
+dnf install git cmake gcc-c++.x86_64 gcc-gfortran.x86_64 make.x86_64 boost-devel.x86_64 boost-python3-devel.x86_64 qt5-qtwebengine-devel.x86_64 qt5-qtsvg-devel.x86_64 python3-devel.x86_64
+~~~~
+
 # Build instructions
 
 The `build` system used by `tfel-editor` is
