@@ -560,6 +560,7 @@ namespace tfel{
     this->addKeys(QStringList() << "Model"
                                 << "AuxiliaryTask"
                                 << "Criterium"
+                                << "Accelerator"
                                 << "PostProcessing");
     this->addBlock(new CouplingItemBlock("SpecialisedModel"));
     this->addBlock(new CouplingItemBlock("SpecialisedAuxiliaryTask"));
