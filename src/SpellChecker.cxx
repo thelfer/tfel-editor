@@ -34,7 +34,7 @@
   POSSIBILITY OF SUCH DAMAGE.  */
 
 #ifdef TFEL_GUI_HUNSPELL_SUPPORT
-#include "hunspell/hunspell.hxx"
+#include "hunspell.hxx"
 #endif /* TFEL_GUI_HUNSPELL_SUPPORT */
 
 #include <QtCore/QDir>
