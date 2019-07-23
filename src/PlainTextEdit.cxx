@@ -181,6 +181,8 @@ namespace tfel{
             in.setCodec(codec.toStdString().c_str());
           }
         }
+      } else {
+        in.setCodec("UTF-8");
       }
       QApplication::setOverrideCursor(Qt::WaitCursor);
       this->setPlainText(in.readAll());

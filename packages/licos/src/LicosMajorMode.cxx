@@ -777,10 +777,10 @@ namespace tfel{
 
   void LicosMajorMode::completeContextMenu(QMenu *const m,
                                            const QTextCursor &tc) {
-    using namespace std;
-    using namespace tfel::system;
-    using ELM = ExternalLibraryManager;
-    auto bConnect = false; // connect
+    // using namespace std;
+    // using namespace tfel::system;
+    // using ELM = ExternalLibraryManager;
+    // auto bConnect = false; // connect
     MajorModeBase::completeContextMenu(m, tc);
     //     // looking for a word
     //     QTextCursor mtc(tc);
