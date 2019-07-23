@@ -80,6 +80,11 @@ set(QT_LIBRARIES
   Qt5::WebEngineWidgets)  
 endif(WebEngine_FOUND AND WebEngineWidgets_FOUND)
 
+if(HUNSPELL_FOUND)
+message("dir: ${HUNSPELL_INCLUDE_DIRS}")
+  target_include_directories(TFELEditor
+    PRIVATE "${HUNSPELL_INCLUDE_DIRS}")
+endif(HUNSPELL_FOUND)
   
 if(HUNSPELL_FOUND)
   target_link_libraries(TFELEditor
