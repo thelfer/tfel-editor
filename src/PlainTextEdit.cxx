@@ -23,16 +23,11 @@
 #include <QtWidgets/QDialogButtonBox>
 #include <QtPrintSupport/QPrinter>
 #include <QtPrintSupport/QPrintDialog>
+#include "TFEL/System/System.hxx"
 #include "TFEL/GUI/utf8/utf8.h"
 #include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/DirectoryMajorMode.hxx"
 #include "TFEL/GUI/PlainTextEdit.hxx"
-
-#ifdef Q_OS_UNIX
-#include <unistd.h>
-#include <sys/types.h>
-#include <pwd.h>
-#endif /* Q_OS_UNIX */
 
 namespace tfel{
 
@@ -100,32 +95,6 @@ namespace tfel{
     std::istreambuf_iterator<char> eos;
     return utf8::is_valid(it, eos);
   }
-
-#ifdef Q_OS_UNIX
-
-  static QString getLoginName() {
-    struct passwd* pw;
-    uid_t uid;
-    uid = geteuid();
-    pw = getpwuid(uid);
-    if (pw != nullptr) {
-      return QString(pw->pw_name);
-    }
-    return QString();
-  }
-
-  static QString getUserName() {
-    struct passwd* pw;
-    uid_t uid;
-    uid = geteuid();
-    pw = getpwuid(uid);
-    if (pw != nullptr) {
-      return QString(pw->pw_gecos);
-    }
-    return QString();
-  }
-
-#endif /* Q_OS_UNIX */
 
   PlainTextEdit::PlainTextEdit(EditorWidget& g,
                                            Buffer& b)

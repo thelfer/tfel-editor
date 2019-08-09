@@ -54,7 +54,7 @@ namespace tfel{
     //! and the completer
     virtual void updateSyntaxHighlighterAndCompleter();
     //! run the Implicit DSL wizard
-    void runImplicitDSLWizard();
+    void runMFrontBehaviourWizard();
 
    protected:
     //! return the list of MTest keywords

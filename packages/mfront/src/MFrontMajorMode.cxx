@@ -1,5 +1,5 @@
 /*!
- * \file  MFrontMajorMode.cxx
+ * \file   packages/mfront/src/MFrontMajorMode.cxx
  * \brief
  * \author Helfer Thomas
  * \date   07/08/2012
@@ -31,7 +31,7 @@
 #include "TFEL/GUI/StandardFunctionCommand.hxx"
 #include "TFEL/GUI/MajorModeFactory.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
-#include "TFEL/GUI/ImplicitDSLWizard.hxx"
+#include "TFEL/GUI/MFrontBehaviourWizard.hxx"
 #include "TFEL/GUI/MFrontOptions.hxx"
 #include "TFEL/GUI/MFrontOptionsDialog.hxx"
 #include "TFEL/GUI/MFrontMajorMode.hxx"
@@ -107,8 +107,7 @@ namespace tfel{
     return e;
   }
 
-  static QString getDSLName(EditorWidget &editor,
-                            TextEditBase &t) {
+  static QString getDSLName(EditorWidget &editor, TextEditBase &t) {
     using tfel::utilities::CxxTokenizer;
     try {
       CxxTokenizer tokenizer;
@@ -366,12 +365,11 @@ namespace tfel{
     // wizards
     auto *const w = m->addMenu(QObject::tr("Wizards"));
     w->setIcon(QIcon(":/tfel/editor/misc/wizard.png"));
-    auto *const sebw = w->addAction(QObject::tr("Implicit DSL wizard"));
+    auto *const sebw = w->addAction(QObject::tr("Behaviour wizard"));
     sebw->setToolTip(
-        QObject::tr("Create the basis of a behaviour \n"
-                    "implementation based on the Implicit DSL."));
+        QObject::tr("Create the basis of a behaviour implementation"));
     QObject::connect(sebw, &QAction::triggered, this,
-                     &MFrontMajorMode::runImplicitDSLWizard);
+                     &MFrontMajorMode::runMFrontBehaviourWizard);
     auto append_examples = [this, &m](const QString &label,
                                       const MFrontExamples &emfm) {
       if ((!emfm.properties.empty()) || (!emfm.behaviours.empty()) ||
@@ -450,6 +448,9 @@ namespace tfel{
     online_ressource2(d, QObject::tr("Frequently asked questions"),
                       "http://tfel.sourceforge.net/faq.html",
                       QIcon::fromTheme("help-faq"));
+    online_ressource2(d, QObject::tr("Search on the website"),
+                      "http://tfel.sourceforge.net/search.html",
+                      QIcon::fromTheme("system-search"));
     // help menu
     auto *const h = m->addMenu(QObject::tr("Getting help"));
     h->setIcon(QIcon::fromTheme("dialog-question"));
@@ -576,11 +577,12 @@ namespace tfel{
     return "mfront --obuild ";
   }
 
-  void MFrontMajorMode::runImplicitDSLWizard() {
-    ImplicitDSLWizard w(this->editor);
+  void MFrontMajorMode::runMFrontBehaviourWizard() {
+    MFrontBehaviourWizard w(this->editor, this->textEdit);
     if (w.exec() == QDialog::Accepted) {
+      w.write();
     }
-  }  // end of MFrontMajorMode::runImplicitDSLWizard
+  }  // end of MFrontMajorMode::runMFrontBehaviourWizard
 
   void MFrontMajorMode::runCompilation() {
     startMFront(this->editor, this->buffer, this->textEdit);

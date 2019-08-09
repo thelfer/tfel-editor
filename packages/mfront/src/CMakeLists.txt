@@ -11,7 +11,11 @@ qt_sources(MFrontMode_SOURCES
   MFrontMajorMode
   MFrontSyntaxHighlighter
   MFrontOptionsDialog
-  ImplicitDSLWizard)
+  MFrontAddVariableDialog
+  MFrontMetaDataPage
+  MFrontBehaviourPage
+  MFrontAddVariablesPage
+  MFrontBehaviourWizard)
 
 qt_add_resources(MFrontResources_RCC
   MFrontModeResources.qrc)
@@ -27,6 +31,8 @@ target_link_libraries(TFELEditorMFrontMode
   TFELMFront
   TFELMaterial
   TFELUtilities
+  TFELGlossary
+  TFELUnicodeSupport
   Qt5::Core
   Qt5::Widgets
   )
