@@ -107,6 +107,10 @@ namespace tfel {
       QLabel *elastic_properties_label = nullptr;
       //! combox box showing available elastic properties
       QComboBox *elastic_properties = nullptr;
+      //! label associated with crystal structure
+      QLabel *crystal_structures_label = nullptr;
+      //! combox box showing available crystal structures
+      QComboBox *crystal_structures = nullptr;
       //! label associated with tangent operators
       QLabel *tangent_operators_label = nullptr;
       //! combox box showing available tangent operators

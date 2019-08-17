@@ -57,6 +57,9 @@ namespace tfel {
           elastic_properties_label(
               new QLabel(QObject::tr("Elastic properties"))),
           elastic_properties(new QComboBox()),
+          crystal_structures_label(
+              new QLabel(QObject::tr("Crystal structure"))),
+          crystal_structures(new QComboBox()),
           tangent_operators_label(
               new QLabel(QObject::tr("Tangent Operator"))),
           tangent_operators(new QComboBox()),
@@ -121,6 +124,12 @@ namespace tfel {
                                                << "Orthotropic (Plate)"
                                                << "Orthotropic");
       this->symmetries->setCurrentText("Isotropic");
+      //
+      this->crystal_structures->addItems(QStringList()
+                                         << "None"
+                                         << "Body-centered cubic"
+                                         << "Face-centered cubic"
+                                         << "Hexagonal close packing");
       // numerical parameters
       auto *const eps = new QDoubleValidator();
       eps->setBottom(0.);
@@ -137,6 +146,7 @@ namespace tfel {
       this->strain_measures_label->setBuddy(this->strain_measures);
       this->bricks_label->setBuddy(this->bricks);
       this->elastic_properties_label->setBuddy(this->elastic_properties);
+      this->crystal_structures_label->setBuddy(this->crystal_structures);
       this->tangent_operators_label->setBuddy(this->tangent_operators);
       this->convergence_criterion_label->setBuddy(this->convergence_criterion);
       this->perturbation_value_label->setBuddy(this->perturbation_value);
@@ -188,20 +198,20 @@ namespace tfel {
       gl->addWidget(this->bricks, 7, 1);
       gl->addWidget(this->elastic_properties_label, 8, 0);
       gl->addWidget(this->elastic_properties, 8, 1);
-      gl->addWidget(this->elastic_properties_label, 8, 0);
-      gl->addWidget(this->elastic_properties, 8, 1);
-      gl->addWidget(this->tangent_operators_label, 9, 0);
-      gl->addWidget(this->tangent_operators, 9, 1);
+      gl->addWidget(this->crystal_structures_label, 9, 0);
+      gl->addWidget(this->crystal_structures, 9, 1);
+      gl->addWidget(this->tangent_operators_label, 10, 0);
+      gl->addWidget(this->tangent_operators, 10, 1);
       auto *const l2 = new QFrame();
       l2->setFrameShape(QFrame::HLine);
       l2->setFrameShadow(QFrame::Sunken);
-      gl->addWidget(l2, 10, 0, 1, 3);
-      gl->addWidget(this->algorithms_label, 11, 0);
-      gl->addWidget(this->algorithms, 11, 1);
-      gl->addWidget(this->convergence_criterion_label, 12, 0);
-      gl->addWidget(this->convergence_criterion, 12, 1);
-      gl->addWidget(this->perturbation_value_label, 13, 0);
-      gl->addWidget(this->perturbation_value, 13, 1);
+      gl->addWidget(l2, 11, 0, 1, 3);
+      gl->addWidget(this->algorithms_label, 12, 0);
+      gl->addWidget(this->algorithms, 12, 1);
+      gl->addWidget(this->convergence_criterion_label, 13, 0);
+      gl->addWidget(this->convergence_criterion, 13, 1);
+      gl->addWidget(this->perturbation_value_label, 14, 0);
+      gl->addWidget(this->perturbation_value, 14, 1);
       this->setLayout(gl);
     }  // end of MFrontBehaviourPage::MFrontBehaviourPage
 

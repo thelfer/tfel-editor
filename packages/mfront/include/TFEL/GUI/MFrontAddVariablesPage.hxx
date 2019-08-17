@@ -9,6 +9,8 @@
 #define LIB_TFEL_GUI_MFRONTADDVARIABLES_HXX
 
 #include <QtWidgets/QWizard>
+#include "MFront/VariableDescription.hxx"
+#include "MFront/BehaviourDescription.hxx"
 
 // forward declaration
 class QComboBox;
@@ -17,14 +19,16 @@ namespace tfel {
 
   namespace gui {
 
+    // forward declaration
+    struct EditorWidget;
+
     struct MFrontAddVariablesPage : public QWizardPage {
       /*!
        * \brief constructor
        * \param[in] w: editor widget
-       * \param[in] cd: current document
        * \param[in] p: parent
        */
-      MFrontAddVariablesPage(QWizard *const);
+      MFrontAddVariablesPage(EditorWidget &, QWizard *const);
 
       bool validatePage() override;
 
@@ -34,9 +38,21 @@ namespace tfel {
       //! destructor
       ~MFrontAddVariablesPage() override;
 
+     protected:
+      //! \brief material properties
+      mfront::VariableDescriptionContainer mps;
+
+      template <void (mfront::BehaviourDescription::*f)(
+          const mfront::BehaviourDescription::Hypothesis,
+          const mfront::VariableDescription &,
+          const mfront::BehaviourData::RegistrationStatus)>
+      void addVariable(
+          mfront::VariableDescriptionContainer &,
+          const mfront::VariableDescription &);
+
      private:
       Q_OBJECT
-    };  // end of struct MFrontAddVariablesPage
+      };  // end of struct MFrontAddVariablesPage
 
   }  // end of namespace gui
 
