@@ -27,10 +27,12 @@ namespace tfel {
       //! \brief supported variable type
       enum VariableType {
         MATERIALPROPERTY,
-        INTERNALSTATEVARIABLE,
+        PARAMETER,
+        STATEVARIABLE,
+        LOCALVARIABLE,
+        EXTERNALSTATEVARIABLE,
         AUXILIARYSTATEVARIABLE,
-        INTEGRATIONVARIABLE,
-        EXTERNALSTATEVARIABLE
+        INTEGRATIONVARIABLE
       }; // end of enum VariableType
       /*!
        * \brief constructor

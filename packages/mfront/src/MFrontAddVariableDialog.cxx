@@ -30,13 +30,17 @@ namespace tfel{
           gb(new QComboBox),
           ee(new LineEdit(w)) {
       if (this->vtype == MATERIALPROPERTY) {
-        this->setWindowTitle("Add new material property");
-      } else if (this->vtype == INTERNALSTATEVARIABLE) {
-        this->setWindowTitle("Add new internal state variable");
+        this->setWindowTitle("Add a new material property");
+      } else if (this->vtype == PARAMETER) {
+        this->setWindowTitle("Add a new parameter");
+      } else if (this->vtype == LOCALVARIABLE) {
+        this->setWindowTitle("Add a new local variable");
+      } else if (this->vtype == STATEVARIABLE) {
+        this->setWindowTitle("Add a new state variable");
       } else if (this->vtype == AUXILIARYSTATEVARIABLE) {
-        this->setWindowTitle("Add new auxiliary state variable");
+        this->setWindowTitle("Add a new auxiliary state variable");
       } else if (this->vtype == INTEGRATIONVARIABLE) {
-        this->setWindowTitle("Add new integration variable");
+        this->setWindowTitle("Add a new integration variable");
       } else {
         this->setWindowTitle("Add new external state variable");
       }
@@ -105,10 +109,16 @@ namespace tfel{
       const auto sn = this->ne->text().toStdString();
       const auto vn = tfel::unicode::getMangledString(sn);
       const auto tn = this->tb->currentText().toStdString();
-      if (sn != vn) {
-        return mfront::VariableDescription(tn, sn, vn, 1u, 0u);
+      auto v = (sn != vn)
+                   ? mfront::VariableDescription(tn, sn, vn, 1u, 0u)
+                   : mfront::VariableDescription(tn, vn, 1u, 0u);
+      if (this->gb->currentText() != "None") {
+        v.setGlossaryName(this->gb->currentText().toStdString());
       }
-      return mfront::VariableDescription(tn, vn, 1u, 0u);
+      if (!this->ee->text().isEmpty()) {
+        v.setEntryName(this->ee->text().toStdString());
+      }
+      return v;
     }  // end of MFrontAddVariableDialog::getVariableDescription
 
     void MFrontAddVariableDialog::updateVariableTypesList() {

@@ -5,7 +5,10 @@
  * \date   27/07/2019
  */
 
+#include <QtCore/QDebug>
+
 #include <QtCore/QTemporaryFile>
+#include <QtGui/QTextCursor>
 #include <QtGui/QTextDocumentWriter>
 #include <QtGui/QDoubleValidator>
 #include <QtWidgets/QLabel>
@@ -71,7 +74,6 @@ namespace tfel {
           perturbation_value(new LineEdit(w)),
           editor(w),
           d(cd) {
-      using tfel::material::ModellingHypothesis;
       this->setTitle(
           QObject::tr("DSL selection, behaviour characteristics, "
                       "main numerical parameters"));
@@ -86,6 +88,8 @@ namespace tfel {
                                         << "Generic behaviour");
       // also calls `updateDSLList`, `updateBrickList`, and
       // `updateElasticPropertyList`, `updateAlgorithmList`
+      // `updateModellingHypothesisList`, `updateBehaviourSymmetryList`
+      // `updateCrystalStructureList`
       this->updateIntegrationSchemeList();
       this->updateTangentOperatorList();
       QObject::connect(this->bts, static_cast<void (QComboBox::*)(int)>(
@@ -103,33 +107,18 @@ namespace tfel {
       QObject::connect(this->dsls,
                        static_cast<void (QComboBox::*)(int)>(
                            &QComboBox::currentIndexChanged),
-                       [this] { this->updateStrainMeasureList(); });
+                       [this] {
+                         this->updateStrainMeasureList();
+                         this->updateModellingHypothesisList();
+                         this->updateBehaviourSymmetryList();
+                         this->updateCrystalStructureList();
+                         this->updateElasticPropertyList();
+                         this->updateBrickList();
+                       });
       QObject::connect(this->algorithms,
                        static_cast<void (QComboBox::*)(int)>(
                            &QComboBox::currentIndexChanged),
                        [this] { this->updateNumericalCriteria(); });
-      // modelling hypotheses
-      QStringList mhs;
-      mhs << "Default"
-          << "All";
-      for (const auto &h :
-           ModellingHypothesis::getModellingHypotheses()) {
-        mhs << QString::fromStdString(ModellingHypothesis::toString(h));
-      }
-      this->hypotheses->addItems(mhs);
-      this->hypotheses->setCurrentText("Default");
-      // behaviour symmetry
-      this->symmetries->addItems(QStringList() << "Isotropic"
-                                               << "Orthotropic (Pipe)"
-                                               << "Orthotropic (Plate)"
-                                               << "Orthotropic");
-      this->symmetries->setCurrentText("Isotropic");
-      //
-      this->crystal_structures->addItems(QStringList()
-                                         << "None"
-                                         << "Body-centered cubic"
-                                         << "Face-centered cubic"
-                                         << "Hexagonal close packing");
       // numerical parameters
       auto *const eps = new QDoubleValidator();
       eps->setBottom(0.);
@@ -215,6 +204,39 @@ namespace tfel {
       this->setLayout(gl);
     }  // end of MFrontBehaviourPage::MFrontBehaviourPage
 
+    std::shared_ptr<mfront::AbstractBehaviourDSL>
+    MFrontBehaviourPage::getBehaviourDSL() const {
+      QTemporaryFile tmp("mfront-file");
+      if (!tmp.open()) {
+        this->editor.displayInformativeMessage(
+            QObject::tr("can't open temporary file"));
+        return {};
+      }
+      QTextDocument t;
+      QTextCursor tc(&t);
+      tc.insertText("@Behaviour Test;\n");
+      this->write(tc, MFrontBehaviourPage::PROCESSING_STAGE);
+      tc.movePosition(QTextCursor::End);
+      QTextDocumentWriter writer(&tmp, "plaintext");
+      if (!writer.write(&t)) {
+        this->editor.displayInformativeMessage(
+            QObject::tr("can't write buffer in temporary file"));
+        return {};
+      }
+      try {
+        const auto &f = mfront::DSLFactory::getDSLFactory();
+        const auto &n = this->getSelectedDomainSpecificLanguage();
+        const auto dsl = f.createNewDSL(n.toStdString());
+        dsl->importFile(tmp.fileName().toStdString(), {}, {});
+        return std::dynamic_pointer_cast<mfront::AbstractBehaviourDSL>(
+            dsl);
+      } catch (std::exception &e) {
+        QMessageBox::warning(&(this->editor), "Inconsistent choice",
+                             QString(e.what()));
+      }
+      return {};
+    }  // end of MFrontBehaviourPage::getBehaviourDSL
+
     bool MFrontBehaviourPage::validatePage() {
       QTemporaryFile tmp("mfront-file");
       if (!tmp.open()) {
@@ -222,22 +244,27 @@ namespace tfel {
             QObject::tr("can't open temporary file"));
         return true;
       }
-      QTextDocument t;
-      QTextCursor tc(&t);
-      tc.insertText("@Behaviour Test;\n");
-      this->write(t);
-      tc.movePosition(QTextCursor::End);
-      tc.insertText("\n@Integrator{}\n");
-      QTextDocumentWriter writer(&tmp, "plaintext");
-      if (!writer.write(&t)) {
-        this->editor.displayInformativeMessage(
-            QObject::tr("can't write buffer in temporary file"));
-        return true;
-      }
       try {
         const auto &f = mfront::DSLFactory::getDSLFactory();
         const auto &n = this->getSelectedDomainSpecificLanguage();
-        const auto dsl = f.createNewDSL(n.toStdString());
+        const auto dsl =
+            std::dynamic_pointer_cast<mfront::AbstractBehaviourDSL>(
+                f.createNewDSL(n.toStdString()));
+        const auto &dsld = dsl->getBehaviourDSLDescription();
+        QTextDocument t;
+        QTextCursor tc(&t);
+        tc.insertText("@DSL " + n + ";\n");
+        tc.insertText("@Behaviour Test;\n");
+        this->write(tc, MFrontBehaviourPage::VALIDATE_STAGE);
+        tc.movePosition(QTextCursor::End);
+        const auto b = dsld.minimalMFrontFileBody;
+        tc.insertText("\n" + QString::fromStdString(b) + "\n");
+        QTextDocumentWriter writer(&tmp, "plaintext");
+        if (!writer.write(&t)) {
+          this->editor.displayInformativeMessage(
+              QObject::tr("can't write buffer in temporary file"));
+          return true;
+        }
         dsl->analyseFile(tmp.fileName().toStdString(), {}, {});
       } catch (std::exception &e) {
         QMessageBox::warning(&(this->editor), "Inconsistent choice",
@@ -250,30 +277,6 @@ namespace tfel {
     int MFrontBehaviourPage::nextId() const {
       return 2;
     }
-
-    mfront::BehaviourDescription::BehaviourType
-    MFrontBehaviourPage::getSelectedBehaviourType() const {
-      if (this->bts->currentText() == "Strain based behaviour") {
-        return BehaviourDescription::STANDARDSTRAINBASEDBEHAVIOUR;
-      } else if (this->bts->currentText() == "Finite strain behaviour") {
-        return BehaviourDescription::STANDARDFINITESTRAINBEHAVIOUR;
-      } else if (this->bts->currentText() == "Cohesive zone model") {
-        return BehaviourDescription::COHESIVEZONEMODEL;
-      }
-      return BehaviourDescription::GENERALBEHAVIOUR;
-    }  // end of MFrontBehaviourPage::getSelectedBehaviourType
-
-    mfront::BehaviourDescription::IntegrationScheme
-    MFrontBehaviourPage::getSelectedIntegrationScheme() const {
-      if (this->iss->currentText() == "Implicit") {
-        return BehaviourDescription::IMPLICITSCHEME;
-      } else if (this->iss->currentText() == "Explicit (Runge-Kutta)") {
-        return BehaviourDescription::EXPLICITSCHEME;
-      } else if (this->iss->currentText() == "Specialized") {
-        return BehaviourDescription::SPECIFICSCHEME;
-      }
-      return BehaviourDescription::USERDEFINEDSCHEME;
-    }  // end of MFrontBehaviourPage::getSelectedIntegrationScheme
 
     void MFrontBehaviourPage::updateIntegrationSchemeList() {
       const auto cis = this->iss->currentText();
@@ -326,7 +329,6 @@ namespace tfel {
       }
       this->updateDSLList();
       this->updateBrickList();
-      this->updateElasticPropertyList();
       this->updateAlgorithmList();
     }  // end of MFrontBehaviourPage::updateIntegrationSchemeList()
 
@@ -354,7 +356,87 @@ namespace tfel {
       } catch (...) {
       }
       this->updateStrainMeasureList();
+      this->updateModellingHypothesisList();
+      this->updateBehaviourSymmetryList();
+      this->updateCrystalStructureList();
+      this->updateBrickList();
+      this->updateElasticPropertyList();
     }  // end of updateDSLList
+
+    void MFrontBehaviourPage::updateModellingHypothesisList() {
+      using tfel::material::ModellingHypothesis;
+      QStringList mhs;
+      mhs << "Default"
+          << "All";
+      for (const auto &h :
+           ModellingHypothesis::getModellingHypotheses()) {
+        mhs << QString::fromStdString(ModellingHypothesis::toString(h));
+      }
+      this->hypotheses->addItems(mhs);
+      this->hypotheses->setCurrentText("Default");
+      //
+    }  // end of MFrontBehaviourPage::updateModellingHypothesisList
+
+    void MFrontBehaviourPage::updateBehaviourSymmetryList() {
+      const auto cs = this->symmetries->currentText();
+      const auto dsld = this->getCurrentBehaviourDSLDescription();
+      const auto &mhs = dsld.supportedBehaviourSymmetries;
+      this->symmetries->clear();
+      QStringList ss;
+      if (std::find(mhs.cbegin(), mhs.cend(), mfront::ISOTROPIC) !=
+          mhs.cend()) {
+        ss << "Isotropic";
+      }
+      if (std::find(mhs.cbegin(), mhs.cend(), mfront::ORTHOTROPIC) !=
+          mhs.cend()) {
+        ss << "Orthotropic (Pipe)"
+           << "Orthotropic (Plate)"
+           << "Orthotropic";
+      }
+      this->symmetries->addItems(ss);
+      if (ss.size() == 1) {
+        this->symmetries_label->setText(
+            mark_disabled("Symmetry"));
+        this->symmetries->setDisabled(true);
+      } else {
+        this->symmetries_label->setText(
+            QObject::tr("Symmetry"));
+        this->symmetries->setEnabled(true);
+      }
+      if (cs.isEmpty()){
+        if (ss.contains("Isotropic")) {
+          this->symmetries->setCurrentText("Isotropic");
+        }
+      } else {
+        if (ss.contains(cs)) {
+          this->symmetries->setCurrentText(cs);
+        }
+      }
+    }  // end of MFrontBehaviourPage::updateBehaviourSymmetryList
+
+    void MFrontBehaviourPage::updateCrystalStructureList() {
+      const auto cs = this->crystal_structures->currentText();
+      const auto dsld = this->getCurrentBehaviourDSLDescription();
+      this->crystal_structures->clear();
+      if (dsld.allowCrystalStructureDefinition) {
+        QStringList css;
+        css << "None"
+            << "Body-centered cubic"
+            << "Face-centered cubic"
+            << "Hexagonal close packing";
+        this->crystal_structures->addItems(css);
+        if (css.contains(cs)) {
+          this->crystal_structures->setCurrentText(cs);
+        }
+        this->crystal_structures_label->setText(
+            QObject::tr("Crystal structure"));
+        this->crystal_structures->setEnabled(true);
+      } else {
+        this->crystal_structures_label->setText(
+            mark_disabled("Crystal structure"));
+        this->crystal_structures->setDisabled(true);
+      }
+    }  // end of MFrontBehaviourPage::updateCrystalStructureList
 
     void MFrontBehaviourPage::updateBrickList() {
       const auto t = this->getSelectedBehaviourType();
@@ -449,7 +531,7 @@ namespace tfel {
       }
       const auto i = this->getSelectedIntegrationScheme();
       this->elastic_properties_label->setText("Elastic properties");
-auto emps = QStringList{};
+      auto emps = QStringList{};
       if (i == BehaviourDescription::SPECIFICSCHEME) {
         emps << "Undefined"
              << "@ElasticMaterialProperties";
@@ -498,7 +580,8 @@ auto emps = QStringList{};
       };
       const auto i = this->getSelectedIntegrationScheme();
       if ((i == BehaviourDescription::IMPLICITSCHEME) ||
-          (i == BehaviourDescription::EXPLICITSCHEME)) {
+          (i == BehaviourDescription::EXPLICITSCHEME) ||
+          (i == BehaviourDescription::SPECIFICSCHEME)) {
         this->convergence_criterion_label->setText(
             QObject::tr("Convergence criterion"));
         this->convergence_criterion->setEnabled(true);
@@ -534,71 +617,153 @@ auto emps = QStringList{};
     }  // end of
        // MFrontBehaviourPage::getSelectedDomainSpecificLanguage()
 
-    void MFrontBehaviourPage::write(QTextDocument &t) const {
-      auto tc = QTextCursor(&t);
+    void MFrontBehaviourPage::write(QTextCursor tc,
+                                    const WriteMode m) const {
       const auto bt = this->getSelectedBehaviourType();
       const auto i = this->getSelectedIntegrationScheme();
       const auto h = this->hypotheses->currentText();
       const auto s = this->symmetries->currentText();
+      const auto e = this->elastic_properties->currentText();
+      const auto b = this->bricks->currentText();
+      const auto c = this->crystal_structures->currentText();
+      auto append = [&tc](const QString &text) { tc.insertText(text); };
+      auto append_if = [&append](const bool cond, const QString &text) {
+        if (!cond) {
+          append("// ");
+        }
+        append(text);
+      };
       if (h != "Default") {
         if (h == "All") {
-          tc.insertText("@ModellingHypotheses {\".+\"};\n\n");
+          append("@ModellingHypotheses {\".+\"};\n\n");
         } else {
-          tc.insertText("@ModellingHypothesis " + h +
-                                  ";\n\n");
+          append("@ModellingHypothesis " + h + ";\n\n");
         }
-      }
-      if (s == "Orthotropic (Plate)") {
-        tc.insertText("@OrthotropicBehaviour<Plate>;\n\n");
-      } else if (s == "Orthotropic (Pipe)") {
-        tc.insertText("@OrthotropicBehaviour<Pipe>;\n\n");
-      } else if (s == "Orthotropic") {
-        tc.insertText("@OrthotropicBehaviour;\n\n");
       }
       if (bt == BehaviourDescription::STANDARDSTRAINBASEDBEHAVIOUR) {
         const auto &sm = this->strain_measures->currentText();
         if (sm == "Green-Lagragrange") {
-          tc.insertText("@StrainMeasure GreenLagrange;\n\n");
+          append("@StrainMeasure GreenLagrange;\n\n");
         } else if ((sm == "Hencky")||(sm == "Linearized")) {
-          tc.insertText("@StrainMeasure " + sm + ";\n\n");
+          append("@StrainMeasure " + sm + ";\n\n");
         }
       }
-      const auto &b = this->bricks->currentText();
-      if ((!b.isEmpty()) && (b != "None")) {
-        tc.insertText("@Brick " + b + ";\n\n");
+      if (s == "Orthotropic (Plate)") {
+        append("@OrthotropicBehaviour<Plate>;\n\n");
+      } else if (s == "Orthotropic (Pipe)") {
+        append("@OrthotropicBehaviour<Pipe>;\n\n");
+      } else if (s == "Orthotropic") {
+        append("@OrthotropicBehaviour;\n\n");
       }
-      if ((i == BehaviourDescription::IMPLICITSCHEME) ||
-          (i == BehaviourDescription::EXPLICITSCHEME)) {
+      if (c == "Body-centered cubic") {
+        append("@CrystalStructure BCC;\n");
+        append_if(m == VALIDATE_STAGE,
+                  "@SlidingSystem <0,1,-1>{1,1,1};\n\n");
+      } else if (c == "Face-centered cubic") {
+        append("@CrystalStructure FCC;\n\n");
+        append_if(m == VALIDATE_STAGE,
+                  "@SlidingSystem <0,1,-1>{1,1,1};\n\n");
+      } else if (c == "Hexagonal close packing") {
+        append("@CrystalStructure HCP;\n\n");
+        append_if(m == VALIDATE_STAGE,
+                  "@SlidingSystem <0,1,-1,0>{1,1,1,1};\n\n");
+      }
+      if ((!b.isEmpty()) && (b != "None")) {
+        append("@Brick " + b + ";\n\n");
+      }
+      if ((e == "@ElasticMaterialProperties") ||
+          (e.startsWith("@ComputeStiffnessTensor"))) {
+        if (s == "Isotropic") {
+          append_if(m == VALIDATE_STAGE, e + "{150e9, 0.3};\n\n");
+        } else {
+          append_if(m == VALIDATE_STAGE,
+                    e + "{150e9, 150e9, 150e9,"
+                        " 0.3, 0.3, 0.3,"
+                        " 150e9, 150e9, 150e9};\n\n");
+        }
+      } else if (e.startsWith("@RequireStiffnessTensor")) {
+        append(e + ";\n\n");
+      }
+      if (i == BehaviourDescription::IMPLICITSCHEME) {
         try {
           const auto &f = mfront::NonLinearSystemSolverFactory::
               getNonLinearSystemSolverFactory();
           const auto &a = this->algorithms->currentText();
           const auto &eps = this->convergence_criterion->text();
           const auto &pv = this->perturbation_value->text();
+          auto bnl = false;
           if (!a.isEmpty()) {
-            tc.insertText("@Algorithm " + a + ";\n");
+            append("@Algorithm " + a + ";\n");
+            bnl = true;
           }
           if (!eps.isEmpty()) {
-            tc.insertText("@Epsilon " + eps + ";\n");
+            append("@Epsilon " + eps + ";\n");
+            bnl = true;
           }
           const auto so = f.getSolver(a.toStdString());
           if ((so->usesJacobian()) && (so->requiresNumericalJacobian())) {
             if (!pv.isEmpty()) {
-              tc.insertText(
+              append(
                   "@PerturbationValueFor"
                   "NumericalJacobianComputation " +
                   pv + ";\n");
+              bnl = true;
             }
           }
-          tc.insertText("\n");
+          if (bnl) {
+            append("\n");
+          };
         } catch (...) {
         }
       }
     }  // end of MFrontBehaviourPage::write()
 
+    mfront::BehaviourDescription::BehaviourType
+    MFrontBehaviourPage::getSelectedBehaviourType() const {
+      if (this->bts->currentText() == "Strain based behaviour") {
+        return BehaviourDescription::STANDARDSTRAINBASEDBEHAVIOUR;
+      } else if (this->bts->currentText() == "Finite strain behaviour") {
+        return BehaviourDescription::STANDARDFINITESTRAINBEHAVIOUR;
+      } else if (this->bts->currentText() == "Cohesive zone model") {
+        return BehaviourDescription::COHESIVEZONEMODEL;
+      }
+      return BehaviourDescription::GENERALBEHAVIOUR;
+    }  // end of MFrontBehaviourPage::getSelectedBehaviourType
+
+    mfront::BehaviourDescription::IntegrationScheme
+    MFrontBehaviourPage::getSelectedIntegrationScheme() const {
+      if (this->iss->currentText() == "Implicit") {
+        return BehaviourDescription::IMPLICITSCHEME;
+      } else if (this->iss->currentText() == "Explicit (Runge-Kutta)") {
+        return BehaviourDescription::EXPLICITSCHEME;
+      } else if (this->iss->currentText() == "Specialized") {
+        return BehaviourDescription::SPECIFICSCHEME;
+      }
+      return BehaviourDescription::USERDEFINEDSCHEME;
+    }  // end of MFrontBehaviourPage::getSelectedIntegrationScheme
+
+    QString MFrontBehaviourPage::getSelectedTangentOperator() const {
+      return this->tangent_operators->currentText();
+    }  // end of MFrontBehaviourPage::getSelectedTangentOperator
+
     void MFrontBehaviourPage::write() const {
-      this->write(*(this->d.document()));
+      this->write(this->d.textCursor(),
+                  MFrontBehaviourPage::FINAL_STAGE);
     }  // end of MFrontBehaviourPage::write()
+
+    mfront::BehaviourDSLDescription
+    MFrontBehaviourPage::getCurrentBehaviourDSLDescription() const {
+      try {
+        const auto &f = mfront::DSLFactory::getDSLFactory();
+        const auto &n = this->getSelectedDomainSpecificLanguage();
+        const auto dsl =
+            std::dynamic_pointer_cast<mfront::AbstractBehaviourDSL>(
+                f.createNewDSL(n.toStdString()));
+        return dsl->getBehaviourDSLDescription();
+      } catch (...) {
+      }
+      return {};
+    }  // end of getCurrentBehaviourDSLDescription
 
     MFrontBehaviourPage::~MFrontBehaviourPage() = default;
 
