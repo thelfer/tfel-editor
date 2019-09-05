@@ -63,6 +63,8 @@ namespace tfel {
       virtual QString getSelectedDomainSpecificLanguage() const;
       //! \return the selected tangent operator
       virtual QString getSelectedTangentOperator() const;
+      //! \return the selected brick
+      virtual QString getSelectedBrick() const;
       //! destructor
       ~MFrontBehaviourPage() override;
 

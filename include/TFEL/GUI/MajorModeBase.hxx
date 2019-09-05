@@ -90,6 +90,8 @@ namespace tfel{
      * appear
      */
     void completeContextMenu(QMenu* const, const QTextCursor&) override;
+    //! \brief indent the whole text
+    void indentAll() override;
     /*!
      * indent the current line
      */

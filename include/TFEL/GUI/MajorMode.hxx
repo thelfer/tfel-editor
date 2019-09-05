@@ -104,6 +104,8 @@ namespace tfel{
     virtual bool handleShortCut(const int,
                                 const Qt::KeyboardModifiers,
                                 const int) = 0;
+    //! \brief indent the whole text
+    virtual void indentAll() = 0;
     //! \brief indent the current line
     virtual void indentLine(const QTextCursor&) = 0;
     //! \brief indent selected region

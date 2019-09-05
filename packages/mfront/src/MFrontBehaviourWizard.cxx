@@ -12,9 +12,11 @@
 #include "MFront/AbstractBehaviourDSL.hxx"
 #include "TFEL/GUI/LineEdit.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/MFrontBehaviourWizardPages.hxx"
 #include "TFEL/GUI/MFrontMetaDataPage.hxx"
 #include "TFEL/GUI/MFrontBehaviourPage.hxx"
 #include "TFEL/GUI/MFrontAddVariablesPage.hxx"
+#include "TFEL/GUI/MFrontStandardElastoViscoPlasticityBrickPage.hxx"
 #include "TFEL/GUI/MFrontBehaviourWizard.hxx"
 
 namespace tfel {
@@ -28,12 +30,18 @@ namespace tfel {
           md(new MFrontMetaDataPage(
               w, cd, MFrontMetaDataPage::BEHAVIOUR, 1, this)),
           im(new MFrontBehaviourPage(w, cd, this)),
-          variables(new MFrontAddVariablesPage(w, this)),
+          variables(new MFrontAddVariablesPage(w, cd, this)),
+          sevpbp(new MFrontStandardElastoViscoPlasticityBrickPage(
+              w, cd, this)),
           d(cd) {
       this->setWindowTitle(QObject::tr("Behaviour wizard"));
-      this->setPage(0, this->md);
-      this->setPage(1, this->im);
-      this->setPage(2, this->variables);
+      this->setPage(MFrontBehaviourWizardPages::METADATA, this->md);
+      this->setPage(MFrontBehaviourWizardPages::BEHAVIOUR, this->im);
+      this->setPage(
+          MFrontBehaviourWizardPages::STANDARDELASTOVISCOPLASTICITY,
+          this->sevpbp);
+      this->setPage(MFrontBehaviourWizardPages::ADDVARIABLES,
+                    this->variables);
       this->setStartId(0);
   }  // end of MFrontBehaviourWizard::MFrontBehaviourWizard
 
@@ -50,55 +58,36 @@ namespace tfel {
     if (dsl == nullptr) {
       return;
     }
-    const auto& bd = dsl->getBehaviourDescription();
-    const auto& dsld = dsl->getBehaviourDSLDescription();
+    this->variables->complete(*dsl);
+    auto dsld = dsl->getBehaviourDSLDescription();
+    const auto bd = dsl->getBehaviourDescription();
     this->d.insertPlainText("@DSL " + n + ";\n\n");
     this->md->write();
     this->im->write();
-    auto write_variables = [this](
-        const QString& t,
-        const mfront::VariableDescriptionContainer& vars) {
-      for (const auto& v : vars) {
-        this->d.insertPlainText(t + " " +
-                                QString::fromStdString(v.type) + " " +
-                                QString::fromStdString(v.name) + ";\n");
-        if (v.hasGlossaryName()) {
-          this->d.insertPlainText(
-              QString::fromStdString(v.name) + ".setGlossaryName(\"" +
-              QString::fromStdString(v.getExternalName()) + "\");\n");
-        }
-        if (v.hasEntryName()) {
-          this->d.insertPlainText(
-              QString::fromStdString(v.name) + ".setEntryName(\"" +
-              QString::fromStdString(v.getExternalName()) + "\");\n");
-        }
-        this->d.insertPlainText("\n");
+    this->variables->write();
+    // local variables
+    const auto lvs = this->variables->getLocalVariables();
+    if (!lvs.empty()) {
+      this->d.insertPlainText("@InitLocalVariables{\n");
+      for (const auto& lv : lvs) {
+        const auto vn = QString::fromStdString(mfront::displayName(lv));
+        this->d.insertPlainText(vn + " = ;\n");
       }
-    };
-    write_variables("@MaterialProperty",
-                    this->variables->getMaterialProperties());
-    write_variables("@Parameter", this->variables->getParameters());
-    write_variables("@StateVariable", this->variables->getStateVariables());
-    write_variables("@AuxiliaryStateVariable",
-                    this->variables->getAuxiliaryStateVariables());
-    write_variables("@IntegrationVariable",
-                    this->variables->getIntegrationVariables());
-    write_variables("@ExternalStateVariable",
-                    this->variables->getExternalStateVariables());
-    write_variables("@LocalVariable",
-                    this->variables->getLocalVariables());
-    for (const auto& c : dsld.typicalCodeBlocks) {
+      this->d.insertPlainText("}\n\n");
+    }
+    const auto cbs = dsld.typicalCodeBlocks;
+    for (const auto& c : cbs) {
       if (!bd.hasCode(h, c)) {
         auto t =
             QString::fromStdString(dsl->getCodeBlockTemplate(c, true));
-        if ((t.startsWith("@PredictionOperator")) ||
-            (t.startsWith("@TangentOperator"))) {
+        if (t.startsWith("@TangentOperator")) {
+          continue;
+        }
+        if (t.startsWith("@PredictionOperator")) {
           const auto to = this->im->getSelectedTangentOperator();
-          if (t.startsWith("@PredictionOperator")) {
-            t.insert(std::strlen("@PredictionOperator"), "<" + to + ">");
-          }
-          if (t.startsWith("@TangentOperator")) {
-            t.insert(std::strlen("@TangentOperator"), "<" + to + ">");
+          if(!to.isEmpty()){
+            t.insert(std::strlen("@PredictionOperator"),
+                     "<" + to + ">");
           }
         }
         if (!t.isEmpty()) {
@@ -106,6 +95,35 @@ namespace tfel {
         }
       }
     }
+
+    // @UpdateAuxiliaryStateVariables
+    const auto asvs = this->variables->getAuxiliaryStateVariables();
+    if (!asvs.empty()) {
+      this->d.insertPlainText("@UpdateAuxiliaryStateVariables{\n");
+      for (const auto& asv : asvs) {
+        const auto vn = QString::fromStdString(mfront::displayName(asv));
+        this->d.insertPlainText(vn + " = ;\n");
+      }
+      this->d.insertPlainText("}\n\n");
+    }
+
+    for (const auto& c : cbs) {
+      if (!bd.hasCode(h, c)) {
+        auto t =
+            QString::fromStdString(dsl->getCodeBlockTemplate(c, true));
+        if (!t.startsWith("@TangentOperator")) {
+          continue;
+        }
+        const auto to = this->im->getSelectedTangentOperator();
+        if (!to.isEmpty()) {
+          t.insert(std::strlen("@TangentOperator"), "<" + to + ">");
+        }
+        if (!t.isEmpty()) {
+          this->d.insertPlainText(t + "\n");
+        }
+      }
+    }
+
   }  // end of MFrontBehaviourWizard::write
 
   MFrontBehaviourWizard::~MFrontBehaviourWizard() = default;

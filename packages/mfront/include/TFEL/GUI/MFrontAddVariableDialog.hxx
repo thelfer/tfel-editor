@@ -58,6 +58,8 @@ namespace tfel {
       QComboBox* const cb;
       //! \brief type of the variable
       QComboBox* const tb;
+      //! \brief arraySize
+      LineEdit* const asize;
       //! \brief list of glossary name
       QComboBox* const gb;
       //! \brief entry name of the variable

@@ -5,6 +5,7 @@
  * \date   07/08/2019
  */
 
+#include <QtGui/QIntValidator>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QVBoxLayout>
@@ -27,6 +28,7 @@ namespace tfel{
           ne(new LineEdit(w)),
           cb(new QComboBox),
           tb(new QComboBox),
+          asize(new LineEdit(w)),
           gb(new QComboBox),
           ee(new LineEdit(w)) {
       if (this->vtype == MATERIALPROPERTY) {
@@ -78,19 +80,31 @@ namespace tfel{
                        [this] { this->updateGlossaryNamesList(); });
       gl->addWidget(tlabel, 2, 0);
       gl->addWidget(this->tb, 2, 1);
-      auto* const glabel = new QLabel(QObject::tr("Glossary name"));
-      this->updateGlossaryNamesList();
-      glabel->setBuddy(this->gb);
-      gl->addWidget(glabel, 3, 0);
-      gl->addWidget(this->gb, 3, 1);
-      auto* const elabel = new QLabel(QObject::tr("Entry name"));
-      elabel->setBuddy(this->ee);
-      QObject::connect(this->ee,
-                       static_cast<void (LineEdit::*)(const QString&)>(
-                           &LineEdit::textChanged),
-                       [this] { this->updateGlossaryNamesList(); });
-      gl->addWidget(elabel, 4, 0);
-      gl->addWidget(this->ee, 4, 1);
+      // array size
+      auto* const alabel = new QLabel(QObject::tr("Array size"));
+      alabel->setBuddy(this->asize);
+      gl->addWidget(alabel, 3, 0);
+      gl->addWidget(this->asize, 3, 1);
+      auto *const sv = new QIntValidator();
+      sv->setBottom(1);
+      this->asize->setValidator(sv);
+      this->asize->setText("1");
+      // glossary and external names
+      if ((this->vtype != LOCALVARIABLE) && (this->vtype != INTEGRATIONVARIABLE)) {
+        auto* const glabel = new QLabel(QObject::tr("Glossary name"));
+        this->updateGlossaryNamesList();
+        glabel->setBuddy(this->gb);
+        gl->addWidget(glabel, 4, 0);
+        gl->addWidget(this->gb, 4, 1);
+        auto* const elabel = new QLabel(QObject::tr("Entry name"));
+        elabel->setBuddy(this->ee);
+        QObject::connect(
+            this->ee, static_cast<void (LineEdit::*)(const QString&)>(
+                          &LineEdit::textChanged),
+            [this] { this->updateGlossaryNamesList(); });
+        gl->addWidget(elabel, 5, 0);
+        gl->addWidget(this->ee, 5, 1);
+      }
       /* buttons */
       auto* const lv = new QVBoxLayout;
       auto* const bb = new QDialogButtonBox(QDialogButtonBox::Ok |
@@ -109,14 +123,19 @@ namespace tfel{
       const auto sn = this->ne->text().toStdString();
       const auto vn = tfel::unicode::getMangledString(sn);
       const auto tn = this->tb->currentText().toStdString();
+      const auto as = static_cast<unsigned short>(
+          this->asize->text().toInt());
       auto v = (sn != vn)
-                   ? mfront::VariableDescription(tn, sn, vn, 1u, 0u)
-                   : mfront::VariableDescription(tn, vn, 1u, 0u);
-      if (this->gb->currentText() != "None") {
-        v.setGlossaryName(this->gb->currentText().toStdString());
-      }
-      if (!this->ee->text().isEmpty()) {
-        v.setEntryName(this->ee->text().toStdString());
+                   ? mfront::VariableDescription(tn, sn, vn, as, 0u)
+                   : mfront::VariableDescription(tn, vn, as, 0u);
+      if ((this->vtype != LOCALVARIABLE) &&
+          (this->vtype != INTEGRATIONVARIABLE)) {
+        if (this->gb->currentText() != "None") {
+          v.setGlossaryName(this->gb->currentText().toStdString());
+        }
+        if (!this->ee->text().isEmpty()) {
+          v.setEntryName(this->ee->text().toStdString());
+        }
       }
       return v;
     }  // end of MFrontAddVariableDialog::getVariableDescription

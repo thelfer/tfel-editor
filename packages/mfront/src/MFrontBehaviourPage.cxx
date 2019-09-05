@@ -27,6 +27,7 @@
 #include "TFEL/GUI/LineEdit.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/MFrontBehaviourWizardPages.hxx"
 #include "TFEL/GUI/MFrontBehaviourPage.hxx"
 
 namespace tfel {
@@ -173,18 +174,18 @@ namespace tfel {
       iml->setBuddy(this->dsls);
       gl->addWidget(iml, 2, 0);
       gl->addWidget(this->dsls, 2, 1);
+      gl->addWidget(this->bricks_label, 3, 0);
+      gl->addWidget(this->bricks, 3, 1);
       auto *const l1 = new QFrame();
       l1->setFrameShape(QFrame::HLine);
       l1->setFrameShadow(QFrame::Sunken);
-      gl->addWidget(l1, 3, 0, 1, 3);
-      gl->addWidget(this->hypotheses_label, 4, 0);
-      gl->addWidget(this->hypotheses, 4, 1);
-      gl->addWidget(this->symmetries_label, 5, 0);
-      gl->addWidget(this->symmetries, 5, 1);
-      gl->addWidget(this->strain_measures_label, 6, 0);
-      gl->addWidget(this->strain_measures, 6, 1);
-      gl->addWidget(this->bricks_label, 7, 0);
-      gl->addWidget(this->bricks, 7, 1);
+      gl->addWidget(l1, 4, 0, 1, 3);
+      gl->addWidget(this->hypotheses_label, 5, 0);
+      gl->addWidget(this->hypotheses, 5, 1);
+      gl->addWidget(this->symmetries_label, 6, 0);
+      gl->addWidget(this->symmetries, 6, 1);
+      gl->addWidget(this->strain_measures_label, 7, 0);
+      gl->addWidget(this->strain_measures, 7, 1);
       gl->addWidget(this->elastic_properties_label, 8, 0);
       gl->addWidget(this->elastic_properties, 8, 1);
       gl->addWidget(this->crystal_structures_label, 9, 0);
@@ -275,7 +276,13 @@ namespace tfel {
     }
 
     int MFrontBehaviourPage::nextId() const {
-      return 2;
+      const auto b = this->bricks->currentText();
+      if (b == "StandardElastoViscoPlasticity") {
+        return MFrontBehaviourWizardPages::
+            STANDARDELASTOVISCOPLASTICITY;
+      } else {
+        return MFrontBehaviourWizardPages::ADDVARIABLES;
+      }
     }
 
     void MFrontBehaviourPage::updateIntegrationSchemeList() {
@@ -669,7 +676,15 @@ namespace tfel {
                   "@SlidingSystem <0,1,-1,0>{1,1,1,1};\n\n");
       }
       if ((!b.isEmpty()) && (b != "None")) {
-        append("@Brick " + b + ";\n\n");
+        if (((m == VALIDATE_STAGE) || (m == PROCESSING_STAGE)) &&
+            (b == "StandardElastoViscoPlasticity")) {
+          append("@Brick " + b +
+                 "{\n"
+                 "stress_potential: \"Hooke\"{}\n"
+                 "};\n\n");
+        } else {
+          append("@Brick " + b + ";\n\n");
+        }
       }
       if ((e == "@ElasticMaterialProperties") ||
           (e.startsWith("@ComputeStiffnessTensor"))) {
@@ -764,6 +779,10 @@ namespace tfel {
       }
       return {};
     }  // end of getCurrentBehaviourDSLDescription
+
+    QString MFrontBehaviourPage::getSelectedBrick() const {
+      return this->bricks->currentText();
+    }  // end of MFrontBehaviourPage::getSelectedBrick()
 
     MFrontBehaviourPage::~MFrontBehaviourPage() = default;
 

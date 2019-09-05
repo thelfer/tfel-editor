@@ -15,12 +15,18 @@
 // forward declaration
 class QComboBox;
 
+namespace mfront {
+  // forward declaration
+  struct AbstractBehaviourDSL;
+}
+
 namespace tfel {
 
   namespace gui {
 
     // forward declarations
     struct EditorWidget;
+    struct TextEditBase;
     struct MFrontBehaviourWizard;
 
     struct MFrontAddVariablesPage : public QWizardPage {
@@ -31,12 +37,26 @@ namespace tfel {
       /*!
        * \brief constructor
        * \param[in] w: editor widget
+       * \param[in] cd: current document
        * \param[in] p: parent
        */
       MFrontAddVariablesPage(EditorWidget &,
+                             TextEditBase &,
                              MFrontBehaviourWizard *const);
 
       bool validatePage() override;
+
+      void initializePage() override;
+
+      int nextId() const override;
+      /*!
+       * \brief complete the behaviour description
+       * \param[in] dsl: behaviour DSL
+       */
+      virtual void complete(mfront::AbstractBehaviourDSL&) const;
+      //! \brief write the output of the wizard
+      virtual void write() const;
+
 
       //! \return the selected  material properties
       VariableDescriptionContainer getMaterialProperties() const;
@@ -53,11 +73,6 @@ namespace tfel {
       //! \return the selected  integration variables
       VariableDescriptionContainer getIntegrationVariables() const;
 
-      void initializePage() override;
-
-      int nextId() const override;
-      //! \brief write the output of the wizard
-      virtual void write() const;
       //! destructor
       ~MFrontAddVariablesPage() override;
 
@@ -76,6 +91,10 @@ namespace tfel {
       VariableDescriptionContainer localVariables;
       //! \brief integration variables
       VariableDescriptionContainer integrationVariables;
+      //!\brief underlying editor
+      EditorWidget &editor;
+      //!\brief document
+      TextEditBase &d;
 
       template <void (mfront::BehaviourDescription::*f)(
           const mfront::BehaviourDescription::Hypothesis,
@@ -84,13 +103,9 @@ namespace tfel {
       void addVariable(mfront::VariableDescriptionContainer &,
                        const mfront::VariableDescription &);
 
-     protected:
-      //!\brief underlying editor
-      EditorWidget &editor;
-
      private:
       Q_OBJECT
-      };  // end of struct MFrontAddVariablesPage
+    };  // end of struct MFrontAddVariablesPage
 
   }  // end of namespace gui
 

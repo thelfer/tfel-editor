@@ -27,6 +27,7 @@ namespace tfel {
     struct TextEditBase;
     struct MFrontMetaDataPage;
     struct MFrontBehaviourPage;
+    struct MFrontStandardElastoViscoPlasticityBrickPage;
     struct MFrontAddVariablesPage;
 
     struct MFrontBehaviourWizard : public QWizard {
@@ -55,8 +56,13 @@ namespace tfel {
       MFrontMetaDataPage *md = nullptr;
       //! \brief integration method
       MFrontBehaviourPage *im = nullptr;
-      //! \brief integration method
+      //! \brief add variables page
       MFrontAddVariablesPage *variables = nullptr;
+      /*!
+       * \brief brick associated to the StandardElastoViscoPlasticity
+       * brick
+       */
+      MFrontStandardElastoViscoPlasticityBrickPage *sevpbp = nullptr;
       //! \brief document
       TextEditBase &d;
 

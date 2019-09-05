@@ -101,6 +101,13 @@ namespace tfel{
     return 3;
   }
 
+  void MajorModeBase::indentAll() {
+    QTextCursor tc(this->textEdit.textCursor());
+    tc.movePosition(QTextCursor::Start, QTextCursor::MoveAnchor);
+    tc.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
+    this->indentRegion(tc);
+  }  // end of MajorModeBase::indentAll
+
   void MajorModeBase::indentLine(const QTextCursor& c) {
     QTextCursor tc(c);
     tc.beginEditBlock();

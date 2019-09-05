@@ -581,6 +581,7 @@ namespace tfel{
     MFrontBehaviourWizard w(this->editor, this->textEdit);
     if (w.exec() == QDialog::Accepted) {
       w.write();
+      this->indentAll();
     }
   }  // end of MFrontMajorMode::runMFrontBehaviourWizard
 
