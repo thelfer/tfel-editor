@@ -189,7 +189,7 @@ namespace tfel{
       return;
     }
     auto nf = new ProcessOutputFrame(editor, b);
-    b.attachSecondaryTask(QObject::tr("MFront output"), nf);
+    b.attachSecondaryTask(QObject::tr("mfront output"), nf);
     auto &p = nf->getProcess();
     p.setWorkingDirectory(fn.dir().absolutePath());
     auto args = QStringList{};
@@ -248,6 +248,31 @@ namespace tfel{
     p.waitForStarted();
   }  // end of runMFront
 
+  static void runMFrontDoc(EditorWidget &editor,
+                           Buffer &b,
+                           TextEditBase &t) {
+    const auto n = t.getCompleteFileName();
+    if (n.isEmpty()) {
+      editor.displayInformativeMessage(
+          QObject::tr("runMFrontDoc: no file name"));
+      return;
+    }
+    QFileInfo fn(n);
+    if ((!fn.exists()) || (!fn.isFile())) {
+      editor.displayInformativeMessage(
+          QObject::tr("invalid file name"));
+      return;
+    }
+    auto nf = new ProcessOutputFrame(editor, b);
+    b.attachSecondaryTask(QObject::tr("mfront-doc output"), nf);
+    auto &p = nf->getProcess();
+    p.setWorkingDirectory(fn.dir().absolutePath());
+    auto args = QStringList{};
+    args << fn.absoluteFilePath();
+    p.start("mfront-doc", args);
+    p.waitForStarted();
+  }  // end of runMFrontDoc
+
   static void startMFront(EditorWidget &editor,
                           Buffer &b,
                           TextEditBase &t) {
@@ -260,6 +285,20 @@ namespace tfel{
     }
     runMFront(editor, b, t);
   }  // end of  startMFront
+
+  static void generateMFrontDocumentation(EditorWidget &e,
+                                          Buffer &b,
+                                          TextEditBase &t) {
+    if (t.isModified()) {
+      auto *input = t.getSaveInput();
+      QObject::connect(
+          input, &TextEditBase::SaveInput::finished,
+          [&e, &b, &t] { runMFrontDoc(e, b, t); });
+      e.setUserInput(input);
+      return;
+    }
+    runMFrontDoc(e, b, t);
+  }  // end of  generateMFrontDocumentation
 
   static void buildAnalyseFileMenu(
       QObject *o,
@@ -429,6 +468,14 @@ namespace tfel{
       debug(e.what());
     } catch (...) {
     }
+    // generate documentation
+    auto *const dm =
+        m->addAction(QObject::tr("Generate documentation"));
+    dm->setIcon(this->getIcon());
+    QObject::connect(dm, &QAction::triggered, this, [this] {
+      generateMFrontDocumentation(this->editor, this->buffer,
+                                  this->textEdit);
+    });
     // examples
     append_examples(QObject::tr("Open examples from MFrontGallery"),
                     getMFrontGalleryExamples());
@@ -597,8 +644,17 @@ namespace tfel{
     startMFront(editor, b, t);
   }  // end of runMFront
 
+  void generateMFrontDocumentation(EditorWidget &editor) {
+    auto &b = editor.getCurrentBuffer();
+    auto &t = b.getMainFrame();
+    generateMFrontDocumentation(editor, b, t);
+  }  // end of generateMFrontDocumentation
+
   static StandardFunctionCommandProxy<runMFront> runMFrontProxy(
       "run-mfront");
+
+  static StandardFunctionCommandProxy<generateMFrontDocumentation>
+      runMFrontDocProxy("run-mfront-doc");
 
   static StandardMajorModeProxy<MFrontMajorMode> proxy(
       "MFront",

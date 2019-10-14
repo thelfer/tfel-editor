@@ -117,7 +117,9 @@ namespace tfel{
             this->editor.openFile(d->file);
           }
           auto &nb = this->editor.getCurrentBuffer();
-          nb.attachSecondaryTask(self);
+          if (self != nullptr) {
+            nb.attachSecondaryTask(self);
+          }
           nb.getMainFrame().gotoLine(d->line);
           return true;
         }

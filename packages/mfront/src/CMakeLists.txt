@@ -17,6 +17,7 @@ qt_sources(MFrontMode_SOURCES
   MFrontAddVariablesPage
   MFrontAddInelasticFlowDialog
   MFrontStandardElastoViscoPlasticityBrickPage
+  MFrontTemplateGenerationOptionsPage
   MFrontBehaviourWizard)
 
 qt_add_resources(MFrontResources_RCC

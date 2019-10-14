@@ -23,6 +23,7 @@ namespace tfel {
       static const int BEHAVIOUR = 1;
       static const int STANDARDELASTOVISCOPLASTICITY = 2;
       static const int ADDVARIABLES = 3;
+      static const int TEMPLATEGENERATIONOPTIONS = 4;
     };  // end of MFrontBehaviourWizardPages
 
   }  // end of namespace gui

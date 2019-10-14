@@ -30,14 +30,19 @@ namespace tfel {
 
   namespace gui {
 
-    // forward declaration
+    // forward declarations
     struct EditorWidget;
     struct TextEditBase;
     struct LineEdit;
+    struct MFrontBehaviourWizard;
 
     struct MFrontBehaviourPage : public QWizardPage {
       //! \brief a simple alias
       using BehaviourDescription = mfront::BehaviourDescription;
+      //! \brief options for the generation of the DSL
+      struct DSLGenerationOptions {
+        bool with_brick = true;
+      };  // end of DSLGenerationOptions
       /*!
        * \brief constructor
        * \param[in] w: editor widget
@@ -46,7 +51,7 @@ namespace tfel {
        */
       MFrontBehaviourPage(EditorWidget &,
                           TextEditBase &,
-                          QWizard *const);
+                          MFrontBehaviourWizard *const);
 
       bool validatePage() override;
 
@@ -58,7 +63,7 @@ namespace tfel {
        * page.
        */
       virtual std::shared_ptr<mfront::AbstractBehaviourDSL>
-      getBehaviourDSL() const;
+      getBehaviourDSL(const DSLGenerationOptions&) const;
       //! \return the selected DSL
       virtual QString getSelectedDomainSpecificLanguage() const;
       //! \return the selected tangent operator
@@ -118,10 +123,13 @@ namespace tfel {
       /*!
        * \brief write the output of the wizard
        * \param[in] tc: text cursor
+       * \param[in] o: generation options
        * \param[in] w: try to generate a working document (i.e. a
        * document from which a workingthat can generate a )
        */
-      virtual void write(QTextCursor, const WriteMode) const;
+      virtual void write(QTextCursor,
+                         const DSLGenerationOptions &,
+                         const WriteMode) const;
       //! \return the description of the currently selected DSL
       virtual mfront::BehaviourDSLDescription
       getCurrentBehaviourDSLDescription() const;

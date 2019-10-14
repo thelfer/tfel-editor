@@ -42,14 +42,14 @@ namespace tfel {
                              "invalid wizard reference");
         return;
       }
-      const auto dsl = p->getBehaviourDSL();
+      const auto dsl = p->getBehaviourDSL({});
       if (dsl == nullptr) {
         vl->addWidget(new QLabel(
             QObject::tr("Invalid domain specific language")));
         this->setLayout(vl);
         return;
       }
-      const auto dsld = dsl->getBehaviourDSLDescription();
+      const auto dsld = p->getBehaviourDSLDescription();
       // material properties
       if (dsld.allowUserDefinedMaterialProperties) {
         auto *const b =
@@ -167,7 +167,9 @@ namespace tfel {
 
     bool MFrontAddVariablesPage::validatePage() { return true; }
 
-    int MFrontAddVariablesPage::nextId() const { return -1; }
+    int MFrontAddVariablesPage::nextId() const {
+      return MFrontBehaviourWizardPages::TEMPLATEGENERATIONOPTIONS;
+    } // end of MFrontAddVariablesPage::nextId
 
     void MFrontAddVariablesPage::complete(
         mfront::AbstractBehaviourDSL &dsl) const {
@@ -254,7 +256,7 @@ namespace tfel {
                              "invalid wizard reference");
         return;
       }
-      const auto dsl = p->getBehaviourDSL();
+      const auto dsl = p->getBehaviourDSL({});
       if (dsl == nullptr) {
         QMessageBox::warning(&(this->editor), "Internal error",
                              "invalid DSL object");

@@ -5,6 +5,8 @@
  * \date   26/06/2012
  */
 
+#include <iostream>
+
 #include <QtCore/QFile>
 #include <QtCore/QTimer>
 #include <QtCore/QDebug>
@@ -17,6 +19,7 @@
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
 
+#include "TFEL/GUI/VerboseLevel.hxx"
 #include "TFEL/GUI/Command.hxx"
 #include "TFEL/GUI/CommandFactory.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
@@ -88,6 +91,11 @@ namespace tfel{
   };  // end of struct TextEdit::OpenFile
 
   struct EditorWidget::ChangeBuffer : public CommandLine {
+    /*!
+     * \param[in] p: editor
+     * \param[in] bn: list of editor widget
+     * \param[in] d: default buffer
+     */
     ChangeBuffer(EditorWidget& p,
                  const QStringList& bn,
                  const QString& d)
@@ -437,12 +445,16 @@ namespace tfel{
   void EditorWidget::displayInformativeMessage(const QString& m) {
     this->um->setText(m);
     this->minibuffer->setCurrentWidget(this->um);
+    const auto d = getVerboseMode() >= VERBOSE_DEBUG;
+    const auto t = d ? 10000 : 2000;
+    if (d) {
+      std::clog << m.toStdString() << '\n';
+    }
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-    QTimer::singleShot(1000, this, SLOT(resetUserInput()));
+    QTimer::singleShot(t, this, SLOT(resetUserInput()));
 #else
-    QTimer::singleShot(1000, this, &EditorWidget::resetUserInput);
+    QTimer::singleShot(t, this, &EditorWidget::resetUserInput);
 #endif
-
   }  // end of EditorWidget::displayInformativeMessage
 
   void EditorWidget::setUserInput(CommandLine* const l) {

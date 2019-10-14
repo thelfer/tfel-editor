@@ -5,8 +5,6 @@
  * \date   27/07/2019
  */
 
-#include <QtCore/QDebug>
-
 #include <QtCore/QTemporaryFile>
 #include <QtGui/QTextCursor>
 #include <QtGui/QTextDocumentWriter>
@@ -21,12 +19,14 @@
 #include "MFront/DSLFactory.hxx"
 #include "MFront/AbstractBehaviourDSL.hxx"
 #include "MFront/BehaviourDescription.hxx"
+#include "MFront/BehaviourBrickDescription.hxx"
 #include "MFront/BehaviourBrickFactory.hxx"
 #include "MFront/NonLinearSystemSolverFactory.hxx"
 #include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/LineEdit.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/MFrontBehaviourWizard.hxx"
 #include "TFEL/GUI/MFrontBehaviourWizardPages.hxx"
 #include "TFEL/GUI/MFrontBehaviourPage.hxx"
 
@@ -39,9 +39,10 @@ namespace tfel {
              "</i>";
     }
 
-    MFrontBehaviourPage::MFrontBehaviourPage(EditorWidget &w,
-                                             TextEditBase &cd,
-                                             QWizard *const p)
+    MFrontBehaviourPage::MFrontBehaviourPage(
+        EditorWidget &w,
+        TextEditBase &cd,
+        MFrontBehaviourWizard *const p)
         : QWizardPage(p),
           bts(new QComboBox()),
           iss(new QComboBox()),
@@ -110,11 +111,22 @@ namespace tfel {
                            &QComboBox::currentIndexChanged),
                        [this] {
                          this->updateStrainMeasureList();
+                         this->updateBrickList();
+                       });
+      QObject::connect(this->bricks,
+                       static_cast<void (QComboBox::*)(int)>(
+                           &QComboBox::currentIndexChanged),
+                       [this] {
                          this->updateModellingHypothesisList();
                          this->updateBehaviourSymmetryList();
                          this->updateCrystalStructureList();
                          this->updateElasticPropertyList();
-                         this->updateBrickList();
+                       });
+      QObject::connect(this->hypotheses,
+                       static_cast<void (QComboBox::*)(int)>(
+                           &QComboBox::currentIndexChanged),
+                       [this] {
+                         this->updateElasticPropertyList();
                        });
       QObject::connect(this->algorithms,
                        static_cast<void (QComboBox::*)(int)>(
@@ -206,7 +218,8 @@ namespace tfel {
     }  // end of MFrontBehaviourPage::MFrontBehaviourPage
 
     std::shared_ptr<mfront::AbstractBehaviourDSL>
-    MFrontBehaviourPage::getBehaviourDSL() const {
+    MFrontBehaviourPage::getBehaviourDSL(
+        const DSLGenerationOptions& o) const {
       QTemporaryFile tmp("mfront-file");
       if (!tmp.open()) {
         this->editor.displayInformativeMessage(
@@ -216,7 +229,7 @@ namespace tfel {
       QTextDocument t;
       QTextCursor tc(&t);
       tc.insertText("@Behaviour Test;\n");
-      this->write(tc, MFrontBehaviourPage::PROCESSING_STAGE);
+      this->write(tc, o, MFrontBehaviourPage::PROCESSING_STAGE);
       tc.movePosition(QTextCursor::End);
       QTextDocumentWriter writer(&tmp, "plaintext");
       if (!writer.write(&t)) {
@@ -256,7 +269,7 @@ namespace tfel {
         QTextCursor tc(&t);
         tc.insertText("@DSL " + n + ";\n");
         tc.insertText("@Behaviour Test;\n");
-        this->write(tc, MFrontBehaviourPage::VALIDATE_STAGE);
+        this->write(tc, {}, MFrontBehaviourPage::VALIDATE_STAGE);
         tc.movePosition(QTextCursor::End);
         const auto b = dsld.minimalMFrontFileBody;
         tc.insertText("\n" + QString::fromStdString(b) + "\n");
@@ -362,43 +375,91 @@ namespace tfel {
         }
       } catch (...) {
       }
+      this->updateBrickList();
       this->updateStrainMeasureList();
+    }  // end of updateDSLList
+
+    void MFrontBehaviourPage::updateBrickList() {
+      const auto t = this->getSelectedBehaviourType();
+      const auto i = this->getSelectedIntegrationScheme();
+      const auto &pb = this->bricks->currentText();
+      this->bricks->clear();
+      const auto &f = mfront::BehaviourBrickFactory::getFactory();
+      auto bs = QStringList{};
+      for (const auto &n : f.getRegistredBricks(t, i)) {
+        bs << QString::fromStdString(n);
+      }
+      if (bs.isEmpty()) {
+        this->bricks_label->setText(mark_disabled("Brick"));
+        this->bricks->setDisabled(true);
+      } else {
+        this->bricks->addItem("None");
+        this->bricks->addItems(bs);
+        if (bs.contains(pb)) {
+          this->bricks->setCurrentText(pb);
+        } else {
+          this->bricks->setCurrentText("None");
+        }
+        this->bricks_label->setText(QObject::tr("Brick"));
+        this->bricks->setEnabled(true);
+      }
       this->updateModellingHypothesisList();
       this->updateBehaviourSymmetryList();
       this->updateCrystalStructureList();
-      this->updateBrickList();
       this->updateElasticPropertyList();
-    }  // end of updateDSLList
+    }  // end of MFrontBehaviourPage::updateBrickList
 
     void MFrontBehaviourPage::updateModellingHypothesisList() {
       using tfel::material::ModellingHypothesis;
+      const auto ch = this->hypotheses->currentText();
+      this->hypotheses->clear();
+      const auto dsld = this->getCurrentBehaviourDSLDescription();
+      const auto amhs = ModellingHypothesis::getModellingHypotheses();
+      const auto &smhs = dsld.supportedModellingHypotheses;
       QStringList mhs;
-      mhs << "Default"
-          << "All";
-      for (const auto &h :
-           ModellingHypothesis::getModellingHypotheses()) {
+      if (smhs.size() != 1u) {
+        mhs << "Default";
+      }
+      if (smhs.size() == amhs.size()) {
+        // paranoic check
+        if(std::equal(smhs.begin(), smhs.end(), amhs.begin())){
+          mhs << "All";
+        }
+      }
+      for (const auto &h : smhs) {
         mhs << QString::fromStdString(ModellingHypothesis::toString(h));
       }
       this->hypotheses->addItems(mhs);
-      this->hypotheses->setCurrentText("Default");
-      //
+      if ((ch.isEmpty()) && (mhs.contains("Default"))) {
+        this->hypotheses->setCurrentText("Default");
+      } else if (mhs.contains(ch)) {
+        this->hypotheses->setCurrentText(ch);
+      }
+      this->updateElasticPropertyList();
     }  // end of MFrontBehaviourPage::updateModellingHypothesisList
 
     void MFrontBehaviourPage::updateBehaviourSymmetryList() {
+      using tfel::material::ModellingHypothesis;
       const auto cs = this->symmetries->currentText();
       const auto dsld = this->getCurrentBehaviourDSLDescription();
-      const auto &mhs = dsld.supportedBehaviourSymmetries;
+      const auto &bhs = dsld.supportedBehaviourSymmetries;
       this->symmetries->clear();
       QStringList ss;
-      if (std::find(mhs.cbegin(), mhs.cend(), mfront::ISOTROPIC) !=
-          mhs.cend()) {
+      if (std::find(bhs.cbegin(), bhs.cend(), mfront::ISOTROPIC) !=
+          bhs.cend()) {
         ss << "Isotropic";
       }
-      if (std::find(mhs.cbegin(), mhs.cend(), mfront::ORTHOTROPIC) !=
-          mhs.cend()) {
-        ss << "Orthotropic (Pipe)"
-           << "Orthotropic (Plate)"
-           << "Orthotropic";
+      if (std::find(bhs.cbegin(), bhs.cend(), mfront::ORTHOTROPIC) !=
+          bhs.cend()) {
+        const auto &mhs = dsld.supportedModellingHypotheses;
+        if ((mhs.size() == 1u) &&
+            (mhs.front() == ModellingHypothesis::TRIDIMENSIONAL)) {
+          ss << "Orthotropic";
+        } else {
+          ss << "Orthotropic (Pipe)"
+             << "Orthotropic (Plate)"
+             << "Orthotropic";
+        }
       }
       this->symmetries->addItems(ss);
       if (ss.size() == 1) {
@@ -427,7 +488,10 @@ namespace tfel {
       this->crystal_structures->clear();
       if (dsld.allowCrystalStructureDefinition) {
         QStringList css;
-        css << "None"
+        if (!dsld.requireCrystalStructureDefinition) {
+          css << "None";
+        }
+        css << "Cubic"
             << "Body-centered cubic"
             << "Face-centered cubic"
             << "Hexagonal close packing";
@@ -444,32 +508,6 @@ namespace tfel {
         this->crystal_structures->setDisabled(true);
       }
     }  // end of MFrontBehaviourPage::updateCrystalStructureList
-
-    void MFrontBehaviourPage::updateBrickList() {
-      const auto t = this->getSelectedBehaviourType();
-      const auto i = this->getSelectedIntegrationScheme();
-      const auto &pb = this->bricks->currentText();
-      this->bricks->clear();
-      const auto &f = mfront::BehaviourBrickFactory::getFactory();
-      auto bs = QStringList{};
-      for (const auto &n : f.getRegistredBricks(t, i)) {
-        bs << QString::fromStdString(n);
-      }
-      if (bs.isEmpty()) {
-        this->bricks_label->setText(mark_disabled("Brick"));
-        this->bricks->setDisabled(true);
-      } else {
-        this->bricks->addItem("None");
-        this->bricks->addItems(bs);
-        if (bs.contains(pb)) {
-          this->bricks->setCurrentText(pb);
-        } else {
-          this->bricks->setCurrentText("None");
-        }
-        this->bricks_label->setText(QObject::tr("Brick"));
-        this->bricks->setEnabled(true);
-      }
-    }  // end of MFrontBehaviourPage::updateBrickList
 
     void MFrontBehaviourPage::updateAlgorithmList() {
       this->algorithms->clear();
@@ -525,8 +563,28 @@ namespace tfel {
     }  // end of MFrontBehaviourPage::updateStrainMeasureList()
 
     void MFrontBehaviourPage::updateElasticPropertyList() {
+      using tfel::material::ModellingHypothesis;
       const auto p = this->elastic_properties->currentText();
       const auto bt = this->getSelectedBehaviourType();
+      const auto dsld = this->getCurrentBehaviourDSLDescription();
+      auto add_stiffness_tensor = [this, &dsld](QStringList &emps) {
+        const auto h = this->hypotheses->currentText();
+        const auto ps =
+            QString::fromStdString(ModellingHypothesis::toString(
+                ModellingHypothesis::PLANESTRESS));
+        const auto agps =
+            QString::fromStdString(ModellingHypothesis::toString(
+                ModellingHypothesis::AXISYMMETRICALGENERALISEDPLANESTRESS));
+        if ((h == "All") || (h == ps) || (h == agps)) {
+          emps << "@ComputeStiffnessTensor<Altered>"
+               << "@ComputeStiffnessTensor<UnAltered>"
+               << "@RequireStiffnessTensor<Altered>"
+               << "@RequireStiffnessTensor<UnAltered>";
+        } else {
+          emps << "@ComputeStiffnessTensor"
+               << "@RequireStiffnessTensor";
+        }
+      };
       this->elastic_properties->clear();
       if (!((bt ==
              BehaviourDescription::STANDARDSTRAINBASEDBEHAVIOUR) ||
@@ -536,19 +594,18 @@ namespace tfel {
             mark_disabled("Elastic properties"));
         return;
       }
-      const auto i = this->getSelectedIntegrationScheme();
       this->elastic_properties_label->setText("Elastic properties");
       auto emps = QStringList{};
-      if (i == BehaviourDescription::SPECIFICSCHEME) {
-        emps << "Undefined"
-             << "@ElasticMaterialProperties";
+      if (dsld.requireStiffnessTensorDefinition) {
+        add_stiffness_tensor(emps);
       } else {
-        emps << "Undefined"
-             << "@ElasticMaterialProperties"
-             << "@ComputeStiffnessTensor<Altered>"
-             << "@ComputeStiffnessTensor<UnAltered>"
-             << "@RequireStiffnessTensor<Altered>"
-             << "@RequireStiffnessTensor<UnAltered>";
+        emps << "Undefined";
+        if (dsld.allowElasticPropertiesDefinition) {
+          emps << "@ElasticMaterialProperties";
+        }
+        if (dsld.allowStiffnessTensorDefinition) {
+          add_stiffness_tensor(emps);
+        }
       }
       this->elastic_properties->addItems(emps);
       if (emps.contains(p)) {
@@ -625,13 +682,14 @@ namespace tfel {
        // MFrontBehaviourPage::getSelectedDomainSpecificLanguage()
 
     void MFrontBehaviourPage::write(QTextCursor tc,
+                                    const DSLGenerationOptions &o,
                                     const WriteMode m) const {
       const auto bt = this->getSelectedBehaviourType();
       const auto i = this->getSelectedIntegrationScheme();
       const auto h = this->hypotheses->currentText();
       const auto s = this->symmetries->currentText();
       const auto e = this->elastic_properties->currentText();
-      const auto b = this->bricks->currentText();
+      const auto b = this->getSelectedBrick();
       const auto c = this->crystal_structures->currentText();
       auto append = [&tc](const QString &text) { tc.insertText(text); };
       auto append_if = [&append](const bool cond, const QString &text) {
@@ -662,20 +720,7 @@ namespace tfel {
       } else if (s == "Orthotropic") {
         append("@OrthotropicBehaviour;\n\n");
       }
-      if (c == "Body-centered cubic") {
-        append("@CrystalStructure BCC;\n");
-        append_if(m == VALIDATE_STAGE,
-                  "@SlidingSystem <0,1,-1>{1,1,1};\n\n");
-      } else if (c == "Face-centered cubic") {
-        append("@CrystalStructure FCC;\n\n");
-        append_if(m == VALIDATE_STAGE,
-                  "@SlidingSystem <0,1,-1>{1,1,1};\n\n");
-      } else if (c == "Hexagonal close packing") {
-        append("@CrystalStructure HCP;\n\n");
-        append_if(m == VALIDATE_STAGE,
-                  "@SlidingSystem <0,1,-1,0>{1,1,1,1};\n\n");
-      }
-      if ((!b.isEmpty()) && (b != "None")) {
+      if ((!b.isEmpty()) && (o.with_brick)) {
         if (((m == VALIDATE_STAGE) || (m == PROCESSING_STAGE)) &&
             (b == "StandardElastoViscoPlasticity")) {
           append("@Brick " + b +
@@ -683,8 +728,28 @@ namespace tfel {
                  "stress_potential: \"Hooke\"{}\n"
                  "};\n\n");
         } else {
-          append("@Brick " + b + ";\n\n");
+          append("@Brick " + b );
+          const auto *const w =
+              dynamic_cast<const MFrontBehaviourWizard *const>(
+                  this->wizard());
+          if ((w != nullptr) && (m == FINAL_STAGE)) {
+            w->writeBehaviourBrickOptions(b);
+          }
+          append(";\n\n");
         }
+      }
+      if (c == "Cubic") {
+        append("@CrystalStructure Cubic;\n");
+        append("@SlidingSystems {<0,1,-1>{1,1,1}};\n\n");
+      } else if (c == "Body-centered cubic") {
+        append("@CrystalStructure BCC;\n");
+        append("@SlidingSystems {<0,1,-1>{1,1,1}};\n\n");
+      } else if (c == "Face-centered cubic") {
+        append("@CrystalStructure FCC;\n\n");
+        append("@SlidingSystems {<0,1,-1>{1,1,1}};\n\n");
+      } else if (c == "Hexagonal close packing") {
+        append("@CrystalStructure HCP;\n\n");
+        append("@SlidingSystems {<0,1,-1,0>{1,1,1,1}};\n\n");
       }
       if ((e == "@ElasticMaterialProperties") ||
           (e.startsWith("@ComputeStiffnessTensor"))) {
@@ -762,7 +827,7 @@ namespace tfel {
     }  // end of MFrontBehaviourPage::getSelectedTangentOperator
 
     void MFrontBehaviourPage::write() const {
-      this->write(this->d.textCursor(),
+      this->write(this->d.textCursor(), {},
                   MFrontBehaviourPage::FINAL_STAGE);
     }  // end of MFrontBehaviourPage::write()
 
@@ -774,14 +839,28 @@ namespace tfel {
         const auto dsl =
             std::dynamic_pointer_cast<mfront::AbstractBehaviourDSL>(
                 f.createNewDSL(n.toStdString()));
-        return dsl->getBehaviourDSLDescription();
+        if (dsl == nullptr) {
+          return {};
+        }
+        auto bd = dsl->getBehaviourDescription();
+        auto dsldd = dsl->getBehaviourDSLDescription();
+        const auto b = MFrontBehaviourPage::getSelectedBrick();
+        if (b.isEmpty()) {
+          return dsldd;
+        }
+        const auto &bbf = mfront::BehaviourBrickFactory::getFactory();
+        const auto bb = bbf.get(b.toStdString(), *dsl, bd);
+        const auto bbd = bb->getDescription();
+        mfront::complete(dsldd, bbd);
+        return dsldd;
       } catch (...) {
       }
       return {};
     }  // end of getCurrentBehaviourDSLDescription
 
     QString MFrontBehaviourPage::getSelectedBrick() const {
-      return this->bricks->currentText();
+      const auto b = this->bricks->currentText();
+      return b == "None" ? "" : b;
     }  // end of MFrontBehaviourPage::getSelectedBrick()
 
     MFrontBehaviourPage::~MFrontBehaviourPage() = default;

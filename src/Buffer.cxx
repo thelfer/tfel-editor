@@ -47,7 +47,10 @@ namespace tfel {
 
       void focusInEvent(QFocusEvent *) override {
         QTabWidget::setFocus();
-        this->currentWidget()->setFocus();
+        auto *const c = this->currentWidget();
+        if (c != nullptr) {
+          c->setFocus();
+        }
       }  // end of focusInEvent
 
       void removeTab(int i) {
@@ -191,12 +194,14 @@ namespace tfel {
       QObject::connect(this->stw,
                        &SecondaryTaskTabWidget::tabCloseRequested, this,
                        &Buffer::closeSecondaryTask);
-      QObject::connect(this->stw,
-                       &SecondaryTaskTabWidget::currentChanged, this,
-                       [this]() {
-                         this->editor.setCurrentSecondaryTask(
-                             this, this->stw->currentWidget());
-                       });
+      QObject::connect(
+          this->stw, &SecondaryTaskTabWidget::currentChanged, this,
+          [this]() {
+            auto *const c = this->stw->currentWidget();
+            if (c != nullptr) {
+              this->editor.setCurrentSecondaryTask(this, c);
+            }
+          });
       this->updateBufferName();
     }
 
@@ -399,6 +404,9 @@ namespace tfel {
     }  // end of Buffer::attachSecondaryTask
 
     void Buffer::attachSecondaryTask(QWidget *const p) {
+      if (p == nullptr) {
+        return;
+      }
       if (this->getSecondaryTaskIndex(p) != -1) {
         return;
       }
@@ -411,6 +419,9 @@ namespace tfel {
     }  // end of Buffer::attachSecondaryTask
 
     int Buffer::getSecondaryTaskIndex(QWidget *const p) const {
+      if (p == nullptr) {
+        return -1;
+      }
       for (int i = 0; i != this->stw->count(); ++i) {
         auto *pi = this->stw->widget(i);
         if (pi == p) {
@@ -422,8 +433,8 @@ namespace tfel {
             return i;
           }
         }
-      }
-      return -1;
+        }
+        return -1;
     }  // end of Buffer::getSecondaryTaskIndex
 
     QString Buffer::getSecondaryTaskTitle(QWidget *const p) const {
@@ -467,10 +478,12 @@ namespace tfel {
         }
         return nullptr;
       }();
-      bool visible = false;
+      auto visible = false;
       for (const auto &t : tasks) {
-        this->stw->addTab(t.w, t.icon, t.title);
-        visible = visible || t.visible;
+        if (t.w != nullptr) {
+          this->stw->addTab(t.w, t.icon, t.title);
+          visible = visible || t.visible;
+        }
       }
       if (visible) {
         this->stw->show();
@@ -483,6 +496,9 @@ namespace tfel {
     }  // end of Buffer::refreshSecondaryTaskTabWidget
 
     void Buffer::removeSecondaryTask(QWidget *const s) {
+      if (s == nullptr) {
+        return;
+      }
       for (int i = 0; i != this->stw->count(); ++i) {
         if (s == this->stw->widget(i)) {
           this->stw->removeTab(i);
@@ -496,6 +512,9 @@ namespace tfel {
     }  // end of Buffer::removeSecondaryTask
 
     void Buffer::showSecondaryTask(QWidget *const s) {
+      if (s == nullptr) {
+        return;
+      }
       // look if all secondary tasks are hidden
       this->editor.showSecondaryTask(this, s);
       for (int i = 0; i != this->stw->count(); ++i) {
@@ -508,6 +527,9 @@ namespace tfel {
     }  // end of Buffer::showSecondaryTask
 
     void Buffer::hideSecondaryTask(QWidget *const s) {
+      if (s == nullptr) {
+        return;
+      }
       // look if all secondary tasks are hidden
       auto h = true;
       this->editor.hideSecondaryTask(this, s);

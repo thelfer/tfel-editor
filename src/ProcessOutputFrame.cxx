@@ -69,6 +69,11 @@ namespace tfel{
   }  // end of ProcessOutputFrame::getProcess
 
   ProcessOutputFrame::~ProcessOutputFrame() {
+    using QProcessFinished =
+        void (QProcess::*)(int, QProcess::ExitStatus);
+    QObject::disconnect(this->process, static_cast<QProcessFinished>(
+                                           &QProcess::finished),
+                        this, &ProcessOutputFrame::processFinished);
     if (this->process->state() == QProcess::Running) {
       this->process->terminate();
       if (!this->process->waitForFinished()) {

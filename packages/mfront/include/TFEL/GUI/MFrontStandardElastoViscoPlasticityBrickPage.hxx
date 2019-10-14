@@ -8,7 +8,9 @@
 #ifndef LIB_TFEL_GUI_MFRONTSTANDARDELASTOVISCOPLASTICITYBRICKPAGE_HXX
 #define LIB_TFEL_GUI_MFRONTSTANDARDELASTOVISCOPLASTICITYBRICKPAGE_HXX
 
+#include <vector>
 #include <QtWidgets/QWizard>
+#include "TFEL/GUI/MFrontAddInelasticFlowDialog.hxx"
 
 // forward declaration
 class QComboBox;
@@ -21,6 +23,7 @@ namespace tfel {
     struct EditorWidget;
     struct TextEditBase;
     struct LineEdit;
+    struct MFrontBehaviourWizard;
 
     struct MFrontStandardElastoViscoPlasticityBrickPage : public QWizardPage {
       /*!
@@ -31,7 +34,7 @@ namespace tfel {
        */
       MFrontStandardElastoViscoPlasticityBrickPage(EditorWidget &,
                                                    TextEditBase &,
-                                                   QWizard *const);
+                                                   MFrontBehaviourWizard*const);
 
       bool validatePage() override;
 
@@ -42,8 +45,14 @@ namespace tfel {
       ~MFrontStandardElastoViscoPlasticityBrickPage() override;
 
      protected:
-
+      //! list of inelastic flows
+      std::vector<
+          MFrontAddInelasticFlowDialog::InelasticFlowDescription>
+          inelastic_flows;
+      //! \brief list of stress potentials
       QComboBox *const stress_potentials;
+      //! \brief editor
+      EditorWidget &editor;
       //!\brief document
       TextEditBase &d;
 

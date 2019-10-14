@@ -205,11 +205,13 @@ namespace tfel{
         const auto pos = c.position()-b.position();
         if (pos < d->file.size()) {
           auto &cb = this->editor.getCurrentBuffer();
-          const auto self  = cb.getCurrentSecondaryTask();
+          auto *const self = cb.getCurrentSecondaryTask();
           this->editor.openFile(d->file);
           auto &nb = this->editor.getCurrentBuffer();
-          nb.attachSecondaryTask(self);
           nb.getMainFrame().gotoPosition(d->line, d->column);
+          if (self != nullptr) {
+            nb.attachSecondaryTask(self);
+          }
           return true;
         }
       }
@@ -236,7 +238,9 @@ namespace tfel{
           const auto self = cb.getCurrentSecondaryTask();
           this->editor.openFile(d->file);
           auto &nb = this->editor.getCurrentBuffer();
-          nb.attachSecondaryTask(self);
+          if (self != nullptr) {
+            nb.attachSecondaryTask(self);
+          }
           nb.getMainFrame().gotoPosition(d->line, d->column);
           return true;
         }
