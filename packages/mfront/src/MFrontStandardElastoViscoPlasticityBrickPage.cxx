@@ -22,6 +22,8 @@
 #include "MFront/BehaviourBrick/IsotropicHardeningRuleFactory.hxx"
 #include "MFront/BehaviourBrick/KinematicHardeningRule.hxx"
 #include "MFront/BehaviourBrick/KinematicHardeningRuleFactory.hxx"
+#include "MFront/BehaviourBrick/InelasticFlow.hxx"
+#include "MFront/BehaviourBrick/InelasticFlowFactory.hxx"
 #include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/LineEdit.hxx"
@@ -160,7 +162,7 @@ namespace tfel{
           }
         }
         for (const auto ihrn : c.isotropic_hardening_rules) {
-          append(",\nisotropic_hardening_rule\n: \"" + ihrn + "\"");
+          append(",\nisotropic_hardening\n: \"" + ihrn + "\"");
           try {
             const auto &ihrf = mfront::bbrick::
                 IsotropicHardeningRuleFactory::getFactory();
@@ -171,7 +173,7 @@ namespace tfel{
           }
         }
         for (const auto khrn : c.kinematic_hardening_rules) {
-          append(",\nkinematic_hardening_rule\n: \"" + khrn + "\"");
+          append(",\nkinematic_hardening\n: \"" + khrn + "\"");
           try {
             const auto &khrf = mfront::bbrick::
                 KinematicHardeningRuleFactory::getFactory();
@@ -180,6 +182,37 @@ namespace tfel{
             write_options(khr->getOptions());
           } catch (...) {
           }
+        }
+        try {
+          const auto &iff =
+              mfront::bbrick::InelasticFlowFactory::getFactory();
+          const auto iflow = iff.generate(c.inelastic_flow.toStdString());
+          const auto opts = iflow->getOptions();
+          bool first = true;
+          for (decltype(opts.size()) i = 0; i != opts.size();) {
+            const auto &o = opts[i];
+            if ((o.name == "criterion") ||
+                (o.name == "stress_criterion") ||
+                (o.name == "flow_criterion") ||
+                (o.name == "plastic_potential") ||
+                (o.name == "isotropic_hardening") ||
+                (o.name == "kinematic_hardening")) {
+              ++i;
+              continue;
+            }
+            if (first) {
+              first = false;
+              append(",\n");
+            }
+            if (++i != opts.size()) {
+              append(QString::fromStdString(o.name + ": , //" +
+                                            o.description + "\n"));
+            } else {
+              append(QString::fromStdString(o.name + ": //" +
+                                            o.description + "\n"));
+            }
+          }
+        } catch (...) {
         }
         append("}\n");
       }
