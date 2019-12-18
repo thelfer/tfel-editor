@@ -47,7 +47,6 @@ namespace tfel {
 
     bool SelectMFMBehaviourPage::validatePage() {
       const auto b = this->sb->getSelectedBehaviour();
-      qDebug() << b.generate().get() << '\n';
       return b.generate() != nullptr;
     }  // end of SelectLibrary::validatePage
 
