@@ -13,7 +13,7 @@ namespace tfel{
 
   CxxSyntaxHighlighter::CxxSyntaxHighlighter(QTextDocument *p)
       : CSyntaxHighlighter(p) {
-    const unsigned short knbr = 67;
+    constexpr const unsigned short knbr = 70;
     const std::string keys[knbr] = {
         "asm",          "auto",         "bool",
         "break",        "case",         "catch",
