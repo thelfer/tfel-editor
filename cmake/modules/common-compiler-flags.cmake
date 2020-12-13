@@ -1,7 +1,7 @@
 # This files gather compiler flags that are common to g++, clang and
 # pathCC
 
-tfel_enable_cxx_compiler_flag(COMPILER_WARNINGS "Wall" "W" "Wextra" "pedantic" "Wshadow")
+tfel_enable_cxx_compiler_flag(COMPILER_WARNINGS "Wall" "W" "Wshadow")
 tfel_enable_cxx_compiler_flag(COMPILER_WARNINGS "Wpointer-arith" "Wcast-qual" "Wcast-align")
 tfel_enable_cxx_compiler_flag(COMPILER_WARNINGS "Wwrite-strings" "Wctor-dtor-privacy" "Wnon-virtual-dtor")
 tfel_enable_cxx_compiler_flag(COMPILER_WARNINGS "Woverloaded-virtual" "Wreturn-type" "Wfloat-equal")
@@ -13,7 +13,6 @@ tfel_enable_cxx_compiler_flag(COMPILER_WARNINGS "Wno-conversion")
 tfel_enable_cxx_compiler_flag(COMPILER_WARNINGS "Wdouble-promotion")
 tfel_enable_cxx_compiler_flag(COMPILER_WARNINGS "Winit-self")
 tfel_enable_cxx_compiler_flag(COMPILER_WARNINGS "Wlogical-op")
-tfel_enable_cxx_compiler_flag(COMPILER_WARNINGS "Wmissing-declarations")
 tfel_enable_cxx_compiler_flag(COMPILER_WARNINGS "Wmissing-include-dirs")
 tfel_enable_cxx_compiler_flag(COMPILER_WARNINGS "Wnoexcept")
 tfel_enable_cxx_compiler_flag(COMPILER_WARNINGS "Wold-style-cast")

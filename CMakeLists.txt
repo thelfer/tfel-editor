@@ -4,6 +4,9 @@ cmake_minimum_required(VERSION 2.4)
 cmake_policy(SET CMP0020 NEW)
 include(cmake/modules/autotools.cmake)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CXX_STANDARD_REQUIRED ON)
+
 #compiler options
 include(cmake/modules/compiler.cmake)
 #find the tfel package
