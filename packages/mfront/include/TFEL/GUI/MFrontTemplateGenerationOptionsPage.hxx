@@ -17,7 +17,7 @@ namespace tfel {
 
     //! forward declaration
     struct MFrontBehaviourWizard;
-    
+
     /*!
      * \brief page allowing the user to select options used for the
      * generation of the template.
@@ -32,8 +32,8 @@ namespace tfel {
       void initializePage() override;
       int nextId() const override;
       //! \return the options selected by the user
-      mfront::MFrontTemplateGenerationOptions
-      getTemplateGenerationOptions() const;
+      mfront::MFrontTemplateGenerationOptions getTemplateGenerationOptions()
+          const;
       //! destructor
       ~MFrontTemplateGenerationOptionsPage() override;
 

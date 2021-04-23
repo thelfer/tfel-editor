@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  CxxMajorMode.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,48 +6,46 @@
  */
 
 #ifndef LIB_TFEL_GUI_CXXMAJORMODE_HXX
-#define LIB_TFEL_GUI_CXXMAJORMODE_HXX 
+#define LIB_TFEL_GUI_CXXMAJORMODE_HXX
 
-#include"TFEL/GUI/Config.hxx"
-#include"TFEL/GUI/CMajorModeBase.hxx"
+#include "TFEL/GUI/Config.hxx"
+#include "TFEL/GUI/CMajorModeBase.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  // forward declaration
-  struct TextEditBase;
+    // forward declaration
+    struct TextEditBase;
 
-  //! major mode dedicated to the C++ language
-  struct TFEL_GUI_VISIBILITY_EXPORT CxxMajorMode : public CMajorModeBase {
-    CxxMajorMode(EditorWidget &, Buffer &, TextEditBase &);
+    //! major mode dedicated to the C++ language
+    struct TFEL_GUI_VISIBILITY_EXPORT CxxMajorMode : public CMajorModeBase {
+      CxxMajorMode(EditorWidget &, Buffer &, TextEditBase &);
 
-    QString getName() const override;
+      QString getName() const override;
 
-    QString getDescription() const override;
+      QString getDescription() const override;
 
-    QIcon getIcon() const override;
-    
-    /*!
-     * This method is called before any treatment by TextEditBase
-     * and allows the mode to override default shortcuts
-     */
-    bool keyPressEvent(QKeyEvent * const) override;
+      QIcon getIcon() const override;
 
-    void setSyntaxHighlighter(QTextDocument *const) override;
-    //! destructor
-    ~CxxMajorMode() override;
+      /*!
+       * This method is called before any treatment by TextEditBase
+       * and allows the mode to override default shortcuts
+       */
+      bool keyPressEvent(QKeyEvent *const) override;
 
-   protected:
+      void setSyntaxHighlighter(QTextDocument *const) override;
+      //! destructor
+      ~CxxMajorMode() override;
 
-    QString getLanguageName() const override;
+     protected:
+      QString getLanguageName() const override;
 
-   private:
-    Q_OBJECT
-  }; // end of struct CxxMajorMode
+     private:
+      Q_OBJECT
+    };  // end of struct CxxMajorMode
 
-} // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_CXXMAJORMODE_HXX */
-

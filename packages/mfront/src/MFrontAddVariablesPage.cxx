@@ -22,9 +22,7 @@ namespace tfel {
   namespace gui {
 
     MFrontAddVariablesPage::MFrontAddVariablesPage(
-        EditorWidget &w,
-        TextEditBase &cd,
-        MFrontBehaviourWizard *const p)
+        EditorWidget &w, TextEditBase &cd, MFrontBehaviourWizard *const p)
         : QWizardPage(p), editor(w), d(cd) {
       this->setTitle(QObject::tr("Add variables."));
       this->setSubTitle(
@@ -44,25 +42,22 @@ namespace tfel {
       }
       const auto dsl = p->getBehaviourDSL({});
       if (dsl == nullptr) {
-        vl->addWidget(new QLabel(
-            QObject::tr("Invalid domain specific language")));
+        vl->addWidget(
+            new QLabel(QObject::tr("Invalid domain specific language")));
         this->setLayout(vl);
         return;
       }
       const auto dsld = p->getBehaviourDSLDescription();
       // material properties
       if (dsld.allowUserDefinedMaterialProperties) {
-        auto *const b =
-            new QPushButton(QObject::tr("Add a material property"));
+        auto *const b = new QPushButton(QObject::tr("Add a material property"));
         QObject::connect(b, &QPushButton::pressed, [this, p] {
           MFrontAddVariableDialog dialog(
-              this->editor, MFrontAddVariableDialog::MATERIALPROPERTY,
-              p);
+              this->editor, MFrontAddVariableDialog::MATERIALPROPERTY, p);
           if (dialog.exec() == QDialog::Accepted) {
             this->addVariable<
                 &mfront::BehaviourDescription::addMaterialProperty>(
-                this->materialProperties,
-                dialog.getVariableDescription());
+                this->materialProperties, dialog.getVariableDescription());
           }
         });
         vl->addWidget(b);
@@ -71,11 +66,10 @@ namespace tfel {
       if (dsld.allowUserDefinedParameters) {
         auto *const b = new QPushButton(QObject::tr("Add a parameter"));
         QObject::connect(b, &QPushButton::pressed, [this, p] {
-          MFrontAddVariableDialog dialog(
-              this->editor, MFrontAddVariableDialog::PARAMETER, p);
+          MFrontAddVariableDialog dialog(this->editor,
+                                         MFrontAddVariableDialog::PARAMETER, p);
           if (dialog.exec() == QDialog::Accepted) {
-            this->addVariable<
-                &mfront::BehaviourDescription::addParameter>(
+            this->addVariable<&mfront::BehaviourDescription::addParameter>(
                 this->parameters, dialog.getVariableDescription());
           }
         });
@@ -83,14 +77,12 @@ namespace tfel {
       }
       // local variables
       if (dsld.allowUserDefinedLocalVariables) {
-        auto *const b =
-            new QPushButton(QObject::tr("Add a local variable"));
+        auto *const b = new QPushButton(QObject::tr("Add a local variable"));
         QObject::connect(b, &QPushButton::pressed, [this, p] {
           MFrontAddVariableDialog dialog(
               this->editor, MFrontAddVariableDialog::LOCALVARIABLE, p);
           if (dialog.exec() == QDialog::Accepted) {
-            this->addVariable<
-                &mfront::BehaviourDescription::addLocalVariable>(
+            this->addVariable<&mfront::BehaviourDescription::addLocalVariable>(
                 this->localVariables, dialog.getVariableDescription());
           }
         });
@@ -98,14 +90,12 @@ namespace tfel {
       }
       // state variables
       if (dsld.allowUserDefinedStateVariables) {
-        auto *const b =
-            new QPushButton(QObject::tr("Add a state variable"));
+        auto *const b = new QPushButton(QObject::tr("Add a state variable"));
         QObject::connect(b, &QPushButton::pressed, [this, p] {
           MFrontAddVariableDialog dialog(
               this->editor, MFrontAddVariableDialog::STATEVARIABLE, p);
           if (dialog.exec() == QDialog::Accepted) {
-            this->addVariable<
-                &mfront::BehaviourDescription::addStateVariable>(
+            this->addVariable<&mfront::BehaviourDescription::addStateVariable>(
                 this->stateVariables, dialog.getVariableDescription());
           }
         });
@@ -113,34 +103,30 @@ namespace tfel {
       }
       // auxiliary state variables
       if (dsld.allowUserDefinedAuxiliaryStateVariables) {
-        auto *const b = new QPushButton(
-            QObject::tr("Add an auxiliary state variable"));
+        auto *const b =
+            new QPushButton(QObject::tr("Add an auxiliary state variable"));
         QObject::connect(b, &QPushButton::pressed, [this, p] {
           MFrontAddVariableDialog dialog(
-              this->editor,
-              MFrontAddVariableDialog::AUXILIARYSTATEVARIABLE, p);
+              this->editor, MFrontAddVariableDialog::AUXILIARYSTATEVARIABLE, p);
           if (dialog.exec() == QDialog::Accepted) {
-            this->addVariable<&mfront::BehaviourDescription::
-                                  addAuxiliaryStateVariable>(
-                this->auxiliaryStateVariables,
-                dialog.getVariableDescription());
+            this->addVariable<
+                &mfront::BehaviourDescription::addAuxiliaryStateVariable>(
+                this->auxiliaryStateVariables, dialog.getVariableDescription());
           }
         });
         vl->addWidget(b);
       }
       // external state variables
       if (dsld.allowUserDefinedExternalStateVariables) {
-        auto *const b = new QPushButton(
-            QObject::tr("Add an external state variable"));
+        auto *const b =
+            new QPushButton(QObject::tr("Add an external state variable"));
         QObject::connect(b, &QPushButton::pressed, [this, p] {
           MFrontAddVariableDialog dialog(
-              this->editor,
-              MFrontAddVariableDialog::EXTERNALSTATEVARIABLE, p);
+              this->editor, MFrontAddVariableDialog::EXTERNALSTATEVARIABLE, p);
           if (dialog.exec() == QDialog::Accepted) {
-            this->addVariable<&mfront::BehaviourDescription::
-                                  addExternalStateVariable>(
-                this->externalStateVariables,
-                dialog.getVariableDescription());
+            this->addVariable<
+                &mfront::BehaviourDescription::addExternalStateVariable>(
+                this->externalStateVariables, dialog.getVariableDescription());
           }
         });
         vl->addWidget(b);
@@ -151,13 +137,11 @@ namespace tfel {
             new QPushButton(QObject::tr("Add an integration variable"));
         QObject::connect(b, &QPushButton::pressed, [this, p] {
           MFrontAddVariableDialog dialog(
-              this->editor,
-              MFrontAddVariableDialog::INTEGRATIONVARIABLE, p);
+              this->editor, MFrontAddVariableDialog::INTEGRATIONVARIABLE, p);
           if (dialog.exec() == QDialog::Accepted) {
             this->addVariable<
                 &mfront::BehaviourDescription::addIntegrationVariable>(
-                this->integrationVariables,
-                dialog.getVariableDescription());
+                this->integrationVariables, dialog.getVariableDescription());
           }
         });
         vl->addWidget(b);
@@ -169,7 +153,7 @@ namespace tfel {
 
     int MFrontAddVariablesPage::nextId() const {
       return MFrontBehaviourWizardPages::TEMPLATEGENERATIONOPTIONS;
-    } // end of MFrontAddVariablesPage::nextId
+    }  // end of MFrontAddVariablesPage::nextId
 
     void MFrontAddVariablesPage::complete(
         mfront::AbstractBehaviourDSL &dsl) const {
@@ -197,43 +181,40 @@ namespace tfel {
     }  // end of MFrontAddVariablesPage::complete
 
     void MFrontAddVariablesPage::write() const {
-      auto write_variables = [this](
-          const QString &t,
-          const mfront::VariableDescriptionContainer &vars) {
-        for (const auto &v : vars) {
-          const auto vn =
-              QString::fromStdString(mfront::displayName(v));
-          const auto as = v.arraySize;
-          if (as == 1) {
-            this->d.insertPlainText(t + " " +
-                                    QString::fromStdString(v.type) +
-                                    " " + vn + ";\n");
-          } else {
-            this->d.insertPlainText(
-                t + " " + QString::fromStdString(v.type) + " " + vn +
-                "[" + QString::number(as) + "];\n");
-          }
-          if (v.hasGlossaryName()) {
-            this->d.insertPlainText(
-                vn + ".setGlossaryName(\"" +
-                QString::fromStdString(v.getExternalName()) + "\");\n");
-          }
-          if (v.hasEntryName()) {
-            this->d.insertPlainText(
-                vn + ".setEntryName(\"" +
-                QString::fromStdString(v.getExternalName()) + "\");\n");
-          }
-          this->d.insertPlainText("\n");
-        }
-      };
-      write_variables("@MaterialProperty",
-                      this->getMaterialProperties());
+      auto write_variables =
+          [this](const QString &t,
+                 const mfront::VariableDescriptionContainer &vars) {
+            for (const auto &v : vars) {
+              const auto vn = QString::fromStdString(mfront::displayName(v));
+              const auto as = v.arraySize;
+              if (as == 1) {
+                this->d.insertPlainText(t + " " +
+                                        QString::fromStdString(v.type) + " " +
+                                        vn + ";\n");
+              } else {
+                this->d.insertPlainText(
+                    t + " " + QString::fromStdString(v.type) + " " + vn + "[" +
+                    QString::number(as) + "];\n");
+              }
+              if (v.hasGlossaryName()) {
+                this->d.insertPlainText(
+                    vn + ".setGlossaryName(\"" +
+                    QString::fromStdString(v.getExternalName()) + "\");\n");
+              }
+              if (v.hasEntryName()) {
+                this->d.insertPlainText(
+                    vn + ".setEntryName(\"" +
+                    QString::fromStdString(v.getExternalName()) + "\");\n");
+              }
+              this->d.insertPlainText("\n");
+            }
+          };
+      write_variables("@MaterialProperty", this->getMaterialProperties());
       write_variables("@Parameter", this->getParameters());
       write_variables("@StateVariable", this->getStateVariables());
       write_variables("@AuxiliaryStateVariable",
                       this->getAuxiliaryStateVariables());
-      write_variables("@IntegrationVariable",
-                      this->getIntegrationVariables());
+      write_variables("@IntegrationVariable", this->getIntegrationVariables());
       write_variables("@ExternalStateVariable",
                       this->getExternalStateVariables());
       write_variables("@LocalVariable", this->getLocalVariables());
@@ -249,8 +230,7 @@ namespace tfel {
       constexpr const auto h =
           tfel::material::ModellingHypothesis::UNDEFINEDHYPOTHESIS;
       const auto *const p =
-          dynamic_cast<const MFrontBehaviourWizard *const>(
-              this->wizard());
+          dynamic_cast<const MFrontBehaviourWizard *const>(this->wizard());
       if (p == nullptr) {
         QMessageBox::warning(&(this->editor), "Internal error",
                              "invalid wizard reference");
@@ -269,11 +249,10 @@ namespace tfel {
         }
         (bd.*f)(h, v, mfront::BehaviourData::UNREGISTRED);
       } catch (std::exception &e) {
-        QMessageBox::warning(&(this->editor),
-                             "Variable insertion failed", e.what());
+        QMessageBox::warning(&(this->editor), "Variable insertion failed",
+                             e.what());
       } catch (...) {
-        QMessageBox::warning(&(this->editor),
-                             "Variable insertion failed",
+        QMessageBox::warning(&(this->editor), "Variable insertion failed",
                              "unsupported exception caught");
       }
       variables.push_back(v);
@@ -284,8 +263,8 @@ namespace tfel {
       return this->materialProperties;
     }  // end of MFrontAddVariablesPage::getMaterialProperties
 
-    mfront::VariableDescriptionContainer
-    MFrontAddVariablesPage::getParameters() const {
+    mfront::VariableDescriptionContainer MFrontAddVariablesPage::getParameters()
+        const {
       return this->parameters;
     }  // end of MFrontAddVariablesPage::getParameters
 

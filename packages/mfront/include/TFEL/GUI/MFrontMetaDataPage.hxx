@@ -1,6 +1,6 @@
 /*!
  * \file   MFrontMetaDataPage.hxx
- * \brief    
+ * \brief
  * \author Thomas Helfer
  * \date   27/07/2019
  */

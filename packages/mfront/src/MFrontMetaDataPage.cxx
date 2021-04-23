@@ -1,6 +1,6 @@
 /*!
  * \file   MFrontMetaDataPage.cxx
- * \brief    
+ * \brief
  * \author th202608
  * \date   27/07/2019
  */
@@ -17,11 +17,11 @@
 #include "TFEL/GUI/TextEditBase.hxx"
 #include "TFEL/GUI/MFrontMetaDataPage.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-    struct MaterialPropertyNameValidator : public QValidator{
+    struct MaterialPropertyNameValidator : public QValidator {
       QValidator::State validate(QString &n, int &) const override {
         return mfront::isValidMaterialPropertyName(n.toStdString())
                    ? QValidator::Acceptable
@@ -29,7 +29,7 @@ namespace tfel{
       }  // end of validate
     };   // end of struct MaterialPropertyNameValidator
 
-    struct BehaviourNameValidator : public QValidator{
+    struct BehaviourNameValidator : public QValidator {
       QValidator::State validate(QString &n, int &) const override {
         return mfront::isValidBehaviourName(n.toStdString())
                    ? QValidator::Acceptable
@@ -37,7 +37,7 @@ namespace tfel{
       }  // end of validate
     };   // end of struct BehaviourNameValidator
 
-    struct ModelNameValidator : public QValidator{
+    struct ModelNameValidator : public QValidator {
       QValidator::State validate(QString &n, int &) const override {
         return mfront::isValidModelName(n.toStdString())
                    ? QValidator::Acceptable
@@ -45,12 +45,11 @@ namespace tfel{
       }  // end of validate
     };   // end of struct ModelNameValidator
 
-    MFrontMetaDataPage::MFrontMetaDataPage(
-        EditorWidget &w,
-        TextEditBase &cd,
-        const MaterialKnowledgeType kt,
-        const int n,
-        QWizard *const p)
+    MFrontMetaDataPage::MFrontMetaDataPage(EditorWidget &w,
+                                           TextEditBase &cd,
+                                           const MaterialKnowledgeType kt,
+                                           const int n,
+                                           QWizard *const p)
         : QWizardPage(p), d(cd), mt(kt), nextPage(n) {
       // main grid layout
       auto *const mgl = new QGridLayout;
@@ -95,7 +94,7 @@ namespace tfel{
       this->ae = new LineEdit(w);
 #ifdef Q_OS_UNIX
       this->ae->setText(getUserName());
-#endif 
+#endif
       auto *const dl = new QLabel(QObject::tr("Date"));
       this->de = new QDateEdit(QDate::currentDate());
       //     auto *const de = new QDateEdit(QDate::currentDate());
@@ -110,7 +109,7 @@ namespace tfel{
       dl->setBuddy(this->de);
       this->setLayout(mgl);
     }  // end of MFrontMetaDataPage::MFrontMetaDataPage
-    
+
     bool MFrontMetaDataPage::validatePage() { return true; }
 
     int MFrontMetaDataPage::nextId() const { return this->nextPage; }
@@ -136,6 +135,4 @@ namespace tfel{
 
   }  // end of namespace gui
 
-} // end of namespace tfel
-
-
+}  // end of namespace tfel

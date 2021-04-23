@@ -33,7 +33,7 @@ namespace tfel {
         EXTERNALSTATEVARIABLE,
         AUXILIARYSTATEVARIABLE,
         INTEGRATIONVARIABLE
-      }; // end of enum VariableType
+      };  // end of enum VariableType
       /*!
        * \brief constructor
        * \param[in] t: type of the variable to be treated
@@ -68,7 +68,7 @@ namespace tfel {
      private:
       Q_OBJECT
 
-    }; // end of struct MFrontAddVariableDialog
+    };  // end of struct MFrontAddVariableDialog
 
   }  // end of namespace gui
 

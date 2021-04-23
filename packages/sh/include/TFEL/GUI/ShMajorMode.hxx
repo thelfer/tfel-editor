@@ -8,50 +8,50 @@
 #ifndef LIB_TFEL_GUI_SHMAJORMODE_HXX
 #define LIB_TFEL_GUI_SHMAJORMODE_HXX
 
-#include"TFEL/Config/TFELConfig.hxx"
+#include "TFEL/Config/TFELConfig.hxx"
 #include "TFEL/GUI/MajorModeBase.hxx"
 
-#if defined _WIN32 || defined _WIN64 ||defined __CYGWIN__
-#  if defined TFELEditorShMode_EXPORTS
-#    define TFELEDITOR_SHMODE_VISIBILITY_EXPORT TFEL_VISIBILITY_EXPORT
-#  else
-#  if !defined TFEL_STATIC_BUILD
-#    define TFELEDITOR_SHMODE_VISIBILITY_EXPORT TFEL_VISIBILITY_IMPORT
-#  else 
-#    define TFELEDITOR_SHMODE_VISIBILITY_EXPORT 
-#  endif
-#  endif
+#if defined _WIN32 || defined _WIN64 || defined __CYGWIN__
+#if defined TFELEditorShMode_EXPORTS
+#define TFELEDITOR_SHMODE_VISIBILITY_EXPORT TFEL_VISIBILITY_EXPORT
 #else
-#  define TFELEDITOR_SHMODE_VISIBILITY_EXPORT TFEL_VISIBILITY_EXPORT
+#if !defined TFEL_STATIC_BUILD
+#define TFELEDITOR_SHMODE_VISIBILITY_EXPORT TFEL_VISIBILITY_IMPORT
+#else
+#define TFELEDITOR_SHMODE_VISIBILITY_EXPORT
+#endif
+#endif
+#else
+#define TFELEDITOR_SHMODE_VISIBILITY_EXPORT TFEL_VISIBILITY_EXPORT
 #endif
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  //! \brief a major mode for editing `sh` files
-  struct TFELEDITOR_SHMODE_VISIBILITY_EXPORT ShMajorMode
-      : public MajorModeBase {
-    ShMajorMode(EditorWidget &, Buffer &, TextEditBase &);
+    //! \brief a major mode for editing `sh` files
+    struct TFELEDITOR_SHMODE_VISIBILITY_EXPORT ShMajorMode
+        : public MajorModeBase {
+      ShMajorMode(EditorWidget &, Buffer &, TextEditBase &);
 
-    QString getName() const override;
+      QString getName() const override;
 
-    QString getDescription() const override;
+      QString getDescription() const override;
 
-    //! \brief format a paragraph
-    void format() override;
+      //! \brief format a paragraph
+      void format() override;
 
-    void setSyntaxHighlighter(QTextDocument *const) override;
+      void setSyntaxHighlighter(QTextDocument *const) override;
 
-    QString getCommentSyntax() override;
+      QString getCommentSyntax() override;
 
-    ~ShMajorMode() override;
+      ~ShMajorMode() override;
 
-   private:
-    Q_OBJECT
-  };  // end of struct ShMajorMode
+     private:
+      Q_OBJECT
+    };  // end of struct ShMajorMode
 
-}  // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_SHMAJORMODE_HXX */

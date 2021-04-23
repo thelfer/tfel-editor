@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  ShortCutStyle.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,51 +6,43 @@
  */
 
 #ifndef LIB_TFEL_GUI_SHORTCUTSTYLE_HXX
-#define LIB_TFEL_GUI_SHORTCUTSTYLE_HXX 
+#define LIB_TFEL_GUI_SHORTCUTSTYLE_HXX
 
-#include<QtCore/QObject>
-#include"TFEL/GUI/Config.hxx"
+#include <QtCore/QObject>
+#include "TFEL/GUI/Config.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  struct TFEL_GUI_VISIBILITY_EXPORT ShortCutStyle : public QObject {
-   signals:
+    struct TFEL_GUI_VISIBILITY_EXPORT ShortCutStyle : public QObject {
+     signals:
 
-    void shortCutStyleChanged();
+      void shortCutStyleChanged();
 
-  public:
+     public:
+      enum Style { EMACS, QT };
 
-    enum Style{
-      EMACS,
-      QT
-    };
+      static ShortCutStyle& getShortCutStyle();
 
-    static ShortCutStyle&
-    getShortCutStyle();
+      Style getStyle();
 
-    Style getStyle();
+      void setStyle(const Style&);
 
-    void setStyle(const Style&);
+     private:
+      ShortCutStyle();
 
-  private:
+      ShortCutStyle(const ShortCutStyle&) = delete;
 
-    ShortCutStyle();
+      ShortCutStyle& operator=(const ShortCutStyle&) = delete;
 
-    ShortCutStyle(const ShortCutStyle&) = delete;
+      Style style;
 
-    ShortCutStyle&
-     operator=(const ShortCutStyle&) = delete;
+      Q_OBJECT
 
-    Style style;
+    };  // end of struct ShortCutStyle
 
-    Q_OBJECT
-
-  }; // end of struct ShortCutStyle
-
-} // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_SHORTCUTSTYLE_HXX */
-

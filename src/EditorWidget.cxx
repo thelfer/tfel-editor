@@ -118,13 +118,10 @@ namespace tfel {
        * \param[in] bn: list of editor widget
        * \param[in] d: default buffer
        */
-      ChangeBuffer(EditorWidget& p,
-                   const QStringList& bn,
-                   const QString& d)
+      ChangeBuffer(EditorWidget& p, const QStringList& bn, const QString& d)
           : CommandLine(
                 QObject::tr("switch to buffer") +
-                    (!d.isEmpty() ? QObject::tr("(default '%1')").arg(d)
-                                  : "") +
+                    (!d.isEmpty() ? QObject::tr("(default '%1')").arg(d) : "") +
                     QObject::tr(" :"),
                 p),
             defaultBuffer(d) {
@@ -290,36 +287,31 @@ namespace tfel {
       Buffer* b;
       if (f.isEmpty()) {
         b = new Buffer(this->nid, *this);
-        b->setSecondaryTasksOrientation(
-            convert(settings.value("secondary tasks orientation")
-                        .value<int>()));
+        b->setSecondaryTasksOrientation(convert(
+            settings.value("secondary tasks orientation").value<int>()));
         ++(this->nid);
       } else {
         b = this->getBufferVisitingFile(f);
         if (b != nullptr) {
           this->displayInformativeMessage(
-              QObject::tr("A buffer is already visiting file '%1'")
-                  .arg(f));
+              QObject::tr("A buffer is already visiting file '%1'").arg(f));
           return b;
         }
         b = new Buffer(f, this->nid, *this);
-        b->setSecondaryTasksOrientation(
-            convert(settings.value("secondary tasks orientation")
-                        .value<int>()));
+        b->setSecondaryTasksOrientation(convert(
+            settings.value("secondary tasks orientation").value<int>()));
         ++(this->nid);
-        this->emitNewTreatedFile(
-            b->getMainFrame().getCompleteFileName());
+        this->emitNewTreatedFile(b->getMainFrame().getCompleteFileName());
       }
       QObject::connect(b, &Buffer::bufferNameChanged, this,
                        &EditorWidget::updateBufferName);
       QObject::connect(b, &Buffer::newTreatedFile, this,
                        &EditorWidget::emitNewTreatedFile);
-      QObject::connect(b, &Buffer::mainFrameMajorModeChanged, this,
-                       [this, b] {
-                         if (&(this->getCurrentBuffer()) == b) {
-                           emit currentBufferMajorModeChanged();
-                         }
-                       });
+      QObject::connect(b, &Buffer::mainFrameMajorModeChanged, this, [this, b] {
+        if (&(this->getCurrentBuffer()) == b) {
+          emit currentBufferMajorModeChanged();
+        }
+      });
       QObject::connect(b, &Buffer::updatedMenu, this, [this, b] {
         if (&(this->getCurrentBuffer()) == b) {
           emit updatedMenu();
@@ -434,9 +426,8 @@ namespace tfel {
         };
         msg += QObject::tr("Do you want to save your changes?");
         const auto ret = QMessageBox::warning(
-            this, QObject::tr(""), msg, QMessageBox::SaveAll |
-                                            QMessageBox::Discard |
-                                            QMessageBox::Cancel);
+            this, QObject::tr(""), msg,
+            QMessageBox::SaveAll | QMessageBox::Discard | QMessageBox::Cancel);
         if (ret == QMessageBox::Cancel) {
           return false;
         } else if (ret == QMessageBox::SaveAll) {
@@ -484,8 +475,7 @@ namespace tfel {
       if (l == nullptr) {
         return;
       }
-      if (std::find(this->ui.begin(), this->ui.end(), l) !=
-          this->ui.end()) {
+      if (std::find(this->ui.begin(), this->ui.end(), l) != this->ui.end()) {
         return;
       }
       if (!this->ui.empty()) {
@@ -505,22 +495,19 @@ namespace tfel {
       if (this->ui.back()->isBlocking()) {
         this->buffers->setEnabled(false);
       }
-      QObject::connect(
-          this->ui.back(), &CommandLine::finished, this,
-          static_cast<void (EditorWidget::*)(CommandLine*)>(
-              &EditorWidget::removeUserInput));
-      QObject::connect(
-          this->ui.back(), &CommandLine::destroyed, this,
-          static_cast<void (EditorWidget::*)(CommandLine*)>(
-              &EditorWidget::removeUserInput));
+      QObject::connect(this->ui.back(), &CommandLine::finished, this,
+                       static_cast<void (EditorWidget::*)(CommandLine*)>(
+                           &EditorWidget::removeUserInput));
+      QObject::connect(this->ui.back(), &CommandLine::destroyed, this,
+                       static_cast<void (EditorWidget::*)(CommandLine*)>(
+                           &EditorWidget::removeUserInput));
     }
 
     void EditorWidget::removeUserInput(CommandLine* p) {
       if (this->ui.empty()) {
         return;
       }
-      if (std::find(this->ui.begin(), this->ui.end(), p) ==
-          this->ui.end()) {
+      if (std::find(this->ui.begin(), this->ui.end(), p) == this->ui.end()) {
         return;
       }
       if (p->isBlocking()) {
@@ -603,8 +590,7 @@ namespace tfel {
     std::vector<QIcon> EditorWidget::getBuffersIcons() const {
       std::vector<QIcon> icons;
       for (int i = 0; i != this->buffers->count(); ++i) {
-        Buffer const* b =
-            qobject_cast<Buffer*>(this->buffers->widget(i));
+        Buffer const* b = qobject_cast<Buffer*>(this->buffers->widget(i));
         if (b != nullptr) {
           icons.push_back(b->getIcon());
         }
@@ -647,8 +633,7 @@ namespace tfel {
       }
     }  // end of EditorWidget::changeBuffer
 
-    QString EditorWidget::chooseBufferNameSuffix(Buffer* b,
-                                                 const QString& f) {
+    QString EditorWidget::chooseBufferNameSuffix(Buffer* b, const QString& f) {
       if (f.isEmpty()) {
         return "";
       }
@@ -659,8 +644,7 @@ namespace tfel {
       bool found = true;
       while (found) {
         found = false;
-        for (int i = 0; (i != this->buffers->count()) && (!found);
-             ++i) {
+        for (int i = 0; (i != this->buffers->count()) && (!found); ++i) {
           auto* ob = qobject_cast<Buffer*>(this->buffers->widget(i));
           if (ob != nullptr) {
             if (ob != b) {
@@ -722,18 +706,14 @@ namespace tfel {
       emit currentBufferChanged();
     }  // end of EditorWidget::setCurrentBuffer
 
-    struct EditorWidget::SaveCurrentBufferAndKill
-        : public YesOrNoUserInput {
+    struct EditorWidget::SaveCurrentBufferAndKill : public YesOrNoUserInput {
       SaveCurrentBufferAndKill(EditorWidget& p)
           : YesOrNoUserInput(
-                QObject::tr(
-                    "buffer '%1' has been modified; kill anyway ?")
+                QObject::tr("buffer '%1' has been modified; kill anyway ?")
                     .arg(p.getCurrentBuffer().getBufferName()),
                 p),
             t(p) {}
-      bool isBlocking() const override {
-        return true;
-      }  // end of isBlocking
+      bool isBlocking() const override { return true; }  // end of isBlocking
      protected:
       void treatUserInput() override {
         if (this->input->text() == "y") {
@@ -798,15 +778,13 @@ namespace tfel {
     }  // end of EditorWidget::closeCurrentBuffer
 
     void EditorWidget::closeCurrentBuffer(const bool b) {
-      auto* buffer =
-          qobject_cast<Buffer*>(this->buffers->currentWidget());
+      auto* buffer = qobject_cast<Buffer*>(this->buffers->currentWidget());
       if (buffer == nullptr) {
         return;
       }
       if (b) {
         if (!buffer->isOkToClose()) {
-          this->setUserInput(
-              new EditorWidget::SaveCurrentBufferAndKill(*this));
+          this->setUserInput(new EditorWidget::SaveCurrentBufferAndKill(*this));
         } else {
           this->removeBuffer(buffer);
         }
@@ -831,8 +809,7 @@ namespace tfel {
       t.print();
     }  // end of EditorWidget::print
 
-    void EditorWidget::setSecondaryTasksOrientation(
-        const Qt::Orientation o) {
+    void EditorWidget::setSecondaryTasksOrientation(const Qt::Orientation o) {
       QSettings settings;
       settings.setValue("secondary tasks orientation", convert(o));
       for (int i = 0; i != this->buffers->count(); ++i) {

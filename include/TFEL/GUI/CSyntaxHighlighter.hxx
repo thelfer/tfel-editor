@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  CSyntaxHighlighter.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,32 +6,31 @@
  */
 
 #ifndef LIB_TFEL_GUI_CSYNTAXHIGHLIGHTER_HXX
-#define LIB_TFEL_GUI_CSYNTAXHIGHLIGHTER_HXX 
+#define LIB_TFEL_GUI_CSYNTAXHIGHLIGHTER_HXX
 
-#include"TFEL/GUI/CSyntaxHighlighterBase.hxx"
+#include "TFEL/GUI/CSyntaxHighlighterBase.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  /*!
-   * \brief a syntaxt highlighter for C-based languages
-   */
-  struct TFEL_GUI_VISIBILITY_EXPORT CSyntaxHighlighter
-      : public CSyntaxHighlighterBase {
     /*!
-     * \param[in] t : text document to be highlighted
+     * \brief a syntaxt highlighter for C-based languages
      */
-    CSyntaxHighlighter(QTextDocument *const);
-    //! destructor
-    ~CSyntaxHighlighter();
+    struct TFEL_GUI_VISIBILITY_EXPORT CSyntaxHighlighter
+        : public CSyntaxHighlighterBase {
+      /*!
+       * \param[in] t : text document to be highlighted
+       */
+      CSyntaxHighlighter(QTextDocument *const);
+      //! destructor
+      ~CSyntaxHighlighter();
 
-   private:
-    Q_OBJECT
-  }; // end of struct CSyntaxHighlighter
-  
-} // end of namespace gui
-}// end of namespace tfel
+     private:
+      Q_OBJECT
+    };  // end of struct CSyntaxHighlighter
+
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_CSYNTAXHIGHLIGHTER_HXX */
-

@@ -1,6 +1,6 @@
 /*!
  * \file   MFrontTemplateGenerationOptionsPage.cxx
- * \brief    
+ * \brief
  * \author th202608
  * \date   07/09/2019
  */
@@ -12,9 +12,8 @@ namespace tfel {
 
   namespace gui {
 
-    MFrontTemplateGenerationOptionsPage::
-        MFrontTemplateGenerationOptionsPage(
-            MFrontBehaviourWizard *const p)
+    MFrontTemplateGenerationOptionsPage::MFrontTemplateGenerationOptionsPage(
+        MFrontBehaviourWizard *const p)
         : QWizardPage(p) {
       this->setTitle(QObject::tr("Select generation options."));
       this->setSubTitle(
@@ -23,15 +22,14 @@ namespace tfel {
     }  // end of
        // MFrontTemplateGenerationOptionsPage::MFrontTemplateGenerationOptionsPage
 
-    bool MFrontTemplateGenerationOptionsPage::validatePage() {return true;}
+    bool MFrontTemplateGenerationOptionsPage::validatePage() { return true; }
 
-    void MFrontTemplateGenerationOptionsPage::initializePage(){}
-    
-    int MFrontTemplateGenerationOptionsPage::nextId() const {return -1;}
+    void MFrontTemplateGenerationOptionsPage::initializePage() {}
+
+    int MFrontTemplateGenerationOptionsPage::nextId() const { return -1; }
 
     mfront::MFrontTemplateGenerationOptions
-    MFrontTemplateGenerationOptionsPage::getTemplateGenerationOptions()
-        const {
+    MFrontTemplateGenerationOptionsPage::getTemplateGenerationOptions() const {
       return {};
     }  // end of
        // MFrontTemplateGenerationOptionsPage::getTemplateGenerationOptions
@@ -42,4 +40,3 @@ namespace tfel {
   }  // end of namespace gui
 
 }  // end of namespace tfel
-

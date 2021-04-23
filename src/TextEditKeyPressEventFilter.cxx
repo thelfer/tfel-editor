@@ -1,25 +1,24 @@
-/*! 
+/*!
  * \file  TextEditKeyPressEventFilter.cxx
  * \brief
  * \author Helfer Thomas
  * \date   02/08/2012
  */
 
-#include"QtCore/QDebug"
+#include "QtCore/QDebug"
 
-#include"TFEL/GUI/TextEditBase.hxx"
-#include"TFEL/GUI/TextEditKeyPressEventFilter.hxx"
+#include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/TextEditKeyPressEventFilter.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui
-{
+  namespace gui {
 
-  TextEditKeyPressEventFilter::TextEditKeyPressEventFilter(TextEditBase& t)
-    : QObject(&t)
-  {} // end of TextEditKeyPressEventFilter::TextEditKeyPressEventFilter
+    TextEditKeyPressEventFilter::TextEditKeyPressEventFilter(TextEditBase& t)
+        : QObject(&t) {
+    }  // end of TextEditKeyPressEventFilter::TextEditKeyPressEventFilter
 
-  TextEditKeyPressEventFilter::~TextEditKeyPressEventFilter() = default;
+    TextEditKeyPressEventFilter::~TextEditKeyPressEventFilter() = default;
 
-} // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel

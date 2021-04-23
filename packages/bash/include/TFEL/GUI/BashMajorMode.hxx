@@ -10,27 +10,27 @@
 
 #include "TFEL/GUI/ShMajorMode.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  //! \brief a major mode for editing `bash` files
-  struct BashMajorMode : public ShMajorMode {
-    BashMajorMode(EditorWidget &, Buffer &, TextEditBase &);
+    //! \brief a major mode for editing `bash` files
+    struct BashMajorMode : public ShMajorMode {
+      BashMajorMode(EditorWidget &, Buffer &, TextEditBase &);
 
-    QString getName() const override;
+      QString getName() const override;
 
-    QString getDescription() const override;
+      QString getDescription() const override;
 
-    void setSyntaxHighlighter(QTextDocument *const) override;
+      void setSyntaxHighlighter(QTextDocument *const) override;
 
-    ~BashMajorMode() override;
+      ~BashMajorMode() override;
 
-   private:
-    Q_OBJECT
-  };  // end of struct BashMajorMode
+     private:
+      Q_OBJECT
+    };  // end of struct BashMajorMode
 
-}  // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_BASHMAJORMODE_HXX */

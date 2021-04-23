@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  LicosStudy.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,121 +6,116 @@
  */
 
 #ifndef LIB_TFEL_GUI_LICOSSTUDY_HXX
-#define LIB_TFEL_GUI_LICOSSTUDY_HXX 
+#define LIB_TFEL_GUI_LICOSSTUDY_HXX
 
-#include<QtCore/QProcess>
-#include<QtCore/QString>
-#include<QtCore/QStringList>
-#include<QtCore/QObject>
-#include<QtWidgets/QPlainTextEdit>
-#include<QtNetwork/QLocalServer>
-#include<QtNetwork/QLocalSocket>
-#include"TFEL/GUI/LicosStudyOptions.hxx"
+#include <QtCore/QProcess>
+#include <QtCore/QString>
+#include <QtCore/QStringList>
+#include <QtCore/QObject>
+#include <QtWidgets/QPlainTextEdit>
+#include <QtNetwork/QLocalServer>
+#include <QtNetwork/QLocalSocket>
+#include "TFEL/GUI/LicosStudyOptions.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui
-{
+  namespace gui {
 
-  /*!
-   * each study is associated to a specific thread
-   */
-  struct LicosStudy : public QObject {
     /*!
-     * \param [in] f : input file
-     * \param [in] o : options
-     * \param [in] a : command line arguments
+     * each study is associated to a specific thread
      */
-    LicosStudy(const QString &,
-               const LicosStudyOptions &,
-               const QStringList &);
-    //! run the study
-    void run();
-    //! \return true if the study success
-    bool succeed() const;
-    //! \return the error messsage if the study failed
-    QString getErrorMessage() const;
+    struct LicosStudy : public QObject {
+      /*!
+       * \param [in] f : input file
+       * \param [in] o : options
+       * \param [in] a : command line arguments
+       */
+      LicosStudy(const QString &,
+                 const LicosStudyOptions &,
+                 const QStringList &);
+      //! run the study
+      void run();
+      //! \return true if the study success
+      bool succeed() const;
+      //! \return the error messsage if the study failed
+      QString getErrorMessage() const;
 
-    ~LicosStudy() override;
+      ~LicosStudy() override;
 
-   public slots:
+     public slots:
 
-    void stopComputations();
+      void stopComputations();
 
-  signals:
-      
-    void finished();
+     signals:
 
-    void newPeriod(int);
+      void finished();
 
-    void newProcessOutput(QString);
+      void newPeriod(int);
 
-  private slots:
+      void newProcessOutput(QString);
 
-    void processInitialised();
+     private slots:
 
-    void processReachedNextStage();
+      void processInitialised();
 
-    void processError(QProcess::ProcessError);
+      void processReachedNextStage();
 
-    void processFinished(const int,QProcess::ExitStatus);
+      void processError(QProcess::ProcessError);
 
-    void displayInputSocketError(QLocalSocket::LocalSocketError);
+      void processFinished(const int, QProcess::ExitStatus);
 
-    void displayOutputSocketError(QLocalSocket::LocalSocketError);
+      void displayInputSocketError(QLocalSocket::LocalSocketError);
 
-    void displayProcessOutput();
+      void displayOutputSocketError(QLocalSocket::LocalSocketError);
 
-  private:
+      void displayProcessOutput();
 
-    void displaySocketError(QLocalSocket *,
-			    QLocalSocket::LocalSocketError);
-    
-    void fails(const QString&);
+     private:
+      void displaySocketError(QLocalSocket *, QLocalSocket::LocalSocketError);
 
-    void sendOption(const QString&,
-		    const QString&);
+      void fails(const QString &);
 
-    void send(const QString&);
+      void sendOption(const QString &, const QString &);
 
-    void send(const char* const);
+      void send(const QString &);
 
-    void quit();
+      void send(const char *const);
 
-    template<typename T>
-    T receive();
+      void quit();
 
-    QLocalServer *server;
+      template <typename T>
+      T receive();
 
-    QLocalSocket *in;
+      QLocalServer *server;
 
-    QLocalSocket *out;
-    
-    QPlainTextEdit *output;
+      QLocalSocket *in;
 
-    QProcess *process;
+      QLocalSocket *out;
 
-    QString inputFile;
+      QPlainTextEdit *output;
 
-    QStringList args;
+      QProcess *process;
 
-    QString inServer;
+      QString inputFile;
 
-    QString errorMessage;
+      QStringList args;
 
-    LicosStudyOptions options;
+      QString inServer;
 
-    volatile bool success;
+      QString errorMessage;
 
-    Q_OBJECT
+      LicosStudyOptions options;
 
-  }; // end of LicosStudy
+      volatile bool success;
 
-  template <>
-  QString LicosStudy::receive<QString>();
+      Q_OBJECT
 
-} // end of namespace gui
-}// end of namespace tfel
+    };  // end of LicosStudy
+
+    template <>
+    QString LicosStudy::receive<QString>();
+
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_LICOSSTUDY_H */
-

@@ -11,26 +11,26 @@
 #include <QtWidgets/QAbstractScrollArea>
 #include "TFEL/GUI/Config.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  struct TFEL_GUI_VISIBILITY_EXPORT QAbstractScrollAreaWrapper
-      : public QWidget {
-    QAbstractScrollAreaWrapper(QAbstractScrollArea *, QWidget *);
+    struct TFEL_GUI_VISIBILITY_EXPORT QAbstractScrollAreaWrapper
+        : public QWidget {
+      QAbstractScrollAreaWrapper(QAbstractScrollArea *, QWidget *);
 
-    QAbstractScrollArea *getWrappedObject();
+      QAbstractScrollArea *getWrappedObject();
 
-    virtual void focusInEvent(QFocusEvent *) override;
+      virtual void focusInEvent(QFocusEvent *) override;
 
-   protected:
-    QAbstractScrollArea *const wrappedObject;
+     protected:
+      QAbstractScrollArea *const wrappedObject;
 
-   private:
-    Q_OBJECT
-  };
+     private:
+      Q_OBJECT
+    };
 
-}  // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_QABSTRACTSCROLLAREAWRAPPER_HXX */

@@ -1,17 +1,17 @@
-/*! 
+/*!
  * \file  LicosSyntaxHighlighter.cxx
  * \brief
  * \author Helfer Thomas
  * \brief  03/07/2012
  */
 
-#include<QtCore/QDebug>
-#include<QtCore/QRegExp>
-#include"TFEL/Utilities/CxxTokenizer.hxx"
-#include"TFEL/GUI/LicosMajorMode.hxx"
-#include"TFEL/GUI/LicosSyntaxHighlighter.hxx"
+#include <QtCore/QDebug>
+#include <QtCore/QRegExp>
+#include "TFEL/Utilities/CxxTokenizer.hxx"
+#include "TFEL/GUI/LicosMajorMode.hxx"
+#include "TFEL/GUI/LicosSyntaxHighlighter.hxx"
 
-namespace tfel{
+namespace tfel {
 
   namespace gui {
 
@@ -26,8 +26,7 @@ namespace tfel{
       this->keyFormat.setForeground(Qt::blue);
       this->optFormat.setForeground(Qt::darkCyan);
       this->importFormat = this->stringFormat;
-      this->importFormat.setUnderlineStyle(
-          QTextCharFormat::SingleUnderline);
+      this->importFormat.setUnderlineStyle(QTextCharFormat::SingleUnderline);
       this->importFormat.setToolTip("open in new buffer");
       const auto keys = LicosSyntaxHighlighter::getKeys();
       const auto blocks = LicosSyntaxHighlighter::getBlocks();
@@ -49,10 +48,8 @@ namespace tfel{
       // override C highligthing rules for links to other files
       const auto exts = LicosMajorMode::getLicosExtensionsSuffix();
       for (const QString &e : exts) {
-        this->importExprs.push_back(
-            QRegExp("'([\\w\\./-]+\\." + e + ")'"));
-        this->importExprs.push_back(
-            QRegExp("\"([\\w\\./-]+\\." + e + ")\""));
+        this->importExprs.push_back(QRegExp("'([\\w\\./-]+\\." + e + ")'"));
+        this->importExprs.push_back(QRegExp("\"([\\w\\./-]+\\." + e + ")\""));
       }
     }
 
@@ -80,8 +77,7 @@ namespace tfel{
         }
       }
       // treating options;
-      if ((p != t.end()) && (p->flag == Token::Standard) &&
-          (p->value == "<")) {
+      if ((p != t.end()) && (p->flag == Token::Standard) && (p->value == "<")) {
         this->setFormat(p->offset, p->value.size(), this->optFormat);
         ++p;
         while ((p != t.end()) && (p->value != ">") &&
@@ -98,8 +94,7 @@ namespace tfel{
         QTextCharFormat f;
         bool b = false;
         if ((p->flag == Token::String) || (p->flag == Token::Char)) {
-          for (int i = 0; (i != this->importExprs.size()) && (!b);
-               ++i) {
+          for (int i = 0; (i != this->importExprs.size()) && (!b); ++i) {
             if (this->importExprs[i].indexIn(
                     QString::fromStdString(p->value)) != -1) {
               f = this->importFormat;
@@ -188,10 +183,8 @@ namespace tfel{
       return keys;
     }  // end of LicosSyntaxHighlighter::getKeys
 
-    const std::vector<std::string>
-        &LicosSyntaxHighlighter::getBlocks() {
-      static const auto blocks =
-          LicosSyntaxHighlighter::buildBlocksList();
+    const std::vector<std::string> &LicosSyntaxHighlighter::getBlocks() {
+      static const auto blocks = LicosSyntaxHighlighter::buildBlocksList();
       return blocks;
     }  // end of LicosSyntaxHighlighter::getBlocks
 
@@ -345,6 +338,5 @@ namespace tfel{
               "SpecializedTimeStepController"};
     }  // end of LicosSyntaxHighlighter::buildBlocksList
 
-} // end of namespace gui
-}// end of namespace tfel
-
+  }  // end of namespace gui
+}  // end of namespace tfel

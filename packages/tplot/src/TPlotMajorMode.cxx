@@ -19,59 +19,55 @@
 #include "TFEL/GUI/GnuplotSyntaxHighlighter.hxx"
 #include "TFEL/GUI/MajorModeFactory.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  struct TPlotSyntaxHighlighter : public GnuplotSyntaxHighlighter {
-    TPlotSyntaxHighlighter(QTextDocument* p)
-        : GnuplotSyntaxHighlighter(p) {
-      for (const auto& k : {"import"}) {
-        HighlightingRule rule;
-        rule.key = k;
-        rule.format = this->keyFormat;
-        highlightingRules.push_back(rule);
-      }
-    }  // end of TPlotSyntaxHighlighter
+    struct TPlotSyntaxHighlighter : public GnuplotSyntaxHighlighter {
+      TPlotSyntaxHighlighter(QTextDocument* p) : GnuplotSyntaxHighlighter(p) {
+        for (const auto& k : {"import"}) {
+          HighlightingRule rule;
+          rule.key = k;
+          rule.format = this->keyFormat;
+          highlightingRules.push_back(rule);
+        }
+      }  // end of TPlotSyntaxHighlighter
 
-  };  // end of struct TPlotSyntaxHighlighter
+    };  // end of struct TPlotSyntaxHighlighter
 
-  /*!
-   * A major mode to handle the tplot utility
-   */
-  struct TPlotMajorMode : public MajorModeBase {
-    TPlotMajorMode(EditorWidget& w,
-                   Buffer& b,
-                   TextEditBase& t)
-        : MajorModeBase(w, b, t, &t) {}
+    /*!
+     * A major mode to handle the tplot utility
+     */
+    struct TPlotMajorMode : public MajorModeBase {
+      TPlotMajorMode(EditorWidget& w, Buffer& b, TextEditBase& t)
+          : MajorModeBase(w, b, t, &t) {}
 
-    QString getName() const override {
-      return "tplot";
-    }  // end of LicosMajorMode
+      QString getName() const override {
+        return "tplot";
+      }  // end of LicosMajorMode
 
-    QString getDescription() const override {
-      return "major mode dedicated to tplot";
-    }  // end of getDescription
+      QString getDescription() const override {
+        return "major mode dedicated to tplot";
+      }  // end of getDescription
 
-    void setSyntaxHighlighter(QTextDocument* d) override {
-      new TPlotSyntaxHighlighter(d);
-    }  // end of setSyntaxHighlighter
+      void setSyntaxHighlighter(QTextDocument* d) override {
+        new TPlotSyntaxHighlighter(d);
+      }  // end of setSyntaxHighlighter
 
-    bool mousePressEvent(QMouseEvent*) override { return false; }
+      bool mousePressEvent(QMouseEvent*) override { return false; }
 
-    bool keyPressEvent(QKeyEvent*) override { return false; }
+      bool keyPressEvent(QKeyEvent*) override { return false; }
 
-    void format() override {}
+      void format() override {}
 
-    void comment() override {}
+      void comment() override {}
 
-    ~TPlotMajorMode() override = default;
+      ~TPlotMajorMode() override = default;
 
-  };  // end of TPlotMajorMode
+    };  // end of TPlotMajorMode
 
-  static StandardMajorModeProxy<TPlotMajorMode> proxy(
-      "TPlot",
-      QVector<QRegExp>() << QRegExp("^[\\w-0-9_\\.]+\\.tplot"));
+    static StandardMajorModeProxy<TPlotMajorMode> proxy(
+        "TPlot", QVector<QRegExp>() << QRegExp("^[\\w-0-9_\\.]+\\.tplot"));
 
-}  // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel

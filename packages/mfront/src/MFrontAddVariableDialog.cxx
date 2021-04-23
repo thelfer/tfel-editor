@@ -1,6 +1,6 @@
 /*!
  * \file   MFrontAddVariableDialog.cxx
- * \brief    
+ * \brief
  * \author Thomas Helfer
  * \date   07/08/2019
  */
@@ -17,12 +17,13 @@
 #include "TFEL/GUI/LineEdit.hxx"
 #include "TFEL/GUI/MFrontAddVariableDialog.hxx"
 
-namespace tfel{
+namespace tfel {
 
   namespace gui {
 
-    MFrontAddVariableDialog::MFrontAddVariableDialog(
-        EditorWidget& w, const VariableType t, QWidget* const p)
+    MFrontAddVariableDialog::MFrontAddVariableDialog(EditorWidget& w,
+                                                     const VariableType t,
+                                                     QWidget* const p)
         : QDialog(p),
           vtype(t),
           ne(new LineEdit(w)),
@@ -60,14 +61,15 @@ namespace tfel{
         this->cb->addItem("Scalar");
       } else {
         this->cb->addItems(QStringList() << "Scalar"
-                                        << "Vector"
-                                        << "Symmetric tensor"
-                                        << "Unsymmetric tensor");
+                                         << "Vector"
+                                         << "Symmetric tensor"
+                                         << "Unsymmetric tensor");
       }
       gl->addWidget(clabel, 1, 0);
       gl->addWidget(this->cb, 1, 1);
-      QObject::connect(this->cb, static_cast<void (QComboBox::*)(int)>(
-                                     &QComboBox::currentIndexChanged),
+      QObject::connect(this->cb,
+                       static_cast<void (QComboBox::*)(int)>(
+                           &QComboBox::currentIndexChanged),
                        [this] {
                          this->updateVariableTypesList();
                          this->updateGlossaryNamesList();
@@ -75,8 +77,9 @@ namespace tfel{
       auto* const tlabel = new QLabel(QObject::tr("Variable type"));
       tlabel->setBuddy(this->tb);
       this->updateVariableTypesList();
-      QObject::connect(this->tb, static_cast<void (QComboBox::*)(int)>(
-                                     &QComboBox::currentIndexChanged),
+      QObject::connect(this->tb,
+                       static_cast<void (QComboBox::*)(int)>(
+                           &QComboBox::currentIndexChanged),
                        [this] { this->updateGlossaryNamesList(); });
       gl->addWidget(tlabel, 2, 0);
       gl->addWidget(this->tb, 2, 1);
@@ -85,12 +88,13 @@ namespace tfel{
       alabel->setBuddy(this->asize);
       gl->addWidget(alabel, 3, 0);
       gl->addWidget(this->asize, 3, 1);
-      auto *const sv = new QIntValidator();
+      auto* const sv = new QIntValidator();
       sv->setBottom(1);
       this->asize->setValidator(sv);
       this->asize->setText("1");
       // glossary and external names
-      if ((this->vtype != LOCALVARIABLE) && (this->vtype != INTEGRATIONVARIABLE)) {
+      if ((this->vtype != LOCALVARIABLE) &&
+          (this->vtype != INTEGRATIONVARIABLE)) {
         auto* const glabel = new QLabel(QObject::tr("Glossary name"));
         this->updateGlossaryNamesList();
         glabel->setBuddy(this->gb);
@@ -98,21 +102,19 @@ namespace tfel{
         gl->addWidget(this->gb, 4, 1);
         auto* const elabel = new QLabel(QObject::tr("Entry name"));
         elabel->setBuddy(this->ee);
-        QObject::connect(
-            this->ee, static_cast<void (LineEdit::*)(const QString&)>(
-                          &LineEdit::textChanged),
-            [this] { this->updateGlossaryNamesList(); });
+        QObject::connect(this->ee,
+                         static_cast<void (LineEdit::*)(const QString&)>(
+                             &LineEdit::textChanged),
+                         [this] { this->updateGlossaryNamesList(); });
         gl->addWidget(elabel, 5, 0);
         gl->addWidget(this->ee, 5, 1);
       }
       /* buttons */
       auto* const lv = new QVBoxLayout;
-      auto* const bb = new QDialogButtonBox(QDialogButtonBox::Ok |
-                                            QDialogButtonBox::Cancel);
-      QObject::connect(bb, &QDialogButtonBox::accepted, this,
-                       &QDialog::accept);
-      QObject::connect(bb, &QDialogButtonBox::rejected, this,
-                       &QDialog::reject);
+      auto* const bb =
+          new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+      QObject::connect(bb, &QDialogButtonBox::accepted, this, &QDialog::accept);
+      QObject::connect(bb, &QDialogButtonBox::rejected, this, &QDialog::reject);
       lv->addLayout(gl);
       lv->addWidget(bb);
       this->setLayout(lv);
@@ -123,11 +125,9 @@ namespace tfel{
       const auto sn = this->ne->text().toStdString();
       const auto vn = tfel::unicode::getMangledString(sn);
       const auto tn = this->tb->currentText().toStdString();
-      const auto as = static_cast<unsigned short>(
-          this->asize->text().toInt());
-      auto v = (sn != vn)
-                   ? mfront::VariableDescription(tn, sn, vn, as, 0u)
-                   : mfront::VariableDescription(tn, vn, as, 0u);
+      const auto as = static_cast<unsigned short>(this->asize->text().toInt());
+      auto v = (sn != vn) ? mfront::VariableDescription(tn, sn, vn, as, 0u)
+                          : mfront::VariableDescription(tn, vn, as, 0u);
       if ((this->vtype != LOCALVARIABLE) &&
           (this->vtype != INTEGRATIONVARIABLE)) {
         if (this->gb->currentText() != "None") {

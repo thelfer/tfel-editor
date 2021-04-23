@@ -41,8 +41,7 @@ namespace tfel {
 
     TextEditBase::TextEditBase(EditorWidget& g, Buffer& b)
         : QWidget(&g), editor(g), buffer(b) {
-      auto& dm =
-          HunspellDictionariesManager::getHunspellDictionariesManager();
+      auto& dm = HunspellDictionariesManager::getHunspellDictionariesManager();
       this->spellCheckLanguage = dm.getDefaultSpellCheckLanguage();
     }  // end of TextEditBase::TextEditBase
 
@@ -99,10 +98,9 @@ namespace tfel {
         QObject::connect(te, &QTextEdit::cursorPositionChanged, this,
                          &TextEditBase::emitCursorPositionChanged);
       } else if (auto* pte = qobject_cast<QPlainTextEdit*>(e)) {
-        QObject::connect(pte, &QPlainTextEdit::cursorPositionChanged,
-                         this, &TextEditBase::highlightCurrentLine);
-        QObject::connect(pte, &QPlainTextEdit::cursorPositionChanged,
-                         this,
+        QObject::connect(pte, &QPlainTextEdit::cursorPositionChanged, this,
+                         &TextEditBase::highlightCurrentLine);
+        QObject::connect(pte, &QPlainTextEdit::cursorPositionChanged, this,
                          &TextEditBase::emitCursorPositionChanged);
       }
       // event filter
@@ -155,24 +153,20 @@ namespace tfel {
       return m;
     }  // end of TextEditBase::getModifier
 
-    struct TextEditBase::KillOtherBufferAndWriteFile
-        : public YesOrNoUserInput {
+    struct TextEditBase::KillOtherBufferAndWriteFile : public YesOrNoUserInput {
       KillOtherBufferAndWriteFile(EditorWidget& p,
                                   TextEditBase& t,
                                   Buffer& b,
                                   const QString& f)
           : YesOrNoUserInput(
-                QObject::tr(
-                    "another buffer is visiting file '%1', proceed ?")
+                QObject::tr("another buffer is visiting file '%1', proceed ?")
                     .arg(f),
                 p),
             textEdit(t),
             kb(b),
             file(f) {}  // end of KillOtherBufferAndWriteFile
 
-      bool isBlocking() const override {
-        return true;
-      }  // end of isBlocking
+      bool isBlocking() const override { return true; }  // end of isBlocking
 
      protected:
       void treatUserInput() override {
@@ -189,14 +183,11 @@ namespace tfel {
 
     struct TextEditBase::OverWriteFile : public YesOrNoUserInput {
       OverWriteFile(EditorWidget& p, TextEditBase& t, const QString& f)
-          : YesOrNoUserInput(
-                QObject::tr("overwrite file '%1' :").arg(f), p),
+          : YesOrNoUserInput(QObject::tr("overwrite file '%1' :").arg(f), p),
             textEdit(t),
             file(f) {}  // end of OverWriteFile
 
-      bool isBlocking() const override {
-        return true;
-      }  // end of isBlocking
+      bool isBlocking() const override { return true; }  // end of isBlocking
 
      protected:
       void treatUserInput() override {
@@ -220,8 +211,7 @@ namespace tfel {
 
     struct TextEditBase::WriteFile : public FilePathUserInput {
       WriteFile(EditorWidget& p, TextEditBase& t, const QString& path)
-          : FilePathUserInput(QObject::tr("write file :"), p),
-            textEdit(t) {
+          : FilePathUserInput(QObject::tr("write file :"), p), textEdit(t) {
         QString npath(path);
         if (!npath.isEmpty()) {
           if (!npath.endsWith(QDir::separator())) {
@@ -231,9 +221,7 @@ namespace tfel {
         this->input->setText(npath);
       }
 
-      bool isBlocking() const override {
-        return true;
-      }  // end of isBlocking
+      bool isBlocking() const override { return true; }  // end of isBlocking
 
       ~WriteFile() override = default;
 
@@ -242,20 +230,17 @@ namespace tfel {
         auto f = this->input->text();
         const auto of = this->textEdit.getCompleteFileName();
         if (f.isEmpty()) {
-          this->editor.displayInformativeMessage(
-              "empty file name specified");
+          this->editor.displayInformativeMessage("empty file name specified");
           return;
         }
         if (f == of) {
-          this->editor.displayInformativeMessage(
-              "current file specified");
+          this->editor.displayInformativeMessage("current file specified");
           return;
         }
         QFileInfo fn(f);
         if (fn.isDir()) {
           if (of.isEmpty()) {
-            this->editor.displayInformativeMessage(
-                "directory specified");
+            this->editor.displayInformativeMessage("directory specified");
             return;
           }
           QFileInfo ofn(of);
@@ -265,14 +250,13 @@ namespace tfel {
         if (fn.exists()) {
           if (!fn.isWritable()) {
             QString msg;
-            msg = QObject::tr(
-                "file '%1' already exists and is not writable");
+            msg = QObject::tr("file '%1' already exists and is not writable");
             this->editor.displayInformativeMessage(msg.arg(f));
             return;
           }
           this->editor.removeUserInput(this);
-          auto* l = new TextEditBase::OverWriteFile(this->editor,
-                                                    this->textEdit, f);
+          auto* l =
+              new TextEditBase::OverWriteFile(this->editor, this->textEdit, f);
           this->editor.setUserInput(l);
         } else {
           // check if another buffer does not visit this file
@@ -328,17 +312,16 @@ namespace tfel {
 
     MajorMode* TextEditBase::setMajorMode() {
       auto& fm = MajorModeFactory::getMajorModeFactory();
-      auto* m = fm.getMajorModeForFile(
-          QFileInfo(this->getFileName()).fileName(), this->editor,
-          this->buffer, *this);
+      auto* m =
+          fm.getMajorModeForFile(QFileInfo(this->getFileName()).fileName(),
+                                 this->editor, this->buffer, *this);
       this->setMajorMode(m);
       return m;
     }  // end of TextEditBase::setMajorMode
 
     MajorMode* TextEditBase::setMajorMode(const QString& n) {
       auto& fm = MajorModeFactory::getMajorModeFactory();
-      auto* m =
-          fm.getMajorModeByName(n, this->editor, this->buffer, *this);
+      auto* m = fm.getMajorModeByName(n, this->editor, this->buffer, *this);
       this->setMajorMode(m);
       return m;
     }  // end of TextEditBase::setMajorMode
@@ -400,8 +383,7 @@ namespace tfel {
       this->ca = new QAction(QObject::tr("Cu&t"), this);
       this->ca->setIcon(QIcon::fromTheme("edit-cut"));
       this->ca->setIconVisibleInMenu(true);
-      QObject::connect(this->ca, &QAction::triggered, this,
-                       &TextEditBase::cut);
+      QObject::connect(this->ca, &QAction::triggered, this, &TextEditBase::cut);
       // copy action
       this->coa = new QAction(QObject::tr("&Copy"), this);
       this->coa->setIcon(QIcon::fromTheme("edit-copy"));
@@ -487,8 +469,7 @@ namespace tfel {
       QTextEdit::ExtraSelection selection;
       auto lineColor = QColor(Qt::yellow).lighter(180);
       selection.format.setBackground(lineColor);
-      selection.format.setProperty(QTextFormat::FullWidthSelection,
-                                   true);
+      selection.format.setProperty(QTextFormat::FullWidthSelection, true);
       selection.cursor = textCursor();
       selection.cursor.clearSelection();
       e.append(selection);
@@ -525,9 +506,9 @@ namespace tfel {
 
     void TextEditBase::removeKeyPressEventFilter() {
       if (this->filter != nullptr) {
-        QObject::disconnect(
-            this->filter, &TextEditKeyPressEventFilter::destroyed, this,
-            &TextEditBase::keyPressEventFilterDestroyed);
+        QObject::disconnect(this->filter,
+                            &TextEditKeyPressEventFilter::destroyed, this,
+                            &TextEditBase::keyPressEventFilterDestroyed);
         this->filter->deleteLater();
         this->filter = nullptr;
       }
@@ -551,9 +532,8 @@ namespace tfel {
         return false;
       }
       this->filter = f;
-      QObject::connect(this->filter,
-                       &TextEditKeyPressEventFilter::destroyed, this,
-                       &TextEditBase::keyPressEventFilterDestroyed);
+      QObject::connect(this->filter, &TextEditKeyPressEventFilter::destroyed,
+                       this, &TextEditBase::keyPressEventFilterDestroyed);
       return true;
     }  // end of TextEditBase::setKeyPressEventFilter
 
@@ -623,15 +603,15 @@ namespace tfel {
       auto* l = new TextEditBase::WriteFile(this->editor, *this, path);
       l->setInputHistorySettingAddress("recent files");
       this->editor.setUserInput(l);
-    } // end of TextEditBase::writeFile
+    }  // end of TextEditBase::writeFile
 
     void TextEditBase::writeFile(const QString& f) {
       // basic check
       QFileInfo fi(f);
       if (fi.exists()) {
         if (!fi.isWritable()) {
-          QString msg(QObject::tr(
-              "file '%1' already exists and is not readable"));
+          QString msg(
+              QObject::tr("file '%1' already exists and is not readable"));
           this->editor.displayInformativeMessage(msg.arg(f));
         }
       }
@@ -682,8 +662,7 @@ namespace tfel {
       return this->handleKeyPressEventWithEmacsShortCuts(e);
     }
 
-    bool TextEditBase::handleKeyPressEventWithQtShortCuts(
-        QKeyEvent* e) {
+    bool TextEditBase::handleKeyPressEventWithQtShortCuts(QKeyEvent* e) {
       const auto k = e->key();
       const auto m = e->modifiers();
       // treating standard keys
@@ -718,14 +697,14 @@ namespace tfel {
       tc.movePosition(QTextCursor::Left);
       tc.movePosition(QTextCursor::EndOfWord);
       if (tc.position() == pc) {
-        static QString eow(
-            "~!@#$%^&*()_+{}|:\"<>?,./;'[]\\-=");  // end of word
+        static QString eow("~!@#$%^&*()_+{}|:\"<>?,./;'[]\\-=");  // end of word
         // const bool ctrlOrShift = m & (Qt::ControlModifier |
         // Qt::ShiftModifier);
         const bool hasModifier = m != Qt::NoModifier;
         QString completionPrefix = this->mode->getCompletionPrefix();
-        if (hasModifier || (completionPrefix.length() <
-                            this->mode->getMinimalCompletionLength()) ||
+        if (hasModifier ||
+            (completionPrefix.length() <
+             this->mode->getMinimalCompletionLength()) ||
             e->text().isEmpty() || eow.contains(e->text().right(1))) {
           completer->popup()->hide();
           return true;
@@ -739,22 +718,18 @@ namespace tfel {
           // do something
           if (completer->currentCompletion() != completionPrefix) {
             QRect cr = cursorRect();
-            cr.setWidth(completer->popup()->sizeHintForColumn(0) +
-                        completer->popup()
-                            ->verticalScrollBar()
-                            ->sizeHint()
-                            .width());
+            cr.setWidth(
+                completer->popup()->sizeHintForColumn(0) +
+                completer->popup()->verticalScrollBar()->sizeHint().width());
             completer->complete(cr);  // popup it up!
           } else {
             completer->popup()->hide();
           }
         } else if (completer->completionCount() > 1) {
           QRect cr = cursorRect();
-          cr.setWidth(completer->popup()->sizeHintForColumn(0) +
-                      completer->popup()
-                          ->verticalScrollBar()
-                          ->sizeHint()
-                          .width());
+          cr.setWidth(
+              completer->popup()->sizeHintForColumn(0) +
+              completer->popup()->verticalScrollBar()->sizeHint().width());
           completer->complete(cr);  // popup it up!
         }
       } else {
@@ -763,8 +738,7 @@ namespace tfel {
       return true;
     }  // end of TextEditBase::handleKeyPressEventWithQtShortCuts
 
-    bool TextEditBase::handleKeyPressEventWithEmacsShortCuts(
-        QKeyEvent* e) {
+    bool TextEditBase::handleKeyPressEventWithEmacsShortCuts(QKeyEvent* e) {
       const auto k = e->key();
       const auto m = e->modifiers();
       auto c = this->textCursor();
@@ -782,18 +756,17 @@ namespace tfel {
           (k == Qt::Key_Alt)) {
         return true;
       }
-      if ((this->yank) &&
-          ((m == Qt::ControlModifier) && (k != Qt::Key_Y)) &&
+      if ((this->yank) && ((m == Qt::ControlModifier) && (k != Qt::Key_Y)) &&
           ((m == Qt::AltModifier) && (k == Qt::Key_Y))) {
         this->yank = false;
       }
-      if (((m == Qt::ControlModifier) && (k == Qt::Key_X)) &&
-          (!this->ctrlx) && (!this->ctrlc)) {
+      if (((m == Qt::ControlModifier) && (k == Qt::Key_X)) && (!this->ctrlx) &&
+          (!this->ctrlc)) {
         this->ctrlx = true;
         return true;
       }
-      if (((m == Qt::ControlModifier) && (k == Qt::Key_C)) &&
-          (!this->ctrlx) && (!this->ctrlc)) {
+      if (((m == Qt::ControlModifier) && (k == Qt::Key_C)) && (!this->ctrlx) &&
+          (!this->ctrlc)) {
         this->ctrlc = true;
         return true;
       }
@@ -848,8 +821,7 @@ namespace tfel {
             this->editor.changeBuffer();
             return true;
           } else if (k == Qt::Key_R) {
-            this->editor.setUserInput(
-                new RectangleMode(*this, this->editor));
+            this->editor.setUserInput(new RectangleMode(*this, this->editor));
             this->moveMode = QTextCursor::MoveAnchor;
             return true;
           } else if (k == Qt::Key_K) {
@@ -887,8 +859,7 @@ namespace tfel {
         const auto modifier = TextEditBase::getModifier(*e);
         if (modifier.isEmpty()) {
           this->editor.displayInformativeMessage(
-              QObject::tr("unknown shortcut : Ctr-X - %1")
-                  .arg(e->text()));
+              QObject::tr("unknown shortcut : Ctr-X - %1").arg(e->text()));
         } else {
           this->editor.displayInformativeMessage(
               QObject::tr("unknown shortcut : Ctr-X - %1-%2")
@@ -906,8 +877,7 @@ namespace tfel {
         const auto modifier = TextEditBase::getModifier(*e);
         if (modifier.isEmpty()) {
           this->editor.displayInformativeMessage(
-              QObject::tr("unknown shortcut : Ctr-C - %1")
-                  .arg(e->text()));
+              QObject::tr("unknown shortcut : Ctr-C - %1").arg(e->text()));
         } else {
           this->editor.displayInformativeMessage(
               QObject::tr("unknown shortcut : Ctr-C - %1-%2")
@@ -968,8 +938,7 @@ namespace tfel {
         // set a search user input
         // the TextEditSearch automatically set itself as a filter
         // for this
-        this->editor.setUserInput(
-            new TextEditSearch(*this, this->editor));
+        this->editor.setUserInput(new TextEditSearch(*this, this->editor));
         // the current buffer shall have the focus : but default, the
         // EditorWidget gives focus to the user input
         this->setFocus();
@@ -984,8 +953,8 @@ namespace tfel {
         // the TextEditSearch automatically set itself as a filter
         // for this
         this->editor.setUserInput(new TextEditSearch(
-            *this, this->editor, QTextDocument::FindCaseSensitively |
-                                     QTextDocument::FindBackward));
+            *this, this->editor,
+            QTextDocument::FindCaseSensitively | QTextDocument::FindBackward));
         // the current buffer shall have the focus : but default, the
         // EditorWidget gives focus to the user input
         this->setFocus();
@@ -995,8 +964,7 @@ namespace tfel {
         this->setTextCursor(c);
         this->editor.displayInformativeMessage(QObject::tr("mark set"));
         this->moveMode = QTextCursor::KeepAnchor;
-      } else if (((m == Qt::ControlModifier) &&
-                  (k == Qt::Key_Underscore)) ||
+      } else if (((m == Qt::ControlModifier) && (k == Qt::Key_Underscore)) ||
                  ((m == Qt::ControlModifier) && (k == Qt::Key_U))) {
         this->undo();
         this->moveMode = QTextCursor::MoveAnchor;
@@ -1044,8 +1012,7 @@ namespace tfel {
               this->setTextCursor(c);
             }
           } else {
-            c.movePosition(QTextCursor::EndOfBlock,
-                           QTextCursor::KeepAnchor);
+            c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
             this->addToKillRing(c.selectedText());
             c.removeSelectedText();
           }
@@ -1069,8 +1036,7 @@ namespace tfel {
                  ((m == Qt::ControlModifier) && (k == Qt::Key_A))) {
         this->moveCursor(QTextCursor::StartOfBlock, this->moveMode);
       } else if ((m == Qt::ControlModifier) && (k == Qt::Key_B)) {
-        this->moveCursor(QTextCursor::PreviousCharacter,
-                         this->moveMode);
+        this->moveCursor(QTextCursor::PreviousCharacter, this->moveMode);
       } else if ((m == Qt::ControlModifier) && (k == Qt::Key_F)) {
         this->moveCursor(QTextCursor::NextCharacter, this->moveMode);
       } else if ((m == Qt::ControlModifier) && (k == Qt::Key_P)) {
@@ -1081,8 +1047,7 @@ namespace tfel {
           p = this->positions[c.block().blockNumber()];
         }
         int npos = qMax(qMin(p, c.block().length() - 1), 0);
-        c.movePosition(QTextCursor::NextCharacter, this->moveMode,
-                       npos);
+        c.movePosition(QTextCursor::NextCharacter, this->moveMode, npos);
         this->setTextCursor(c);
       } else if ((m == Qt::ControlModifier) && (k == Qt::Key_N)) {
         int p = c.position() - c.block().position();
@@ -1092,12 +1057,10 @@ namespace tfel {
           p = this->positions[c.block().blockNumber()];
         }
         int npos = qMax(qMin(p, c.block().length() - 1), 0);
-        c.movePosition(QTextCursor::NextCharacter, this->moveMode,
-                       npos);
+        c.movePosition(QTextCursor::NextCharacter, this->moveMode, npos);
         this->setTextCursor(c);
       } else if ((m == Qt::ControlModifier) && (k == Qt::Key_D)) {
-        c.movePosition(QTextCursor::NextCharacter,
-                       QTextCursor::MoveAnchor);
+        c.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor);
         c.deletePreviousChar();
         this->setTextCursor(c);
       } else if ((m == Qt::ControlModifier) && (k == Qt::Key_T)) {
@@ -1111,8 +1074,8 @@ namespace tfel {
         }
         c.beginEditBlock();
         c.movePosition(QTextCursor::NoMove, QTextCursor::MoveAnchor);
-        c.movePosition(QTextCursor::PreviousCharacter,
-                       QTextCursor::KeepAnchor, 2);
+        c.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor,
+                       2);
         QString s = c.selectedText();
         c.removeSelectedText();
         QChar tmp = s[0];
@@ -1180,13 +1143,10 @@ namespace tfel {
         QTextCursor tc(c);
         tc.beginEditBlock();
         tc.clearSelection();
-        tc.movePosition(QTextCursor::EndOfWord,
-                        QTextCursor::KeepAnchor);
+        tc.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
         if (tc == c) {
-          tc.movePosition(QTextCursor::NextWord,
-                          QTextCursor::MoveAnchor);
-          tc.movePosition(QTextCursor::EndOfWord,
-                          QTextCursor::KeepAnchor);
+          tc.movePosition(QTextCursor::NextWord, QTextCursor::MoveAnchor);
+          tc.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
         }
         QString s = tc.selectedText();
         tc.removeSelectedText();
@@ -1202,13 +1162,10 @@ namespace tfel {
         QTextCursor tc(c);
         tc.beginEditBlock();
         tc.clearSelection();
-        tc.movePosition(QTextCursor::EndOfWord,
-                        QTextCursor::KeepAnchor);
+        tc.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
         if (tc == c) {
-          tc.movePosition(QTextCursor::NextWord,
-                          QTextCursor::MoveAnchor);
-          tc.movePosition(QTextCursor::EndOfWord,
-                          QTextCursor::KeepAnchor);
+          tc.movePosition(QTextCursor::NextWord, QTextCursor::MoveAnchor);
+          tc.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
         }
         QString s = tc.selectedText();
         tc.removeSelectedText();
@@ -1224,8 +1181,8 @@ namespace tfel {
       } else if ((m == Qt::AltModifier) && (k == Qt::Key_X)) {
         this->editor.launchCommand();
       } else if ((m == Qt::AltModifier) && (k == Qt::Key_Exclam)) {
-        auto* l = new ShellProcessLineEdit("shell command:", "", "",
-                                           this->editor);
+        auto* l =
+            new ShellProcessLineEdit("shell command:", "", "", this->editor);
         l->setInputHistorySettingAddress("command/shell/history");
         this->editor.setUserInput(l);
       } else if (((m == Qt::AltModifier) && (k == Qt::Key_Percent)) ||
@@ -1284,8 +1241,7 @@ namespace tfel {
               QObject::tr("read only buffer"));
         } else {
           c.movePosition(QTextCursor::NoMove, QTextCursor::MoveAnchor);
-          c.movePosition(QTextCursor::NextWord,
-                         QTextCursor::KeepAnchor);
+          c.movePosition(QTextCursor::NextWord, QTextCursor::KeepAnchor);
           this->addToKillRing(c.selectedText());
           c.removeSelectedText();
           this->moveMode = QTextCursor::MoveAnchor;
@@ -1305,8 +1261,7 @@ namespace tfel {
             ((m == Qt::NoModifier) && (k == Qt::Key_Hyper_R))) {
           return true;
         } else if ((m == Qt::NoModifier) && (k == Qt::Key_Left)) {
-          this->moveCursor(QTextCursor::PreviousCharacter,
-                           this->moveMode);
+          this->moveCursor(QTextCursor::PreviousCharacter, this->moveMode);
         } else if ((m == Qt::NoModifier) && (k == Qt::Key_Right)) {
           this->moveCursor(QTextCursor::NextCharacter, this->moveMode);
         } else if ((m == Qt::NoModifier) && (k == Qt::Key_Up)) {
@@ -1314,16 +1269,14 @@ namespace tfel {
           this->positions[c.block().blockNumber()] = p;
           c.movePosition(QTextCursor::PreviousBlock, this->moveMode);
           int npos = qMax(qMin(p, c.block().length() - 1), 0);
-          c.movePosition(QTextCursor::NextCharacter, this->moveMode,
-                         npos);
+          c.movePosition(QTextCursor::NextCharacter, this->moveMode, npos);
           this->setTextCursor(c);
         } else if ((m == Qt::NoModifier) && (k == Qt::Key_Down)) {
           int p = c.position() - c.block().position();
           this->positions[c.block().blockNumber()] = p;
           c.movePosition(QTextCursor::NextBlock, this->moveMode);
           int npos = qMax(qMin(p, c.block().length() - 1), 0);
-          c.movePosition(QTextCursor::NextCharacter, this->moveMode,
-                         npos);
+          c.movePosition(QTextCursor::NextCharacter, this->moveMode, npos);
           this->setTextCursor(c);
         } else if ((m == Qt::NoModifier) && (k == Qt::Key_Tab)) {
           /* indentation */
@@ -1357,13 +1310,11 @@ namespace tfel {
                 // const bool ctrlOrShift = m & (Qt::ControlModifier |
                 // Qt::ShiftModifier);
                 const bool hasModifier = m != Qt::NoModifier;
-                QString completionPrefix =
-                    this->mode->getCompletionPrefix();
+                QString completionPrefix = this->mode->getCompletionPrefix();
                 if (hasModifier ||
                     (completionPrefix.length() <
                      this->mode->getMinimalCompletionLength()) ||
-                    e->text().isEmpty() ||
-                    eow.contains(e->text().right(1))) {
+                    e->text().isEmpty() || eow.contains(e->text().right(1))) {
                   completer->popup()->hide();
                   return true;
                 }
@@ -1374,15 +1325,13 @@ namespace tfel {
                 }
                 if (completer->completionCount() == 1) {
                   // do something
-                  if (completer->currentCompletion() !=
-                      completionPrefix) {
+                  if (completer->currentCompletion() != completionPrefix) {
                     QRect cr = cursorRect();
-                    cr.setWidth(
-                        completer->popup()->sizeHintForColumn(0) +
-                        completer->popup()
-                            ->verticalScrollBar()
-                            ->sizeHint()
-                            .width());
+                    cr.setWidth(completer->popup()->sizeHintForColumn(0) +
+                                completer->popup()
+                                    ->verticalScrollBar()
+                                    ->sizeHint()
+                                    .width());
                     completer->complete(cr);  // popup it up!
                   } else {
                     completer->popup()->hide();
@@ -1432,8 +1381,7 @@ namespace tfel {
         }
         m->addAction(this->sa);
         if (this->mode != nullptr) {
-          this->mode->completeContextMenu(
-              m, this->cursorForPosition(e->pos()));
+          this->mode->completeContextMenu(m, this->cursorForPosition(e->pos()));
         }
         m->exec(e->globalPos());
         e->accept();
@@ -1462,9 +1410,9 @@ namespace tfel {
 
     TextEditBase::~TextEditBase() {
       if (this->filter != nullptr) {
-        QObject::disconnect(
-            this->filter, &TextEditKeyPressEventFilter::destroyed, this,
-            &TextEditBase::keyPressEventFilterDestroyed);
+        QObject::disconnect(this->filter,
+                            &TextEditKeyPressEventFilter::destroyed, this,
+                            &TextEditBase::keyPressEventFilterDestroyed);
         this->filter->deleteLater();
       }
       this->deleteContextMenuActions();

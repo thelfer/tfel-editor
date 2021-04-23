@@ -18,225 +18,222 @@
 #include "TFEL/GUI/Config.hxx"
 #include "TFEL/GUI/SecondaryTaskManager.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  //! forward declaration
-  struct Buffer;
-  //! forward declaration
-  struct LineEdit;
-  //! forward declaration
-  struct CommandLine;
+    //! forward declaration
+    struct Buffer;
+    //! forward declaration
+    struct LineEdit;
+    //! forward declaration
+    struct CommandLine;
 
-  //! \brief a wigdet providing an emacs-inspired editor
-  struct TFEL_GUI_VISIBILITY_EXPORT EditorWidget
-      : public QWidget,
-        public SecondaryTaskManager {
-    static QStringList &getRecentFiles();
+    //! \brief a wigdet providing an emacs-inspired editor
+    struct TFEL_GUI_VISIBILITY_EXPORT EditorWidget
+        : public QWidget,
+          public SecondaryTaskManager {
+      static QStringList &getRecentFiles();
 
-    void addToRecentFiles(const QString &);
+      void addToRecentFiles(const QString &);
 
-    /*!
-     * \param[in] p : parent widget
-     */
-    EditorWidget(QWidget *const = nullptr);
+      /*!
+       * \param[in] p : parent widget
+       */
+      EditorWidget(QWidget *const = nullptr);
 
-    virtual bool isOkToClose();
+      virtual bool isOkToClose();
 
-    virtual QStringList getBuffersNames() const;
+      virtual QStringList getBuffersNames() const;
 
-    virtual std::vector<QIcon> getBuffersIcons() const;
+      virtual std::vector<QIcon> getBuffersIcons() const;
 
-    virtual std::vector<int> getBuffersIds() const;
+      virtual std::vector<int> getBuffersIds() const;
 
-    virtual void changeBuffer(const QString &);
+      virtual void changeBuffer(const QString &);
 
-    virtual void changeBuffer(const int);
+      virtual void changeBuffer(const int);
 
-    virtual QString chooseBufferNameSuffix(Buffer *,
-                                           const QString &);
+      virtual QString chooseBufferNameSuffix(Buffer *, const QString &);
 
-    virtual std::vector<QMenu *> getCurrentBufferSpecificMenus();
+      virtual std::vector<QMenu *> getCurrentBufferSpecificMenus();
 
-    virtual Buffer &getCurrentBuffer();
+      virtual Buffer &getCurrentBuffer();
 
-    virtual void changeBuffer();
+      virtual void changeBuffer();
 
-    virtual void launchCommand(const QString &);
+      virtual void launchCommand(const QString &);
 
-    virtual void launchCommand();
+      virtual void launchCommand();
 
-    virtual const QStringList &getKillRing() const;
+      virtual const QStringList &getKillRing() const;
 
-    virtual void addToKillRing(const QString &);
+      virtual void addToKillRing(const QString &);
 
-    virtual bool hasUserInput() const;
+      virtual bool hasUserInput() const;
 
-    //! destructor
-    ~EditorWidget() override;
+      //! destructor
+      ~EditorWidget() override;
 
-   public slots:
+     public slots:
 
-    /*!
-     * change the font used by the main frames
-     * \param[in] f : new font
-     */
-    void changeMainFramesFont(const QFont &);
+      /*!
+       * change the font used by the main frames
+       * \param[in] f : new font
+       */
+      void changeMainFramesFont(const QFont &);
 
-    /*!
-     * open a file in a new buffer
-     */
-    virtual void openFile();
+      /*!
+       * open a file in a new buffer
+       */
+      virtual void openFile();
 
-    //! \brief print the current widget main frame
-    virtual void print();
+      //! \brief print the current widget main frame
+      virtual void print();
 
-    /*!
-     * open a file in a new buffer
-     * \param[in] f : file name
-     */
-    virtual void openFile(const QString &);
+      /*!
+       * open a file in a new buffer
+       * \param[in] f : file name
+       */
+      virtual void openFile(const QString &);
 
-    /*!
-     * create a new buffer
-     */
-    virtual void createEmptyBuffer();
+      /*!
+       * create a new buffer
+       */
+      virtual void createEmptyBuffer();
 
-    /*!
-     * save all modified buffers
-     */
-    virtual void saveAllBuffers();
+      /*!
+       * save all modified buffers
+       */
+      virtual void saveAllBuffers();
 
-    virtual void displayInformativeMessage(const QString &m);
+      virtual void displayInformativeMessage(const QString &m);
 
-    /*!
-     * set an user input
-     * \param[in] l : the line edit
-     */
-    virtual void setUserInput(CommandLine *const);
+      /*!
+       * set an user input
+       * \param[in] l : the line edit
+       */
+      virtual void setUserInput(CommandLine *const);
 
-    virtual Buffer *getBufferVisitingFile(const QString &);
+      virtual Buffer *getBufferVisitingFile(const QString &);
 
-    virtual void focusUserInput();
+      virtual void focusUserInput();
 
-    virtual void removeUserInputs();
+      virtual void removeUserInputs();
 
-    virtual void removeUserInput();
+      virtual void removeUserInput();
 
-    virtual void removeUserInput(CommandLine *);
+      virtual void removeUserInput(CommandLine *);
 
-    /*!
-     * \param[in] b : if true, check if the buffer is ok to close
-     */
-    virtual void closeCurrentBuffer(const bool = true);
+      /*!
+       * \param[in] b : if true, check if the buffer is ok to close
+       */
+      virtual void closeCurrentBuffer(const bool = true);
 
-    /*!
-     * \param[in] b : if true, check if the buffer is ok to close
-     */
-    virtual void closeBuffer(Buffer &, const bool = true);
+      /*!
+       * \param[in] b : if true, check if the buffer is ok to close
+       */
+      virtual void closeBuffer(Buffer &, const bool = true);
 
-    virtual void saveCurrentBuffer();
-    /*!
-     * \brief go to the next buffer. If the current buffer is the
-     * last one, cycle the first one (index 0).
-     */
-    virtual void nextBuffer();
-    /*!
-     * \brief go to the previous buffer. If the current buffer is the
-     * first one (index 0), cycle the last one.
-     */
-    virtual void previousBuffer();
-    /*!
-     * \brief change the orientation of the secondary tasks in all
-     * buffers
-     * \param[in] o: orientation
-     */
-    virtual void setSecondaryTasksOrientation(const Qt::Orientation);
-    
-   signals:
+      virtual void saveCurrentBuffer();
+      /*!
+       * \brief go to the next buffer. If the current buffer is the
+       * last one, cycle the first one (index 0).
+       */
+      virtual void nextBuffer();
+      /*!
+       * \brief go to the previous buffer. If the current buffer is the
+       * first one (index 0), cycle the last one.
+       */
+      virtual void previousBuffer();
+      /*!
+       * \brief change the orientation of the secondary tasks in all
+       * buffers
+       * \param[in] o: orientation
+       */
+      virtual void setSecondaryTasksOrientation(const Qt::Orientation);
 
-    void closed();
+     signals:
 
-    void bufferAdded();
+      void closed();
 
-    void bufferRemoved();
+      void bufferAdded();
 
-    void bufferNameChanged();
+      void bufferRemoved();
 
-    void currentBufferChanged();
+      void bufferNameChanged();
 
-    void currentBufferMajorModeChanged();
+      void currentBufferChanged();
 
-    void updatedMenu();
+      void currentBufferMajorModeChanged();
 
-    void newTreatedFile(const QString &);
+      void updatedMenu();
 
-   protected slots:
+      void newTreatedFile(const QString &);
 
-    virtual void resetUserInput();
+     protected slots:
 
-    virtual void updateBufferName(Buffer *,
-                                  const QString &,
-                                  const QString &);
+      virtual void resetUserInput();
 
-    virtual void emitNewTreatedFile(const QString &);
+      virtual void updateBufferName(Buffer *, const QString &, const QString &);
 
-   protected:
-    /*!
-     * "open file" user input
-     */
-    struct OpenFile;
+      virtual void emitNewTreatedFile(const QString &);
 
-    /*!
-     * change buffer user input
-     */
-    struct ChangeBuffer;
+     protected:
+      /*!
+       * "open file" user input
+       */
+      struct OpenFile;
 
-    /*!
-     * launch a new command
-     */
-    struct Command;
+      /*!
+       * change buffer user input
+       */
+      struct ChangeBuffer;
 
-    struct SaveCurrentBufferAndKill;
+      /*!
+       * launch a new command
+       */
+      struct Command;
 
-    virtual void closeEvent(QCloseEvent *) override;
+      struct SaveCurrentBufferAndKill;
 
-    /*!
-     * create a new buffer
-     */
-    virtual Buffer *createNewBuffer(const QString & = "");
+      virtual void closeEvent(QCloseEvent *) override;
 
-    /*!
-     * set the current buffer, add it at the top of history, emit
-     * the currentBufferChanged signal, and give it the focus
-     */
-    virtual void setCurrentBuffer(Buffer *const);
+      /*!
+       * create a new buffer
+       */
+      virtual Buffer *createNewBuffer(const QString & = "");
 
-    virtual void removeBuffer(Buffer *const) override;
+      /*!
+       * set the current buffer, add it at the top of history, emit
+       * the currentBufferChanged signal, and give it the focus
+       */
+      virtual void setCurrentBuffer(Buffer *const);
 
-    //! buffers
-    QStackedWidget *buffers;
-    //! buffer history
-    QStringList bHistory;
-    //! the minibuffer
-    QStackedWidget *minibuffer;
-    //! user message
-    LineEdit *um;
-    //! user input
-    std::vector<CommandLine *> ui;
-    //! empty line edit
-    LineEdit *eui;
-    //! the list of tokens pasted/killed
-    QStringList killRing;
-    //! id of the next buffer
-    int nid;
+      virtual void removeBuffer(Buffer *const) override;
 
-   private:
-    Q_OBJECT
-  };  // end of struct 
+      //! buffers
+      QStackedWidget *buffers;
+      //! buffer history
+      QStringList bHistory;
+      //! the minibuffer
+      QStackedWidget *minibuffer;
+      //! user message
+      LineEdit *um;
+      //! user input
+      std::vector<CommandLine *> ui;
+      //! empty line edit
+      LineEdit *eui;
+      //! the list of tokens pasted/killed
+      QStringList killRing;
+      //! id of the next buffer
+      int nid;
 
-}  // end of namespace gui
-}// end of namespace tfel
+     private:
+      Q_OBJECT
+    };  // end of struct
+
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_EDITORWIDGET_HXX */

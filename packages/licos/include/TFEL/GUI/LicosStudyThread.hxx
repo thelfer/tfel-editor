@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  LicosStudyThread.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,98 +6,96 @@
  */
 
 #ifndef LIB_TFEL_GUI_LICOSSTUDYTHREAD_HXX
-#define LIB_TFEL_GUI_LICOSSTUDYTHREAD_HXX 
+#define LIB_TFEL_GUI_LICOSSTUDYTHREAD_HXX
 
-#include<QtCore/QProcess>
-#include<QtCore/QString>
-#include<QtCore/QStringList>
-#include<QtCore/QThread>
-#include<QtWidgets/QPlainTextEdit>
-#include<QtNetwork/QLocalServer>
-#include<QtNetwork/QLocalSocket>
+#include <QtCore/QProcess>
+#include <QtCore/QString>
+#include <QtCore/QStringList>
+#include <QtCore/QThread>
+#include <QtWidgets/QPlainTextEdit>
+#include <QtNetwork/QLocalServer>
+#include <QtNetwork/QLocalSocket>
 
-#include"TFEL/GUI/LicosStudyOptions.hxx"
+#include "TFEL/GUI/LicosStudyOptions.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  // forward declaration
-  struct LicosStudy;
-  // forward declaration
-  struct LicosOutputFrame;
-
-  /*!
-   * each studyThread is associated to a specific thread
-   */
-  struct LicosStudyThread : public QThread {
-
-    friend struct LicosOutputFrame;
+    // forward declaration
+    struct LicosStudy;
+    // forward declaration
+    struct LicosOutputFrame;
 
     /*!
-     * \param [in] f : input file
-     * \param [in] o : study options
-     * \param [in] a : command line arguments
-     * \param [in] p : parent (qt sense)
+     * each studyThread is associated to a specific thread
      */
-    LicosStudyThread(const QString &,
-                     const LicosStudyOptions &,
-                     const QStringList &,
-                     LicosOutputFrame *const);
-    /*!
-     * run the study
-     */
-    void run() override;
+    struct LicosStudyThread : public QThread {
+      friend struct LicosOutputFrame;
 
-    /*!
-     * return true if the study success
-     */
-    bool succeed() const;
+      /*!
+       * \param [in] f : input file
+       * \param [in] o : study options
+       * \param [in] a : command line arguments
+       * \param [in] p : parent (qt sense)
+       */
+      LicosStudyThread(const QString &,
+                       const LicosStudyOptions &,
+                       const QStringList &,
+                       LicosOutputFrame *const);
+      /*!
+       * run the study
+       */
+      void run() override;
 
-    /*!
-     * return the error messsage if the study failed
-     */
-    QString getErrorMessage() const;
+      /*!
+       * return true if the study success
+       */
+      bool succeed() const;
 
-    ~LicosStudyThread() override;
-			
-  signals:
+      /*!
+       * return the error messsage if the study failed
+       */
+      QString getErrorMessage() const;
 
-    void finished(bool,QString);
+      ~LicosStudyThread() override;
 
-    void newProcessOutput(QString);
+     signals:
 
-    void newPeriod(int);
+      void finished(bool, QString);
 
-    void killProcess();
+      void newProcessOutput(QString);
 
-  private slots:
-    
-    void studyFinished();
+      void newPeriod(int);
 
-    void forwardProcessOutput(QString);
+      void killProcess();
 
-    void forwardNewPeriod(int);
+     private slots:
 
-  private:
+      void studyFinished();
 
-    QString inputFile;
+      void forwardProcessOutput(QString);
 
-    QStringList args;
+      void forwardNewPeriod(int);
 
-    QString errorMessage;
+     private:
+      QString inputFile;
 
-    LicosStudyOptions options;
+      QStringList args;
 
-    LicosStudy *study;
+      QString errorMessage;
 
-    bool success;
+      LicosStudyOptions options;
 
-    Q_OBJECT
+      LicosStudy *study;
 
-  }; // end of LicosStudyThread
+      bool success;
 
-} // end of namespace gui
-}// end of namespace tfel
+      Q_OBJECT
+
+    };  // end of LicosStudyThread
+
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_LICOSSTUDYTHREAD_H */

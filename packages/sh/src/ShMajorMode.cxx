@@ -17,39 +17,35 @@
 #include "TFEL/GUI/ShSyntaxHighlighter.hxx"
 #include "TFEL/GUI/ShMajorMode.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  ShMajorMode::ShMajorMode(EditorWidget& w,
-                           Buffer& b,
-                           TextEditBase& t)
-      : MajorModeBase(w, b, t, &t) {
-  }  // end of ShMajorMode::ShMajorMode
+    ShMajorMode::ShMajorMode(EditorWidget& w, Buffer& b, TextEditBase& t)
+        : MajorModeBase(w, b, t, &t) {}  // end of ShMajorMode::ShMajorMode
 
-  QString ShMajorMode::getName() const {
-    return "sh";
-  }  // end of ShMajorMode::ShMajorMode
+    QString ShMajorMode::getName() const {
+      return "sh";
+    }  // end of ShMajorMode::ShMajorMode
 
-  QString ShMajorMode::getDescription() const {
-    return "major mode dedicated to sh files";
-  }  // end of ShMajorMode::ShMajorMode
+    QString ShMajorMode::getDescription() const {
+      return "major mode dedicated to sh files";
+    }  // end of ShMajorMode::ShMajorMode
 
-  void ShMajorMode::format() {}  // end of ShMajorMode::format
+    void ShMajorMode::format() {}  // end of ShMajorMode::format
 
-  QString ShMajorMode::getCommentSyntax() {
-    return "#";
-  }  // end of ShMajorMode::getCommentSyntax
+    QString ShMajorMode::getCommentSyntax() {
+      return "#";
+    }  // end of ShMajorMode::getCommentSyntax
 
-  void ShMajorMode::setSyntaxHighlighter(QTextDocument* const d) {
-    new ShSyntaxHighlighter(d);
-  }  // end of ShMajorMode::setSyntaxHighlighter
+    void ShMajorMode::setSyntaxHighlighter(QTextDocument* const d) {
+      new ShSyntaxHighlighter(d);
+    }  // end of ShMajorMode::setSyntaxHighlighter
 
-  ShMajorMode::~ShMajorMode() = default;
+    ShMajorMode::~ShMajorMode() = default;
 
-  static StandardMajorModeProxy<ShMajorMode> proxy(
-      "sh",
-      QVector<QRegExp>() << QRegExp("^" + fileNameRegExp() + "\\.sh$"));
+    static StandardMajorModeProxy<ShMajorMode> proxy(
+        "sh", QVector<QRegExp>() << QRegExp("^" + fileNameRegExp() + "\\.sh$"));
 
-}  // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel

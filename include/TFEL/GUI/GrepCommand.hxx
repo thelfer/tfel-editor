@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  GrepCommand.hxx
  * \brief
  * \author Thomas Helfer
@@ -6,32 +6,27 @@
  */
 
 #ifndef LIB_TFEL_GUI_GREPCOMMAND_HXX
-#define LIB_TFEL_GUI_GREPCOMMAND_HXX 
+#define LIB_TFEL_GUI_GREPCOMMAND_HXX
 
-#include"TFEL/GUI/Command.hxx"
+#include "TFEL/GUI/Command.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui
-{
+  namespace gui {
 
-  /*!
-   * A command based on the grep utility
-   */
-  struct GrepCommand
-    : public Command
-  {
-    
-    GrepCommand(EditorWidget&);
-    
-    void execute() override;
-    
-    ~GrepCommand() override;
+    /*!
+     * A command based on the grep utility
+     */
+    struct GrepCommand : public Command {
+      GrepCommand(EditorWidget&);
 
-  }; // end of GrepCommand
+      void execute() override;
 
-} // end of namespace gui
-}// end of namespace tfel
+      ~GrepCommand() override;
+
+    };  // end of GrepCommand
+
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_GREPCOMMAND_HXX */
-

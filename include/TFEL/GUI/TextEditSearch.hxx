@@ -14,89 +14,87 @@
 #include "TFEL/GUI/CommandLine.hxx"
 #include "TFEL/GUI/TextEditKeyPressEventFilter.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  // forward declaration
-  struct EditorWidget;
-  // forward declaration
-  struct TextEdit;
-  // forward declaration
-  struct TextEditSearch;
+    // forward declaration
+    struct EditorWidget;
+    // forward declaration
+    struct TextEdit;
+    // forward declaration
+    struct TextEditSearch;
 
-  /*!
-   * \brief a key press event filter which forward the user
-   */
-  struct TFEL_GUI_VISIBILITY_EXPORT TextEditSearchFilter
-      : public TextEditKeyPressEventFilter {
     /*!
-     * \brief constructor
+     * \brief a key press event filter which forward the user
      */
-    TextEditSearchFilter(TextEditBase&,
-                               TextEditSearch&);
+    struct TFEL_GUI_VISIBILITY_EXPORT TextEditSearchFilter
+        : public TextEditKeyPressEventFilter {
+      /*!
+       * \brief constructor
+       */
+      TextEditSearchFilter(TextEditBase&, TextEditSearch&);
 
-    bool isOk() const override;
+      bool isOk() const override;
 
-    bool filterKeyPressEvent(QKeyEvent* const) override;
-    //! destructor
-    ~TextEditSearchFilter() override;
+      bool filterKeyPressEvent(QKeyEvent* const) override;
+      //! destructor
+      ~TextEditSearchFilter() override;
 
-   public slots:
+     public slots:
 
-    void lineEditDestroyed();
+      void lineEditDestroyed();
 
-   protected:
-    TextEditBase& textEdit;
+     protected:
+      TextEditBase& textEdit;
 
-    TextEditSearch& s;
-   private:
-    Q_OBJECT
+      TextEditSearch& s;
 
-  };  // end of TextEditSearchFilter
+     private:
+      Q_OBJECT
 
-  struct TFEL_GUI_VISIBILITY_EXPORT TextEditSearch
-      : public CommandLine {
+    };  // end of TextEditSearchFilter
 
-    TextEditSearch(TextEditBase&,
-                         EditorWidget&,
-                         const QTextDocument::FindFlags =
-                             QTextDocument::FindCaseSensitively);
+    struct TFEL_GUI_VISIBILITY_EXPORT TextEditSearch : public CommandLine {
+      TextEditSearch(
+          TextEditBase&,
+          EditorWidget&,
+          const QTextDocument::FindFlags = QTextDocument::FindCaseSensitively);
 
-    virtual void findNext();
+      virtual void findNext();
 
-    virtual void setSearchOptions(const QTextDocument::FindFlags);
+      virtual void setSearchOptions(const QTextDocument::FindFlags);
 
-    virtual QTextDocument::FindFlags getSearchOptions() const;
-    //! destructor
-    ~TextEditSearch() override;
+      virtual QTextDocument::FindFlags getSearchOptions() const;
+      //! destructor
+      ~TextEditSearch() override;
 
-   protected slots:
+     protected slots:
 
-    virtual void search(const QString&);
+      virtual void search(const QString&);
 
-   public slots:
+     public slots:
 
-    virtual void searchFilterDestroyed();
+      virtual void searchFilterDestroyed();
 
-   protected:
-    void treatUserInput() override;
+     protected:
+      void treatUserInput() override;
 
-    TextEditBase& textEdit;
+      TextEditBase& textEdit;
 
-    TextEditSearchFilter* sf;
+      TextEditSearchFilter* sf;
 
-    //! position of the cursor at the beginning of the search
-    QTextCursor cursor;
-    //! options used for searching
-    QTextDocument::FindFlags opts = QTextDocument::FindFlags();
+      //! position of the cursor at the beginning of the search
+      QTextCursor cursor;
+      //! options used for searching
+      QTextDocument::FindFlags opts = QTextDocument::FindFlags();
 
-   private:
-    Q_OBJECT
+     private:
+      Q_OBJECT
 
-  };  // end of struct TextEditSearch
+    };  // end of struct TextEditSearch
 
-}  // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_TEXTEDITSEARCH_HXX */

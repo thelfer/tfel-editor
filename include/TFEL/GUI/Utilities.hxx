@@ -40,8 +40,7 @@ namespace tfel {
      * otherwise
      */
     TFEL_GUI_VISIBILITY_EXPORT QString
-    findFileInDirectoryOrParentDirectory(const QString&,
-                                         const QString&);
+    findFileInDirectoryOrParentDirectory(const QString&, const QString&);
 
     TFEL_GUI_VISIBILITY_EXPORT QString fileNameRegExp();
 
@@ -53,8 +52,7 @@ namespace tfel {
                                         QAbstractScrollArea* const);
 
 #ifdef TFEL_GUI_HAVE_WEBENGINE
-    void setQWebEngineViewInLayout(QHBoxLayout* const,
-                                   QWebEngineView* const);
+    void setQWebEngineViewInLayout(QHBoxLayout* const, QWebEngineView* const);
 #endif /* TFEL_GUI_HAVE_WEBENGINE */
 
     QString commonPart(const QString&, const QString&);
@@ -97,7 +95,6 @@ namespace tfel {
     TFEL_GUI_VISIBILITY_EXPORT QString getUserName();
 
 #endif /* Q_OS_UNIX */
-
 
   }  // end of namespace gui
 }  // end of namespace tfel

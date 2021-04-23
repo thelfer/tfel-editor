@@ -12,93 +12,91 @@
 #include <QtWidgets/QMainWindow>
 #include "TFEL/GUI/Config.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  struct MainWindow : public QMainWindow {
-    MainWindow(const QStringList & = QStringList(),
-                     QWidget *const = nullptr);
+    struct MainWindow : public QMainWindow {
+      MainWindow(const QStringList & = QStringList(), QWidget *const = nullptr);
 
-    virtual QSize sizeHint() const override;
+      virtual QSize sizeHint() const override;
 
-   protected:
-    virtual void closeEvent(QCloseEvent *) override;
+     protected:
+      virtual void closeEvent(QCloseEvent *) override;
 
-   protected slots:
+     protected slots:
 
-    virtual void about();
+      virtual void about();
 
-    virtual void undo();
+      virtual void undo();
 
-    virtual void redo();
+      virtual void redo();
 
-    virtual void cut();
+      virtual void cut();
 
-    virtual void copy();
+      virtual void copy();
 
-    virtual void paste();
+      virtual void paste();
 
-    virtual void selectAll();
+      virtual void selectAll();
 
-    virtual void print();
+      virtual void print();
 
-    virtual void updateBuffersMenu();
+      virtual void updateBuffersMenu();
 
-    virtual void updateOptionsMenu();
+      virtual void updateOptionsMenu();
 
-    virtual void createMainMenu();
+      virtual void createMainMenu();
 
-    virtual void openFile();
+      virtual void openFile();
 
-    virtual void selectFont();
+      virtual void selectFont();
 
-    virtual void useEmacsShortCuts();
+      virtual void useEmacsShortCuts();
 
-    virtual void useQtShortCuts();
+      virtual void useQtShortCuts();
 
-    virtual void addToRecentFiles(const QString &);
+      virtual void addToRecentFiles(const QString &);
 
-   protected:
-    virtual void createActions();
+     protected:
+      virtual void createActions();
 
-    virtual void createRecentFilesMenu(QMenu *const,
-                                       const QStringList &);
+      virtual void createRecentFilesMenu(QMenu *const, const QStringList &);
 
-    QAction *na;
-    QAction *oa;
-    QAction *sa;
-    QAction *saa;
-    QAction *ka;
-    QAction *pra;
-    QAction *ea;
+      QAction *na;
+      QAction *oa;
+      QAction *sa;
+      QAction *saa;
+      QAction *ka;
+      QAction *pra;
+      QAction *ea;
 
-    QAction *ua;
-    QAction *ra;
-    QAction *ca;
-    QAction *ca2;
-    QAction *pa;
-    QAction *sea;
+      QAction *ua;
+      QAction *ra;
+      QAction *ca;
+      QAction *ca2;
+      QAction *pa;
+      QAction *sea;
 
-    QAction *fa;
-    QAction *esca;
-    QAction *qsca;
-    QAction *aa;
-    QAction *aa2;
+      QAction *fa;
+      QAction *esca;
+      QAction *qsca;
+      QAction *aa;
+      QAction *aa2;
 
-    QMenu *fm;
-    QMenu *cm; // command menu
-    QMenu *em; // editor menu
-    QMenu *om; // option menu
-    QMenu *bm; // buffer menu
-    QMenu *hm; // help menu
+      QMenu *fm;
+      QMenu *cm;  // command menu
+      QMenu *em;  // editor menu
+      QMenu *om;  // option menu
+      QMenu *bm;  // buffer menu
+      QMenu *hm;  // help menu
 
-   private:
-    Q_OBJECT
+     private:
+      Q_OBJECT
 
-  };  // end of class MainWindow
+    };  // end of class MainWindow
 
-}  // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_MAINWINDOW_HXX */

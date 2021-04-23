@@ -28,8 +28,8 @@ namespace tfel {
       auto* l = new QVBoxLayout;
       l->addWidget(this->sb);
       QObject::connect(this->sb,
-                       &SelectMFMBehaviour::behaviourDescriptionChanged,
-                       this, [this](const BehaviourDescription& bd) {
+                       &SelectMFMBehaviour::behaviourDescriptionChanged, this,
+                       [this](const BehaviourDescription& bd) {
                          emit behaviourDescriptionChanged(bd);
                        });
       QObject::connect(this->sb, &SelectMFMBehaviour::doubleClicked,
@@ -40,8 +40,8 @@ namespace tfel {
       this->setLayout(l);
     }
 
-    BehaviourDescription
-    SelectMFMBehaviourPage::getBehaviourDescription() const {
+    BehaviourDescription SelectMFMBehaviourPage::getBehaviourDescription()
+        const {
       return this->sb->getSelectedBehaviour();
     }  // end of SelectMFMBehaviourPage::getSelectedBehaviour
 

@@ -12,45 +12,45 @@
 #include "TFEL/GUI/BehaviourDescription.hxx"
 #include "TFEL/GUI/SelectMFMBehaviour.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  // forward declaration
-  struct EditorWidget;
+    // forward declaration
+    struct EditorWidget;
 
-  /*!
-   * \brief a wizard page used to select a behaviour from a shared
-   * library.
-   */
-  struct TFEL_GUI_MIW_VISIBILITY_EXPORT SelectMFMBehaviourPage
-      : public QWizardPage {
-    //! a simple alias
-    using Options = SelectMFMBehaviour::Options;
+    /*!
+     * \brief a wizard page used to select a behaviour from a shared
+     * library.
+     */
+    struct TFEL_GUI_MIW_VISIBILITY_EXPORT SelectMFMBehaviourPage
+        : public QWizardPage {
+      //! a simple alias
+      using Options = SelectMFMBehaviour::Options;
 
-    SelectMFMBehaviourPage(EditorWidget &, const Options &);
+      SelectMFMBehaviourPage(EditorWidget &, const Options &);
 
-    int nextId() const override;
+      int nextId() const override;
 
-    bool validatePage() override;
+      bool validatePage() override;
 
-    BehaviourDescription getBehaviourDescription() const;
-    
-    //! destructor
-    ~SelectMFMBehaviourPage() override;
+      BehaviourDescription getBehaviourDescription() const;
 
-   signals:
+      //! destructor
+      ~SelectMFMBehaviourPage() override;
 
-    void behaviourDescriptionChanged(const BehaviourDescription &);
+     signals:
 
-    void doubleClicked(const BehaviourDescription &);
+      void behaviourDescriptionChanged(const BehaviourDescription &);
 
-   private:
-    SelectMFMBehaviour *sb;
-    Q_OBJECT
-  };  // end of struct SelectMFMBehaviourPage
+      void doubleClicked(const BehaviourDescription &);
 
-}  // end of namespace gui
-}// end of namespace tfel
+     private:
+      SelectMFMBehaviour *sb;
+      Q_OBJECT
+    };  // end of struct SelectMFMBehaviourPage
+
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_SELECTMFMBEHAVIOURPAGE_HXX */

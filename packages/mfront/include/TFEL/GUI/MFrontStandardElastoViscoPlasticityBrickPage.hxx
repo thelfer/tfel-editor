@@ -1,6 +1,6 @@
 /*!
  * \file   MFrontStandardElastoViscoPlasticityBrickPage.hxx
- * \brief    
+ * \brief
  * \author Thomas Helfer
  * \date   27/07/2019
  */
@@ -32,9 +32,8 @@ namespace tfel {
        * \param[in] cd: current document
        * \param[in] p: parent
        */
-      MFrontStandardElastoViscoPlasticityBrickPage(EditorWidget &,
-                                                   TextEditBase &,
-                                                   MFrontBehaviourWizard*const);
+      MFrontStandardElastoViscoPlasticityBrickPage(
+          EditorWidget &, TextEditBase &, MFrontBehaviourWizard *const);
 
       bool validatePage() override;
 
@@ -46,8 +45,7 @@ namespace tfel {
 
      protected:
       //! list of inelastic flows
-      std::vector<
-          MFrontAddInelasticFlowDialog::InelasticFlowDescription>
+      std::vector<MFrontAddInelasticFlowDialog::InelasticFlowDescription>
           inelastic_flows;
       //! \brief list of stress potentials
       QComboBox *const stress_potentials;
@@ -65,4 +63,4 @@ namespace tfel {
 }  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_MFRONTSTANDARDELASTOVISCOPLASTICITYBRICKPAGE_HXX \
-          */
+        */

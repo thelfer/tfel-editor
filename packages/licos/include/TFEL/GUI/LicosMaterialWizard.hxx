@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  LicosMaterialWizard.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,57 +6,53 @@
  */
 
 #ifndef LIB_TFEL_GUI_LICOSMATERIALWIZARD_HXX
-#define LIB_TFEL_GUI_LICOSMATERIALWIZARD_HXX 
+#define LIB_TFEL_GUI_LICOSMATERIALWIZARD_HXX
 
-#include<QtWidgets/QWizard>
+#include <QtWidgets/QWizard>
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  // forward declaration
-  struct TextEditBase;
-  // forward declaration
-  struct LicosThermalBehaviourWizard;
-  // foward declaration
-  struct LicosMechanicalBehaviourWizard;
+    // forward declaration
+    struct TextEditBase;
+    // forward declaration
+    struct LicosThermalBehaviourWizard;
+    // foward declaration
+    struct LicosMechanicalBehaviourWizard;
 
-  /*!
-   * a wizard to introduce a new material
-   */
-  struct LicosMaterialWizard
-    : public QWizard
-  {
     /*!
-     * Constructor
-     * \param[in] t : 
+     * a wizard to introduce a new material
      */
-    LicosMaterialWizard(TextEditBase&);
+    struct LicosMaterialWizard : public QWizard {
+      /*!
+       * Constructor
+       * \param[in] t :
+       */
+      LicosMaterialWizard(TextEditBase &);
 
-    bool validateCurrentPage() override;
+      bool validateCurrentPage() override;
 
-    void writeMaterial();
+      void writeMaterial();
 
-  protected:
+     protected:
+      struct MaterialPage;
 
-    struct MaterialPage;
+      //! the textedit modified by the wizard
+      TextEditBase &textEdit;
 
-    //! the textedit modified by the wizard 
-    TextEditBase& textEdit;
+      //! the main page
+      MaterialPage *mpage;
 
-    //! the main page
-    MaterialPage *mpage;
+      //! wizard for the thermal behaviour
+      LicosThermalBehaviourWizard *tbw;
 
-    //! wizard for the thermal behaviour
-    LicosThermalBehaviourWizard *tbw;
+      //! wizard for the mechanial behaviour
+      LicosMechanicalBehaviourWizard *mbw;
 
-    //! wizard for the mechanial behaviour
-    LicosMechanicalBehaviourWizard *mbw;
+    };  // end of struct LicosMaterialWizard
 
-  }; // end of struct LicosMaterialWizard
-
-} // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_LICOSMATERIALWIZARD_H */
-

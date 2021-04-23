@@ -47,24 +47,22 @@ namespace tfel {
       const auto dsl = p->getBehaviourDSL(o);
       auto* const vl = new QVBoxLayout;
       if (dsl == nullptr) {
-        vl->addWidget(new QLabel(
-            QObject::tr("Invalid domain specific language")));
+        vl->addWidget(
+            new QLabel(QObject::tr("Invalid domain specific language")));
         this->setLayout(vl);
         return;
       }
       const auto& bd = dsl->getBehaviourDescription();
       const auto s = bd.getSymmetryType();
       // inelastic flows
-      const auto& iff =
-          mfront::bbrick::InelasticFlowFactory::getFactory();
+      const auto& iff = mfront::bbrick::InelasticFlowFactory::getFactory();
       auto* const ifl = new QLabel(QObject::tr("Inelastic flow"));
       for (const auto& iflow : iff.getRegistredInelasticFlows()) {
         this->inelastic_flows->addItem(QString::fromStdString(iflow));
       }
       // stress criteria and plastic potential
       this->plastic_potentials->addItem("Associated flow");
-      const auto& scf =
-          mfront::bbrick::StressCriterionFactory::getFactory();
+      const auto& scf = mfront::bbrick::StressCriterionFactory::getFactory();
       auto* const scl = new QLabel(QObject::tr("Stress criterion"));
       auto* const ppl = new QLabel(QObject::tr("Plastic Potential"));
       for (const auto& scn : scf.getRegistredStressCriteria()) {
@@ -72,8 +70,7 @@ namespace tfel {
         const auto ss = sc->getSupportedBehaviourSymmetries();
         if (std::find(ss.begin(), ss.end(), s) != ss.end()) {
           this->stress_criteria->addItem(QString::fromStdString(scn));
-          this->plastic_potentials->addItem(
-              QString::fromStdString(scn));
+          this->plastic_potentials->addItem(QString::fromStdString(scn));
         }
       }
       if (s == mfront::ISOTROPIC) {
@@ -83,12 +80,10 @@ namespace tfel {
       }
       this->plastic_potentials->setCurrentText("Associated flow");
       /* buttons */
-      auto* const bb = new QDialogButtonBox(QDialogButtonBox::Ok |
-                                            QDialogButtonBox::Cancel);
-      QObject::connect(bb, &QDialogButtonBox::accepted, this,
-                       &QDialog::accept);
-      QObject::connect(bb, &QDialogButtonBox::rejected, this,
-                       &QDialog::reject);
+      auto* const bb =
+          new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+      QObject::connect(bb, &QDialogButtonBox::accepted, this, &QDialog::accept);
+      QObject::connect(bb, &QDialogButtonBox::rejected, this, &QDialog::reject);
       auto* const gl = new QGridLayout();
       gl->addWidget(ifl, 0, 0);
       gl->addWidget(this->inelastic_flows, 0, 1);
@@ -111,13 +106,10 @@ namespace tfel {
       });
       const auto& ihrf =
           mfront::bbrick::IsotropicHardeningRuleFactory::getFactory();
-      for (const auto& ihrn :
-           ihrf.getRegistredIsotropicHardeningRules()) {
-        this->isotropic_hardening_rules->addItem(
-            QString::fromStdString(ihrn));
+      for (const auto& ihrn : ihrf.getRegistredIsotropicHardeningRules()) {
+        this->isotropic_hardening_rules->addItem(QString::fromStdString(ihrn));
       }
-      gl->addWidget(this->isotropic_hardening_rules_selected, 3, 0, 1,
-                    2);
+      gl->addWidget(this->isotropic_hardening_rules_selected, 3, 0, 1, 2);
       gl->addWidget(this->isotropic_hardening_rules, 4, 0);
       gl->addWidget(ihrb, 4, 1);
       //
@@ -135,13 +127,10 @@ namespace tfel {
       });
       const auto& khrf =
           mfront::bbrick::KinematicHardeningRuleFactory::getFactory();
-      for (const auto& khrn :
-           khrf.getRegistredKinematicHardeningRules()) {
-        this->kinematic_hardening_rules->addItem(
-            QString::fromStdString(khrn));
+      for (const auto& khrn : khrf.getRegistredKinematicHardeningRules()) {
+        this->kinematic_hardening_rules->addItem(QString::fromStdString(khrn));
       }
-      gl->addWidget(this->kinematic_hardening_rules_selected, 5, 0, 1,
-                    2);
+      gl->addWidget(this->kinematic_hardening_rules_selected, 5, 0, 1, 2);
       gl->addWidget(this->kinematic_hardening_rules, 6, 0);
       gl->addWidget(khrb, 6, 1);
       vl->addLayout(gl);
@@ -173,8 +162,7 @@ namespace tfel {
     }  // end of
        // MFrontAddInelasticFlowDialog::getInelasticFlowDescription
 
-    MFrontAddInelasticFlowDialog::~MFrontAddInelasticFlowDialog() =
-        default;
+    MFrontAddInelasticFlowDialog::~MFrontAddInelasticFlowDialog() = default;
 
   }  // end of namespace gui
 

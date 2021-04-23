@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  LicosMainBlock.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,26 +6,22 @@
  */
 
 #ifndef LIB_TFEL_GUI_LICOSMAINBLOCK_HXX
-#define LIB_TFEL_GUI_LICOSMAINBLOCK_HXX 
+#define LIB_TFEL_GUI_LICOSMAINBLOCK_HXX
 
-#include"TFEL/GUI/StandardLicosBlock.hxx"
+#include "TFEL/GUI/StandardLicosBlock.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui
-{
+  namespace gui {
 
-  /*!
-   * licos main block
-   */
-  struct LicosMainBlock
-    : public StandardLicosBlock
-  {
-    LicosMainBlock();
-  };
-  
-} // end of namespace gui
-}// end of namespace tfel
+    /*!
+     * licos main block
+     */
+    struct LicosMainBlock : public StandardLicosBlock {
+      LicosMainBlock();
+    };
+
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_LICOSMAINBLOCK_H */
-

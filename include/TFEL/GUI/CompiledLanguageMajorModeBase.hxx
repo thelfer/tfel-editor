@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  CompiledLanguageMajorModeBase.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,46 +6,42 @@
  */
 
 #ifndef LIB_TFEL_GUI_COMPILEDLANGUAGEMAJORMODEBASE_HXX
-#define LIB_TFEL_GUI_COMPILEDLANGUAGEMAJORMODEBASE_HXX 
+#define LIB_TFEL_GUI_COMPILEDLANGUAGEMAJORMODEBASE_HXX
 
-#include"TFEL/GUI/Config.hxx"
-#include"TFEL/GUI/MajorModeBase.hxx"
+#include "TFEL/GUI/Config.hxx"
+#include "TFEL/GUI/MajorModeBase.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  // forward declaration
-  struct ProcessOutputFrame;
+    // forward declaration
+    struct ProcessOutputFrame;
 
-  /*!
-   * base class for all compiled language
-   */
-  struct TFEL_GUI_VISIBILITY_EXPORT CompiledLanguageMajorModeBase
-      : public MajorModeBase {
-    CompiledLanguageMajorModeBase(EditorWidget &,
-                                  Buffer &,
-                                  TextEditBase &);
+    /*!
+     * base class for all compiled language
+     */
+    struct TFEL_GUI_VISIBILITY_EXPORT CompiledLanguageMajorModeBase
+        : public MajorModeBase {
+      CompiledLanguageMajorModeBase(EditorWidget &, Buffer &, TextEditBase &);
 
-    ~CompiledLanguageMajorModeBase() override;
+      ~CompiledLanguageMajorModeBase() override;
 
-  protected:
+     protected:
+      virtual QString getLanguageName() const = 0;
 
-    virtual QString getLanguageName() const = 0;
-    
-    virtual QString getDefaultCompilationCommand() const;
+      virtual QString getDefaultCompilationCommand() const;
 
-    virtual void runCompilation();
+      virtual void runCompilation();
 
-    ProcessOutputFrame *po;
+      ProcessOutputFrame *po;
 
-   private:
-    Q_OBJECT
+     private:
+      Q_OBJECT
 
-  }; // end of struct CompiledLanguageMajorModeBase
+    };  // end of struct CompiledLanguageMajorModeBase
 
-} // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_COMPILEDLANGUAGEMAJORMODEBASE_HXX */
-

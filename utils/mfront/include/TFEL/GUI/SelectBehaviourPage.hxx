@@ -14,9 +14,9 @@
 #include "TFEL/GUI/LineEdit.hxx"
 #include "TFEL/GUI/BehaviourDescription.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
     /*!
      * \brief a wizard page used to select a behaviour from a shared
@@ -68,6 +68,6 @@ namespace tfel{
     };  // end of struct SelectBehaviourPage
 
   }  // end of namespace gui
-}// end of namespace tfel
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_SELECTBEHAVIOURPAGE_HXX */

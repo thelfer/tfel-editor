@@ -94,8 +94,7 @@ namespace tfel {
         return false;
       }
       auto *const w = qobject_cast<QWidget *>(o);
-      if (!((w == this->e->widget()) ||
-            (this->stw->indexOf(w) != -1))) {
+      if (!((w == this->e->widget()) || (this->stw->indexOf(w) != -1))) {
         return false;
       }
       if (ev->type() == QEvent::KeyPress) {
@@ -183,31 +182,27 @@ namespace tfel {
                        &Buffer::emitNewTreatedFile);
       QObject::connect(this->e, &PlainTextEdit::fileNameChanged, this,
                        &Buffer::updateBufferName);
-      QObject::connect(this->e, &PlainTextEdit::cursorPositionChanged,
-                       this, &Buffer::updatePosition);
-      QObject::connect(this->e, &PlainTextEdit::cursorPositionChanged,
-                       this, &Buffer::updateDate);
+      QObject::connect(this->e, &PlainTextEdit::cursorPositionChanged, this,
+                       &Buffer::updatePosition);
+      QObject::connect(this->e, &PlainTextEdit::cursorPositionChanged, this,
+                       &Buffer::updateDate);
       QObject::connect(this->e, &PlainTextEdit::majorModeChanged, this,
                        &Buffer::updateBufferInformations);
       QObject::connect(this->e, &PlainTextEdit::majorModeChanged, this,
                        [this] { emit mainFrameMajorModeChanged(); });
-      QObject::connect(this->stw,
-                       &SecondaryTaskTabWidget::tabCloseRequested, this,
-                       &Buffer::closeSecondaryTask);
-      QObject::connect(
-          this->stw, &SecondaryTaskTabWidget::currentChanged, this,
-          [this]() {
-            auto *const c = this->stw->currentWidget();
-            if (c != nullptr) {
-              this->editor.setCurrentSecondaryTask(this, c);
-            }
-          });
+      QObject::connect(this->stw, &SecondaryTaskTabWidget::tabCloseRequested,
+                       this, &Buffer::closeSecondaryTask);
+      QObject::connect(this->stw, &SecondaryTaskTabWidget::currentChanged, this,
+                       [this]() {
+                         auto *const c = this->stw->currentWidget();
+                         if (c != nullptr) {
+                           this->editor.setCurrentSecondaryTask(this, c);
+                         }
+                       });
       this->updateBufferName();
     }
 
-    int Buffer::getId() const {
-      return this->id;
-    }  // end of Buffer::getId
+    int Buffer::getId() const { return this->id; }  // end of Buffer::getId
 
     void Buffer::emitNewTreatedFile(const QString &f) {
       emit newTreatedFile(f);
@@ -243,8 +238,8 @@ namespace tfel {
 
     void Buffer::updateBufferName() {
       const auto o = this->getBufferName();
-      this->bufferNameSuffix = this->editor.chooseBufferNameSuffix(
-          this, this->getBufferRawName());
+      this->bufferNameSuffix =
+          this->editor.chooseBufferNameSuffix(this, this->getBufferRawName());
       this->updateBufferInformations();
       const auto n = this->getBufferName();
       emit bufferNameChanged(this, o, n);
@@ -286,18 +281,16 @@ namespace tfel {
         if (cn == bn) {
           this->rpi->setText("100%");
         } else {
-          QString p = QString::number(static_cast<int>(
-                          qreal(cn) / qreal(bn) * 100.)) +
-                      "%";
+          QString p =
+              QString::number(static_cast<int>(qreal(cn) / qreal(bn) * 100.)) +
+              "%";
           this->rpi->setText(p);
         }
       }
       QTextCursor b(c);
-      b.movePosition(QTextCursor::StartOfBlock,
-                     QTextCursor::KeepAnchor);
+      b.movePosition(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
       this->api->setText("(" + QString::number(cn) + "," +
-                         QString::number(c.position() - b.position()) +
-                         ")");
+                         QString::number(c.position() - b.position()) + ")");
     }
 
     void Buffer::updateBufferInformations() {
@@ -352,8 +345,7 @@ namespace tfel {
       return this->stw->count() != 0;
     }
 
-    QWidget *Buffer::attachSecondaryTask(const QString &t,
-                                         QWidget *const s) {
+    QWidget *Buffer::attachSecondaryTask(const QString &t, QWidget *const s) {
       if (s == nullptr) {
         return nullptr;
       }
@@ -433,8 +425,8 @@ namespace tfel {
             return i;
           }
         }
-        }
-        return -1;
+      }
+      return -1;
     }  // end of Buffer::getSecondaryTaskIndex
 
     QString Buffer::getSecondaryTaskTitle(QWidget *const p) const {
@@ -446,8 +438,7 @@ namespace tfel {
       return n;
     }
 
-    void Buffer::setSecondaryTaskIcon(QWidget *const p,
-                                      const QIcon &i) {
+    void Buffer::setSecondaryTaskIcon(QWidget *const p, const QIcon &i) {
       const auto sid = this->getSecondaryTaskIndex(p);
       if (sid != -1) {
         this->editor.setSecondaryTaskIcon(p, i);
@@ -455,8 +446,7 @@ namespace tfel {
       }
     }
 
-    void Buffer::setSecondaryTaskTitle(QWidget *const p,
-                                       const QString &n) {
+    void Buffer::setSecondaryTaskTitle(QWidget *const p, const QString &n) {
       const auto i = this->getSecondaryTaskIndex(p);
       if (i != -1) {
         this->editor.setSecondaryTaskTitle(p, n);

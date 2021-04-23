@@ -10,9 +10,9 @@
 #include "TFEL/GUI/SelectMFMBehaviour.hxx"
 #include "TFEL/GUI/ImportMFMBehaviour.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
     ImportMFMBehaviour::ImportMFMBehaviour(EditorWidget& q,
                                            const Options& o,
@@ -20,24 +20,21 @@ namespace tfel{
         : QDialog(p), b(new SelectMFMBehaviour(q, o)) {
       auto* const lv = new QVBoxLayout;
       /* buttons */
-      auto* bb = new QDialogButtonBox(QDialogButtonBox::Ok |
-                                      QDialogButtonBox::Cancel);
-      QObject::connect(bb, &QDialogButtonBox::accepted, this,
-                       &QDialog::accept);
-      QObject::connect(bb, &QDialogButtonBox::rejected, this,
-                       &QDialog::reject);
+      auto* bb =
+          new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+      QObject::connect(bb, &QDialogButtonBox::accepted, this, &QDialog::accept);
+      QObject::connect(bb, &QDialogButtonBox::rejected, this, &QDialog::reject);
       // main layout
       lv->addWidget(this->b);
       lv->addWidget(bb);
       this->setLayout(lv);
     }  // end of ImportMFMBehaviour::ImportMFMBehaviour
 
-    BehaviourDescription ImportMFMBehaviour::getSelectedBehaviour()
-        const {
+    BehaviourDescription ImportMFMBehaviour::getSelectedBehaviour() const {
       return this->b->getSelectedBehaviour();
     }  // end of ImportMFMBehaviour::getSelectedBehaviour
 
     ImportMFMBehaviour::~ImportMFMBehaviour() = default;
 
   }  // end of namespace gui
-}// end of namespace tfel
+}  // end of namespace tfel

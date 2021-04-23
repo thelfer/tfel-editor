@@ -12,75 +12,72 @@
 #include "TFEL/GUI/ProcessOutputMajorModeBase.hxx"
 #include "TFEL/GUI/ProcessOutputFrame.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  ProcessOutputFrame::ProcessOutputFrame(EditorWidget& w,
-                                         Buffer& b)
-      : PlainTextEdit(w, b), process(new QProcess(this)) {
-    using QProcessFinished =
-        void (QProcess::*)(int, QProcess::ExitStatus);
-    PlainTextEdit::setReadOnly(true);
-    PlainTextEdit::setUndoRedoEnabled(false);
-    this->process->setProcessChannelMode(QProcess::MergedChannels);
-    QObject::connect(this->process, &QProcess::readyReadStandardOutput,
-                     this, &ProcessOutputFrame::displayProcessOutput);
-    QObject::connect(this->process,
-                     static_cast<QProcessFinished>(&QProcess::finished),
-                     this, &ProcessOutputFrame::processFinished);
-  }
+    ProcessOutputFrame::ProcessOutputFrame(EditorWidget& w, Buffer& b)
+        : PlainTextEdit(w, b), process(new QProcess(this)) {
+      using QProcessFinished = void (QProcess::*)(int, QProcess::ExitStatus);
+      PlainTextEdit::setReadOnly(true);
+      PlainTextEdit::setUndoRedoEnabled(false);
+      this->process->setProcessChannelMode(QProcess::MergedChannels);
+      QObject::connect(this->process, &QProcess::readyReadStandardOutput, this,
+                       &ProcessOutputFrame::displayProcessOutput);
+      QObject::connect(this->process,
+                       static_cast<QProcessFinished>(&QProcess::finished), this,
+                       &ProcessOutputFrame::processFinished);
+    }
 
-  void ProcessOutputFrame::setReadOnly(bool) {
-  }  // end of ProcessOutputFrame::setReadOnly
+    void ProcessOutputFrame::setReadOnly(bool) {
+    }  // end of ProcessOutputFrame::setReadOnly
 
-  void ProcessOutputFrame::displayProcessOutput() {
-    QObject::disconnect(this->process,
-                        &QProcess::readyReadStandardOutput, this,
-                        &ProcessOutputFrame::displayProcessOutput);
-    auto out = this->process->readAll();
+    void ProcessOutputFrame::displayProcessOutput() {
+      QObject::disconnect(this->process, &QProcess::readyReadStandardOutput,
+                          this, &ProcessOutputFrame::displayProcessOutput);
+      auto out = this->process->readAll();
 #ifdef Q_OS_WIN
-    auto* codec = QTextCodec::codecForName("cp850");
+      auto* codec = QTextCodec::codecForName("cp850");
 #else  /*  Q_OS_WIN */
-    auto* codec = QTextCodec::codecForLocale();
-#endif/*  Q_OS_WIN */
-    auto* decoder = codec->makeDecoder();
-    this->appendPlainText(decoder->toUnicode(out));
-    delete decoder;
-    QObject::connect(this->process, &QProcess::readyReadStandardOutput,
-                     this, &ProcessOutputFrame::displayProcessOutput);
-  }  // end of ProcessOutputFrame::displayProcessOutput
+      auto* codec = QTextCodec::codecForLocale();
+#endif /*  Q_OS_WIN */
+      auto* decoder = codec->makeDecoder();
+      this->appendPlainText(decoder->toUnicode(out));
+      delete decoder;
+      QObject::connect(this->process, &QProcess::readyReadStandardOutput, this,
+                       &ProcessOutputFrame::displayProcessOutput);
+    }  // end of ProcessOutputFrame::displayProcessOutput
 
-  void ProcessOutputFrame::processFinished(int s,
-                                           QProcess::ExitStatus es) {
-    if (s == 0) {
-      this->editor.setSecondaryTaskIcon(this, QIcon(":/tfel/editor/success.png"));
-    } else {
-      this->editor.setSecondaryTaskIcon(this, QIcon(":/tfel/editor/failure.png"));
-    };
-    auto pom = qobject_cast<ProcessOutputMajorModeBase*>(this->mode);
-    if(pom!=nullptr){
-      pom->processFinished(s,es);
-    }
-  }  // end of ProcessOutputFrame::processFinished
-
-  QProcess& ProcessOutputFrame::getProcess() {
-    return *(this->process);
-  }  // end of ProcessOutputFrame::getProcess
-
-  ProcessOutputFrame::~ProcessOutputFrame() {
-    using QProcessFinished =
-        void (QProcess::*)(int, QProcess::ExitStatus);
-    QObject::disconnect(this->process, static_cast<QProcessFinished>(
-                                           &QProcess::finished),
-                        this, &ProcessOutputFrame::processFinished);
-    if (this->process->state() == QProcess::Running) {
-      this->process->terminate();
-      if (!this->process->waitForFinished()) {
-        this->process->kill();
+    void ProcessOutputFrame::processFinished(int s, QProcess::ExitStatus es) {
+      if (s == 0) {
+        this->editor.setSecondaryTaskIcon(this,
+                                          QIcon(":/tfel/editor/success.png"));
+      } else {
+        this->editor.setSecondaryTaskIcon(this,
+                                          QIcon(":/tfel/editor/failure.png"));
+      };
+      auto pom = qobject_cast<ProcessOutputMajorModeBase*>(this->mode);
+      if (pom != nullptr) {
+        pom->processFinished(s, es);
       }
-    }
-  }  // end of ProcessOutputFrame::~ProcessOutputFrame()
+    }  // end of ProcessOutputFrame::processFinished
 
-}  // end of namespace gui
-}// end of namespace tfel
+    QProcess& ProcessOutputFrame::getProcess() {
+      return *(this->process);
+    }  // end of ProcessOutputFrame::getProcess
+
+    ProcessOutputFrame::~ProcessOutputFrame() {
+      using QProcessFinished = void (QProcess::*)(int, QProcess::ExitStatus);
+      QObject::disconnect(this->process,
+                          static_cast<QProcessFinished>(&QProcess::finished),
+                          this, &ProcessOutputFrame::processFinished);
+      if (this->process->state() == QProcess::Running) {
+        this->process->terminate();
+        if (!this->process->waitForFinished()) {
+          this->process->kill();
+        }
+      }
+    }  // end of ProcessOutputFrame::~ProcessOutputFrame()
+
+  }  // end of namespace gui
+}  // end of namespace tfel

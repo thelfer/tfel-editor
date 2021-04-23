@@ -18,7 +18,7 @@ class QComboBox;
 namespace mfront {
   // forward declaration
   struct AbstractBehaviourDSL;
-}
+}  // namespace mfront
 
 namespace tfel {
 
@@ -31,8 +31,7 @@ namespace tfel {
 
     struct MFrontAddVariablesPage : public QWizardPage {
       //! a simple alias
-      using VariableDescriptionContainer =
-          mfront::VariableDescriptionContainer;
+      using VariableDescriptionContainer = mfront::VariableDescriptionContainer;
 
       /*!
        * \brief constructor
@@ -53,10 +52,9 @@ namespace tfel {
        * \brief complete the behaviour description
        * \param[in] dsl: behaviour DSL
        */
-      virtual void complete(mfront::AbstractBehaviourDSL&) const;
+      virtual void complete(mfront::AbstractBehaviourDSL &) const;
       //! \brief write the output of the wizard
       virtual void write() const;
-
 
       //! \return the selected  material properties
       VariableDescriptionContainer getMaterialProperties() const;

@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  LicosTokenizer.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,74 +6,65 @@
  */
 
 #ifndef LIB_TFEL_GUI_LICOSTOKENIZER_HXX
-#define LIB_TFEL_GUI_LICOSTOKENIZER_HXX 
+#define LIB_TFEL_GUI_LICOSTOKENIZER_HXX
 
-#include<QVector>
-#include"TFEL/Utilities/CxxTokenizer.hxx"
+#include <QVector>
+#include "TFEL/Utilities/CxxTokenizer.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui
-{
-
-  /*!
-   * a tokenizer for licos input file
-   */
-  struct LicosTokenizer
-    : public tfel::utilities::CxxTokenizer
-  {
-    enum State {
-      STANDARD,
-      FAILED,
-      ARRAYOPENED
-    };
-
-    LicosTokenizer();
+  namespace gui {
 
     /*!
-     * \brief analyse the string given
-     * all previous tokens are erased
-     * \param[in] s : string to be parsed
-     */ 
-    void parseString(const QString&);
-
-    /*!
-     * \return the curret state
+     * a tokenizer for licos input file
      */
-    State getState() const;
+    struct LicosTokenizer : public tfel::utilities::CxxTokenizer {
+      enum State { STANDARD, FAILED, ARRAYOPENED };
 
-    /*!
-     * \return the beginning of currently opened arrays
-     */
-    QVector<unsigned short> getBeginningOfArrays() const;
+      LicosTokenizer();
 
-    /*!
-     * \return the error message
-     */
-    virtual QString getErrorMessage();
+      /*!
+       * \brief analyse the string given
+       * all previous tokens are erased
+       * \param[in] s : string to be parsed
+       */
+      void parseString(const QString&);
 
-    /*!
-     * \param[in] e : error message
-     */
-    virtual void setFailedState(const QString&);
+      /*!
+       * \return the curret state
+       */
+      State getState() const;
 
-    virtual void reset();
+      /*!
+       * \return the beginning of currently opened arrays
+       */
+      QVector<unsigned short> getBeginningOfArrays() const;
 
-  protected:
+      /*!
+       * \return the error message
+       */
+      virtual QString getErrorMessage();
 
-    State state;
+      /*!
+       * \param[in] e : error message
+       */
+      virtual void setFailedState(const QString&);
 
-    /*!
-     * position of the beginning of opened arrays
-     */
-    QVector<unsigned short> apos;
+      virtual void reset();
 
-    QString error;
+     protected:
+      State state;
 
-  }; // end of struct LicosTokenizer
+      /*!
+       * position of the beginning of opened arrays
+       */
+      QVector<unsigned short> apos;
 
-} // end of namespace gui
-}// end of namespace tfel
+      QString error;
+
+    };  // end of struct LicosTokenizer
+
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_LICOSTOKENIZER_H */
-

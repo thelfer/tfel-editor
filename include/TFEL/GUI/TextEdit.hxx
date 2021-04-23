@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  TextEdit.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,102 +6,96 @@
  */
 
 #ifndef LIB_TFEL_GUI_TEXTEDIT_HXX
-#define LIB_TFEL_GUI_TEXTEDIT_HXX 
+#define LIB_TFEL_GUI_TEXTEDIT_HXX
 
-#include<QtWidgets/QTextEdit>
-#include"TFEL/GUI/TextEditBase.hxx"
+#include <QtWidgets/QTextEdit>
+#include "TFEL/GUI/TextEditBase.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui
-{
+  namespace gui {
 
-  struct TFEL_GUI_VISIBILITY_EXPORT TextEdit
-      : public TextEditBase {
-    TextEdit(EditorWidget&, Buffer&);
+    struct TFEL_GUI_VISIBILITY_EXPORT TextEdit : public TextEditBase {
+      TextEdit(EditorWidget&, Buffer&);
 
-    TextEdit(const QString&, EditorWidget&, Buffer&);
-    //! destructor
-    ~TextEdit() override;
+      TextEdit(const QString&, EditorWidget&, Buffer&);
+      //! destructor
+      ~TextEdit() override;
 
-  public slots:
+     public slots:
 
-    void print() override;
+      void print() override;
 
-    void clear() override;
+      void clear() override;
 
-    void undo() override;
+      void undo() override;
 
-    void redo() override;
+      void redo() override;
 
-    void cut() override;
-      
-    void copy() override;
-    
-    void paste() override;
-      
-    void selectAll() override;
-      
-    void setPlainText(const QString&) override;
-      
-    void insertPlainText(const QString&) override;
+      void cut() override;
 
-    void appendPlainText(const QString&) override;
+      void copy() override;
 
-    void setHtml(const QString&) override;
-      
-    void insertHtml(const QString&) override;
+      void paste() override;
 
-    void appendHtml(const QString&) override;
-      
-    void setTextInteractionFlags(Qt::TextInteractionFlags) override;
-      
-    void setTextCursor(const QTextCursor&) override;
+      void selectAll() override;
 
-    void centerCursor() override;
+      void setPlainText(const QString&) override;
 
-    void setReadOnly(bool) override;
-      
-    void setUndoRedoEnabled(bool) override;
+      void insertPlainText(const QString&) override;
 
-  public:
-      
-    QTextDocument* document() const override;
-      
-    void moveCursor(QTextCursor::MoveOperation,
-		    QTextCursor::MoveMode) override;
-      
-    bool isReadOnly() override;
+      void appendPlainText(const QString&) override;
 
-    bool find(const QString&,
-	      QTextDocument::FindFlags = nullptr) override;
-      
-    QTextCursor textCursor() const override;
-      
-    QTextCursor cursorForPosition(const QPoint&) const override;
-      
-    QRect cursorRect(const QTextCursor&) const override;
-      
-    QRect cursorRect() const override;
-      
-    void setExtraSelections(const QList<QTextEdit::ExtraSelection>&) override;
-      
-    QList<QTextEdit::ExtraSelection> extraSelections() const override;
-      
-    bool isUndoRedoEnabled() const override;
+      void setHtml(const QString&) override;
 
-    QAbstractScrollArea* widget() override;
+      void insertHtml(const QString&) override;
 
-  protected:
+      void appendHtml(const QString&) override;
 
-    QTextEdit *e;
+      void setTextInteractionFlags(Qt::TextInteractionFlags) override;
 
-   private:
-    Q_OBJECT
-  }; // end of struct TextEdit
+      void setTextCursor(const QTextCursor&) override;
 
-} // end of namespace gui
-}// end of namespace tfel
+      void centerCursor() override;
+
+      void setReadOnly(bool) override;
+
+      void setUndoRedoEnabled(bool) override;
+
+     public:
+      QTextDocument* document() const override;
+
+      void moveCursor(QTextCursor::MoveOperation,
+                      QTextCursor::MoveMode) override;
+
+      bool isReadOnly() override;
+
+      bool find(const QString&, QTextDocument::FindFlags = nullptr) override;
+
+      QTextCursor textCursor() const override;
+
+      QTextCursor cursorForPosition(const QPoint&) const override;
+
+      QRect cursorRect(const QTextCursor&) const override;
+
+      QRect cursorRect() const override;
+
+      void setExtraSelections(const QList<QTextEdit::ExtraSelection>&) override;
+
+      QList<QTextEdit::ExtraSelection> extraSelections() const override;
+
+      bool isUndoRedoEnabled() const override;
+
+      QAbstractScrollArea* widget() override;
+
+     protected:
+      QTextEdit* e;
+
+     private:
+      Q_OBJECT
+    };  // end of struct TextEdit
+
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_TEXTEDIT_HXX */
-

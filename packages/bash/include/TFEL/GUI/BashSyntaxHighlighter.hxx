@@ -15,35 +15,35 @@
 #include "TFEL/GUI/Config.hxx"
 #include "TFEL/GUI/ShSyntaxHighlighter.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  /*!
-   * \brief syntax highlighter class for `bash` files
-   */
-  struct BashSyntaxHighlighter : public ShSyntaxHighlighter {
     /*!
-     * \brief constructor
-     * \param t: text to be highlighted
+     * \brief syntax highlighter class for `bash` files
      */
-    BashSyntaxHighlighter(QTextDocument* const);
-    //! \return all `bash` keywords
-    const QStringList& getKeywordsList() override;
-    //! \return all `bash` build-in keywords
-    const QStringList& getBuildInKeywordsList() override;
-    //! \return all `bash` functions
-    const QStringList& getFunctionsList() override;
-    //! \return all `bash` commands
-    const QStringList& getCommandsList() override;
-    //! destructor
-    ~BashSyntaxHighlighter() override;
+    struct BashSyntaxHighlighter : public ShSyntaxHighlighter {
+      /*!
+       * \brief constructor
+       * \param t: text to be highlighted
+       */
+      BashSyntaxHighlighter(QTextDocument* const);
+      //! \return all `bash` keywords
+      const QStringList& getKeywordsList() override;
+      //! \return all `bash` build-in keywords
+      const QStringList& getBuildInKeywordsList() override;
+      //! \return all `bash` functions
+      const QStringList& getFunctionsList() override;
+      //! \return all `bash` commands
+      const QStringList& getCommandsList() override;
+      //! destructor
+      ~BashSyntaxHighlighter() override;
 
-   private:
-    Q_OBJECT
-  };  // end of struct CSyntaxHighlighter
+     private:
+      Q_OBJECT
+    };  // end of struct CSyntaxHighlighter
 
-}  // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_BASHSYNTAXHIGHLIGHTER_HXX */

@@ -16,35 +16,36 @@
 #include "TFEL/GUI/LineEdit.hxx"
 #include "TFEL/GUI/BehaviourDescription.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  // forward declaration
-  struct TextEditBase;
-  // forward declaration
-  struct SelectBehaviourPage;
-  // forward declaration
-  struct MaterialPropertiesSelectionPage;
-  // forward declaration
-  struct BehaviourSummaryPage;
+    // forward declaration
+    struct TextEditBase;
+    // forward declaration
+    struct SelectBehaviourPage;
+    // forward declaration
+    struct MaterialPropertiesSelectionPage;
+    // forward declaration
+    struct BehaviourSummaryPage;
 
-  struct TFEL_GUI_MIW_VISIBILITY_EXPORT ImportBehaviourWizard : public QWizard {
-    ImportBehaviourWizard(TextEditBase &);
-    //! \return the descrioption of the selected
-    BehaviourDescription getSelectedBehaviour() const;
-    //! destructor
-    ~ImportBehaviourWizard() override;
+    struct TFEL_GUI_MIW_VISIBILITY_EXPORT ImportBehaviourWizard
+        : public QWizard {
+      ImportBehaviourWizard(TextEditBase &);
+      //! \return the descrioption of the selected
+      BehaviourDescription getSelectedBehaviour() const;
+      //! destructor
+      ~ImportBehaviourWizard() override;
 
-    SelectBehaviourPage *sb;
-    MaterialPropertiesSelectionPage *mp;
-    BehaviourSummaryPage*c;
+      SelectBehaviourPage *sb;
+      MaterialPropertiesSelectionPage *mp;
+      BehaviourSummaryPage *c;
 
-   private:
-    Q_OBJECT
-  };  // end of struct ImportBehaviourWizard
+     private:
+      Q_OBJECT
+    };  // end of struct ImportBehaviourWizard
 
-}  // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_MTEST_IMPORTBEHAVIOURWIZARD_HXX */

@@ -36,27 +36,24 @@ namespace tfel {
               w, cd, MFrontMetaDataPage::BEHAVIOUR, 1, this)),
           im(new MFrontBehaviourPage(w, cd, this)),
           variables(new MFrontAddVariablesPage(w, cd, this)),
-          sevpbp(new MFrontStandardElastoViscoPlasticityBrickPage(
-              w, cd, this)),
+          sevpbp(new MFrontStandardElastoViscoPlasticityBrickPage(w, cd, this)),
           tgop(new MFrontTemplateGenerationOptionsPage(this)),
           editor(w),
           d(cd) {
       this->setWindowTitle(QObject::tr("Behaviour wizard"));
       this->setPage(MFrontBehaviourWizardPages::METADATA, this->md);
       this->setPage(MFrontBehaviourWizardPages::BEHAVIOUR, this->im);
-      this->setPage(
-          MFrontBehaviourWizardPages::STANDARDELASTOVISCOPLASTICITY,
-          this->sevpbp);
-      this->setPage(MFrontBehaviourWizardPages::ADDVARIABLES,
-                    this->variables);
-      this->setPage(
-          MFrontBehaviourWizardPages::TEMPLATEGENERATIONOPTIONS,
-          this->tgop);
+      this->setPage(MFrontBehaviourWizardPages::STANDARDELASTOVISCOPLASTICITY,
+                    this->sevpbp);
+      this->setPage(MFrontBehaviourWizardPages::ADDVARIABLES, this->variables);
+      this->setPage(MFrontBehaviourWizardPages::TEMPLATEGENERATIONOPTIONS,
+                    this->tgop);
       this->setStartId(0);
     }  // end of MFrontBehaviourWizard::MFrontBehaviourWizard
 
     std::shared_ptr<mfront::AbstractBehaviourDSL>
-    MFrontBehaviourWizard::getBehaviourDSL(const DSLGenerationOptions& o) const {
+    MFrontBehaviourWizard::getBehaviourDSL(
+        const DSLGenerationOptions& o) const {
       return this->im->getBehaviourDSL(o);
     }  // end of MFrontBehaviourWizard::getBehaviourDSL
 
@@ -69,7 +66,7 @@ namespace tfel {
         if (b.isEmpty()) {
           return dsldd;
         }
-        const auto &bbf = mfront::BehaviourBrickFactory::getFactory();
+        const auto& bbf = mfront::BehaviourBrickFactory::getFactory();
         auto bd = dsl->getBehaviourDescription();
         const auto bb = bbf.get(b.toStdString(), *dsl, bd);
         const auto bbd = bb->getDescription();
@@ -111,27 +108,23 @@ namespace tfel {
         if (!lvs.empty()) {
           this->d.insertPlainText("@InitLocalVariables{\n");
           for (const auto& lv : lvs) {
-            const auto vn =
-                QString::fromStdString(mfront::displayName(lv));
+            const auto vn = QString::fromStdString(mfront::displayName(lv));
             this->d.insertPlainText(vn + " = ;\n");
           }
           this->d.insertPlainText("}\n\n");
         }
         const auto cbs = dsld.typicalCodeBlocks;
         for (const auto& c : cbs) {
-          if ((!bd.hasCode(h, c)) ||
-              (c == mfront::BehaviourData::Integrator) ||
+          if ((!bd.hasCode(h, c)) || (c == mfront::BehaviourData::Integrator) ||
               (c == mfront::BehaviourData::ComputeDerivative)) {
-            auto t =
-                QString::fromStdString(dsl->getCodeBlockTemplate(c, o));
+            auto t = QString::fromStdString(dsl->getCodeBlockTemplate(c, o));
             if (t.startsWith("@TangentOperator")) {
               continue;
             }
             if (t.startsWith("@PredictionOperator")) {
               const auto to = this->im->getSelectedTangentOperator();
               if (!to.isEmpty()) {
-                t.insert(std::strlen("@PredictionOperator"),
-                         "<" + to + ">");
+                t.insert(std::strlen("@PredictionOperator"), "<" + to + ">");
               }
             }
             if (!t.isEmpty()) {
@@ -145,8 +138,7 @@ namespace tfel {
         if (!asvs.empty()) {
           this->d.insertPlainText("@UpdateAuxiliaryStateVariables{\n");
           for (const auto& asv : asvs) {
-            const auto vn =
-                QString::fromStdString(mfront::displayName(asv));
+            const auto vn = QString::fromStdString(mfront::displayName(asv));
             this->d.insertPlainText(vn + " = ;\n");
           }
           this->d.insertPlainText("}\n\n");
@@ -154,8 +146,7 @@ namespace tfel {
 
         for (const auto& c : cbs) {
           if (!bd.hasCode(h, c)) {
-            auto t =
-                QString::fromStdString(dsl->getCodeBlockTemplate(c, o));
+            auto t = QString::fromStdString(dsl->getCodeBlockTemplate(c, o));
             if (!t.startsWith("@TangentOperator")) {
               continue;
             }
@@ -179,28 +170,26 @@ namespace tfel {
 
     void MFrontBehaviourWizard::writeBehaviourBrickOptions(
         const QString& b) const {
-      auto write_options = [this](
-          const std::vector<mfront::bbrick::OptionDescription>& opts) {
-        auto tc = this->d.textCursor();
-        auto append = [&tc](const QString& text) {
-          tc.insertText(text);
-        };
-        if (opts.empty()) {
-          return;
-        }
-        append("{\n");
-        for (decltype(opts.size()) i = 0; i != opts.size();) {
-          const auto& o = opts[i];
-          if (++i != opts.size()) {
-            append(QString::fromStdString(o.name + ": , //" +
-                                          o.description + "\n"));
-          } else {
-            append(QString::fromStdString(o.name + ": //" +
-                                          o.description + "\n"));
-          }
-        }
-        append("}");
-      };
+      auto write_options =
+          [this](const std::vector<mfront::bbrick::OptionDescription>& opts) {
+            auto tc = this->d.textCursor();
+            auto append = [&tc](const QString& text) { tc.insertText(text); };
+            if (opts.empty()) {
+              return;
+            }
+            append("{\n");
+            for (decltype(opts.size()) i = 0; i != opts.size();) {
+              const auto& o = opts[i];
+              if (++i != opts.size()) {
+                append(QString::fromStdString(o.name + ": , //" +
+                                              o.description + "\n"));
+              } else {
+                append(QString::fromStdString(o.name + ": //" + o.description +
+                                              "\n"));
+              }
+            }
+            append("}");
+          };
       if (b == "StandardElastoViscoPlasticity") {
         this->sevpbp->write();
       } else {

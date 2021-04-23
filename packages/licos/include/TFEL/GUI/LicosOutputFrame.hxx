@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  LicosOutputFrame.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,60 +6,57 @@
  */
 
 #ifndef LIB_LICOSOUTPUTFRAME_HXX
-#define LIB_LICOSOUTPUTFRAME_HXX 
+#define LIB_LICOSOUTPUTFRAME_HXX
 
-#include<QtWidgets/QProgressBar>
-#include"TFEL/GUI/LicosStudyOptions.hxx"
+#include <QtWidgets/QProgressBar>
+#include "TFEL/GUI/LicosStudyOptions.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  // forward declaration
-  struct EditorWidget;
-  // forward declaration
-  struct Buffer;
-  // forward declaration
-  struct PlainTextEdit;
-  // forward declaration
-  struct LicosStudyThread;
+    // forward declaration
+    struct EditorWidget;
+    // forward declaration
+    struct Buffer;
+    // forward declaration
+    struct PlainTextEdit;
+    // forward declaration
+    struct LicosStudyThread;
 
-  /*!
-   * Frame displaying the licos output
-   */
-  struct LicosOutputFrame : public QWidget {
-    LicosOutputFrame(EditorWidget &w,
-                     Buffer &b,
-                     const QString &,
-                     const LicosStudyOptions &);
+    /*!
+     * Frame displaying the licos output
+     */
+    struct LicosOutputFrame : public QWidget {
+      LicosOutputFrame(EditorWidget &w,
+                       Buffer &b,
+                       const QString &,
+                       const LicosStudyOptions &);
 
-   protected:
+     protected:
+      void closeEvent(QCloseEvent *) override;
 
-    void closeEvent(QCloseEvent *) override;
+     signals:
 
-  signals:
-      
-    void finished(bool,QString);
+      void finished(bool, QString);
 
-  private slots:
+     private slots:
 
-    void studyFinished(bool,QString);
+      void studyFinished(bool, QString);
 
-    void newPeriod(int);
+      void newPeriod(int);
 
-    void displayProcessOutput(QString);
+      void displayProcessOutput(QString);
 
-  private:
+     private:
+      PlainTextEdit *textEdit;
+      QProgressBar *pbar;
+      LicosStudyThread *licos;
 
-    PlainTextEdit *textEdit;
-    QProgressBar        *pbar;
-    LicosStudyThread    *licos;
+      Q_OBJECT
+    };  // end of struct LicosOutputFrame
 
-    Q_OBJECT
-  }; // end of struct LicosOutputFrame
-
-} // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_LICOSOUTPUTFRAME_H */
-

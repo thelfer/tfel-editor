@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  LicosInsertMaterialPropertiesDialog.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,38 +6,33 @@
  */
 
 #ifndef LIB_LICOSINSERTMATERIALPROPERTIESDIALOG_HXX
-#define LIB_LICOSINSERTMATERIALPROPERTIESDIALOG_HXX 
+#define LIB_LICOSINSERTMATERIALPROPERTIESDIALOG_HXX
 
-#include<QtCore/QVector>
-#include<QtWidgets/QDialog>
+#include <QtCore/QVector>
+#include <QtWidgets/QDialog>
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui
-{
+  namespace gui {
 
-  struct MaterialProperty;
+    struct MaterialProperty;
 
-  struct TextEditBase;
+    struct TextEditBase;
 
-  struct LicosInsertMaterialPropertyDialog : public QDialog {
+    struct LicosInsertMaterialPropertyDialog : public QDialog {
+      LicosInsertMaterialPropertyDialog(TextEditBase&);
 
-    LicosInsertMaterialPropertyDialog(TextEditBase&);
+     protected slots:
 
-  protected slots:
+      void insertMaterialProperties(const QVector<MaterialProperty>&);
 
-    void
-    insertMaterialProperties(const QVector<MaterialProperty>&);
+     private:
+      TextEditBase& textEdit;
 
-  private:
+      Q_OBJECT
+    };  // end of struct LicosInsertMaterialPropertyDialog
 
-    TextEditBase& textEdit;
-
-    Q_OBJECT
-  }; // end of struct LicosInsertMaterialPropertyDialog
-
-} // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_LICOSINSERTMATERIALPROPERTIESDIALOG_H */
-

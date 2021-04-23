@@ -41,7 +41,7 @@ namespace tfel {
         QStringList isotropic_hardening_rules;
         //! \brief selected kinematic hardening rules
         QStringList kinematic_hardening_rules;
-      }; // end of struct InelasticFlowDescription
+      };  // end of struct InelasticFlowDescription
       /*!
        * \brief constructor
        * \param[in] p: parent widget
@@ -71,10 +71,10 @@ namespace tfel {
      private:
       Q_OBJECT
 
-      };  // end of struct MFrontAddInelasticFlowDialog
+    };  // end of struct MFrontAddInelasticFlowDialog
 
-    }  // end of namespace gui
+  }  // end of namespace gui
 
-  }  // end of namespace tfel
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_MFRONTADDINELASTICFLOWDIALOG_HXX */

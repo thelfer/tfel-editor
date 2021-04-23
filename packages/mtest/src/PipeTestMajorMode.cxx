@@ -31,10 +31,10 @@ namespace tfel {
       this->c->setWidget(&t);
       this->c->setCaseSensitivity(Qt::CaseInsensitive);
       this->c->setCompletionMode(QCompleter::PopupCompletion);
-      QObject::connect(
-          this->c, static_cast<void (QCompleter::*)(const QString&)>(
-                       &QCompleter::activated),
-          &t, &TextEditBase::insertCompletion);
+      QObject::connect(this->c,
+                       static_cast<void (QCompleter::*)(const QString&)>(
+                           &QCompleter::activated),
+                       &t, &TextEditBase::insertCompletion);
     }  // end of PipeTestMajorMode::PipeTestMajorMode
 
     QString PipeTestMajorMode::getName() const {
@@ -47,13 +47,11 @@ namespace tfel {
 
     QString PipeTestMajorMode::getScheme() const { return "ptest"; }
 
-    void PipeTestMajorMode::setSyntaxHighlighter(
-        QTextDocument* const d) {
+    void PipeTestMajorMode::setSyntaxHighlighter(QTextDocument* const d) {
       new PipeTestSyntaxHighlighter(d);
     }  // end of PipeTestMajorMode::setSyntaxHighlighter
 
-    const std::vector<std::string>& PipeTestMajorMode::getKeyWordsList()
-        const {
+    const std::vector<std::string>& PipeTestMajorMode::getKeyWordsList() const {
       return PipeTestSyntaxHighlighter::getPipeTestKeys();
     }
 

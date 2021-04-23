@@ -1,6 +1,6 @@
 /*!
  * \file   MFrontStandardElastoViscoPlasticityBrickPage.cxx
- * \brief    
+ * \brief
  * \author th202608
  * \date   27/07/2019
  */
@@ -32,23 +32,17 @@
 #include "TFEL/GUI/MFrontBehaviourWizardPages.hxx"
 #include "TFEL/GUI/MFrontStandardElastoViscoPlasticityBrickPage.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
     MFrontStandardElastoViscoPlasticityBrickPage::
         MFrontStandardElastoViscoPlasticityBrickPage(
-            EditorWidget & w,
-            TextEditBase &cd,
-            MFrontBehaviourWizard *const p)
-        : QWizardPage(p),
-          stress_potentials(new QComboBox),
-          editor(w),
-          d(cd) {
-      this->setTitle(
-          QObject::tr("The StandardElastoViscoPlasticity brick"));
-      this->setSubTitle(QObject::tr(
-          "Specify a stress potential and some inelastic flows"));
+            EditorWidget &w, TextEditBase &cd, MFrontBehaviourWizard *const p)
+        : QWizardPage(p), stress_potentials(new QComboBox), editor(w), d(cd) {
+      this->setTitle(QObject::tr("The StandardElastoViscoPlasticity brick"));
+      this->setSubTitle(
+          QObject::tr("Specify a stress potential and some inelastic flows"));
       // populate stress potentials
       const auto &spf = mfront::bbrick::StressPotentialFactory::getFactory();
       for (const auto &sp : spf.getRegistredStressPotentials()) {
@@ -57,8 +51,7 @@ namespace tfel{
       this->stress_potentials->setCurrentText("Hooke");
       auto *const gl = new QGridLayout;
       auto *const spl = new QLabel(QObject::tr("Stress potential"));
-      auto *const sph =
-          new QPushButton(QIcon::fromTheme("help-contents"), "");
+      auto *const sph = new QPushButton(QIcon::fromTheme("help-contents"), "");
       QObject::connect(sph, &QPushButton::clicked, [p] {
         QMessageBox::information(
             p, QObject::tr("Stress potentials"),
@@ -74,18 +67,17 @@ namespace tfel{
       l1->setFrameShape(QFrame::HLine);
       l1->setFrameShadow(QFrame::Sunken);
       gl->addWidget(l1, 2, 0, 1, 3);
-      auto *const ifb =
-          new QPushButton(QObject::tr("Add an inelastic flow"));
+      auto *const ifb = new QPushButton(QObject::tr("Add an inelastic flow"));
       QObject::connect(ifb, &QPushButton::pressed, [this, p] {
         MFrontAddInelasticFlowDialog dialog(p);
         if (dialog.exec() == QDialog::Accepted) {
-          this->inelastic_flows.push_back(
-              dialog.getInelasticFlowDescription());
+          this->inelastic_flows.push_back(dialog.getInelasticFlowDescription());
         }
       });
       gl->addWidget(ifb, 3, 0, 1, 2);
       this->setLayout(gl);
-    }  // end of MFrontStandardElastoViscoPlasticityBrickPage::MFrontStandardElastoViscoPlasticityBrickPage
+    }  // end of
+       // MFrontStandardElastoViscoPlasticityBrickPage::MFrontStandardElastoViscoPlasticityBrickPage
 
     bool MFrontStandardElastoViscoPlasticityBrickPage::validatePage() {
       return true;
@@ -98,30 +90,30 @@ namespace tfel{
     void MFrontStandardElastoViscoPlasticityBrickPage::write() const {
       auto tc = this->d.textCursor();
       auto append = [&tc](const QString &text) { tc.insertText(text); };
-      auto write_options = [&tc,&append](
-          const std::vector<mfront::bbrick::OptionDescription> &opts) {
-        if (opts.empty()) {
-          return;
-        }
-        append("{\n");
-        for (decltype(opts.size()) i = 0; i != opts.size();) {
-          const auto& o = opts[i];
-          if (++i != opts.size()) {
-            append(QString::fromStdString(o.name + ": , //" +
-                                          o.description + "\n"));
-          } else {
-            append(QString::fromStdString(o.name + ": //" +
-                                          o.description + "\n"));
-          }
-        }
-        append("}");
-      };
+      auto write_options =
+          [&tc, &append](
+              const std::vector<mfront::bbrick::OptionDescription> &opts) {
+            if (opts.empty()) {
+              return;
+            }
+            append("{\n");
+            for (decltype(opts.size()) i = 0; i != opts.size();) {
+              const auto &o = opts[i];
+              if (++i != opts.size()) {
+                append(QString::fromStdString(o.name + ": , //" +
+                                              o.description + "\n"));
+              } else {
+                append(QString::fromStdString(o.name + ": //" + o.description +
+                                              "\n"));
+              }
+            }
+            append("}");
+          };
       append("{\n");
       const auto spn = this->stress_potentials->currentText();
       append("stress_potential: \"" + spn + "\"");
       try {
-        const auto &spf =
-            mfront::bbrick::StressPotentialFactory::getFactory();
+        const auto &spf = mfront::bbrick::StressPotentialFactory::getFactory();
         const auto sp = spf.generate(spn.toStdString());
         auto *const p =
             dynamic_cast<MFrontBehaviourWizard *const>(this->wizard());
@@ -155,8 +147,7 @@ namespace tfel{
           try {
             const auto &scf =
                 mfront::bbrick::StressCriterionFactory::getFactory();
-            const auto sc =
-                scf.generate(c.plastic_potential.toStdString());
+            const auto sc = scf.generate(c.plastic_potential.toStdString());
             write_options(sc->getOptions());
           } catch (...) {
           }
@@ -164,10 +155,9 @@ namespace tfel{
         for (const auto ihrn : c.isotropic_hardening_rules) {
           append(",\nisotropic_hardening\n: \"" + ihrn + "\"");
           try {
-            const auto &ihrf = mfront::bbrick::
-                IsotropicHardeningRuleFactory::getFactory();
-            const auto ihr =
-                ihrf.generate(ihrn.toStdString());
+            const auto &ihrf =
+                mfront::bbrick::IsotropicHardeningRuleFactory::getFactory();
+            const auto ihr = ihrf.generate(ihrn.toStdString());
             write_options(ihr->getOptions());
           } catch (...) {
           }
@@ -175,24 +165,21 @@ namespace tfel{
         for (const auto khrn : c.kinematic_hardening_rules) {
           append(",\nkinematic_hardening\n: \"" + khrn + "\"");
           try {
-            const auto &khrf = mfront::bbrick::
-                KinematicHardeningRuleFactory::getFactory();
-            const auto khr =
-                khrf.generate(khrn.toStdString());
+            const auto &khrf =
+                mfront::bbrick::KinematicHardeningRuleFactory::getFactory();
+            const auto khr = khrf.generate(khrn.toStdString());
             write_options(khr->getOptions());
           } catch (...) {
           }
         }
         try {
-          const auto &iff =
-              mfront::bbrick::InelasticFlowFactory::getFactory();
+          const auto &iff = mfront::bbrick::InelasticFlowFactory::getFactory();
           const auto iflow = iff.generate(c.inelastic_flow.toStdString());
           const auto opts = iflow->getOptions();
           bool first = true;
           for (decltype(opts.size()) i = 0; i != opts.size();) {
             const auto &o = opts[i];
-            if ((o.name == "criterion") ||
-                (o.name == "stress_criterion") ||
+            if ((o.name == "criterion") || (o.name == "stress_criterion") ||
                 (o.name == "flow_criterion") ||
                 (o.name == "plastic_potential") ||
                 (o.name == "isotropic_hardening") ||
@@ -205,11 +192,11 @@ namespace tfel{
               append(",\n");
             }
             if (++i != opts.size()) {
-              append(QString::fromStdString(o.name + ": , //" +
-                                            o.description + "\n"));
+              append(QString::fromStdString(o.name + ": , //" + o.description +
+                                            "\n"));
             } else {
-              append(QString::fromStdString(o.name + ": //" +
-                                            o.description + "\n"));
+              append(QString::fromStdString(o.name + ": //" + o.description +
+                                            "\n"));
             }
           }
         } catch (...) {
@@ -219,10 +206,9 @@ namespace tfel{
       append("\n}");
     }  // end of MFrontStandardElastoViscoPlasticityBrickPage::write()
 
-    MFrontStandardElastoViscoPlasticityBrickPage::~MFrontStandardElastoViscoPlasticityBrickPage() = default;
+    MFrontStandardElastoViscoPlasticityBrickPage::
+        ~MFrontStandardElastoViscoPlasticityBrickPage() = default;
 
   }  // end of namespace gui
 
-} // end of namespace tfel
-
-
+}  // end of namespace tfel

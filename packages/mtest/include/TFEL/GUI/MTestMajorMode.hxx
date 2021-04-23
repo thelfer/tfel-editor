@@ -10,73 +10,70 @@
 
 #include "TFEL/GUI/CxxMajorMode.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  //! forward declaration
-  struct TextEditBase;
+    //! forward declaration
+    struct TextEditBase;
 
-  /*!
-   * major mode
-   */
-  struct MTestMajorMode : public CxxMajorMode {
     /*!
-     * \brief constructor
+     * major mode
      */
-    MTestMajorMode(EditorWidget &,
-                   Buffer &,
-                   TextEditBase &);
+    struct MTestMajorMode : public CxxMajorMode {
+      /*!
+       * \brief constructor
+       */
+      MTestMajorMode(EditorWidget &, Buffer &, TextEditBase &);
 
-    QString getName() const override;
+      QString getName() const override;
 
-    QString getDescription() const override;
+      QString getDescription() const override;
 
-    void completeContextMenu(QMenu *const,
-                             const QTextCursor &) override;
+      void completeContextMenu(QMenu *const, const QTextCursor &) override;
 
-    void setSyntaxHighlighter(QTextDocument *const) override;
+      void setSyntaxHighlighter(QTextDocument *const) override;
 
-    QCompleter *getCompleter() override;
+      QCompleter *getCompleter() override;
 
-    QString getCompletionPrefix() override;
+      QString getCompletionPrefix() override;
 
-    QMenu *getSpecificMenu() override;
+      QMenu *getSpecificMenu() override;
 
-    bool keyPressEvent(QKeyEvent *const) override;
-    //! destructor
-    ~MTestMajorMode() override;
+      bool keyPressEvent(QKeyEvent *const) override;
+      //! destructor
+      ~MTestMajorMode() override;
 
-   protected slots:
-    //! \brief launch the import behaviour wizard
-    virtual void showImportBehaviourWizard();
-    //! \brief launch the import MFM behaviour dialog
-    virtual void showImportMFMBehaviourWizard();
-    //! \brief method called when the `Show Results with TPlot` menu is
-    //! called
-    virtual void showResults();
-    /*!
-     * \param[in] a: action
-     */
-    virtual void insertKeyword(QAction *);
+     protected slots:
+      //! \brief launch the import behaviour wizard
+      virtual void showImportBehaviourWizard();
+      //! \brief launch the import MFM behaviour dialog
+      virtual void showImportMFMBehaviourWizard();
+      //! \brief method called when the `Show Results with TPlot` menu is
+      //! called
+      virtual void showResults();
+      /*!
+       * \param[in] a: action
+       */
+      virtual void insertKeyword(QAction *);
 
-   protected:
-    //! \brief return the list of MTest keywords
-    virtual const std::vector<std::string> &getKeyWordsList() const;
-    //! \brief return the scheme name
-    virtual QString getScheme() const;
-    //! \brief completer
-    QCompleter *c = nullptr;
+     protected:
+      //! \brief return the list of MTest keywords
+      virtual const std::vector<std::string> &getKeyWordsList() const;
+      //! \brief return the scheme name
+      virtual QString getScheme() const;
+      //! \brief completer
+      QCompleter *c = nullptr;
 
-   private:
-    Q_OBJECT
+     private:
+      Q_OBJECT
 
-  };  // end of struct MTestMajorMode
+    };  // end of struct MTestMajorMode
 
-  void runMTest(EditorWidget &);
-  void runPTest(EditorWidget &);
+    void runMTest(EditorWidget &);
+    void runPTest(EditorWidget &);
 
-}  // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_MTESTMAJORMODE_H */

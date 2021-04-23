@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  LicosSyntaxHighlighter.hxx
  * \brief
  * \author Thomas Helfer
@@ -6,58 +6,52 @@
  */
 
 #ifndef LIB_TFEL_GUI_LICOSSYNTAXHIGHLIGHTER_HXX
-#define LIB_TFEL_GUI_LICOSSYNTAXHIGHLIGHTER_HXX 
+#define LIB_TFEL_GUI_LICOSSYNTAXHIGHLIGHTER_HXX
 
-#include<string>
-#include<vector>
-#include"TFEL/GUI/CSyntaxHighlighterBase.hxx"
+#include <string>
+#include <vector>
+#include "TFEL/GUI/CSyntaxHighlighterBase.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui
-{
+  namespace gui {
 
-  struct LicosData
-    : public QTextBlockUserData
-  {
-    virtual ~LicosData();
-    QString library;
-    QString function;
-    int pos;
-  }; // end of   struct LicosData
+    struct LicosData : public QTextBlockUserData {
+      virtual ~LicosData();
+      QString library;
+      QString function;
+      int pos;
+    };  // end of   struct LicosData
 
-  //! \brief a syntaxt highlighter for Licos input files
-  struct LicosSyntaxHighlighter : public CSyntaxHighlighterBase {
+    //! \brief a syntaxt highlighter for Licos input files
+    struct LicosSyntaxHighlighter : public CSyntaxHighlighterBase {
+      static const std::vector<std::string>& getKeys();
 
-    static const std::vector<std::string>& getKeys();
+      static const std::vector<std::string>& getBlocks();
 
-    static const std::vector<std::string>& getBlocks();
+      /*!
+       * \param[in] t : text document to be highlighted
+       */
+      LicosSyntaxHighlighter(QTextDocument* const);
 
-    /*!
-     * \param[in] t : text document to be highlighted
-     */
-    LicosSyntaxHighlighter(QTextDocument *const);
+      void highlightBlock(const QString&) override;
 
-    void highlightBlock(const QString &) override;
+     protected:
+      static std::vector<std::string> buildKeysList();
 
-  protected:
+      static std::vector<std::string> buildBlocksList();
 
-    static std::vector<std::string> buildKeysList();
+      QVector<QRegExp> importExprs;
 
-    static std::vector<std::string> buildBlocksList();
+      QTextCharFormat optFormat;
+      QTextCharFormat importFormat;
 
-    QVector<QRegExp> importExprs;
+     private:
+      Q_OBJECT
 
-    QTextCharFormat optFormat;
-    QTextCharFormat importFormat;
+    };  // end of struct LicosSyntaxHighlighter
 
-   private:
-    Q_OBJECT
-
-  }; // end of struct LicosSyntaxHighlighter
-  
-} // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_LICOSSYNTAXHIGHLIGHTER_H */
-

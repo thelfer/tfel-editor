@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  LaTeXMajorMode.hxx
  * \brief
  * \author Helfer Thomas
@@ -8,156 +8,153 @@
 #ifndef LIB_TFEL_GUI_LATEXMAJORMODE_HXX
 #define LIB_TFEL_GUI_LATEXMAJORMODE_HXX
 
-#include<QtCore/QPointer>
+#include <QtCore/QPointer>
 
-#include<TFEL/GUI/SpellChecker.hxx>
-#include"TFEL/GUI/MajorModeBase.hxx"
+#include <TFEL/GUI/SpellChecker.hxx>
+#include "TFEL/GUI/MajorModeBase.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  //! forward declaration
-  struct TextEditBase;
-  //! forward declaration
-  struct ProcessOutputFrame;
-  //! forward declaration
-  struct LaTeXSyntaxHighlighter;
+    //! forward declaration
+    struct TextEditBase;
+    //! forward declaration
+    struct ProcessOutputFrame;
+    //! forward declaration
+    struct LaTeXSyntaxHighlighter;
 
-  //! \brief major mode for editing LaTeX documents
-  struct LaTeXMajorMode
-    : public MajorModeBase
-  {
-    LaTeXMajorMode(EditorWidget &, Buffer &, TextEditBase &);
+    //! \brief major mode for editing LaTeX documents
+    struct LaTeXMajorMode : public MajorModeBase {
+      LaTeXMajorMode(EditorWidget &, Buffer &, TextEditBase &);
 
-    QString getName() const override;
+      QString getName() const override;
 
-    QString getDescription() const override;
-    
-    void setSyntaxHighlighter(QTextDocument *const) override;
+      QString getDescription() const override;
 
-    /*!
-     * complete the context menu actions
-     * \param[in] m : complete the context menu
-     * \param[in] c : text cursor at the position where the menu will
-     * appear
-     */
-    void completeContextMenu(QMenu *const,
-			     const QTextCursor&) override;
+      void setSyntaxHighlighter(QTextDocument *const) override;
 
-    QCompleter* getCompleter() override;
+      /*!
+       * complete the context menu actions
+       * \param[in] m : complete the context menu
+       * \param[in] c : text cursor at the position where the menu will
+       * appear
+       */
+      void completeContextMenu(QMenu *const, const QTextCursor &) override;
 
-    void completeCurrentWord(TextEditBase&,
-			     const QString&) override;
+      QCompleter *getCompleter() override;
 
-    QMenu* getSpecificMenu() override;
+      void completeCurrentWord(TextEditBase &, const QString &) override;
 
-    bool keyPressEvent(QKeyEvent * const) override;
+      QMenu *getSpecificMenu() override;
 
-    bool mousePressEvent(QMouseEvent * const) override;
+      bool keyPressEvent(QKeyEvent *const) override;
 
-    /*!
-     * treat "Ctrl-k1 Mod-k2" shortcuts not handled by TextEditBase
-     * where k1 is either Qt::Key_X or Qt::Key_C.
-     * \param[in] k1 : first  key
-     * \param[in] m  : second key modifier
-     * \param[in] k2 : second key
-     * \return true if the short cut is handled by this mode
-     */
-    bool handleShortCut(const int,
-			const Qt::KeyboardModifiers,
-			const int) override;
-    /*!
-     * indent the current line
-     */
-    void indentLine(const QTextCursor&) override;
-    /*!
-     * indent selected region
-     */
-    void indentRegion(const QTextCursor&) override;
+      bool mousePressEvent(QMouseEvent *const) override;
 
-    QIcon getIcon() const override;
+      /*!
+       * treat "Ctrl-k1 Mod-k2" shortcuts not handled by TextEditBase
+       * where k1 is either Qt::Key_X or Qt::Key_C.
+       * \param[in] k1 : first  key
+       * \param[in] m  : second key modifier
+       * \param[in] k2 : second key
+       * \return true if the short cut is handled by this mode
+       */
+      bool handleShortCut(const int,
+                          const Qt::KeyboardModifiers,
+                          const int) override;
+      /*!
+       * indent the current line
+       */
+      void indentLine(const QTextCursor &) override;
+      /*!
+       * indent selected region
+       */
+      void indentRegion(const QTextCursor &) override;
 
-    /*!
-     * format the selected paragraph
-     */
-    void format() override;
+      QIcon getIcon() const override;
 
-    QString getCommentSyntax() override;
+      /*!
+       * format the selected paragraph
+       */
+      void format() override;
 
-    SpellChecker& getSpellChecker();
+      QString getCommentSyntax() override;
 
-    void setSpellCheckLanguage(const QString&) override;
+      SpellChecker &getSpellChecker();
 
-    ~LaTeXMajorMode() override;
+      void setSpellCheckLanguage(const QString &) override;
 
-  protected slots:
+      ~LaTeXMajorMode() override;
 
-    virtual void runLaTeX();
+     protected slots:
 
-    virtual void startLaTeX();
+      virtual void runLaTeX();
 
-    virtual void replaceMispelledWordBySuggestion(QAction *);
+      virtual void startLaTeX();
 
-  protected:
+      virtual void replaceMispelledWordBySuggestion(QAction *);
 
-    struct LaTeXInsertBlock;
+     protected:
+      struct LaTeXInsertBlock;
 
-    /*!
-     * \param[out] m   : context menu
-     * \param[in]  t   : portion of text
-     * \param[in]  pos : position of the cursor relative to the
-     * beginning of the portion of text in the line
-     * \param[in] apos : abosolution position of the beginning of the
-     * portion of text in the line
-     */
-    virtual void completeContextMenuForMispelledWord(QMenu *,
-						     const QString&,
-						     const int,
-						     const int);
-    /*!
-     * compute indentation of the current line
-     * \param[out] i  : indentation of the previous line (0 if first line)
-     * \param[out] di : indentation increment of the given line 
-     * \param[out] b  : true if the increment shall be used for the current line 
-     */
-    virtual void
-    getLineIndentation(const QTextCursor &, int &, int &, bool &) const;
+      /*!
+       * \param[out] m   : context menu
+       * \param[in]  t   : portion of text
+       * \param[in]  pos : position of the cursor relative to the
+       * beginning of the portion of text in the line
+       * \param[in] apos : abosolution position of the beginning of the
+       * portion of text in the line
+       */
+      virtual void completeContextMenuForMispelledWord(QMenu *,
+                                                       const QString &,
+                                                       const int,
+                                                       const int);
+      /*!
+       * compute indentation of the current line
+       * \param[out] i  : indentation of the previous line (0 if first line)
+       * \param[out] di : indentation increment of the given line
+       * \param[out] b  : true if the increment shall be used for the current
+       * line
+       */
+      virtual void getLineIndentation(const QTextCursor &,
+                                      int &,
+                                      int &,
+                                      bool &) const;
 
-    /*!
-     * \return the indentation increment of the current line
-     * \param[in] line : line 
-     */
-    virtual int getIndentationIncrement(const QString&) const;    
+      /*!
+       * \return the indentation increment of the current line
+       * \param[in] line : line
+       */
+      virtual int getIndentationIncrement(const QString &) const;
 
-    virtual QString getTeXMasterFile();
+      virtual QString getTeXMasterFile();
 
-    QRegExp rb;
-    QRegExp re;
-    QRegExp rb2;
-    QRegExp re2;
+      QRegExp rb;
+      QRegExp re;
+      QRegExp rb2;
+      QRegExp re2;
 
-    QCompleter *c;
+      QCompleter *c;
 
-    LaTeXSyntaxHighlighter *highlighter;
+      LaTeXSyntaxHighlighter *highlighter;
 
-    SpellChecker spellChecker;
+      SpellChecker spellChecker;
 
-    QVector<QAction *> suggestions;
-    //! absolute postion of the beginning of the mispelled word
-    int bmwp; 
-    //! absolute postion of the end of the mispelled word
-    int emwp;
+      QVector<QAction *> suggestions;
+      //! absolute postion of the beginning of the mispelled word
+      int bmwp;
+      //! absolute postion of the end of the mispelled word
+      int emwp;
 
-    QPointer<ProcessOutputFrame> po;
+      QPointer<ProcessOutputFrame> po;
 
-   private:
-    Q_OBJECT
+     private:
+      Q_OBJECT
 
-  }; // end of struct LaTeXMajorMode
+    };  // end of struct LaTeXMajorMode
 
-} // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_LATEXMAJORMODE_HXX */
-

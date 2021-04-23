@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  LicosThermalBehaviourWizard.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,38 +6,34 @@
  */
 
 #ifndef LIB_TFEL_GUI_LICOSTHERMALBEHAVIOURWIZARD_HXX
-#define LIB_TFEL_GUI_LICOSTHERMALBEHAVIOURWIZARD_HXX 
+#define LIB_TFEL_GUI_LICOSTHERMALBEHAVIOURWIZARD_HXX
 
-#include<QtWidgets/QWizard>
+#include <QtWidgets/QWizard>
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  //! foward declaration
-  struct TextEditBase;
+    //! foward declaration
+    struct TextEditBase;
 
-  //! a wizard to introduce a new thermal material
-  struct LicosThermalBehaviourWizard
-    : public QWizard
-  {
-    /*!
-     * Constructor
-     * \param[in] t : 
-     */
-    LicosThermalBehaviourWizard(TextEditBase&);
+    //! a wizard to introduce a new thermal material
+    struct LicosThermalBehaviourWizard : public QWizard {
+      /*!
+       * Constructor
+       * \param[in] t :
+       */
+      LicosThermalBehaviourWizard(TextEditBase&);
 
-    bool validateCurrentPage() override;
+      bool validateCurrentPage() override;
 
-  protected:
-    
-    //! the textedit modified by the wizard 
-    TextEditBase& textEdit;
+     protected:
+      //! the textedit modified by the wizard
+      TextEditBase& textEdit;
 
-  }; // end of struct LicosThermalBehaviourWizard
+    };  // end of struct LicosThermalBehaviourWizard
 
-} // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_LICOSTHERMALBEHAVIOURWIZARD_H */
-

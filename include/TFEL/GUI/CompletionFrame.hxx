@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file   include/TFEL/GUI/CompletionFrame.hxx
  * \brief
  * \author Thomas Helfer
@@ -6,22 +6,21 @@
  */
 
 #ifndef LIB_TFEL_GUI_COMPLETIONFRAME_HXX
-#define LIB_TFEL_GUI_COMPLETIONFRAME_HXX 
+#define LIB_TFEL_GUI_COMPLETIONFRAME_HXX
 
-#include<QtCore/QString>
-#include<QtGui/QTextEdit>
+#include <QtCore/QString>
+#include <QtGui/QTextEdit>
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  /*!
-   * 
-   */
-  struct CompletionFrame : public QTextEdit {};
+    /*!
+     *
+     */
+    struct CompletionFrame : public QTextEdit {};
 
-} // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_COMPLETIONFRAME_HXX */
-

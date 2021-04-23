@@ -12,73 +12,69 @@
 #include <TFEL/GUI/SpellChecker.hxx>
 #include "TFEL/GUI/CompiledLanguageMajorModeBase.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  // forward declaration
-  struct TextEditBase;
+    // forward declaration
+    struct TextEditBase;
 
-  //! \brief major mode for editing Markdown documents
-  struct MarkdownMajorMode : public CompiledLanguageMajorModeBase {
-    MarkdownMajorMode(EditorWidget &,
-                      Buffer &,
-                      TextEditBase &);
+    //! \brief major mode for editing Markdown documents
+    struct MarkdownMajorMode : public CompiledLanguageMajorModeBase {
+      MarkdownMajorMode(EditorWidget &, Buffer &, TextEditBase &);
 
-    QString getName() const override;
+      QString getName() const override;
 
-    QString getDescription() const override;
+      QString getDescription() const override;
 
-    void setSpellCheckLanguage(const QString &) override;
+      void setSpellCheckLanguage(const QString &) override;
 
-    void setSyntaxHighlighter(QTextDocument *const) override;
+      void setSyntaxHighlighter(QTextDocument *const) override;
 
-    QMenu *getSpecificMenu() override;
+      QMenu *getSpecificMenu() override;
 
-    void completeContextMenu(QMenu *const,
-                             const QTextCursor &) override;
+      void completeContextMenu(QMenu *const, const QTextCursor &) override;
 
-    QCompleter *getCompleter() override;
+      QCompleter *getCompleter() override;
 
-    QString getCompletionPrefix() override;
+      QString getCompletionPrefix() override;
 
-    QString getLanguageName() const override;
+      QString getLanguageName() const override;
 
-    QString getDefaultCompilationCommand() const override;
+      QString getDefaultCompilationCommand() const override;
 
-    void format() override;
+      void format() override;
 
-    bool keyPressEvent(QKeyEvent *const) override;
+      bool keyPressEvent(QKeyEvent *const) override;
 
-    bool handleShortCut(const int,
-                        const Qt::KeyboardModifiers,
-                        const int) override;
+      bool handleShortCut(const int,
+                          const Qt::KeyboardModifiers,
+                          const int) override;
 
-    QIcon getIcon() const override;
+      QIcon getIcon() const override;
 
-    SpellChecker &getSpellChecker();
+      SpellChecker &getSpellChecker();
 
-    //! destructor
-    ~MarkdownMajorMode() override;
+      //! destructor
+      ~MarkdownMajorMode() override;
 
-   protected slots:
+     protected slots:
 
-    //! slot called to prepare a Markdown analysis
-    virtual void runPandoc();
-    //! slot called to start a new Markdown analysis
-    virtual void startPandoc();
+      //! slot called to prepare a Markdown analysis
+      virtual void runPandoc();
+      //! slot called to start a new Markdown analysis
+      virtual void startPandoc();
 
-   protected:
+     protected:
+      //! checking
+      SpellChecker spellChecker;
+      QSyntaxHighlighter *highlighter = nullptr;
 
-    //! checking
-    SpellChecker spellChecker;
-    QSyntaxHighlighter *highlighter = nullptr;
+     private:
+      Q_OBJECT
+    };  // end of struct MarkdownMajorMode
 
-   private:
-    Q_OBJECT
-  };  // end of struct MarkdownMajorMode
-
-}  // end of namespace gui
-}// end of namespace tfel
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_MFRONTMAJORMODE_H */

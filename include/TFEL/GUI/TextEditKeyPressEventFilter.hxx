@@ -12,39 +12,39 @@
 #include <QtGui/QKeyEvent>
 #include "TFEL/GUI/Config.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  // forward declaration
-  struct TextEditBase;
-
-  /*!
-   * An abstract class using by TextEditBase to filter key press
-   * event.
-   *
-   * A filter is called on standard key (the only modifier accepted is
-   * the Shift key)
-   */
-  struct TFEL_GUI_VISIBILITY_EXPORT TextEditKeyPressEventFilter
-      : public QObject {
-    TextEditKeyPressEventFilter(TextEditBase&);
-
-    virtual bool filterKeyPressEvent(QKeyEvent* const) = 0;
+    // forward declaration
+    struct TextEditBase;
 
     /*!
-     * return true if this object can be set : if something goes wrong
-     * in the constructor, this must be reported through this method
+     * An abstract class using by TextEditBase to filter key press
+     * event.
+     *
+     * A filter is called on standard key (the only modifier accepted is
+     * the Shift key)
      */
-    virtual bool isOk() const = 0;
-    //! destructor
-    ~TextEditKeyPressEventFilter() override;
+    struct TFEL_GUI_VISIBILITY_EXPORT TextEditKeyPressEventFilter
+        : public QObject {
+      TextEditKeyPressEventFilter(TextEditBase&);
 
-   private:
-    Q_OBJECT
-  };  // end of TextEditKeyPressEventFilter
+      virtual bool filterKeyPressEvent(QKeyEvent* const) = 0;
 
-}  // end of namespace gui
-}// end of namespace tfel
+      /*!
+       * return true if this object can be set : if something goes wrong
+       * in the constructor, this must be reported through this method
+       */
+      virtual bool isOk() const = 0;
+      //! destructor
+      ~TextEditKeyPressEventFilter() override;
+
+     private:
+      Q_OBJECT
+    };  // end of TextEditKeyPressEventFilter
+
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_TEXTEDITKEYPRESSEVENTFILTER_HXX */

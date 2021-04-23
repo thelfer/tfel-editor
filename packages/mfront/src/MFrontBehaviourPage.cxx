@@ -35,27 +35,24 @@ namespace tfel {
   namespace gui {
 
     static QString mark_disabled(const char *const s) {
-      return "<i>" + QObject::tr(s) + QObject::tr(" (disabled)") +
-             "</i>";
+      return "<i>" + QObject::tr(s) + QObject::tr(" (disabled)") + "</i>";
     }
 
-    MFrontBehaviourPage::MFrontBehaviourPage(
-        EditorWidget &w,
-        TextEditBase &cd,
-        MFrontBehaviourWizard *const p)
+    MFrontBehaviourPage::MFrontBehaviourPage(EditorWidget &w,
+                                             TextEditBase &cd,
+                                             MFrontBehaviourWizard *const p)
         : QWizardPage(p),
           bts(new QComboBox()),
           iss(new QComboBox()),
           dsls(new QComboBox()),
           algorithms_label(new QLabel(QObject::tr("Algorithm"))),
           algorithms(new QComboBox()),
-          hypotheses_label(new QLabel(
-              QObject::tr("Supported modelling hypotheses"))),
+          hypotheses_label(
+              new QLabel(QObject::tr("Supported modelling hypotheses"))),
           hypotheses(new QComboBox()),
           symmetries_label(new QLabel(QObject::tr("Symmetry"))),
           symmetries(new QComboBox()),
-          strain_measures_label(
-              new QLabel(QObject::tr("Strain measure"))),
+          strain_measures_label(new QLabel(QObject::tr("Strain measure"))),
           strain_measures(new QComboBox()),
           bricks_label(new QLabel(QObject::tr("Brick"))),
           bricks(new QComboBox()),
@@ -65,8 +62,7 @@ namespace tfel {
           crystal_structures_label(
               new QLabel(QObject::tr("Crystal structure"))),
           crystal_structures(new QComboBox()),
-          tangent_operators_label(
-              new QLabel(QObject::tr("Tangent Operator"))),
+          tangent_operators_label(new QLabel(QObject::tr("Tangent Operator"))),
           tangent_operators(new QComboBox()),
           convergence_criterion_label(
               new QLabel(QObject::tr("Convergence criterion"))),
@@ -79,11 +75,11 @@ namespace tfel {
       this->setTitle(
           QObject::tr("DSL selection, behaviour characteristics, "
                       "main numerical parameters"));
-      this->setSubTitle(QObject::tr(
-          "Selection of the Domain Specific Language "
-          "for the new behaviour. This page also allows "
-          "specifying various details about the behaviour and "
-          "the numerical algorithm."));
+      this->setSubTitle(
+          QObject::tr("Selection of the Domain Specific Language "
+                      "for the new behaviour. This page also allows "
+                      "specifying various details about the behaviour and "
+                      "the numerical algorithm."));
       this->bts->addItems(QStringList() << "Strain based behaviour"
                                         << "Finite strain behaviour"
                                         << "Cohesive zone model"
@@ -94,14 +90,16 @@ namespace tfel {
       // `updateCrystalStructureList`
       this->updateIntegrationSchemeList();
       this->updateTangentOperatorList();
-      QObject::connect(this->bts, static_cast<void (QComboBox::*)(int)>(
-                                      &QComboBox::currentIndexChanged),
+      QObject::connect(this->bts,
+                       static_cast<void (QComboBox::*)(int)>(
+                           &QComboBox::currentIndexChanged),
                        [this] {
                          this->updateIntegrationSchemeList();
                          this->updateTangentOperatorList();
                        });
-      QObject::connect(this->iss, static_cast<void (QComboBox::*)(int)>(
-                                      &QComboBox::currentIndexChanged),
+      QObject::connect(this->iss,
+                       static_cast<void (QComboBox::*)(int)>(
+                           &QComboBox::currentIndexChanged),
                        [this] {
                          this->updateDSLList();
                          this->updateAlgorithmList();
@@ -125,9 +123,7 @@ namespace tfel {
       QObject::connect(this->hypotheses,
                        static_cast<void (QComboBox::*)(int)>(
                            &QComboBox::currentIndexChanged),
-                       [this] {
-                         this->updateElasticPropertyList();
-                       });
+                       [this] { this->updateElasticPropertyList(); });
       QObject::connect(this->algorithms,
                        static_cast<void (QComboBox::*)(int)>(
                            &QComboBox::currentIndexChanged),
@@ -181,8 +177,7 @@ namespace tfel {
       isl->setBuddy(this->iss);
       gl->addWidget(isl, 1, 0);
       gl->addWidget(this->iss, 1, 1);
-      auto *const iml =
-          new QLabel(QObject::tr("Domain Specific Language"));
+      auto *const iml = new QLabel(QObject::tr("Domain Specific Language"));
       iml->setBuddy(this->dsls);
       gl->addWidget(iml, 2, 0);
       gl->addWidget(this->dsls, 2, 1);
@@ -218,8 +213,7 @@ namespace tfel {
     }  // end of MFrontBehaviourPage::MFrontBehaviourPage
 
     std::shared_ptr<mfront::AbstractBehaviourDSL>
-    MFrontBehaviourPage::getBehaviourDSL(
-        const DSLGenerationOptions& o) const {
+    MFrontBehaviourPage::getBehaviourDSL(const DSLGenerationOptions &o) const {
       QTemporaryFile tmp("mfront-file");
       if (!tmp.open()) {
         this->editor.displayInformativeMessage(
@@ -242,8 +236,7 @@ namespace tfel {
         const auto &n = this->getSelectedDomainSpecificLanguage();
         const auto dsl = f.createNewDSL(n.toStdString());
         dsl->importFile(tmp.fileName().toStdString(), {}, {});
-        return std::dynamic_pointer_cast<mfront::AbstractBehaviourDSL>(
-            dsl);
+        return std::dynamic_pointer_cast<mfront::AbstractBehaviourDSL>(dsl);
       } catch (std::exception &e) {
         QMessageBox::warning(&(this->editor), "Inconsistent choice",
                              QString(e.what()));
@@ -291,8 +284,7 @@ namespace tfel {
     int MFrontBehaviourPage::nextId() const {
       const auto b = this->bricks->currentText();
       if (b == "StandardElastoViscoPlasticity") {
-        return MFrontBehaviourWizardPages::
-            STANDARDELASTOVISCOPLASTICITY;
+        return MFrontBehaviourWizardPages::STANDARDELASTOVISCOPLASTICITY;
       } else {
         return MFrontBehaviourWizardPages::ADDVARIABLES;
       }
@@ -307,11 +299,9 @@ namespace tfel {
         QStringList ischemes;
         for (const auto &n : f.getRegistredParsers(false)) {
           const auto dsl = f.createNewDSL(n);
-          if (dsl->getTargetType() ==
-              mfront::AbstractDSL::BEHAVIOURDSL) {
+          if (dsl->getTargetType() == mfront::AbstractDSL::BEHAVIOURDSL) {
             const auto &bdsl =
-                dynamic_cast<const mfront::AbstractBehaviourDSL &>(
-                    *dsl);
+                dynamic_cast<const mfront::AbstractBehaviourDSL &>(*dsl);
             const auto &bd = bdsl.getBehaviourDescription();
             if (bd.getBehaviourType() == bt) {
               const auto is = [&bd] {
@@ -335,10 +325,8 @@ namespace tfel {
         if (ischemes.contains(cis)) {
           this->iss->setCurrentText(cis);
         } else {
-          if ((bt ==
-               BehaviourDescription::STANDARDSTRAINBASEDBEHAVIOUR) ||
-              (bt ==
-               BehaviourDescription::STANDARDFINITESTRAINBEHAVIOUR) ||
+          if ((bt == BehaviourDescription::STANDARDSTRAINBASEDBEHAVIOUR) ||
+              (bt == BehaviourDescription::STANDARDFINITESTRAINBEHAVIOUR) ||
               (bt == BehaviourDescription::GENERALBEHAVIOUR)) {
             if (ischemes.contains("Implicit")) {
               this->iss->setCurrentText("Implicit");
@@ -361,11 +349,9 @@ namespace tfel {
         const auto it = this->getSelectedIntegrationScheme();
         for (const auto &n : f.getRegistredParsers(false)) {
           const auto dsl = f.createNewDSL(n);
-          if (dsl->getTargetType() ==
-              mfront::AbstractDSL::BEHAVIOURDSL) {
+          if (dsl->getTargetType() == mfront::AbstractDSL::BEHAVIOURDSL) {
             const auto &bdsl =
-                dynamic_cast<const mfront::AbstractBehaviourDSL &>(
-                    *dsl);
+                dynamic_cast<const mfront::AbstractBehaviourDSL &>(*dsl);
             const auto &bd = bdsl.getBehaviourDescription();
             if ((bd.getBehaviourType() == bt) &&
                 (bd.getIntegrationScheme() == it)) {
@@ -422,7 +408,7 @@ namespace tfel {
       }
       if (smhs.size() == amhs.size()) {
         // paranoic check
-        if(std::equal(smhs.begin(), smhs.end(), amhs.begin())){
+        if (std::equal(smhs.begin(), smhs.end(), amhs.begin())) {
           mhs << "All";
         }
       }
@@ -463,15 +449,13 @@ namespace tfel {
       }
       this->symmetries->addItems(ss);
       if (ss.size() == 1) {
-        this->symmetries_label->setText(
-            mark_disabled("Symmetry"));
+        this->symmetries_label->setText(mark_disabled("Symmetry"));
         this->symmetries->setDisabled(true);
       } else {
-        this->symmetries_label->setText(
-            QObject::tr("Symmetry"));
+        this->symmetries_label->setText(QObject::tr("Symmetry"));
         this->symmetries->setEnabled(true);
       }
-      if (cs.isEmpty()){
+      if (cs.isEmpty()) {
         if (ss.contains("Isotropic")) {
           this->symmetries->setCurrentText("Isotropic");
         }
@@ -552,13 +536,11 @@ namespace tfel {
         this->strain_measures->setDisabled(true);
         return;
       }
-      this->strain_measures->addItems(QStringList()
-                                      << "Unspecified"
-                                      << "Hencky"
-                                      << "Green-Lagragrange"
-                                      << "Linearized");
-      this->strain_measures_label->setText(
-          QObject::tr("Strain measure"));
+      this->strain_measures->addItems(QStringList() << "Unspecified"
+                                                    << "Hencky"
+                                                    << "Green-Lagragrange"
+                                                    << "Linearized");
+      this->strain_measures_label->setText(QObject::tr("Strain measure"));
       this->strain_measures->setEnabled(true);
     }  // end of MFrontBehaviourPage::updateStrainMeasureList()
 
@@ -569,12 +551,10 @@ namespace tfel {
       const auto dsld = this->getCurrentBehaviourDSLDescription();
       auto add_stiffness_tensor = [this, &dsld](QStringList &emps) {
         const auto h = this->hypotheses->currentText();
-        const auto ps =
-            QString::fromStdString(ModellingHypothesis::toString(
-                ModellingHypothesis::PLANESTRESS));
-        const auto agps =
-            QString::fromStdString(ModellingHypothesis::toString(
-                ModellingHypothesis::AXISYMMETRICALGENERALISEDPLANESTRESS));
+        const auto ps = QString::fromStdString(
+            ModellingHypothesis::toString(ModellingHypothesis::PLANESTRESS));
+        const auto agps = QString::fromStdString(ModellingHypothesis::toString(
+            ModellingHypothesis::AXISYMMETRICALGENERALISEDPLANESTRESS));
         if ((h == "All") || (h == ps) || (h == agps)) {
           emps << "@ComputeStiffnessTensor<Altered>"
                << "@ComputeStiffnessTensor<UnAltered>"
@@ -586,10 +566,8 @@ namespace tfel {
         }
       };
       this->elastic_properties->clear();
-      if (!((bt ==
-             BehaviourDescription::STANDARDSTRAINBASEDBEHAVIOUR) ||
-            (bt ==
-             BehaviourDescription::STANDARDFINITESTRAINBEHAVIOUR))) {
+      if (!((bt == BehaviourDescription::STANDARDSTRAINBASEDBEHAVIOUR) ||
+            (bt == BehaviourDescription::STANDARDFINITESTRAINBEHAVIOUR))) {
         this->elastic_properties_label->setText(
             mark_disabled("Elastic properties"));
         return;
@@ -625,14 +603,11 @@ namespace tfel {
         this->tangent_operators->setDisabled(true);
         return;
       }
-      this->tangent_operators_label->setText(
-          QObject::tr("Tangent Operator"));
+      this->tangent_operators_label->setText(QObject::tr("Tangent Operator"));
       this->tangent_operators->setEnabled(true);
-      for (const auto to :
-           getFiniteStrainBehaviourTangentOperatorFlags()) {
+      for (const auto to : getFiniteStrainBehaviourTangentOperatorFlags()) {
         this->tangent_operators->addItem(QString::fromStdString(
-            convertFiniteStrainBehaviourTangentOperatorFlagToString(
-                to)));
+            convertFiniteStrainBehaviourTangentOperatorFlagToString(to)));
       }
     }  // end of MFrontBehaviourPage::updateTangentOperatorList
 
@@ -661,8 +636,7 @@ namespace tfel {
           const auto &a = this->algorithms->currentText();
           const auto s = f.getSolver(a.toStdString());
           if ((s->usesJacobian()) && (s->requiresNumericalJacobian())) {
-            this->perturbation_value_label->setText(
-                "Perturbation value");
+            this->perturbation_value_label->setText("Perturbation value");
             this->perturbation_value->setEnabled(true);
           } else {
             disable_perturbation_value();
@@ -675,8 +649,7 @@ namespace tfel {
       }
     }  // end of MFrontBehaviourPage::updateNumericalCriteria
 
-    QString MFrontBehaviourPage::getSelectedDomainSpecificLanguage()
-        const {
+    QString MFrontBehaviourPage::getSelectedDomainSpecificLanguage() const {
       return this->dsls->currentText();
     }  // end of
        // MFrontBehaviourPage::getSelectedDomainSpecificLanguage()
@@ -709,7 +682,7 @@ namespace tfel {
         const auto &sm = this->strain_measures->currentText();
         if (sm == "Green-Lagragrange") {
           append("@StrainMeasure GreenLagrange;\n\n");
-        } else if ((sm == "Hencky")||(sm == "Linearized")) {
+        } else if ((sm == "Hencky") || (sm == "Linearized")) {
           append("@StrainMeasure " + sm + ";\n\n");
         }
       }
@@ -728,10 +701,9 @@ namespace tfel {
                  "stress_potential: \"Hooke\"{}\n"
                  "};\n\n");
         } else {
-          append("@Brick " + b );
+          append("@Brick " + b);
           const auto *const w =
-              dynamic_cast<const MFrontBehaviourWizard *const>(
-                  this->wizard());
+              dynamic_cast<const MFrontBehaviourWizard *const>(this->wizard());
           if ((w != nullptr) && (m == FINAL_STAGE)) {
             w->writeBehaviourBrickOptions(b);
           }
@@ -756,10 +728,9 @@ namespace tfel {
         if (s == "Isotropic") {
           append_if(m == VALIDATE_STAGE, e + "{150e9, 0.3};\n\n");
         } else {
-          append_if(m == VALIDATE_STAGE,
-                    e + "{150e9, 150e9, 150e9,"
-                        " 0.3, 0.3, 0.3,"
-                        " 150e9, 150e9, 150e9};\n\n");
+          append_if(m == VALIDATE_STAGE, e + "{150e9, 150e9, 150e9,"
+                                             " 0.3, 0.3, 0.3,"
+                                             " 150e9, 150e9, 150e9};\n\n");
         }
       } else if (e.startsWith("@RequireStiffnessTensor")) {
         append(e + ";\n\n");
@@ -827,8 +798,7 @@ namespace tfel {
     }  // end of MFrontBehaviourPage::getSelectedTangentOperator
 
     void MFrontBehaviourPage::write() const {
-      this->write(this->d.textCursor(), {},
-                  MFrontBehaviourPage::FINAL_STAGE);
+      this->write(this->d.textCursor(), {}, MFrontBehaviourPage::FINAL_STAGE);
     }  // end of MFrontBehaviourPage::write()
 
     mfront::BehaviourDSLDescription

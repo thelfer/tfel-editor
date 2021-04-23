@@ -41,19 +41,18 @@ static void loadExternalPackages() {
 #else
 #ifdef __APPLE__
       const auto libs = d.entryList(QStringList("*.dylib"), QDir::Files);
-#else /* __APPLE__ */
+#else  /* __APPLE__ */
       const auto libs = d.entryList(QStringList("*.so"), QDir::Files);
 #endif /* __APPLE__ */
 #endif /* WIN32 */
       for (const auto& rl : libs) {
         const auto l = (p + QDir::separator() + rl).toStdString();
         try {
-          auto& lm =
-              ExternalLibraryManager::getExternalLibraryManager();
+          auto& lm = ExternalLibraryManager::getExternalLibraryManager();
           lm.loadLibrary(l);
         } catch (std::exception& e) {
-          std::cerr << "loading library : '" << l << "' failed ('"
-                    << e.what() << "')" << std::endl;
+          std::cerr << "loading library : '" << l << "' failed ('" << e.what()
+                    << "')" << std::endl;
           std::exit(EXIT_FAILURE);
         }
       }

@@ -1,4 +1,4 @@
-/*! 
+/*!
  * \file  CSyntaxHighlighterBase.hxx
  * \brief
  * \author Helfer Thomas
@@ -6,56 +6,55 @@
  */
 
 #ifndef LIB_TFEL_GUI_CSYNTAXHIGHLIGHTERBASE_HXX
-#define LIB_TFEL_GUI_CSYNTAXHIGHLIGHTERBASE_HXX 
+#define LIB_TFEL_GUI_CSYNTAXHIGHLIGHTERBASE_HXX
 
-#include<vector>
-#include<QtCore/QString>
-#include<QtGui/QTextDocument>
-#include<QtGui/QSyntaxHighlighter>
+#include <vector>
+#include <QtCore/QString>
+#include <QtGui/QTextDocument>
+#include <QtGui/QSyntaxHighlighter>
 
-#include"TFEL/Utilities/CxxTokenizerOptions.hxx"
-#include"TFEL/GUI/Config.hxx"
+#include "TFEL/Utilities/CxxTokenizerOptions.hxx"
+#include "TFEL/GUI/Config.hxx"
 
-namespace tfel{
+namespace tfel {
 
-  namespace gui{
+  namespace gui {
 
-  /*!
-   * \brief base class for language based on `C`
-   * (such as C/C++/mfront/mtest/licos)
-   */
-  struct TFEL_GUI_VISIBILITY_EXPORT CSyntaxHighlighterBase
-      : public QSyntaxHighlighter {
-
-    virtual void highlightBlock(const QString &) override;
-
-   protected:
     /*!
-     * a simple wrapper around the highligthing rule
+     * \brief base class for language based on `C`
+     * (such as C/C++/mfront/mtest/licos)
      */
-    struct HighlightingRule {
-      std::string key;
-      QTextCharFormat format;
-    };  // end of struct HighlightingRule
+    struct TFEL_GUI_VISIBILITY_EXPORT CSyntaxHighlighterBase
+        : public QSyntaxHighlighter {
+      virtual void highlightBlock(const QString &) override;
 
-    CSyntaxHighlighterBase(QTextDocument *const);
+     protected:
+      /*!
+       * a simple wrapper around the highligthing rule
+       */
+      struct HighlightingRule {
+        std::string key;
+        QTextCharFormat format;
+      };  // end of struct HighlightingRule
 
-    //! list of highlighting rules
-    std::vector<HighlightingRule> highlightingRules;
+      CSyntaxHighlighterBase(QTextDocument *const);
 
-    QTextCharFormat keyFormat;
-    QTextCharFormat numberFormat;
-    QTextCharFormat commentFormat;
-    QTextCharFormat stringFormat;
-    QTextCharFormat preprocessorFormat;
+      //! list of highlighting rules
+      std::vector<HighlightingRule> highlightingRules;
 
-    tfel::utilities::CxxTokenizerOptions options;
+      QTextCharFormat keyFormat;
+      QTextCharFormat numberFormat;
+      QTextCharFormat commentFormat;
+      QTextCharFormat stringFormat;
+      QTextCharFormat preprocessorFormat;
 
-   private:
-    Q_OBJECT
-  }; // end of struct CSyntaxHighlighter
-  
-} // end of namespace gui
-}// end of namespace tfel
+      tfel::utilities::CxxTokenizerOptions options;
+
+     private:
+      Q_OBJECT
+    };  // end of struct CSyntaxHighlighter
+
+  }  // end of namespace gui
+}  // end of namespace tfel
 
 #endif /* LIB_TFEL_GUI_CSYNTAXHIGHLIGHTERBASE_HXX */
