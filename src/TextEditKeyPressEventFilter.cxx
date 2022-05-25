@@ -10,15 +10,12 @@
 #include "TFEL/GUI/TextEditBase.hxx"
 #include "TFEL/GUI/TextEditKeyPressEventFilter.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  TextEditKeyPressEventFilter::TextEditKeyPressEventFilter(TextEditBase& t)
+      : QObject(&t) {
+  }  // end of TextEditKeyPressEventFilter::TextEditKeyPressEventFilter
 
-    TextEditKeyPressEventFilter::TextEditKeyPressEventFilter(TextEditBase& t)
-        : QObject(&t) {
-    }  // end of TextEditKeyPressEventFilter::TextEditKeyPressEventFilter
+  TextEditKeyPressEventFilter::~TextEditKeyPressEventFilter() = default;
 
-    TextEditKeyPressEventFilter::~TextEditKeyPressEventFilter() = default;
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui

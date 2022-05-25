@@ -11,23 +11,20 @@
 #include <QtWebEngineWidgets/QWebEngineView>
 #include "TFEL/GUI/Config.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  struct TFEL_GUI_VISIBILITY_EXPORT QWebEngineViewWrapper : public QWidget {
+    QWebEngineViewWrapper(QWebEngineView *, QWidget *);
 
-    struct TFEL_GUI_VISIBILITY_EXPORT QWebEngineViewWrapper : public QWidget {
-      QWebEngineViewWrapper(QWebEngineView *, QWidget *);
+    void focusInEvent(QFocusEvent *) override;
 
-      void focusInEvent(QFocusEvent *) override;
+   protected:
+    QWebEngineView *const wrappedObject;
 
-     protected:
-      QWebEngineView *const wrappedObject;
+   private:
+    Q_OBJECT
+  };  // end of QWebEngineViewWrapper
 
-     private:
-      Q_OBJECT
-    };  // end of QWebEngineViewWrapper
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_QWEBENGINEVIEWWRAPPER_HXX */

@@ -10,41 +10,38 @@
 
 #include "TFEL/GUI/CommandLine.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  // forward declaration
+  struct EditorWidget;
+  // forward declaration
+  struct TextEdit;
 
-    // forward declaration
-    struct EditorWidget;
-    // forward declaration
-    struct TextEdit;
+  struct TextEditQueryReplace : public CommandLine {
+    TextEditQueryReplace(TextEditBase&, EditorWidget&);
+    //! desctructor
+    ~TextEditQueryReplace() override;
 
-    struct TextEditQueryReplace : public CommandLine {
-      TextEditQueryReplace(TextEditBase&, EditorWidget&);
-      //! desctructor
-      ~TextEditQueryReplace() override;
+   protected:
+    static QStringList getHistory();
 
-     protected:
-      static QStringList getHistory();
+    static void addToHistory(const QString&);
 
-      static void addToHistory(const QString&);
+    TextEditQueryReplace(TextEditBase&, EditorWidget&, const QString&);
 
-      TextEditQueryReplace(TextEditBase&, EditorWidget&, const QString&);
+    TextEditQueryReplace(TextEditBase&,
+                         EditorWidget&,
+                         const QString&,
+                         const QString&);
 
-      TextEditQueryReplace(TextEditBase&,
-                           EditorWidget&,
-                           const QString&,
-                           const QString&);
+    void treatUserInput() override;
 
-      void treatUserInput() override;
+    TextEditBase& textEdit;
+    QString s1;
+    int stage;
 
-      TextEditBase& textEdit;
-      QString s1;
-      int stage;
+  };  // end of struct TextEditQueryReplace
 
-    };  // end of struct TextEditQueryReplace
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_TEXTEDITQUERYREPLACE_HXX */

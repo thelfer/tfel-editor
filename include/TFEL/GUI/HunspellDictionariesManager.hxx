@@ -11,41 +11,37 @@
 #include <map>
 #include "TFEL/GUI/Config.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  /*!
+   * structure in charge of managing hunspell dictionaries
+   */
+  struct TFEL_GUI_VISIBILITY_EXPORT HunspellDictionariesManager {
+    static HunspellDictionariesManager& getHunspellDictionariesManager();
 
-    /*!
-     * structure in charge of managing hunspell dictionaries
-     */
-    struct TFEL_GUI_VISIBILITY_EXPORT HunspellDictionariesManager {
-      static HunspellDictionariesManager& getHunspellDictionariesManager();
+    QString getDefaultSpellCheckLanguage() const;
 
-      QString getDefaultSpellCheckLanguage() const;
+    QString getDictionaryPath(const QString&) const;
 
-      QString getDictionaryPath(const QString&) const;
+    QStringList getAvailableDictionnaries() const;
 
-      QStringList getAvailableDictionnaries() const;
+   protected:
+    HunspellDictionariesManager();
 
-     protected:
-      HunspellDictionariesManager();
+    HunspellDictionariesManager(const HunspellDictionariesManager&);
 
-      HunspellDictionariesManager(const HunspellDictionariesManager&);
+    void searchDictionariesInDefaultLocations();
 
-      void searchDictionariesInDefaultLocations();
+    void searchDictionaries(const QString&);
 
-      void searchDictionaries(const QString&);
+    HunspellDictionariesManager& operator=(const HunspellDictionariesManager&);
 
-      HunspellDictionariesManager& operator=(
-          const HunspellDictionariesManager&);
+    // first  key : lang
+    // second key : path to dictionaries
+    std::map<QString, QString> dictionaries;
 
-      // first  key : lang
-      // second key : path to dictionaries
-      std::map<QString, QString> dictionaries;
+  };  // end of struct HunspellDictionariesManager
 
-    };  // end of struct HunspellDictionariesManager
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_HUNSPELL_DICTIONARIESMANAGER_HXX */

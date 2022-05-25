@@ -11,28 +11,22 @@
 #include "TFEL/GUI/Config.hxx"
 #include "TFEL/GUI/CSyntaxHighlighter.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
-
+  //! \brief a syntaxt highlighter for the C++ language
+  struct TFEL_GUI_VISIBILITY_EXPORT CxxSyntaxHighlighter
+      : public CSyntaxHighlighter {
     /*!
-     * a syntaxt highlighter for the C++ language
+     * \param[in] t : text document to be highlighted
      */
-    struct TFEL_GUI_VISIBILITY_EXPORT CxxSyntaxHighlighter
-        : public CSyntaxHighlighter {
-      /*!
-       * \param[in] t : text document to be highlighted
-       */
-      CxxSyntaxHighlighter(QTextDocument *const);
-      //! destructor
-      ~CxxSyntaxHighlighter() override;
+    CxxSyntaxHighlighter(QTextDocument *const);
+    //! \brief destructor
+    ~CxxSyntaxHighlighter() override;
 
-     private:
-      Q_OBJECT
+   private:
+    Q_OBJECT
+  };  // end of struct CxxSyntaxHighlighter
 
-    };  // end of struct CxxSyntaxHighlighter
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_CXXSYNTAXHIGHLIGHTER_HXX */

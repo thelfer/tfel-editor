@@ -9,25 +9,22 @@
 #include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/QAbstractScrollAreaWrapper.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  QAbstractScrollAreaWrapper::QAbstractScrollAreaWrapper(QAbstractScrollArea *s,
+                                                         QWidget *p)
+      : QWidget(p), wrappedObject(s) {
+    auto *hl = new QHBoxLayout;
+    setQAbstractScrollAreaInLayout(hl, this->wrappedObject);
+    this->setLayout(hl);
+  }
 
-    QAbstractScrollAreaWrapper::QAbstractScrollAreaWrapper(
-        QAbstractScrollArea *s, QWidget *p)
-        : QWidget(p), wrappedObject(s) {
-      auto *hl = new QHBoxLayout;
-      setQAbstractScrollAreaInLayout(hl, this->wrappedObject);
-      this->setLayout(hl);
-    }
+  QAbstractScrollArea *QAbstractScrollAreaWrapper::getWrappedObject() {
+    return this->wrappedObject;
+  }
 
-    QAbstractScrollArea *QAbstractScrollAreaWrapper::getWrappedObject() {
-      return this->wrappedObject;
-    }
+  void QAbstractScrollAreaWrapper::focusInEvent(QFocusEvent *) {
+    this->wrappedObject->setFocus();
+  }
 
-    void QAbstractScrollAreaWrapper::focusInEvent(QFocusEvent *) {
-      this->wrappedObject->setFocus();
-    }
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui

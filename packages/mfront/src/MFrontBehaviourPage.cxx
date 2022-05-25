@@ -651,8 +651,7 @@ namespace tfel {
 
     QString MFrontBehaviourPage::getSelectedDomainSpecificLanguage() const {
       return this->dsls->currentText();
-    }  // end of
-       // MFrontBehaviourPage::getSelectedDomainSpecificLanguage()
+    }  // end of getSelectedDomainSpecificLanguage
 
     void MFrontBehaviourPage::write(QTextCursor tc,
                                     const DSLGenerationOptions &o,

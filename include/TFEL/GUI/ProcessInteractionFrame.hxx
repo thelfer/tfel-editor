@@ -13,29 +13,26 @@
 #include "TFEL/GUI/Config.hxx"
 #include "TFEL/GUI/ProcessOutputFrame.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
-
+  /*!
+   * \brief an helper class to interact with a QProcess
+   * and displaying its outpout within a PlainText
+   */
+  struct TFEL_GUI_VISIBILITY_EXPORT ProcessInteractionFrame
+      : public ProcessOutputFrame {
     /*!
-     * \brief an helper class to interact with a QProcess
-     * and displaying its outpout within a PlainText
+     * \param[in] w : the editor widget
+     * \param[in] b : the buffer
      */
-    struct TFEL_GUI_VISIBILITY_EXPORT ProcessInteractionFrame
-        : public ProcessOutputFrame {
-      /*!
-       * \param[in] w : the editor widget
-       * \param[in] b : the buffer
-       */
-      ProcessInteractionFrame(EditorWidget&, Buffer&);
-      //! destructor
-      ~ProcessInteractionFrame();
+    ProcessInteractionFrame(EditorWidget&, Buffer&);
+    //! destructor
+    ~ProcessInteractionFrame();
 
-     private:
-      Q_OBJECT
-    };  // end of ProcessInteractionFrame
+   private:
+    Q_OBJECT
+  };  // end of ProcessInteractionFrame
 
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_PROCESSINTERACTIONFRAME_HXX */

@@ -16,45 +16,42 @@
 #include "TFEL/Utilities/CxxTokenizerOptions.hxx"
 #include "TFEL/GUI/Config.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  /*!
+   * \brief base class for language based on `C`
+   * (such as C/C++/mfront/mtest/licos)
+   */
+  struct TFEL_GUI_VISIBILITY_EXPORT CSyntaxHighlighterBase
+      : public QSyntaxHighlighter {
+    virtual void highlightBlock(const QString &) override;
 
+   protected:
     /*!
-     * \brief base class for language based on `C`
-     * (such as C/C++/mfront/mtest/licos)
+     * a simple wrapper around the highligthing rule
      */
-    struct TFEL_GUI_VISIBILITY_EXPORT CSyntaxHighlighterBase
-        : public QSyntaxHighlighter {
-      virtual void highlightBlock(const QString &) override;
+    struct HighlightingRule {
+      std::string key;
+      QTextCharFormat format;
+    };  // end of struct HighlightingRule
 
-     protected:
-      /*!
-       * a simple wrapper around the highligthing rule
-       */
-      struct HighlightingRule {
-        std::string key;
-        QTextCharFormat format;
-      };  // end of struct HighlightingRule
+    CSyntaxHighlighterBase(QTextDocument *const);
 
-      CSyntaxHighlighterBase(QTextDocument *const);
+    //! list of highlighting rules
+    std::vector<HighlightingRule> highlightingRules;
 
-      //! list of highlighting rules
-      std::vector<HighlightingRule> highlightingRules;
+    QTextCharFormat keyFormat;
+    QTextCharFormat numberFormat;
+    QTextCharFormat commentFormat;
+    QTextCharFormat stringFormat;
+    QTextCharFormat preprocessorFormat;
 
-      QTextCharFormat keyFormat;
-      QTextCharFormat numberFormat;
-      QTextCharFormat commentFormat;
-      QTextCharFormat stringFormat;
-      QTextCharFormat preprocessorFormat;
+    tfel::utilities::CxxTokenizerOptions options;
 
-      tfel::utilities::CxxTokenizerOptions options;
+   private:
+    Q_OBJECT
+  };  // end of struct CSyntaxHighlighter
 
-     private:
-      Q_OBJECT
-    };  // end of struct CSyntaxHighlighter
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_CSYNTAXHIGHLIGHTERBASE_HXX */

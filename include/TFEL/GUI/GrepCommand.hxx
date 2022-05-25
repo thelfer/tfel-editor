@@ -10,23 +10,17 @@
 
 #include "TFEL/GUI/Command.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  //! \brief a command based on the grep utility
+  struct GrepCommand : public Command {
+    GrepCommand(EditorWidget&);
 
-    /*!
-     * A command based on the grep utility
-     */
-    struct GrepCommand : public Command {
-      GrepCommand(EditorWidget&);
+    void execute() override;
+    //! \brief destructor
+    ~GrepCommand() override;
+  };  // end of GrepCommand
 
-      void execute() override;
-
-      ~GrepCommand() override;
-
-    };  // end of GrepCommand
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_GREPCOMMAND_HXX */

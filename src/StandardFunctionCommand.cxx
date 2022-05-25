@@ -8,25 +8,19 @@
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/StandardFunctionCommand.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  StandardFunctionCommand::StandardFunctionCommand(EditorWidget &w, const Fct f)
+      : Command(w), c(f) {}  // end of StandardFunctionCommand
 
-    StandardFunctionCommand::StandardFunctionCommand(EditorWidget &w,
-                                                     const Fct f)
-        : Command(w),
-          c(f) {}  // end of
-                   // StandardFunctionCommand::StandardFunctionCommand
+  void StandardFunctionCommand::execute() {
+    auto *p = qobject_cast<EditorWidget *>(this->parent());
+    if (p == nullptr) {
+      return;
+    }
+    this->c(*p);
+  }  // end of execute
 
-    void StandardFunctionCommand::execute() {
-      auto *p = qobject_cast<EditorWidget *>(this->parent());
-      if (p == nullptr) {
-        return;
-      }
-      this->c(*p);
-    }  // end of StandardFunctionCommand::execute
+  StandardFunctionCommand::~StandardFunctionCommand() = default;
 
-    StandardFunctionCommand::~StandardFunctionCommand() = default;
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui

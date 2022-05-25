@@ -48,40 +48,37 @@
 class Hunspell;
 class QSyntaxHighlighter;
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  struct TFEL_GUI_VISIBILITY_EXPORT SpellChecker {
+    SpellChecker();
 
-    struct TFEL_GUI_VISIBILITY_EXPORT SpellChecker {
-      SpellChecker();
+    ~SpellChecker();
 
-      ~SpellChecker();
+    bool spell(const QString &);
 
-      bool spell(const QString &);
+    std::vector<std::pair<int, int>> spellLine(const QString &);
 
-      std::vector<std::pair<int, int>> spellLine(const QString &);
+    QStringList suggest(const QString &);
 
-      QStringList suggest(const QString &);
+    void ignoreWord(const QString &);
 
-      void ignoreWord(const QString &);
+    void setSpellCheckLanguage(const QString &l);
 
-      void setSpellCheckLanguage(const QString &l);
+    void addToUserWordlist(const QString &);
 
-      void addToUserWordlist(const QString &);
+   private:
+    void put_word(const QString &);
 
-     private:
-      void put_word(const QString &);
+    Hunspell *_hunspell;
 
-      Hunspell *_hunspell;
+    QString _userDictionary;
 
-      QString _userDictionary;
+    QString _encoding;
 
-      QString _encoding;
+    QTextCodec *_codec;
+  };
 
-      QTextCodec *_codec;
-    };
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_SPELLCHECKER_HXX */

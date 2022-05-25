@@ -8,14 +8,10 @@
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/Command.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  Command::Command(EditorWidget& t) : QObject(&t) {}  // end of Command
 
-    Command::Command(EditorWidget& t)
-        : QObject(&t) {}  // end of Command::Command
+  Command::~Command() = default;
 
-    Command::~Command() = default;
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui

@@ -10,37 +10,34 @@
 
 #include "TFEL/GUI/CommandLine.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  struct TextEditBase;
 
-    struct TextEditBase;
+  /*!
+   *
+   */
+  struct RectangleMode : public CommandLine {
+    RectangleMode(TextEditBase&, EditorWidget&);
 
-    /*!
-     *
-     */
-    struct RectangleMode : public CommandLine {
-      RectangleMode(TextEditBase&, EditorWidget&);
+    virtual bool isBlocking() const override;
 
-      virtual bool isBlocking() const override;
+    //! \brief method called when processing is finished
+    virtual void treatUserInput() override;
 
-      //! \brief method called when processing is finished
-      virtual void treatUserInput() override;
+   protected:
+    static QVector<QString> killedRectangle;
 
-     protected:
-      static QVector<QString> killedRectangle;
+    struct RectangleModeLineEdit;
 
-      struct RectangleModeLineEdit;
+    void killRectangle();
 
-      void killRectangle();
+    void pasteRectangle();
 
-      void pasteRectangle();
+    TextEditBase& textEdit;
 
-      TextEditBase& textEdit;
+  };  // end of struct RectangleMode
 
-    };  // end of struct RectangleMode
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_RECTANGLEMODE_HXX */

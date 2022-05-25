@@ -7,18 +7,15 @@
 
 #include "TFEL/GUI/VerboseLevel.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  VerboseLevel& getVerboseMode() {
+    static VerboseLevel verboseMode = VERBOSE_LEVEL1;
+    return verboseMode;
+  }  // end of getVerboseMode()
 
-    VerboseLevel& getVerboseMode() {
-      static VerboseLevel verboseMode = VERBOSE_LEVEL1;
-      return verboseMode;
-    }  // end of getVerboseMode()
+  void setVerboseMode(const VerboseLevel l) {
+    getVerboseMode() = l;
+  }  // end of setVerboseMode
 
-    void setVerboseMode(const VerboseLevel l) {
-      getVerboseMode() = l;
-    }  // end of setVerboseMode
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui

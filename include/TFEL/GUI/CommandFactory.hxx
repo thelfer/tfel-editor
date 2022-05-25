@@ -14,82 +14,79 @@
 #include "TFEL/GUI/Config.hxx"
 #include "TFEL/GUI/Command.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  struct EditorWidget;
 
-    struct EditorWidget;
+  struct TFEL_GUI_VISIBILITY_EXPORT CommandProxy {
+    virtual QString getName() const = 0;
+    virtual Command* getCommand(EditorWidget&) const = 0;
+    /*!
+     * destructor
+     */
+    virtual ~CommandProxy();
+  };  // end of struct CommandProxy
 
-    struct TFEL_GUI_VISIBILITY_EXPORT CommandProxy {
-      virtual QString getName() const = 0;
-      virtual Command* getCommand(EditorWidget&) const = 0;
-      /*!
-       * destructor
-       */
-      virtual ~CommandProxy();
-    };  // end of struct CommandProxy
+  /*!
+   * a standard implementation of a proxy
+   * \param T : major mode
+   */
+  template <typename T>
+  struct StandardCommandProxy : public CommandProxy {
+    /*!
+     * \param[in] n : name of the major mode
+     */
+    StandardCommandProxy(const QString&, const bool = true);
+    //! \return the name of the command
+    QString getName() const override;
+    //! \return a new instance of command
+    Command* getCommand(EditorWidget&) const override;
+    /*!
+     * destructor
+     */
+    ~StandardCommandProxy() override;
+
+   private:
+    //! command name
+    const QString name;
+  };  // end of struct StandardCommandProxy
+
+  //! \brief editor command factory
+  struct TFEL_GUI_VISIBILITY_EXPORT CommandFactory {
+    //! a simple alias
+    using CommandPtr = std::shared_ptr<Command>;
+    //! a simple alias
+    using CommandProxyPtr = std::shared_ptr<CommandProxy>;
+
+    static CommandFactory& getCommandFactory();
+
+    void loadLibrary(const QString&);
 
     /*!
-     * a standard implementation of a proxy
-     * \param T : major mode
+     * \return a command according to the given name or NULL if no
+     * command is found
+     *
+     * \param[in] n : name \param[in] w : editor
+     * widget
      */
-    template <typename T>
-    struct StandardCommandProxy : public CommandProxy {
-      /*!
-       * \param[in] n : name of the major mode
-       */
-      StandardCommandProxy(const QString&, const bool = true);
-      //! \return the name of the command
-      QString getName() const override;
-      //! \return a new instance of command
-      Command* getCommand(EditorWidget&) const override;
-      /*!
-       * destructor
-       */
-      ~StandardCommandProxy() override;
+    Command* getCommand(const QString&, EditorWidget&) const;
 
-     private:
-      //! command name
-      const QString name;
-    };  // end of struct StandardCommandProxy
+    void addCommand(const CommandProxyPtr);
 
-    //! \brief editor command factory
-    struct TFEL_GUI_VISIBILITY_EXPORT CommandFactory {
-      //! a simple alias
-      using CommandPtr = std::shared_ptr<Command>;
-      //! a simple alias
-      using CommandProxyPtr = std::shared_ptr<CommandProxy>;
+    QStringList getAvailableCommandsNames() const;
 
-      static CommandFactory& getCommandFactory();
+    bool hasCommand(const QString&) const;
 
-      void loadLibrary(const QString&);
+   private:
+    CommandFactory();
 
-      /*!
-       * \return a command according to the given name or NULL if no
-       * command is found
-       *
-       * \param[in] n : name \param[in] w : editor
-       * widget
-       */
-      Command* getCommand(const QString&, EditorWidget&) const;
+    ~CommandFactory();
 
-      void addCommand(const CommandProxyPtr);
+    std::map<QString, CommandProxyPtr> proxies;
 
-      QStringList getAvailableCommandsNames() const;
+  };  // end of struct CommandFactory
 
-      bool hasCommand(const QString&) const;
-
-     private:
-      CommandFactory();
-
-      ~CommandFactory();
-
-      std::map<QString, CommandProxyPtr> proxies;
-
-    };  // end of struct CommandFactory
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #include "TFEL/GUI/CommandFactory.ixx"
 

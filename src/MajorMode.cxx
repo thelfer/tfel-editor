@@ -8,14 +8,10 @@
 #include <QtWidgets/QWidget>
 #include "TFEL/GUI/MajorMode.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  MajorMode::MajorMode(QWidget *const p) : QObject(p) {}  // end of MajorMode
 
-    MajorMode::MajorMode(QWidget *const p)
-        : QObject(p) {}  // end of MajorMode::MajorMode
+  MajorMode::~MajorMode() = default;
 
-    MajorMode::~MajorMode() = default;
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui

@@ -7,22 +7,19 @@
 
 #include "TFEL/GUI/CSyntaxHighlighter.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  CSyntaxHighlighter::CSyntaxHighlighter(QTextDocument *p)
+      : CSyntaxHighlighterBase(p) {
+    // QStringList keys;
+    // for(const QString &k: keys) {
+    //   HighlightingRule rule;
+    //   rule.key     = k;
+    //   rule.format  = this->keyFormat;
+    //   highlightingRules.append(rule);
+    // }
+  }
 
-    CSyntaxHighlighter::CSyntaxHighlighter(QTextDocument *p)
-        : CSyntaxHighlighterBase(p) {
-      // QStringList keys;
-      // for(const QString &k: keys) {
-      //   HighlightingRule rule;
-      //   rule.key     = k;
-      //   rule.format  = this->keyFormat;
-      //   highlightingRules.append(rule);
-      // }
-    }
+  CSyntaxHighlighter::~CSyntaxHighlighter() = default;
 
-    CSyntaxHighlighter::~CSyntaxHighlighter() = default;
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui

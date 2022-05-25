@@ -11,38 +11,35 @@
 #include <QtCore/QObject>
 #include "TFEL/GUI/Config.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  struct TFEL_GUI_VISIBILITY_EXPORT ShortCutStyle : public QObject {
+   signals:
 
-    struct TFEL_GUI_VISIBILITY_EXPORT ShortCutStyle : public QObject {
-     signals:
+    void shortCutStyleChanged();
 
-      void shortCutStyleChanged();
+   public:
+    enum Style { EMACS, QT };
 
-     public:
-      enum Style { EMACS, QT };
+    static ShortCutStyle& getShortCutStyle();
 
-      static ShortCutStyle& getShortCutStyle();
+    Style getStyle();
 
-      Style getStyle();
+    void setStyle(const Style&);
 
-      void setStyle(const Style&);
+   private:
+    ShortCutStyle();
 
-     private:
-      ShortCutStyle();
+    ShortCutStyle(const ShortCutStyle&) = delete;
 
-      ShortCutStyle(const ShortCutStyle&) = delete;
+    ShortCutStyle& operator=(const ShortCutStyle&) = delete;
 
-      ShortCutStyle& operator=(const ShortCutStyle&) = delete;
+    Style style;
 
-      Style style;
+    Q_OBJECT
 
-      Q_OBJECT
+  };  // end of struct ShortCutStyle
 
-    };  // end of struct ShortCutStyle
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_SHORTCUTSTYLE_HXX */

@@ -11,16 +11,10 @@
 #include <QtCore/QString>
 #include <QtGui/QTextEdit>
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  struct CompletionFrame : public QTextEdit {};
 
-    /*!
-     *
-     */
-    struct CompletionFrame : public QTextEdit {};
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_COMPLETIONFRAME_HXX */

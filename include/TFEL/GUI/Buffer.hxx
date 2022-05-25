@@ -20,181 +20,178 @@
 #include <QtWidgets/QAbstractScrollArea>
 #include "TFEL/GUI/Config.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  //! forward declaration
+  struct EditorWidget;
 
-    //! forward declaration
-    struct EditorWidget;
+  //! forward declaration
+  struct SecondaryTaskManager;
 
-    //! forward declaration
-    struct SecondaryTaskManager;
+  //! forward declaration
+  struct PlainTextEdit;
 
-    //! forward declaration
-    struct PlainTextEdit;
+  /*!
+   * \brief class in charge of managing one buffer.
+   *
+   * A buffer is made of:
+   * - a main widget (most of the time an instance of
+   *   `PlainTextEdit`)
+   * - SecondaryTasks of that main widget
+   *
+   *  \note: a SecondaryTask can be shared between several buffers.
+   */
+  struct TFEL_GUI_VISIBILITY_EXPORT Buffer : public QWidget {
+    Buffer(const int, EditorWidget &);
+
+    Buffer(const QString &, const int, EditorWidget &);
+
+    virtual int getId() const;
+
+    virtual QString getBufferName() const;
+
+    virtual QString getBufferNameSuffix() const;
+
+    virtual QString getBufferRawName() const;
+
+    virtual PlainTextEdit &getMainFrame();
+    //! \return the current SecondaryTask if any, nullptr otherwise
+    virtual QWidget *getCurrentSecondaryTask();
+    /*!
+     * \return the title of the current SecondaryTask if any,
+     * an empty string otherwise
+     */
+    virtual QString getCurrentSecondaryTaskTitle() const;
+
+    virtual std::vector<QMenu *> getSpecificMenus();
+
+    virtual QIcon getIcon() const;
+
+    int getSecondaryTaskIndex(QWidget *const p) const;
+
+    virtual void refreshSecondaryTaskTabWidget();
 
     /*!
-     * \brief class in charge of managing one buffer.
-     *
-     * A buffer is made of:
-     * - a main widget (most of the time an instance of
-     *   `PlainTextEdit`)
-     * - SecondaryTasks of that main widget
-     *
-     *  \note: a SecondaryTask can be shared between several buffers.
+     * \brief attach a secondary task to the buffer.
+     * \param[in] t: title
+     * \param[in] w: associated widget
      */
-    struct TFEL_GUI_VISIBILITY_EXPORT Buffer : public QWidget {
-      Buffer(const int, EditorWidget &);
+    virtual QWidget *attachSecondaryTask(const QString &, QWidget *const);
+    /*!
+     * \brief attach an existing task to the buffer
+     * \param[in] w: widget
+     */
+    virtual void attachSecondaryTask(QWidget *const);
 
-      Buffer(const QString &, const int, EditorWidget &);
+    virtual void removeSecondaryTask(QWidget *const);
 
-      virtual int getId() const;
+    virtual QString getSecondaryTaskTitle(QWidget *const) const;
 
-      virtual QString getBufferName() const;
+    virtual void setSecondaryTaskTitle(QWidget *const, const QString &);
 
-      virtual QString getBufferNameSuffix() const;
+    virtual void setSecondaryTaskIcon(QWidget *const, const QIcon &);
 
-      virtual QString getBufferRawName() const;
+    virtual void showSecondaryTask(QWidget *const);
 
-      virtual PlainTextEdit &getMainFrame();
-      //! \return the current SecondaryTask if any, nullptr otherwise
-      virtual QWidget *getCurrentSecondaryTask();
-      /*!
-       * \return the title of the current SecondaryTask if any,
-       * an empty string otherwise
-       */
-      virtual QString getCurrentSecondaryTaskTitle() const;
+    virtual void hideSecondaryTask(QWidget *const);
 
-      virtual std::vector<QMenu *> getSpecificMenus();
+    virtual bool hasSecondaryTasks() const;
 
-      virtual QIcon getIcon() const;
+    virtual bool areSecondaryTasksVisible() const;
 
-      int getSecondaryTaskIndex(QWidget *const p) const;
+    virtual bool isOkToClose() const;
 
-      virtual void refreshSecondaryTaskTabWidget();
+    bool eventFilter(QObject *, QEvent *) override;
+    //! destructor
+    ~Buffer() override;
 
-      /*!
-       * \brief attach a secondary task to the buffer.
-       * \param[in] t: title
-       * \param[in] w: associated widget
-       */
-      virtual QWidget *attachSecondaryTask(const QString &, QWidget *const);
-      /*!
-       * \brief attach an existing task to the buffer
-       * \param[in] w: widget
-       */
-      virtual void attachSecondaryTask(QWidget *const);
+   public slots:
 
-      virtual void removeSecondaryTask(QWidget *const);
+    virtual void showSecondaryTasks();
 
-      virtual QString getSecondaryTaskTitle(QWidget *const) const;
+    virtual void setSecondaryTasksOrientation(const Qt::Orientation);
 
-      virtual void setSecondaryTaskTitle(QWidget *const, const QString &);
+    virtual void hideSecondaryTasks();
 
-      virtual void setSecondaryTaskIcon(QWidget *const, const QIcon &);
+    virtual void focusCurrentSecondaryTask();
 
-      virtual void showSecondaryTask(QWidget *const);
+    virtual void focusMainFrame();
 
-      virtual void hideSecondaryTask(QWidget *const);
+    virtual void closeCurrentSecondaryTask();
 
-      virtual bool hasSecondaryTasks() const;
+    virtual void updateMenu();
 
-      virtual bool areSecondaryTasksVisible() const;
+   signals:
 
-      virtual bool isOkToClose() const;
+    void mainFrameMajorModeChanged();
+    //! signal launched when the menu of the buffer shall be updated
+    void updatedMenu();
+    /*!
+     * \param[out] b : reference to this
+     * \param[out] o : old name
+     * \param[out] n : new name
+     */
+    void bufferNameChanged(Buffer *, const QString &, const QString &);
 
-      bool eventFilter(QObject *, QEvent *) override;
-      //! destructor
-      ~Buffer() override;
+    void newTreatedFile(const QString &);
 
-     public slots:
+   protected slots:
 
-      virtual void showSecondaryTasks();
+    void focusInEvent(QFocusEvent *) override;
 
-      virtual void setSecondaryTasksOrientation(const Qt::Orientation);
+    virtual void updatePosition();
 
-      virtual void hideSecondaryTasks();
+    virtual void updateDate();
 
-      virtual void focusCurrentSecondaryTask();
+    virtual void updateBufferInformations();
 
-      virtual void focusMainFrame();
+    virtual void updateBufferName();
 
-      virtual void closeCurrentSecondaryTask();
+    virtual void closeSecondaryTask(int);
 
-      virtual void updateMenu();
+    virtual void emitNewTreatedFile(const QString &);
 
-     signals:
+   protected:
+    struct SecondaryTaskTabWidget;
 
-      void mainFrameMajorModeChanged();
-      //! signal launched when the menu of the buffer shall be updated
-      void updatedMenu();
-      /*!
-       * \param[out] b : reference to this
-       * \param[out] o : old name
-       * \param[out] n : new name
-       */
-      void bufferNameChanged(Buffer *, const QString &, const QString &);
+    void initialize();
 
-      void newTreatedFile(const QString &);
+    EditorWidget &editor;
 
-     protected slots:
+    //! widget handling the main buffer and its SecondaryTasks
+    QSplitter *splitter;
+    //! SecondaryTask widgets
+    SecondaryTaskTabWidget *stw;
+    //! main widget
+    PlainTextEdit *e;
+    // timer to update the date
+    QTimer *timer;
+    //! display information about the current buffer
+    QHBoxLayout *info;
+    //! buffer name
+    QLabel *bni;
+    //! relative position
+    QLabel *rpi;
+    //! absolute position
+    QLabel *api;
+    //! icon
+    QLabel *ii;
+    //! mode name
+    QLabel *mi;
+    //! time
+    QLabel *ti;
+    //! buffer suffix
+    QString bufferNameSuffix;
+    //! buffer id
+    const int id;
 
-      void focusInEvent(QFocusEvent *) override;
+   private:
+    Q_OBJECT
 
-      virtual void updatePosition();
+    friend struct SecondaryTaskManager;
 
-      virtual void updateDate();
+  };  // end of Buffer
 
-      virtual void updateBufferInformations();
-
-      virtual void updateBufferName();
-
-      virtual void closeSecondaryTask(int);
-
-      virtual void emitNewTreatedFile(const QString &);
-
-     protected:
-      struct SecondaryTaskTabWidget;
-
-      void initialize();
-
-      EditorWidget &editor;
-
-      //! widget handling the main buffer and its SecondaryTasks
-      QSplitter *splitter;
-      //! SecondaryTask widgets
-      SecondaryTaskTabWidget *stw;
-      //! main widget
-      PlainTextEdit *e;
-      // timer to update the date
-      QTimer *timer;
-      //! display information about the current buffer
-      QHBoxLayout *info;
-      //! buffer name
-      QLabel *bni;
-      //! relative position
-      QLabel *rpi;
-      //! absolute position
-      QLabel *api;
-      //! icon
-      QLabel *ii;
-      //! mode name
-      QLabel *mi;
-      //! time
-      QLabel *ti;
-      //! buffer suffix
-      QString bufferNameSuffix;
-      //! buffer id
-      const int id;
-
-     private:
-      Q_OBJECT
-
-      friend struct SecondaryTaskManager;
-
-    };  // end of Buffer
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_BUFFER_HXX */

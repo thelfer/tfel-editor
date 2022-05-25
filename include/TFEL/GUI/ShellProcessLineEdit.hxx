@@ -11,39 +11,36 @@
 #include "TFEL/GUI/Config.hxx"
 #include "TFEL/GUI/ProcessLineEdit.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
-
+  /*!
+   * An helper class asking the user for a shell command and
+   * displaying the results in a ProcessOutputFrame created as a slave
+   * of the current buffer
+   */
+  struct TFEL_GUI_VISIBILITY_EXPORT ShellProcessLineEdit
+      : public ProcessLineEdit {
     /*!
-     * An helper class asking the user for a shell command and
-     * displaying the results in a ProcessOutputFrame created as a slave
-     * of the current buffer
+     * \param[in] l : label
+     * \param[in] c : command guess
+     * \param[in] m : mode used to display the results
+     * \param[in] p : parent
      */
-    struct TFEL_GUI_VISIBILITY_EXPORT ShellProcessLineEdit
-        : public ProcessLineEdit {
-      /*!
-       * \param[in] l : label
-       * \param[in] c : command guess
-       * \param[in] m : mode used to display the results
-       * \param[in] p : parent
-       */
-      ShellProcessLineEdit(const QString &,
-                           const QString &,
-                           const QString &,
-                           EditorWidget &);
-      //! destructor
-      ~ShellProcessLineEdit() override;
+    ShellProcessLineEdit(const QString &,
+                         const QString &,
+                         const QString &,
+                         EditorWidget &);
+    //! destructor
+    ~ShellProcessLineEdit() override;
 
-     protected:
-      void treatUserInput() override;
+   protected:
+    void treatUserInput() override;
 
-     private:
-      Q_OBJECT
+   private:
+    Q_OBJECT
 
-    };  // end of ShellProcessLineEdit
+  };  // end of ShellProcessLineEdit
 
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_SHELLPROCESSLINEEDIT_HXX */

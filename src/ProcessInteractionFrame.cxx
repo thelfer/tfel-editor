@@ -7,16 +7,13 @@
 
 #include "TFEL/GUI/ProcessInteractionFrame.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  ProcessInteractionFrame::ProcessInteractionFrame(EditorWidget& w, Buffer& b)
+      : ProcessOutputFrame(w, b) {}
+  // end ProcessInteractionFrame
 
-    ProcessInteractionFrame::ProcessInteractionFrame(EditorWidget& w, Buffer& b)
-        : ProcessOutputFrame(w, b) {}
-    // end of ProcessInteractionFrame::ProcessInteractionFrame
+  ProcessInteractionFrame::~ProcessInteractionFrame() {
+  }  // end ~ProcessInteractionFrame
 
-    ProcessInteractionFrame::~ProcessInteractionFrame() {
-    }  // end of ProcessInteractionFrame::~ProcessInteractionFrame
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui

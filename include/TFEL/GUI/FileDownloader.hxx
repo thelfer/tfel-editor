@@ -15,34 +15,31 @@
 #include <QtNetwork/QNetworkReply>
 #include <TFEL/GUI/Config.hxx>
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  struct TFEL_GUI_VISIBILITY_EXPORT FileDownloader : public QObject {
+    explicit FileDownloader(QUrl, QObject* = nullptr);
 
-    struct TFEL_GUI_VISIBILITY_EXPORT FileDownloader : public QObject {
-      explicit FileDownloader(QUrl, QObject* = nullptr);
+    virtual ~FileDownloader();
 
-      virtual ~FileDownloader();
+    QByteArray downloadedData() const;
 
-      QByteArray downloadedData() const;
+   signals:
 
-     signals:
+    void downloaded(FileDownloader*);
 
-      void downloaded(FileDownloader*);
+   private slots:
 
-     private slots:
+    void fileDownloaded(QNetworkReply* pReply);
 
-      void fileDownloaded(QNetworkReply* pReply);
+   private:
+    QNetworkAccessManager m_WebCtrl;
 
-     private:
-      QNetworkAccessManager m_WebCtrl;
+    QByteArray m_DownloadedData;
 
-      QByteArray m_DownloadedData;
+    Q_OBJECT
+  };
 
-      Q_OBJECT
-    };
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_FILEDOWNLOADER_*/

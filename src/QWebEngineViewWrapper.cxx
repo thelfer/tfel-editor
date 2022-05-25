@@ -9,20 +9,17 @@
 #include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/QWebEngineViewWrapper.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  QWebEngineViewWrapper::QWebEngineViewWrapper(QWebEngineView *s, QWidget *p)
+      : QWidget(p), wrappedObject(s) {
+    auto *hl = new QHBoxLayout;
+    setQWebEngineViewInLayout(hl, this->wrappedObject);
+    this->setLayout(hl);
+  }
 
-    QWebEngineViewWrapper::QWebEngineViewWrapper(QWebEngineView *s, QWidget *p)
-        : QWidget(p), wrappedObject(s) {
-      auto *hl = new QHBoxLayout;
-      setQWebEngineViewInLayout(hl, this->wrappedObject);
-      this->setLayout(hl);
-    }
+  void QWebEngineViewWrapper::focusInEvent(QFocusEvent *) {
+    this->wrappedObject->setFocus();
+  }
 
-    void QWebEngineViewWrapper::focusInEvent(QFocusEvent *) {
-      this->wrappedObject->setFocus();
-    }
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui

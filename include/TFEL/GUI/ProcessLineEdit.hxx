@@ -11,41 +11,38 @@
 #include "TFEL/GUI/Config.hxx"
 #include "TFEL/GUI/CommandLine.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
-
+  /*!
+   * An helper class asking the user for a command and displaying the
+   * results in a ProcessOutputFrame created as a slave of the current
+   * buffer
+   */
+  struct TFEL_GUI_VISIBILITY_EXPORT ProcessLineEdit : public CommandLine {
     /*!
-     * An helper class asking the user for a command and displaying the
-     * results in a ProcessOutputFrame created as a slave of the current
-     * buffer
+     * \param[in] l : label
+     * \param[in] c : command guess
+     * \param[in] m : mode used to display the results
+     * \param[in] p : parent
      */
-    struct TFEL_GUI_VISIBILITY_EXPORT ProcessLineEdit : public CommandLine {
-      /*!
-       * \param[in] l : label
-       * \param[in] c : command guess
-       * \param[in] m : mode used to display the results
-       * \param[in] p : parent
-       */
-      ProcessLineEdit(const QString &,
-                      const QString &,
-                      const QString &,
-                      EditorWidget &);
-      //! destructor
-      ~ProcessLineEdit() override;
+    ProcessLineEdit(const QString &,
+                    const QString &,
+                    const QString &,
+                    EditorWidget &);
+    //! \brief destructor
+    ~ProcessLineEdit() override;
 
-     protected:
-      void treatUserInput() override;
+   protected:
+    void treatUserInput() override;
 
-      virtual void run(const QString &, const QString &, const QStringList &);
-      //! major mode for the process output frame
-      const QString mode;
+    virtual void run(const QString &, const QString &, const QStringList &);
+    //! major mode for the process output frame
+    const QString mode;
 
-     private:
-      Q_OBJECT
-    };  // end of ProcessLineEdit
+   private:
+    Q_OBJECT
+  };  // end of ProcessLineEdit
 
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_PROCESSLINEEDIT_HXX */
