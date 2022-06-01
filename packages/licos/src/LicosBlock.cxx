@@ -7,27 +7,24 @@
 
 #include "TFEL/GUI/LicosBlock.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  static QStringList buildParameterKeys() {
+    return QStringList() << "Double"
+                         << "Int"
+                         << "Array"
+                         << "Map"
+                         << "Bool"
+                         << "Real"
+                         << "String"
+                         << "Dictionnary";
+  }
 
-    static QStringList buildParameterKeys() {
-      return QStringList() << "Double"
-                           << "Int"
-                           << "Array"
-                           << "Map"
-                           << "Bool"
-                           << "Real"
-                           << "String"
-                           << "Dictionnary";
-    }
+  const QStringList& getParameterKeys() {
+    static QStringList l(buildParameterKeys());
+    return l;
+  }  // end of getParameterKeys
 
-    const QStringList& getParameterKeys() {
-      static QStringList l(buildParameterKeys());
-      return l;
-    }  // end of getParameterKeys
+  LicosBlock::~LicosBlock() = default;
 
-    LicosBlock::~LicosBlock() = default;
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui

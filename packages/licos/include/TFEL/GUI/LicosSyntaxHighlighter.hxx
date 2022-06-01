@@ -12,46 +12,43 @@
 #include <vector>
 #include "TFEL/GUI/CSyntaxHighlighterBase.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  struct LicosData : public QTextBlockUserData {
+    virtual ~LicosData();
+    QString library;
+    QString function;
+    int pos;
+  };  // end of   struct LicosData
 
-    struct LicosData : public QTextBlockUserData {
-      virtual ~LicosData();
-      QString library;
-      QString function;
-      int pos;
-    };  // end of   struct LicosData
+  //! \brief a syntaxt highlighter for Licos input files
+  struct LicosSyntaxHighlighter : public CSyntaxHighlighterBase {
+    static const std::vector<std::string>& getKeys();
 
-    //! \brief a syntaxt highlighter for Licos input files
-    struct LicosSyntaxHighlighter : public CSyntaxHighlighterBase {
-      static const std::vector<std::string>& getKeys();
+    static const std::vector<std::string>& getBlocks();
 
-      static const std::vector<std::string>& getBlocks();
+    /*!
+     * \param[in] t : text document to be highlighted
+     */
+    LicosSyntaxHighlighter(QTextDocument* const);
 
-      /*!
-       * \param[in] t : text document to be highlighted
-       */
-      LicosSyntaxHighlighter(QTextDocument* const);
+    void highlightBlock(const QString&) override;
 
-      void highlightBlock(const QString&) override;
+   protected:
+    static std::vector<std::string> buildKeysList();
 
-     protected:
-      static std::vector<std::string> buildKeysList();
+    static std::vector<std::string> buildBlocksList();
 
-      static std::vector<std::string> buildBlocksList();
+    QVector<QRegExp> importExprs;
 
-      QVector<QRegExp> importExprs;
+    QTextCharFormat optFormat;
+    QTextCharFormat importFormat;
 
-      QTextCharFormat optFormat;
-      QTextCharFormat importFormat;
+   private:
+    Q_OBJECT
 
-     private:
-      Q_OBJECT
+  };  // end of struct LicosSyntaxHighlighter
 
-    };  // end of struct LicosSyntaxHighlighter
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_LICOSSYNTAXHIGHLIGHTER_H */

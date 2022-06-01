@@ -17,30 +17,27 @@
 #include "TFEL/GUI/BashSyntaxHighlighter.hxx"
 #include "TFEL/GUI/BashMajorMode.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  BashMajorMode::BashMajorMode(EditorWidget& w, Buffer& b, TextEditBase& t)
+      : ShMajorMode(w, b, t) {}  // end of BashMajorMode::BashMajorMode
 
-    BashMajorMode::BashMajorMode(EditorWidget& w, Buffer& b, TextEditBase& t)
-        : ShMajorMode(w, b, t) {}  // end of BashMajorMode::BashMajorMode
+  QString BashMajorMode::getName() const {
+    return "bash";
+  }  // end of BashMajorMode::BashMajorMode
 
-    QString BashMajorMode::getName() const {
-      return "bash";
-    }  // end of BashMajorMode::BashMajorMode
+  QString BashMajorMode::getDescription() const {
+    return "major mode dedicated to bash files";
+  }  // end of BashMajorMode::BashMajorMode
 
-    QString BashMajorMode::getDescription() const {
-      return "major mode dedicated to bash files";
-    }  // end of BashMajorMode::BashMajorMode
+  void BashMajorMode::setSyntaxHighlighter(QTextDocument* const d) {
+    new BashSyntaxHighlighter(d);
+  }  // end of BashMajorMode::setSyntaxHighlighter
 
-    void BashMajorMode::setSyntaxHighlighter(QTextDocument* const d) {
-      new BashSyntaxHighlighter(d);
-    }  // end of BashMajorMode::setSyntaxHighlighter
+  BashMajorMode::~BashMajorMode() = default;
 
-    BashMajorMode::~BashMajorMode() = default;
+  static StandardMajorModeProxy<BashMajorMode> proxy(
+      "bash",
+      QVector<QRegExp>() << QRegExp("^" + fileNameRegExp() + "\\.bash$"));
 
-    static StandardMajorModeProxy<BashMajorMode> proxy(
-        "bash",
-        QVector<QRegExp>() << QRegExp("^" + fileNameRegExp() + "\\.bash$"));
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui

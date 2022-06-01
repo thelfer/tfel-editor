@@ -15,52 +15,49 @@
 // forward declaration
 class QComboBox;
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  // forward declaration
+  struct EditorWidget;
+  struct TextEditBase;
+  struct LineEdit;
+  struct MFrontBehaviourWizard;
 
-    // forward declaration
-    struct EditorWidget;
-    struct TextEditBase;
-    struct LineEdit;
-    struct MFrontBehaviourWizard;
+  struct MFrontStandardElastoViscoPlasticityBrickPage : public QWizardPage {
+    /*!
+     * \brief constructor
+     * \param[in] w: editor widget
+     * \param[in] cd: current document
+     * \param[in] p: parent
+     */
+    MFrontStandardElastoViscoPlasticityBrickPage(EditorWidget &,
+                                                 TextEditBase &,
+                                                 MFrontBehaviourWizard *const);
 
-    struct MFrontStandardElastoViscoPlasticityBrickPage : public QWizardPage {
-      /*!
-       * \brief constructor
-       * \param[in] w: editor widget
-       * \param[in] cd: current document
-       * \param[in] p: parent
-       */
-      MFrontStandardElastoViscoPlasticityBrickPage(
-          EditorWidget &, TextEditBase &, MFrontBehaviourWizard *const);
+    bool validatePage() override;
 
-      bool validatePage() override;
+    int nextId() const override;
+    //! \brief write the output of the wizard
+    virtual void write() const;
+    //! \brief destructor
+    ~MFrontStandardElastoViscoPlasticityBrickPage() override;
 
-      int nextId() const override;
-      //! \brief write the output of the wizard
-      virtual void write() const;
-      //! destructor
-      ~MFrontStandardElastoViscoPlasticityBrickPage() override;
+   protected:
+    //! list of inelastic flows
+    std::vector<MFrontAddInelasticFlowDialog::InelasticFlowDescription>
+        inelastic_flows;
+    //! \brief list of stress potentials
+    QComboBox *const stress_potentials;
+    //! \brief editor
+    EditorWidget &editor;
+    //!\brief document
+    TextEditBase &d;
 
-     protected:
-      //! list of inelastic flows
-      std::vector<MFrontAddInelasticFlowDialog::InelasticFlowDescription>
-          inelastic_flows;
-      //! \brief list of stress potentials
-      QComboBox *const stress_potentials;
-      //! \brief editor
-      EditorWidget &editor;
-      //!\brief document
-      TextEditBase &d;
+   private:
+    Q_OBJECT
+  };  // end of struct MFrontStandardElastoViscoPlasticityBrickPage
 
-     private:
-      Q_OBJECT
-    };  // end of struct MFrontStandardElastoViscoPlasticityBrickPage
-
-  }  // end of namespace gui
-
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_MFRONTSTANDARDELASTOVISCOPLASTICITYBRICKPAGE_HXX \
         */

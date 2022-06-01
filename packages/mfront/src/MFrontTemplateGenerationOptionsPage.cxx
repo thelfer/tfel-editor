@@ -8,35 +8,31 @@
 #include "TFEL/GUI/MFrontBehaviourWizard.hxx"
 #include "TFEL/GUI/MFrontTemplateGenerationOptionsPage.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  MFrontTemplateGenerationOptionsPage::MFrontTemplateGenerationOptionsPage(
+      MFrontBehaviourWizard *const p)
+      : QWizardPage(p) {
+    this->setTitle(QObject::tr("Select generation options."));
+    this->setSubTitle(
+        QObject::tr("This page allows the selection various options "
+                    "for the generation of the code"));
+  }  // end of
+     // MFrontTemplateGenerationOptionsPage::MFrontTemplateGenerationOptionsPage
 
-    MFrontTemplateGenerationOptionsPage::MFrontTemplateGenerationOptionsPage(
-        MFrontBehaviourWizard *const p)
-        : QWizardPage(p) {
-      this->setTitle(QObject::tr("Select generation options."));
-      this->setSubTitle(
-          QObject::tr("This page allows the selection various options "
-                      "for the generation of the code"));
-    }  // end of
-       // MFrontTemplateGenerationOptionsPage::MFrontTemplateGenerationOptionsPage
+  bool MFrontTemplateGenerationOptionsPage::validatePage() { return true; }
 
-    bool MFrontTemplateGenerationOptionsPage::validatePage() { return true; }
+  void MFrontTemplateGenerationOptionsPage::initializePage() {}
 
-    void MFrontTemplateGenerationOptionsPage::initializePage() {}
+  int MFrontTemplateGenerationOptionsPage::nextId() const { return -1; }
 
-    int MFrontTemplateGenerationOptionsPage::nextId() const { return -1; }
+  mfront::MFrontTemplateGenerationOptions
+  MFrontTemplateGenerationOptionsPage::getTemplateGenerationOptions() const {
+    return {};
+  }  // end of
+     // MFrontTemplateGenerationOptionsPage::getTemplateGenerationOptions
 
-    mfront::MFrontTemplateGenerationOptions
-    MFrontTemplateGenerationOptionsPage::getTemplateGenerationOptions() const {
-      return {};
-    }  // end of
-       // MFrontTemplateGenerationOptionsPage::getTemplateGenerationOptions
+  MFrontTemplateGenerationOptionsPage::~MFrontTemplateGenerationOptionsPage() =
+      default;
 
-    MFrontTemplateGenerationOptionsPage::
-        ~MFrontTemplateGenerationOptionsPage() = default;
-
-  }  // end of namespace gui
-
-}  // end of namespace tfel
+}  // end of namespace tfel::gui

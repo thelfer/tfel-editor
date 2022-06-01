@@ -14,87 +14,84 @@
 #include "TFEL/GUI/FileDownloader.hxx"
 #include "TFEL/GUI/PlainTextEdit.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  /*!
+   * \brief a major mode dedicated to the `Cast3M` finite element solver
+   */
+  struct CastemMajorMode : public MajorModeBase {
+    //! \return the list of `Cast3M` keyword
+    static const QStringList &getKeysList();
 
+    static bool isCastemKeyWord(const QString &);
+
+    CastemMajorMode(EditorWidget &, Buffer &, TextEditBase &);
+
+    QString getName() const override;
+
+    QString getDescription() const override;
+
+    void setSyntaxHighlighter(QTextDocument *) override;
+
+    bool handleShortCut(const int,
+                        const Qt::KeyboardModifiers,
+                        const int) override;
+
+    QCompleter *getCompleter() override;
+    //! \return a menu specific to this mode
+    QMenu *getSpecificMenu() override;
     /*!
-     * \brief a major mode dedicated to the `Cast3M` finite element solver
+     * \brief complete the context menu actions
+     * \param[in] m : complete the context menu
+     * \param[in] c : text cursor at the position where the menu will
+     * appear
      */
-    struct CastemMajorMode : public MajorModeBase {
-      //! \return the list of `Cast3M` keyword
-      static const QStringList &getKeysList();
+    void completeContextMenu(QMenu *const, const QTextCursor &) override;
 
-      static bool isCastemKeyWord(const QString &);
+    void completeCurrentWord(TextEditBase &, const QString &) override;
 
-      CastemMajorMode(EditorWidget &, Buffer &, TextEditBase &);
+    int getMinimalCompletionLength() override;
 
-      QString getName() const override;
+    void format() override;
 
-      QString getDescription() const override;
+    void indentLine(const QTextCursor &) override;
 
-      void setSyntaxHighlighter(QTextDocument *) override;
+    QString getCommentSyntax() override;
 
-      bool handleShortCut(const int,
-                          const Qt::KeyboardModifiers,
-                          const int) override;
+    QIcon getIcon() const override;
 
-      QCompleter *getCompleter() override;
-      //! \return a menu specific to this mode
-      QMenu *getSpecificMenu() override;
-      /*!
-       * \brief complete the context menu actions
-       * \param[in] m : complete the context menu
-       * \param[in] c : text cursor at the position where the menu will
-       * appear
-       */
-      void completeContextMenu(QMenu *const, const QTextCursor &) override;
+    ~CastemMajorMode() override;
 
-      void completeCurrentWord(TextEditBase &, const QString &) override;
+   protected slots:
 
-      int getMinimalCompletionLength() override;
+    virtual bool sendLineToCastem();
 
-      void format() override;
+    virtual bool sendRegionToCastem();
 
-      void indentLine(const QTextCursor &) override;
+    virtual bool sendBufferToCastem();
 
-      QString getCommentSyntax() override;
+    virtual void showImportBehaviourWizard();
 
-      QIcon getIcon() const override;
+    virtual void showImportMFMBehaviourWizard();
 
-      ~CastemMajorMode() override;
+   protected:
+    static QStringList buildKeysList();
 
-     protected slots:
+    virtual void displayHelp(const QString &, const QString &);
 
-      virtual bool sendLineToCastem();
+    virtual void openWebHelp(const QString &);
 
-      virtual bool sendRegionToCastem();
+    virtual bool sendToCastem(const QString &);
 
-      virtual bool sendBufferToCastem();
+    virtual bool startCastem();
 
-      virtual void showImportBehaviourWizard();
+    // completer
+    QCompleter *c;
 
-      virtual void showImportMFMBehaviourWizard();
+    ProcessInteractionFrame *co;
 
-     protected:
-      static QStringList buildKeysList();
+   private:
+    Q_OBJECT
+  };  // end of struct CastemMajorMode
 
-      virtual void displayHelp(const QString &, const QString &);
-
-      virtual void openWebHelp(const QString &);
-
-      virtual bool sendToCastem(const QString &);
-
-      virtual bool startCastem();
-
-      // completer
-      QCompleter *c;
-
-      ProcessInteractionFrame *co;
-
-     private:
-      Q_OBJECT
-    };  // end of struct CastemMajorMode
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui

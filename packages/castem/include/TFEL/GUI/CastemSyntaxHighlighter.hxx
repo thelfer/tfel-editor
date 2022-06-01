@@ -10,40 +10,37 @@
 
 #include <QtGui/QSyntaxHighlighter>
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  struct CastemSyntaxHighlighter : public QSyntaxHighlighter {
+    CastemSyntaxHighlighter(QTextDocument *);
 
-    struct CastemSyntaxHighlighter : public QSyntaxHighlighter {
-      CastemSyntaxHighlighter(QTextDocument *);
+    virtual void highlightBlock(const QString &) override;
 
-      virtual void highlightBlock(const QString &) override;
+   protected:
+    /*!
+     * a simple wrapper around the highligthing rule
+     */
+    struct HighlightingRule {
+      QRegExp pattern;
+      QTextCharFormat format;
+    };  // end of struct HighlightingRule
 
-     protected:
-      /*!
-       * a simple wrapper around the highligthing rule
-       */
-      struct HighlightingRule {
-        QRegExp pattern;
-        QTextCharFormat format;
-      };  // end of struct HighlightingRule
+    //! list of highlighting rules
+    QVector<HighlightingRule> highlightingRules;
 
-      //! list of highlighting rules
-      QVector<HighlightingRule> highlightingRules;
+    QTextCharFormat keyFormat;
 
-      QTextCharFormat keyFormat;
+    QTextCharFormat commentFormat;
 
-      QTextCharFormat commentFormat;
+    QTextCharFormat quotationFormat;
 
-      QTextCharFormat quotationFormat;
+    // for characters whose position is greater than 80 (those
+    // caracters will be ignored by Cast3M)
+    QTextCharFormat outOfBoundsFormat;
 
-      // for characters whose position is greater than 80 (those
-      // caracters will be ignored by Cast3M)
-      QTextCharFormat outOfBoundsFormat;
+  };  // end of struct CastemSyntaxHighlighter
 
-    };  // end of struct CastemSyntaxHighlighter
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_CASTEMSYNTAXHIGHLIGHTER_H */

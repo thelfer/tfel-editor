@@ -18,84 +18,81 @@
 
 #include "TFEL/GUI/LicosStudyOptions.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  // forward declaration
+  struct LicosStudy;
+  // forward declaration
+  struct LicosOutputFrame;
 
-    // forward declaration
-    struct LicosStudy;
-    // forward declaration
-    struct LicosOutputFrame;
+  /*!
+   * each studyThread is associated to a specific thread
+   */
+  struct LicosStudyThread : public QThread {
+    friend struct LicosOutputFrame;
 
     /*!
-     * each studyThread is associated to a specific thread
+     * \param [in] f : input file
+     * \param [in] o : study options
+     * \param [in] a : command line arguments
+     * \param [in] p : parent (qt sense)
      */
-    struct LicosStudyThread : public QThread {
-      friend struct LicosOutputFrame;
+    LicosStudyThread(const QString &,
+                     const LicosStudyOptions &,
+                     const QStringList &,
+                     LicosOutputFrame *const);
+    /*!
+     * run the study
+     */
+    void run() override;
 
-      /*!
-       * \param [in] f : input file
-       * \param [in] o : study options
-       * \param [in] a : command line arguments
-       * \param [in] p : parent (qt sense)
-       */
-      LicosStudyThread(const QString &,
-                       const LicosStudyOptions &,
-                       const QStringList &,
-                       LicosOutputFrame *const);
-      /*!
-       * run the study
-       */
-      void run() override;
+    /*!
+     * return true if the study success
+     */
+    bool succeed() const;
 
-      /*!
-       * return true if the study success
-       */
-      bool succeed() const;
+    /*!
+     * return the error messsage if the study failed
+     */
+    QString getErrorMessage() const;
 
-      /*!
-       * return the error messsage if the study failed
-       */
-      QString getErrorMessage() const;
+    ~LicosStudyThread() override;
 
-      ~LicosStudyThread() override;
+   signals:
 
-     signals:
+    void finished(bool, QString);
 
-      void finished(bool, QString);
+    void newProcessOutput(QString);
 
-      void newProcessOutput(QString);
+    void newPeriod(int);
 
-      void newPeriod(int);
+    void killProcess();
 
-      void killProcess();
+   private slots:
 
-     private slots:
+    void studyFinished();
 
-      void studyFinished();
+    void forwardProcessOutput(QString);
 
-      void forwardProcessOutput(QString);
+    void forwardNewPeriod(int);
 
-      void forwardNewPeriod(int);
+   private:
+    QString inputFile;
 
-     private:
-      QString inputFile;
+    QStringList args;
 
-      QStringList args;
+    QString errorMessage;
 
-      QString errorMessage;
+    LicosStudyOptions options;
 
-      LicosStudyOptions options;
+    LicosStudy *study;
 
-      LicosStudy *study;
+    bool success;
 
-      bool success;
+    Q_OBJECT
 
-      Q_OBJECT
+  };  // end of LicosStudyThread
 
-    };  // end of LicosStudyThread
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_LICOSSTUDYTHREAD_H */

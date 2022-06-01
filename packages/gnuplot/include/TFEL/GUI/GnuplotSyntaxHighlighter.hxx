@@ -24,18 +24,15 @@
 #define TFELEDITOR_GNUPLOTMODE_VISIBILITY_EXPORT TFEL_VISIBILITY_EXPORT
 #endif
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  struct TFELEDITOR_GNUPLOTMODE_VISIBILITY_EXPORT GnuplotSyntaxHighlighter
+      : public CSyntaxHighlighterBase {
+    GnuplotSyntaxHighlighter(QTextDocument *);
+    void highlightBlock(const QString &) override;
+    ~GnuplotSyntaxHighlighter() override;
+  };  // end of struct GnuplotSyntaxHighlighter
 
-    struct TFELEDITOR_GNUPLOTMODE_VISIBILITY_EXPORT GnuplotSyntaxHighlighter
-        : public CSyntaxHighlighterBase {
-      GnuplotSyntaxHighlighter(QTextDocument *);
-      void highlightBlock(const QString &) override;
-      ~GnuplotSyntaxHighlighter() override;
-    };  // end of struct GnuplotSyntaxHighlighter
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_GNUPLOTSYNTAXHIGLIGHTER_HXX_ */

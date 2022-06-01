@@ -10,28 +10,25 @@
 
 #include "TFEL/GUI/CxxSyntaxHighlighter.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  //! a syntax highlighter for the MFront code generator
+  struct MFrontSyntaxHighlighter : public CxxSyntaxHighlighter {
+    /*!
+     * \param[in] t : text document to be highlighted
+     * \param[in] n : dsl name
+     */
+    MFrontSyntaxHighlighter(QTextDocument *const, const QString &);
+    //! \brief destructor
+    ~MFrontSyntaxHighlighter() override;
 
-    //! a syntax highlighter for the MFront code generator
-    struct MFrontSyntaxHighlighter : public CxxSyntaxHighlighter {
-      /*!
-       * \param[in] t : text document to be highlighted
-       * \param[in] n : dsl name
-       */
-      MFrontSyntaxHighlighter(QTextDocument *const, const QString &);
-      //! destructor
-      ~MFrontSyntaxHighlighter();
+   protected:
+    QTextCharFormat mfrontKeyFormat;
 
-     protected:
-      QTextCharFormat mfrontKeyFormat;
+   private:
+    Q_OBJECT
+  };  // end of struct MFrontSyntaxHighlighter
 
-     private:
-      Q_OBJECT
-    };  // end of struct MFrontSyntaxHighlighter
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_MFRONTSYNTAXHIGHLIGHTER_H */

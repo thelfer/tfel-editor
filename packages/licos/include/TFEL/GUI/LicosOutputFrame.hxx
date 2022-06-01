@@ -11,52 +11,49 @@
 #include <QtWidgets/QProgressBar>
 #include "TFEL/GUI/LicosStudyOptions.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  // forward declaration
+  struct EditorWidget;
+  // forward declaration
+  struct Buffer;
+  // forward declaration
+  struct PlainTextEdit;
+  // forward declaration
+  struct LicosStudyThread;
 
-    // forward declaration
-    struct EditorWidget;
-    // forward declaration
-    struct Buffer;
-    // forward declaration
-    struct PlainTextEdit;
-    // forward declaration
-    struct LicosStudyThread;
+  /*!
+   * Frame displaying the licos output
+   */
+  struct LicosOutputFrame : public QWidget {
+    LicosOutputFrame(EditorWidget &w,
+                     Buffer &b,
+                     const QString &,
+                     const LicosStudyOptions &);
 
-    /*!
-     * Frame displaying the licos output
-     */
-    struct LicosOutputFrame : public QWidget {
-      LicosOutputFrame(EditorWidget &w,
-                       Buffer &b,
-                       const QString &,
-                       const LicosStudyOptions &);
+   protected:
+    void closeEvent(QCloseEvent *) override;
 
-     protected:
-      void closeEvent(QCloseEvent *) override;
+   signals:
 
-     signals:
+    void finished(bool, QString);
 
-      void finished(bool, QString);
+   private slots:
 
-     private slots:
+    void studyFinished(bool, QString);
 
-      void studyFinished(bool, QString);
+    void newPeriod(int);
 
-      void newPeriod(int);
+    void displayProcessOutput(QString);
 
-      void displayProcessOutput(QString);
+   private:
+    PlainTextEdit *textEdit;
+    QProgressBar *pbar;
+    LicosStudyThread *licos;
 
-     private:
-      PlainTextEdit *textEdit;
-      QProgressBar *pbar;
-      LicosStudyThread *licos;
+    Q_OBJECT
+  };  // end of struct LicosOutputFrame
 
-      Q_OBJECT
-    };  // end of struct LicosOutputFrame
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_LICOSOUTPUTFRAME_H */

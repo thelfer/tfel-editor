@@ -10,18 +10,15 @@
 
 #include "TFEL/GUI/StandardLicosBlock.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  /*!
+   * licos main block
+   */
+  struct LicosMainBlock : public StandardLicosBlock {
+    LicosMainBlock();
+  };
 
-    /*!
-     * licos main block
-     */
-    struct LicosMainBlock : public StandardLicosBlock {
-      LicosMainBlock();
-    };
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_LICOSMAINBLOCK_H */

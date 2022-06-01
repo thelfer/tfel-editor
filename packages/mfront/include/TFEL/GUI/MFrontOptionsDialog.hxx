@@ -10,38 +10,35 @@
 
 #include <QtWidgets/QDialog>
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  // forward declaration
+  struct EditorWidget;
+  // forward declaration
+  struct MFrontOptions;
 
-    // forward declaration
-    struct EditorWidget;
-    // forward declaration
-    struct MFrontOptions;
+  //! \brief a dialog used to choose the options passed to `MTest`
+  struct MFrontOptionsDialog : public QDialog {
+    //! type of material knowlegde treated
+    enum MaterialKnowledgeType { MATERIALPROPERTY, BEHAVIOUR, MODEL };
+    /*!
+     * \param[in] q: editor widget
+     * \param[in] o: options to be modified
+     * \param[in] t: material knowledge type
+     * \param[in] p: parent
+     */
+    MFrontOptionsDialog(EditorWidget &,
+                        MFrontOptions &,
+                        const MaterialKnowledgeType,
+                        QWidget *const);
 
-    //! \brief a dialog used to choose the options passed to `MTest`
-    struct MFrontOptionsDialog : public QDialog {
-      //! type of material knowlegde treated
-      enum MaterialKnowledgeType { MATERIALPROPERTY, BEHAVIOUR, MODEL };
-      /*!
-       * \param[in] q: editor widget
-       * \param[in] o: options to be modified
-       * \param[in] t: material knowledge type
-       * \param[in] p: parent
-       */
-      MFrontOptionsDialog(EditorWidget &,
-                          MFrontOptions &,
-                          const MaterialKnowledgeType,
-                          QWidget *const);
+   protected:
+    MFrontOptions &opts;
 
-     protected:
-      MFrontOptions &opts;
+   private:
+    Q_OBJECT
+  };
 
-     private:
-      Q_OBJECT
-    };
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_MFRONTOPTIONSDIALOG_HXX */

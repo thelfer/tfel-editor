@@ -10,56 +10,53 @@
 
 #include <QtGui/QSyntaxHighlighter>
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  // forward declaration
+  struct LaTeXMajorMode;
 
-    // forward declaration
-    struct LaTeXMajorMode;
+  /*!
+   * a syntaxt highlighter for LaTeX
+   */
+  struct LaTeXSyntaxHighlighter : public QSyntaxHighlighter {
+    /*!
+     * a simple wrapper around the highligthing rule
+     */
+    struct HighlightingRule {
+      QRegExp pattern;
+      QVector<QTextCharFormat> format;
+    };  // end of struct HighlightingRule
+
+    static QString stripComment(const QString&);
+
+    static int startOfComment(const QString&);
+
+    //! list of highlighting rules
+    const static QVector<HighlightingRule>& getHighlightingRules();
 
     /*!
-     * a syntaxt highlighter for LaTeX
+     * \param[in] m : latex mode
+     * \param[in] t : text document to be highlighted
      */
-    struct LaTeXSyntaxHighlighter : public QSyntaxHighlighter {
-      /*!
-       * a simple wrapper around the highligthing rule
-       */
-      struct HighlightingRule {
-        QRegExp pattern;
-        QVector<QTextCharFormat> format;
-      };  // end of struct HighlightingRule
+    LaTeXSyntaxHighlighter(LaTeXMajorMode&, QTextDocument* const);
 
-      static QString stripComment(const QString&);
+    virtual void highlightBlock(const QString&) override;
 
-      static int startOfComment(const QString&);
+   protected:
+    void highLightMispellWords(const QString&, const int);
 
-      //! list of highlighting rules
-      const static QVector<HighlightingRule>& getHighlightingRules();
+    //! build the highlighting rules
+    static QVector<HighlightingRule> buildHighlightingRules();
 
-      /*!
-       * \param[in] m : latex mode
-       * \param[in] t : text document to be highlighted
-       */
-      LaTeXSyntaxHighlighter(LaTeXMajorMode&, QTextDocument* const);
+    LaTeXMajorMode& mode;
 
-      virtual void highlightBlock(const QString&) override;
+    QTextCharFormat commentFormat;
 
-     protected:
-      void highLightMispellWords(const QString&, const int);
+   private:
+    Q_OBJECT
 
-      //! build the highlighting rules
-      static QVector<HighlightingRule> buildHighlightingRules();
+  };  // end of struct LaTeXSyntaxHighlighter
 
-      LaTeXMajorMode& mode;
-
-      QTextCharFormat commentFormat;
-
-     private:
-      Q_OBJECT
-
-    };  // end of struct LaTeXSyntaxHighlighter
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_LATEXSYNTAXHIGHLIGHTER_H */

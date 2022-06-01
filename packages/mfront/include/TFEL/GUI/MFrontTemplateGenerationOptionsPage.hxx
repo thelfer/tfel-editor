@@ -11,38 +11,34 @@
 #include <QtWidgets/QWizard>
 #include "MFront/MFrontTemplateGenerationOptions.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  //! forward declaration
+  struct MFrontBehaviourWizard;
 
-    //! forward declaration
-    struct MFrontBehaviourWizard;
-
+  /*!
+   * \brief page allowing the user to select options used for the
+   * generation of the template.
+   */
+  struct MFrontTemplateGenerationOptionsPage : public QWizardPage {
     /*!
-     * \brief page allowing the user to select options used for the
-     * generation of the template.
+     * \brief constructor
+     * \param[in] p: parent
      */
-    struct MFrontTemplateGenerationOptionsPage : public QWizardPage {
-      /*!
-       * \brief constructor
-       * \param[in] p: parent
-       */
-      MFrontTemplateGenerationOptionsPage(MFrontBehaviourWizard *const);
-      bool validatePage() override;
-      void initializePage() override;
-      int nextId() const override;
-      //! \return the options selected by the user
-      mfront::MFrontTemplateGenerationOptions getTemplateGenerationOptions()
-          const;
-      //! destructor
-      ~MFrontTemplateGenerationOptionsPage() override;
+    MFrontTemplateGenerationOptionsPage(MFrontBehaviourWizard *const);
+    bool validatePage() override;
+    void initializePage() override;
+    int nextId() const override;
+    //! \return the options selected by the user
+    mfront::MFrontTemplateGenerationOptions getTemplateGenerationOptions()
+        const;
+    //! \brief destructor
+    ~MFrontTemplateGenerationOptionsPage() override;
 
-     private:
-      Q_OBJECT
-    };  // end of struct MFrontAddVariablesPage
+   private:
+    Q_OBJECT
+  };  // end of struct MFrontAddVariablesPage
 
-  }  // end of namespace gui
-
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_MFRONTTEMPLATEGENERATIONOPTIONSPAGE_HXX */

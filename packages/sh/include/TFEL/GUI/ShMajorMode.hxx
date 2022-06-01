@@ -25,33 +25,30 @@
 #define TFELEDITOR_SHMODE_VISIBILITY_EXPORT TFEL_VISIBILITY_EXPORT
 #endif
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  //! \brief a major mode for editing `sh` files
+  struct TFELEDITOR_SHMODE_VISIBILITY_EXPORT ShMajorMode
+      : public MajorModeBase {
+    ShMajorMode(EditorWidget &, Buffer &, TextEditBase &);
 
-    //! \brief a major mode for editing `sh` files
-    struct TFELEDITOR_SHMODE_VISIBILITY_EXPORT ShMajorMode
-        : public MajorModeBase {
-      ShMajorMode(EditorWidget &, Buffer &, TextEditBase &);
+    QString getName() const override;
 
-      QString getName() const override;
+    QString getDescription() const override;
 
-      QString getDescription() const override;
+    //! \brief format a paragraph
+    void format() override;
 
-      //! \brief format a paragraph
-      void format() override;
+    void setSyntaxHighlighter(QTextDocument *const) override;
 
-      void setSyntaxHighlighter(QTextDocument *const) override;
+    QString getCommentSyntax() override;
 
-      QString getCommentSyntax() override;
+    ~ShMajorMode() override;
 
-      ~ShMajorMode() override;
+   private:
+    Q_OBJECT
+  };  // end of struct ShMajorMode
 
-     private:
-      Q_OBJECT
-    };  // end of struct ShMajorMode
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_SHMAJORMODE_HXX */

@@ -7,13 +7,10 @@
 
 #include "TFEL/GUI/MFrontOptions.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  MFrontOptions::MFrontOptions() = default;
 
-    MFrontOptions::MFrontOptions() = default;
+  MFrontOptions::~MFrontOptions() = default;
 
-    MFrontOptions::~MFrontOptions() = default;
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui

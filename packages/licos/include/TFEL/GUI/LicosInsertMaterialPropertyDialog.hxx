@@ -11,28 +11,25 @@
 #include <QtCore/QVector>
 #include <QtWidgets/QDialog>
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  struct MaterialProperty;
 
-    struct MaterialProperty;
+  struct TextEditBase;
 
-    struct TextEditBase;
+  struct LicosInsertMaterialPropertyDialog : public QDialog {
+    LicosInsertMaterialPropertyDialog(TextEditBase&);
 
-    struct LicosInsertMaterialPropertyDialog : public QDialog {
-      LicosInsertMaterialPropertyDialog(TextEditBase&);
+   protected slots:
 
-     protected slots:
+    void insertMaterialProperties(const QVector<MaterialProperty>&);
 
-      void insertMaterialProperties(const QVector<MaterialProperty>&);
+   private:
+    TextEditBase& textEdit;
 
-     private:
-      TextEditBase& textEdit;
+    Q_OBJECT
+  };  // end of struct LicosInsertMaterialPropertyDialog
 
-      Q_OBJECT
-    };  // end of struct LicosInsertMaterialPropertyDialog
+}  // end of namespace tfel::gui
 
-  }  // end of namespace gui
-}  // end of namespace tfel
-
-#endif /* LIB_LICOSINSERTMATERIALPROPERTIESDIALOG_H */
+#endif /* LIB_LICOSINSERTMATERIALPROPERTIESDIALOG_HXX */

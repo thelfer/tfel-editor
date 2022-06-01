@@ -17,105 +17,100 @@
 #include <QtNetwork/QLocalSocket>
 #include "TFEL/GUI/LicosStudyOptions.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
-
+  /*!
+   * each study is associated to a specific thread
+   */
+  struct LicosStudy : public QObject {
     /*!
-     * each study is associated to a specific thread
+     * \param [in] f : input file
+     * \param [in] o : options
+     * \param [in] a : command line arguments
      */
-    struct LicosStudy : public QObject {
-      /*!
-       * \param [in] f : input file
-       * \param [in] o : options
-       * \param [in] a : command line arguments
-       */
-      LicosStudy(const QString &,
-                 const LicosStudyOptions &,
-                 const QStringList &);
-      //! run the study
-      void run();
-      //! \return true if the study success
-      bool succeed() const;
-      //! \return the error messsage if the study failed
-      QString getErrorMessage() const;
+    LicosStudy(const QString &, const LicosStudyOptions &, const QStringList &);
+    //! run the study
+    void run();
+    //! \return true if the study success
+    bool succeed() const;
+    //! \return the error messsage if the study failed
+    QString getErrorMessage() const;
 
-      ~LicosStudy() override;
+    ~LicosStudy() override;
 
-     public slots:
+   public slots:
 
-      void stopComputations();
+    void stopComputations();
 
-     signals:
+   signals:
 
-      void finished();
+    void finished();
 
-      void newPeriod(int);
+    void newPeriod(int);
 
-      void newProcessOutput(QString);
+    void newProcessOutput(QString);
 
-     private slots:
+   private slots:
 
-      void processInitialised();
+    void processInitialised();
 
-      void processReachedNextStage();
+    void processReachedNextStage();
 
-      void processError(QProcess::ProcessError);
+    void processError(QProcess::ProcessError);
 
-      void processFinished(const int, QProcess::ExitStatus);
+    void processFinished(const int, QProcess::ExitStatus);
 
-      void displayInputSocketError(QLocalSocket::LocalSocketError);
+    void displayInputSocketError(QLocalSocket::LocalSocketError);
 
-      void displayOutputSocketError(QLocalSocket::LocalSocketError);
+    void displayOutputSocketError(QLocalSocket::LocalSocketError);
 
-      void displayProcessOutput();
+    void displayProcessOutput();
 
-     private:
-      void displaySocketError(QLocalSocket *, QLocalSocket::LocalSocketError);
+   private:
+    void displaySocketError(QLocalSocket *, QLocalSocket::LocalSocketError);
 
-      void fails(const QString &);
+    void fails(const QString &);
 
-      void sendOption(const QString &, const QString &);
+    void sendOption(const QString &, const QString &);
 
-      void send(const QString &);
+    void send(const QString &);
 
-      void send(const char *const);
+    void send(const char *const);
 
-      void quit();
+    void quit();
 
-      template <typename T>
-      T receive();
+    template <typename T>
+    T receive();
 
-      QLocalServer *server;
+    QLocalServer *server;
 
-      QLocalSocket *in;
+    QLocalSocket *in;
 
-      QLocalSocket *out;
+    QLocalSocket *out;
 
-      QPlainTextEdit *output;
+    QPlainTextEdit *output;
 
-      QProcess *process;
+    QProcess *process;
 
-      QString inputFile;
+    QString inputFile;
 
-      QStringList args;
+    QStringList args;
 
-      QString inServer;
+    QString inServer;
 
-      QString errorMessage;
+    QString errorMessage;
 
-      LicosStudyOptions options;
+    LicosStudyOptions options;
 
-      volatile bool success;
+    volatile bool success;
 
-      Q_OBJECT
+    Q_OBJECT
 
-    };  // end of LicosStudy
+  };  // end of LicosStudy
 
-    template <>
-    QString LicosStudy::receive<QString>();
+  template <>
+  QString LicosStudy::receive<QString>();
 
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_LICOSSTUDY_H */
