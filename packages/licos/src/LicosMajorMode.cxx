@@ -807,14 +807,14 @@ namespace tfel::gui {
     b.attachSecondaryTask("*search for " + s + "*", po);
   }  // end of LicosMajorMode::search
 
-  void LicosMajorMode::createAnalyseUsingMFMAction(const QString &l) {
+  void LicosMajorMode::createAnalyseUsingMFMAction(const QString & /* l */) {
     //     this->mfma = new QAction(QObject::tr("Analyse using mfm"),
     //     this);
     //     this->mfma->setData(l);
   }  // end of LicosMajorMode::createAnalyseUsingMFMAction
 
-  void LicosMajorMode::completeContextMenu(QMenu *const m,
-                                           const QTextCursor &tc) {
+  void LicosMajorMode::completeContextMenu(QMenu *const /* m */,
+                                           const QTextCursor & /* tc */) {
     // using namespace std;
     // using namespace tfel::system;
     // using ELM = ExternalLibraryManager;

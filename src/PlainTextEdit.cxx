@@ -105,7 +105,7 @@ namespace tfel::gui {
     this->e->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     this->setLayout(hl);
     QObject::connect(this->e->document(), &QTextDocument::modificationChanged,
-                     [this](const bool b) { emit modificationChanged(b); });
+                     [this](const bool bSo) { emit modificationChanged(b); });
   }  // end of PlainTextEdit()
 
   PlainTextEdit::PlainTextEdit(const QString& f, EditorWidget& g, Buffer& b)
