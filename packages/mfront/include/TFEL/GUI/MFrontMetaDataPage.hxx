@@ -56,7 +56,9 @@ namespace tfel::gui {
     const MaterialKnowledgeType mt;
     //! \brief name
     LineEdit *ne = nullptr;
-    //! \brief autho
+    //! \brief material
+    LineEdit *me = nullptr;
+    //! \brief author
     LineEdit *ae = nullptr;
     //! \brief date
     QDateEdit *de = nullptr;

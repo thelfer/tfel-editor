@@ -63,6 +63,9 @@ namespace tfel::gui {
         convergence_criterion_label(
             new QLabel(QObject::tr("Convergence criterion"))),
         convergence_criterion(new LineEdit(w)),
+        implicit_parameter_label(
+            new QLabel(QObject::tr("Implicit parameter"))),
+        implicit_parameter(new LineEdit(w)),
         perturbation_value_label(new QLabel(QObject::tr("Perturbation value"))),
         perturbation_value(new LineEdit(w)),
         editor(w),
@@ -128,6 +131,11 @@ namespace tfel::gui {
     eps->setBottom(0.);
     this->convergence_criterion->setValidator(eps);
     this->convergence_criterion->setText("1.e-14");
+    auto *const theta = new QDoubleValidator();
+    theta->setBottom(0.);
+    theta->setTop(1.);
+    this->implicit_parameter->setValidator(theta);
+    this->implicit_parameter->setText("1");
     auto *const pv = new QDoubleValidator();
     pv->setBottom(0.);
     this->perturbation_value->setValidator(pv);
@@ -142,9 +150,11 @@ namespace tfel::gui {
     this->crystal_structures_label->setBuddy(this->crystal_structures);
     this->tangent_operators_label->setBuddy(this->tangent_operators);
     this->convergence_criterion_label->setBuddy(this->convergence_criterion);
+    this->implicit_parameter_label->setBuddy(this->implicit_parameter);
     this->perturbation_value_label->setBuddy(this->perturbation_value);
     // alignements
     this->convergence_criterion->setAlignment(Qt::AlignCenter);
+    this->implicit_parameter->setAlignment(Qt::AlignCenter);
     this->perturbation_value->setAlignment(Qt::AlignCenter);
     // final layout
     auto *const gl = new QGridLayout;
@@ -202,10 +212,12 @@ namespace tfel::gui {
     gl->addWidget(this->algorithms, 12, 1);
     gl->addWidget(this->convergence_criterion_label, 13, 0);
     gl->addWidget(this->convergence_criterion, 13, 1);
-    gl->addWidget(this->perturbation_value_label, 14, 0);
-    gl->addWidget(this->perturbation_value, 14, 1);
+    gl->addWidget(this->implicit_parameter_label, 14, 0);
+    gl->addWidget(this->implicit_parameter, 14, 1);
+    gl->addWidget(this->perturbation_value_label, 15, 0);
+    gl->addWidget(this->perturbation_value, 15, 1);
     this->setLayout(gl);
-  }  // end of MFrontBehaviourPage::MFrontBehaviourPage
+  }  // end of MFrontBehaviourPage
 
   std::shared_ptr<mfront::AbstractBehaviourDSL>
   MFrontBehaviourPage::getBehaviourDSL(const DSLGenerationOptions &o) const {
@@ -237,7 +249,7 @@ namespace tfel::gui {
                            QString(e.what()));
     }
     return {};
-  }  // end of MFrontBehaviourPage::getBehaviourDSL
+  }  // end of getBehaviourDSL
 
   bool MFrontBehaviourPage::validatePage() {
     QTemporaryFile tmp("mfront-file");
@@ -332,7 +344,7 @@ namespace tfel::gui {
     this->updateDSLList();
     this->updateBrickList();
     this->updateAlgorithmList();
-  }  // end of MFrontBehaviourPage::updateIntegrationSchemeList()
+  }  // end of updateIntegrationSchemeList()
 
   void MFrontBehaviourPage::updateDSLList() {
     using mfront::BehaviourDescription;
@@ -387,7 +399,7 @@ namespace tfel::gui {
     this->updateBehaviourSymmetryList();
     this->updateCrystalStructureList();
     this->updateElasticPropertyList();
-  }  // end of MFrontBehaviourPage::updateBrickList
+  }  // end of updateBrickList
 
   void MFrontBehaviourPage::updateModellingHypothesisList() {
     using tfel::material::ModellingHypothesis;
@@ -416,7 +428,7 @@ namespace tfel::gui {
       this->hypotheses->setCurrentText(ch);
     }
     this->updateElasticPropertyList();
-  }  // end of MFrontBehaviourPage::updateModellingHypothesisList
+  }  // end of updateModellingHypothesisList
 
   void MFrontBehaviourPage::updateBehaviourSymmetryList() {
     using tfel::material::ModellingHypothesis;
@@ -457,7 +469,7 @@ namespace tfel::gui {
         this->symmetries->setCurrentText(cs);
       }
     }
-  }  // end of MFrontBehaviourPage::updateBehaviourSymmetryList
+  }  // end of updateBehaviourSymmetryList
 
   void MFrontBehaviourPage::updateCrystalStructureList() {
     const auto cs = this->crystal_structures->currentText();
@@ -483,7 +495,7 @@ namespace tfel::gui {
           mark_disabled("Crystal structure"));
       this->crystal_structures->setDisabled(true);
     }
-  }  // end of MFrontBehaviourPage::updateCrystalStructureList
+  }  // end of updateCrystalStructureList
 
   void MFrontBehaviourPage::updateAlgorithmList() {
     this->algorithms->clear();
@@ -518,7 +530,7 @@ namespace tfel::gui {
       this->algorithms_label->setText(mark_disabled("Algorithm"));
       this->algorithms->setDisabled(true);
     }
-  }  // end of MFrontBehaviourPage::updateAlgorithmList
+  }  // end of updateAlgorithmList
 
   void MFrontBehaviourPage::updateStrainMeasureList() {
     this->strain_measures->clear();
@@ -534,7 +546,7 @@ namespace tfel::gui {
                                                   << "Linearized");
     this->strain_measures_label->setText(QObject::tr("Strain measure"));
     this->strain_measures->setEnabled(true);
-  }  // end of MFrontBehaviourPage::updateStrainMeasureList()
+  }  // end of updateStrainMeasureList()
 
   void MFrontBehaviourPage::updateElasticPropertyList() {
     using tfel::material::ModellingHypothesis;
@@ -583,7 +595,7 @@ namespace tfel::gui {
     } else {
       this->elastic_properties->setCurrentText("Undefined");
     }
-  }  // end of MFrontBehaviourPage::updateElasticPropertyList
+  }  // end of updateElasticPropertyList
 
   void MFrontBehaviourPage::updateTangentOperatorList() {
     using namespace tfel::material;
@@ -600,7 +612,7 @@ namespace tfel::gui {
       this->tangent_operators->addItem(QString::fromStdString(
           convertFiniteStrainBehaviourTangentOperatorFlagToString(to)));
     }
-  }  // end of MFrontBehaviourPage::updateTangentOperatorList
+  }  // end of updateTangentOperatorList
 
   void MFrontBehaviourPage::updateNumericalCriteria() {
     auto disable_perturbation_value = [this] {
@@ -615,10 +627,16 @@ namespace tfel::gui {
       this->convergence_criterion_label->setText(
           QObject::tr("Convergence criterion"));
       this->convergence_criterion->setEnabled(true);
+      this->implicit_parameter_label->setText(
+          QObject::tr("Implicit parameter"));
+      this->implicit_parameter->setEnabled(true);
     } else {
       this->convergence_criterion_label->setText(
           mark_disabled("Convergence criterion"));
       this->convergence_criterion->setDisabled(true);
+      this->implicit_parameter_label->setText(
+          mark_disabled("Implicit parameter"));
+      this->implicit_parameter->setDisabled(true);
     }
     if (i == BehaviourDescription::IMPLICITSCHEME) {
       try {
@@ -638,7 +656,7 @@ namespace tfel::gui {
     } else {
       disable_perturbation_value();
     }
-  }  // end of MFrontBehaviourPage::updateNumericalCriteria
+  }  // end of updateNumericalCriteria
 
   QString MFrontBehaviourPage::getSelectedDomainSpecificLanguage() const {
     return this->dsls->currentText();
@@ -683,23 +701,6 @@ namespace tfel::gui {
     } else if (s == "Orthotropic") {
       append("@OrthotropicBehaviour;\n\n");
     }
-    if ((!b.isEmpty()) && (o.with_brick)) {
-      if (((m == VALIDATE_STAGE) || (m == PROCESSING_STAGE)) &&
-          (b == "StandardElastoViscoPlasticity")) {
-        append("@Brick " + b +
-               "{\n"
-               "stress_potential: \"Hooke\"{}\n"
-               "};\n\n");
-      } else {
-        append("@Brick " + b);
-        const auto *const w =
-            dynamic_cast<const MFrontBehaviourWizard *const>(this->wizard());
-        if ((w != nullptr) && (m == FINAL_STAGE)) {
-          w->writeBehaviourBrickOptions(b);
-        }
-        append(";\n\n");
-      }
-    }
     if (c == "Cubic") {
       append("@CrystalStructure Cubic;\n");
       append("@SlidingSystems {<0,1,-1>{1,1,1}};\n\n");
@@ -731,6 +732,7 @@ namespace tfel::gui {
             getNonLinearSystemSolverFactory();
         const auto &a = this->algorithms->currentText();
         const auto &eps = this->convergence_criterion->text();
+        const auto &theta = this->implicit_parameter->text();
         const auto &pv = this->perturbation_value->text();
         auto bnl = false;
         if (!a.isEmpty()) {
@@ -739,6 +741,10 @@ namespace tfel::gui {
         }
         if (!eps.isEmpty()) {
           append("@Epsilon " + eps + ";\n");
+          bnl = true;
+        }
+        if (!theta.isEmpty()) {
+          append("@Theta " + theta + ";\n");
           bnl = true;
         }
         const auto so = f.getSolver(a.toStdString());
@@ -757,7 +763,24 @@ namespace tfel::gui {
       } catch (...) {
       }
     }
-  }  // end of MFrontBehaviourPage::write()
+    if ((!b.isEmpty()) && (o.with_brick)) {
+      if (((m == VALIDATE_STAGE) || (m == PROCESSING_STAGE)) &&
+          (b == "StandardElastoViscoPlasticity")) {
+        append("@Brick " + b +
+               "{\n"
+               "stress_potential: \"Hooke\"{}\n"
+               "};\n\n");
+      } else {
+        append("@Brick " + b);
+        const auto *const w =
+            dynamic_cast<const MFrontBehaviourWizard *const>(this->wizard());
+        if ((w != nullptr) && (m == FINAL_STAGE)) {
+          w->writeBehaviourBrickOptions(b);
+        }
+        append(";\n\n");
+      }
+    }
+  }  // end of write()
 
   mfront::BehaviourDescription::BehaviourType
   MFrontBehaviourPage::getSelectedBehaviourType() const {
@@ -769,7 +792,7 @@ namespace tfel::gui {
       return BehaviourDescription::COHESIVEZONEMODEL;
     }
     return BehaviourDescription::GENERALBEHAVIOUR;
-  }  // end of MFrontBehaviourPage::getSelectedBehaviourType
+  }  // end of getSelectedBehaviourType
 
   mfront::BehaviourDescription::IntegrationScheme
   MFrontBehaviourPage::getSelectedIntegrationScheme() const {
@@ -781,15 +804,15 @@ namespace tfel::gui {
       return BehaviourDescription::SPECIFICSCHEME;
     }
     return BehaviourDescription::USERDEFINEDSCHEME;
-  }  // end of MFrontBehaviourPage::getSelectedIntegrationScheme
+  }  // end of getSelectedIntegrationScheme
 
   QString MFrontBehaviourPage::getSelectedTangentOperator() const {
     return this->tangent_operators->currentText();
-  }  // end of MFrontBehaviourPage::getSelectedTangentOperator
+  }  // end of getSelectedTangentOperator
 
   void MFrontBehaviourPage::write() const {
     this->write(this->d.textCursor(), {}, MFrontBehaviourPage::FINAL_STAGE);
-  }  // end of MFrontBehaviourPage::write()
+  }  // end of write
 
   mfront::BehaviourDSLDescription
   MFrontBehaviourPage::getCurrentBehaviourDSLDescription() const {
@@ -820,7 +843,7 @@ namespace tfel::gui {
   QString MFrontBehaviourPage::getSelectedBrick() const {
     const auto b = this->bricks->currentText();
     return b == "None" ? "" : b;
-  }  // end of MFrontBehaviourPage::getSelectedBrick()
+  }  // end of getSelectedBrick
 
   MFrontBehaviourPage::~MFrontBehaviourPage() = default;
 

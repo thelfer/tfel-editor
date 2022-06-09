@@ -1,7 +1,7 @@
 /*!
  * \file   MFrontMetaDataPage.cxx
  * \brief
- * \author th202608
+ * \author Thomas Helfer
  * \date   27/07/2019
  */
 
@@ -86,26 +86,35 @@ namespace tfel::gui {
           " generated entry point");
       this->ne->setValidator(new ModelNameValidator());
     }
+    //
+    auto *const ml = new QLabel(QObject::tr("Material"));
+    ml->setToolTip("Material name");
+    this->me = new LineEdit(w);
+    //
     auto *const anl = new QLabel(QObject::tr("Author name"));
-    anl->setToolTip("This is the name of the the implementation");
+    anl->setToolTip("This is the name of the author of the implementation");
     this->ae = new LineEdit(w);
 #ifdef Q_OS_UNIX
     this->ae->setText(getUserName());
 #endif
+    //
     auto *const dl = new QLabel(QObject::tr("Date"));
     this->de = new QDateEdit(QDate::currentDate());
     //     auto *const de = new QDateEdit(QDate::currentDate());
     mgl->addWidget(nl, 0, 0);
     mgl->addWidget(this->ne, 0, 1);
     nl->setBuddy(this->ne);
-    mgl->addWidget(anl, 1, 0);
-    mgl->addWidget(this->ae, 1, 1);
+    mgl->addWidget(ml, 1, 0);
+    mgl->addWidget(this->me, 1, 1);
+    anl->setBuddy(this->me);
+    mgl->addWidget(anl, 2, 0);
+    mgl->addWidget(this->ae, 2, 1);
     anl->setBuddy(this->ae);
-    mgl->addWidget(dl, 2, 0);
-    mgl->addWidget(this->de, 2, 1);
+    mgl->addWidget(dl, 3, 0);
+    mgl->addWidget(this->de, 3, 1);
     dl->setBuddy(this->de);
     this->setLayout(mgl);
-  }  // end of MFrontMetaDataPage::MFrontMetaDataPage
+  }  // end of MFrontMetaDataPage
 
   bool MFrontMetaDataPage::validatePage() { return true; }
 
@@ -119,14 +128,19 @@ namespace tfel::gui {
       return QString::number(v);
     };
     this->d.insertPlainText("@Behaviour " + this->ne->text() + ";\n");
-    this->d.insertPlainText("@Author " + this->ae->text() + ";\n");
+    if (const auto material = this->me->text(); !material.isEmpty()) {
+      this->d.insertPlainText("@Material " + material + ";\n");
+    }
+    if (const auto author = this->ae->text(); !author.isEmpty()) {
+      this->d.insertPlainText("@Author " + author + ";\n");
+    }
     const auto date = this->de->date();
     this->d.insertPlainText("@Date " + number(date.day()) + '/' +
                             number(date.month()) + '/' +
                             QString::number(date.year()) + ";\n");
     this->d.insertPlainText("@Description {\n");
     this->d.insertPlainText("}\n\n");
-  }  // end of MFrontMetaDataPage::write()
+  }  // end of write
 
   MFrontMetaDataPage::~MFrontMetaDataPage() = default;
 

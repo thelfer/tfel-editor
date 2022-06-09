@@ -813,8 +813,8 @@ namespace tfel::gui {
     //     this->mfma->setData(l);
   }  // end of LicosMajorMode::createAnalyseUsingMFMAction
 
-  void LicosMajorMode::completeContextMenu(QMenu *const /* m */,
-                                           const QTextCursor & /* tc */) {
+  void LicosMajorMode::completeContextMenu(QMenu *const m,
+                                           const QTextCursor &tc) {
     // using namespace std;
     // using namespace tfel::system;
     // using ELM = ExternalLibraryManager;

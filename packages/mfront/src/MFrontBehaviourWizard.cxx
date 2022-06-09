@@ -129,7 +129,6 @@ namespace tfel::gui {
           }
         }
       }
-
       // @UpdateAuxiliaryStateVariables
       const auto asvs = this->variables->getAuxiliaryStateVariables();
       if (!asvs.empty()) {

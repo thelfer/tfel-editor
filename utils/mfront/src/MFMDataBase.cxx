@@ -14,34 +14,32 @@
 #include "TFEL/GUI/Debug.hxx"
 #include "TFEL/GUI/MFMDataBase.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  MFMDataBase::MFMDataBase() = default;
 
-    MFMDataBase::MFMDataBase() = default;
+  const QStringList& MFMDataBase::getMaterialPropertiesInterfaces() const {
+    return this->mpInterfaces;
+  }  // end of MFMDataBase::getMaterialPropertiesInterfaces
 
-    const QStringList& MFMDataBase::getMaterialPropertiesInterfaces() const {
-      return this->mpInterfaces;
-    }  // end of MFMDataBase::getMaterialPropertiesInterfaces
+  const QStringList& MFMDataBase::getBehavioursInterfaces() const {
+    return this->bInterfaces;
+  }  // end of MFMDataBase::getBehavioursInterfaces
 
-    const QStringList& MFMDataBase::getBehavioursInterfaces() const {
-      return this->bInterfaces;
-    }  // end of MFMDataBase::getBehavioursInterfaces
+  const QStringList& MFMDataBase::getModelsInterfaces() const {
+    return this->mInterfaces;
+  }  // end of MFMDataBase::getModelsInterfaces
 
-    const QStringList& MFMDataBase::getModelsInterfaces() const {
-      return this->mInterfaces;
-    }  // end of MFMDataBase::getModelsInterfaces
-
-    QAbstractItemModel* MFMDataBase::load(QObject* const p) {
+  QAbstractItemModel* MFMDataBase::load(QObject* const p) {
+    auto* const m = new QStandardItemModel(0, 5, p);
+    m->setHeaderData(0, Qt::Horizontal, QObject::tr("Type"));
+    m->setHeaderData(1, Qt::Horizontal, QObject::tr("Name"));
+    m->setHeaderData(2, Qt::Horizontal, QObject::tr("Material"));
+    m->setHeaderData(3, Qt::Horizontal, QObject::tr("Library"));
+    m->setHeaderData(4, Qt::Horizontal, QObject::tr("Interface"));
+    auto loadImplementations = [this, &m](const char* const env) {
       using tfel::system::ExternalLibraryManager;
       auto& elm = ExternalLibraryManager::getExternalLibraryManager();
-      auto* const m = new QStandardItemModel(0, 5, p);
-      m->setHeaderData(0, Qt::Horizontal, QObject::tr("Type"));
-      m->setHeaderData(1, Qt::Horizontal, QObject::tr("Name"));
-      m->setHeaderData(2, Qt::Horizontal, QObject::tr("Material"));
-      m->setHeaderData(3, Qt::Horizontal, QObject::tr("Library"));
-      m->setHeaderData(4, Qt::Horizontal, QObject::tr("Interface"));
-      m->setHeaderData(5, Qt::Horizontal, QObject::tr("Interface"));
       auto add = [this, &m, &elm](const std::string& l, const std::string& e) {
         const auto type = elm.getMaterialKnowledgeType(l, e);
         const auto mkt = [type] {
@@ -71,15 +69,14 @@ namespace tfel {
           this->mInterfaces.append(i);
         }
       };
-      // loading
-      const auto mfm = ::getenv("MFMHOME");
+      const auto mfm = ::getenv(env);
       if (mfm == nullptr) {
         debug("MFMDataBase::load: MFMHOME is not defined");
-        return m;
+        return;
       }
 #ifdef Q_OS_WIN
       const auto paths = QString(mfm).split(";", QString::SkipEmptyParts);
-#else  /* Q_OS_WIN */
+#else /* Q_OS_WIN */
       const auto paths = QString(mfm).split(":", QString::SkipEmptyParts);
 #endif /* Q_OS_WIN */
       for (const auto& path : paths) {
@@ -133,10 +130,13 @@ namespace tfel {
           }
         }
       }
-      return m;
-    }  // end of MFMDataBase::load
+    };
+    // loading
+    loadImplementations("MFMHOME");
+    loadImplementations("MFRONTGALLERYHOME");
+    return m;
+  }  // end of MFMDataBase::load
 
-    MFMDataBase::~MFMDataBase() = default;
+  MFMDataBase::~MFMDataBase() = default;
 
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui

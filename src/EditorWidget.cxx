@@ -621,11 +621,12 @@ namespace tfel::gui {
   void EditorWidget::changeBuffer(const int id) {
     for (int i = 0; i != this->buffers->count(); ++i) {
       auto* b = qobject_cast<Buffer*>(this->buffers->widget(i));
-      if (b != nullptr) {
-        if (b->getId() == id) {
-          this->setCurrentBuffer(b);
-          return;
-        }
+      if (b == nullptr) {
+        continue;
+      }
+      if (b->getId() == id) {
+        this->setCurrentBuffer(b);
+        return;
       }
     }
   }  // end of EditorWidget::changeBuffer
@@ -667,11 +668,12 @@ namespace tfel::gui {
     QStringList bnames;
     for (int i = 0; i != this->buffers->count(); ++i) {
       auto* b = qobject_cast<Buffer*>(this->buffers->widget(i));
-      if (b != nullptr) {
-        const auto& n = b->getBufferName();
-        if (bn != n) {
-          bnames.append(n);
-        }
+      if (b == nullptr) {
+        continue;
+      }
+      const auto& n = b->getBufferName();
+      if (bn != n) {
+        bnames.append(n);
       }
     }
     if (bnames.empty()) {
