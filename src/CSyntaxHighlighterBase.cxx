@@ -12,6 +12,32 @@
 
 namespace tfel::gui {
 
+  std::vector<std::string> &CSyntaxHighlighterBase::getRawStringDelimiters() {
+    static std::vector<std::string> delimiters;
+    return delimiters;
+  } // end of getRawStringDelimiters
+
+  const std::string &CSyntaxHighlighterBase::getRawStringDelimiter(
+      const int i) {
+    static const std::string empty;
+    const auto &delimiters = getRawStringDelimiters();
+    if ((i < 0) || (i >= delimiters.size())) {
+      return empty;
+    }
+    return delimiters[i];
+  }  // end of getRawStringDelimiter
+
+  int CSyntaxHighlighterBase::getRawStringDelimiterId(const std::string &n) {
+    auto &delimiters = getRawStringDelimiters();
+    const auto p = std::find(delimiters.begin(), delimiters.end(), n);
+    if (p == delimiters.end()) {
+      const auto s = static_cast<int>(delimiters.size());
+      delimiters.push_back(n);
+      return s;
+    }
+    return static_cast<int>(p - delimiters.begin());
+  }  // end of getRawStringDelimiterId
+
   CSyntaxHighlighterBase::CSyntaxHighlighterBase(QTextDocument *p)
       : QSyntaxHighlighter(p) {
     this->options.bKeepCommentBoundaries = true;
@@ -28,16 +54,21 @@ namespace tfel::gui {
   void CSyntaxHighlighterBase::highlightBlock(const QString &text) {
     using tfel::utilities::CxxTokenizer;
     using tfel::utilities::Token;
-    if (this->previousBlockState() == -2) {
-      this->setCurrentBlockState(-2);
+    if (this->previousBlockState() == invalidState) {
+      this->setCurrentBlockState(invalidState);
       return;
     }
     CxxTokenizer tokenizer(this->options);
-    tokenizer.setCStyleCommentOpened(this->previousBlockState() == 1);
+    if (this->previousBlockState() >= rawStringOpenedState) {
+      tokenizer.setRawStringDelimiter(getRawStringDelimiter(
+          this->previousBlockState() - rawStringOpenedState));
+    }
+    tokenizer.setCStyleCommentOpened(this->previousBlockState() ==
+                                     cStyleCommentOpenedState);
     try {
       tokenizer.parseString(text.toStdString());
     } catch (std::exception &) {
-      this->setCurrentBlockState(-2);
+      this->setCurrentBlockState(invalidState);
       return;
     }
     for (auto pt = tokenizer.begin(); pt != tokenizer.end(); ++pt) {
@@ -86,9 +117,13 @@ namespace tfel::gui {
       }
     }
     if (tokenizer.isCStyleCommentOpened()) {
-      this->setCurrentBlockState(1);
+      this->setCurrentBlockState(cStyleCommentOpenedState);
+    } else if (tokenizer.isRawStringOpened()) {
+      this->setCurrentBlockState(
+          rawStringOpenedState +
+          getRawStringDelimiterId(tokenizer.getCurrentRawStringDelimiter()));
     } else {
-      this->setCurrentBlockState(0);
+      this->setCurrentBlockState(defaultState);
     }
   }
 

@@ -8,6 +8,7 @@
 #ifndef LIB_TFEL_GUI_CSYNTAXHIGHLIGHTERBASE_HXX
 #define LIB_TFEL_GUI_CSYNTAXHIGHLIGHTERBASE_HXX
 
+#include <string>
 #include <vector>
 #include <QtCore/QString>
 #include <QtGui/QTextDocument>
@@ -24,12 +25,20 @@ namespace tfel::gui {
    */
   struct TFEL_GUI_VISIBILITY_EXPORT CSyntaxHighlighterBase
       : public QSyntaxHighlighter {
+    //! \brief flag indicating that an error occured while parsing previous
+    //! lines
+    static constexpr int invalidState = -2;
+    //! \brief flag indicating that normal processing state
+    static constexpr int defaultState = 0;
+    //! \brief flag indicating that a C-style comment is opened
+    static constexpr int cStyleCommentOpenedState = 1;
+    //! \brief flag indicating that a raw-string comment is opened
+    static constexpr int rawStringOpenedState = 2;
+    //
     virtual void highlightBlock(const QString &) override;
 
    protected:
-    /*!
-     * a simple wrapper around the highligthing rule
-     */
+    //! \brief a simple wrapper around the highligthing rule
     struct HighlightingRule {
       std::string key;
       QTextCharFormat format;
@@ -47,6 +56,12 @@ namespace tfel::gui {
     QTextCharFormat preprocessorFormat;
 
     tfel::utilities::CxxTokenizerOptions options;
+    //
+    static const std::string& getRawStringDelimiter(const int);
+    //
+    static int getRawStringDelimiterId(const std::string &);
+    //
+    static std::vector<std::string> &getRawStringDelimiters();
 
    private:
     Q_OBJECT
