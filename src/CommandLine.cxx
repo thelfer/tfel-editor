@@ -11,6 +11,7 @@
 #include <QtWidgets/QCompleter>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QDirModel>
+#include <QtWidgets/QFileSystemModel>
 #include <QtWidgets/QAbstractItemView>
 
 #include "TFEL/GUI/Utilities.hxx"
@@ -372,9 +373,9 @@ namespace tfel::gui {
   struct FilePathUserInput::FilePathLineEdit : CommandLine::CustomLineEdit {
     FilePathLineEdit(EditorWidget& q, CommandLine& p) : CustomLineEdit(q, p) {
       auto* c = new QCompleter(&p);
-      auto* dm = new QDirModel(c);
-      //      dm->setRootPath(QDir::currentPath());
-      //      dm->setNameFilterDisables(false);
+      auto* dm = new QFileSystemModel(c);
+      dm->setRootPath(QDir::currentPath());
+      dm->setNameFilterDisables(false);
       c->setModel(dm);
       c->setCompletionMode(QCompleter::InlineCompletion);
       this->setCompleter(c, false);
