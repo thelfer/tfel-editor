@@ -23,7 +23,7 @@ target_link_libraries(TFELEditorCastemMode
   TFELEditorMFrontImportWidgets
   TFELEditor
   TFELGlossary
-  Qt5::Core
-  Qt5::Widgets
+  Qt6::Core
+  Qt6::Widgets
   )
   

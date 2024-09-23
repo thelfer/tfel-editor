@@ -28,7 +28,7 @@ namespace tfel::gui {
 
   void ProcessLineEdit::treatUserInput() {
     const auto c = this->input->text();
-    auto args = c.split(" ", QString::SkipEmptyParts);
+    auto args = c.split(" ", Qt::SkipEmptyParts);
     if (args.empty()) {
       this->editor.displayInformativeMessage(QObject::tr("empty command"));
       return;

@@ -11,10 +11,10 @@
 #include <vector>
 #include <QtCore/QString>
 #include <QtWidgets/QLabel>
-#include <QtWidgets/QAction>
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QStackedWidget>
+#include <QtGui/QAction>
 #include "TFEL/GUI/Config.hxx"
 #include "TFEL/GUI/SecondaryTaskManager.hxx"
 

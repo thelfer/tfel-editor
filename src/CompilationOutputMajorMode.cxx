@@ -7,7 +7,7 @@
 
 #include <QtCore/QDebug>
 #include <QtCore/QDir>
-#include <QtCore/QRegExp>
+#include <QtCore/QRegularExpression>
 #include <QtGui/QSyntaxHighlighter>
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/Buffer.hxx"
@@ -41,57 +41,59 @@ namespace tfel::gui {
 
     void highlightBlock(const QString &l) override {
       static auto e1 = [] {
-        QRegExp r("^([/-\\w|\\.]+):(\\d+):(\\d+): fatal error:");
-        r.setMinimal(true);
+        QRegularExpression r("^([/-\\w|\\.]+):(\\d+):(\\d+): fatal error:");
+        r.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
         return r;
       }();
       static auto e2 = [] {
-        QRegExp r("^([/-\\w|\\.]+):(\\d+):(\\d+): error:");
-        r.setMinimal(true);
+        QRegularExpression r("^([/-\\w|\\.]+):(\\d+):(\\d+): error:");
+        r.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
         return r;
       }();
       // qt-moc error
       static auto e3 = [] {
-        QRegExp r("^([/-\\w|\\.]+):(\\d+): Error:");
-        r.setMinimal(true);
+        QRegularExpression r("^([/-\\w|\\.]+):(\\d+): Error:");
+        r.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
         return r;
       }();
       static auto b = [] {
-        QRegExp r("^([/-\\w|\\.]+):(\\d+):(\\d+):   required from here");
-        r.setMinimal(true);
+        QRegularExpression r(
+            "^([/-\\w|\\.]+):(\\d+):(\\d+):   required from here");
+        r.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
         return r;
       }();
       static auto w = [] {
-        QRegExp r("^([/-\\w|\\.]+):(\\d+):(\\d+): warning:");
-        r.setMinimal(true);
+        QRegularExpression r("^([/-\\w|\\.]+):(\\d+):(\\d+): warning:");
+        r.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
         return r;
       }();
       static auto n1 = [] {
-        QRegExp r("^([/-\\w|\\.]+):(\\d+):(\\d+): note:");
-        r.setMinimal(true);
+        QRegularExpression r("^([/-\\w|\\.]+):(\\d+):(\\d+): note:");
+        r.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
         return r;
       }();
       // qt-moc note
       static auto n2 = [] {
-        QRegExp r("^([/-\\w|\\.]+):(\\d+): Note:");
-        r.setMinimal(true);
+        QRegularExpression r("^([/-\\w|\\.]+):(\\d+): Note:");
+        r.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
         return r;
       }();
-      auto apply = [this, &l](const QRegExp &r, const QTextCharFormat &f) {
-        const auto index = r.indexIn(l);
-        if ((index == 0) && (r.captureCount() == 3)) {
+      auto apply = [this, &l](const QRegularExpression &r,
+                              const QTextCharFormat &f) {
+        const auto match = r.match(l);
+        if ((match.hasMatch()) && (r.captureCount() == 3)) {
           auto *d = new CompilationOutputUserData;
           bool b1, b2;
-          d->file = r.cap(1);
-          d->line = r.cap(2).toInt(&b1);
-          d->column = r.cap(3).toInt(&b2);
+          d->file = match.captured(1);
+          d->line = match.captured(2).toInt(&b1);
+          d->column = match.captured(3).toInt(&b2);
           if (!b1 || !b2) {
             delete d;
             return false;
           }
           const auto l1 = d->file.size();
-          const auto l2 = r.cap(2).size();
-          const auto l3 = r.cap(3).size();
+          const auto l2 = match.captured(2).size();
+          const auto l3 = match.captured(3).size();
           this->setFormat(0, l1, f);
           this->setFormat(l1 + 1, l2, this->number);
           this->setFormat(l1 + l2 + 2, l3, this->number);
@@ -100,20 +102,21 @@ namespace tfel::gui {
         }
         return false;
       };
-      auto apply2 = [this, &l](const QRegExp &r, const QTextCharFormat &f) {
-        const auto index = r.indexIn(l);
-        if ((index == 0) && (r.captureCount() == 2)) {
+      auto apply2 = [this, &l](const QRegularExpression &r,
+                               const QTextCharFormat &f) {
+        const auto match = r.match(l);
+        if ((match.hasMatch()) && (r.captureCount() == 2)) {
           auto *d = new CompilationOutputUserData;
           bool b1;
-          d->file = r.cap(1);
-          d->line = r.cap(2).toInt(&b1);
+          d->file = match.captured(1);
+          d->line = match.captured(2).toInt(&b1);
           d->column = 0;
           if (!b1) {
             delete d;
             return false;
           }
           const auto l1 = d->file.size();
-          const auto l2 = r.cap(2).size();
+          const auto l2 = match.captured(2).size();
           this->setFormat(0, l1, f);
           this->setFormat(l1 + 1, l2, this->number);
           this->setCurrentBlockUserData(d);

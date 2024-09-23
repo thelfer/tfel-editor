@@ -194,7 +194,7 @@ namespace tfel::gui {
     s.setHorizontalPolicy(QSizePolicy::Minimum);
     s.setVerticalPolicy(QSizePolicy::Maximum);
     this->minibuffer->setSizePolicy(s);
-    vl->setMargin(0);
+    //    vl->setMargin(0);
     vl->setContentsMargins(0, 0, 0, 0);
     vl->addWidget(this->buffers);
     vl->addWidget(this->minibuffer);

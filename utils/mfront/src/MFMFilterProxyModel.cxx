@@ -51,21 +51,23 @@ namespace tfel {
       if (!b) {
         return false;
       }
-      if ((!this->name.isEmpty()) && (this->name.isValid())) {
-        b = b && this->name.indexIn(m->data(in).toString()) != -1;
+      if (this->name.isValid()) {
+        const auto match = this->name.match(m->data(in).toString());
+        b = b && match.hasMatch();
       }
       if (!b) {
         return false;
       }
-      if ((!this->mfront_interface.isEmpty()) &&
-          (this->mfront_interface.isValid())) {
-        b = b && this->mfront_interface.indexIn(m->data(ii).toString()) != -1;
+      if (this->mfront_interface.isValid()) {
+        const auto match = this->mfront_interface.match(m->data(ii).toString());
+        b = b && match.hasMatch();
       }
       if (!b) {
         return false;
       }
-      if ((!this->material.isEmpty()) && (this->material.isValid())) {
-        b = b && this->material.indexIn(m->data(im).toString()) != -1;
+      if (this->material.isValid()) {
+        const auto match = this->material.match(m->data(im).toString());
+        b = b && match.hasMatch();
       }
       return b;
     }  // end of MFMFilterProxyModel::filterAcceptsRow

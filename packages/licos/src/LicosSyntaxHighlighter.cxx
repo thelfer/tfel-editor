@@ -6,7 +6,7 @@
  */
 
 #include <QtCore/QDebug>
-#include <QtCore/QRegExp>
+#include <QtCore/QRegularExpression>
 #include "TFEL/Utilities/CxxTokenizer.hxx"
 #include "TFEL/GUI/LicosMajorMode.hxx"
 #include "TFEL/GUI/LicosSyntaxHighlighter.hxx"
@@ -46,8 +46,10 @@ namespace tfel::gui {
     // override C highligthing rules for links to other files
     const auto exts = LicosMajorMode::getLicosExtensionsSuffix();
     for (const QString &e : exts) {
-      this->importExprs.push_back(QRegExp("'([\\w\\./-]+\\." + e + ")'"));
-      this->importExprs.push_back(QRegExp("\"([\\w\\./-]+\\." + e + ")\""));
+      this->importExprs.push_back(
+          QRegularExpression("'([\\w\\./-]+\\." + e + ")'"));
+      this->importExprs.push_back(
+          QRegularExpression("\"([\\w\\./-]+\\." + e + ")\""));
     }
   }
 
@@ -93,8 +95,9 @@ namespace tfel::gui {
       bool b = false;
       if ((p->flag == Token::String) || (p->flag == Token::Char)) {
         for (int i = 0; (i != this->importExprs.size()) && (!b); ++i) {
-          if (this->importExprs[i].indexIn(QString::fromStdString(p->value)) !=
-              -1) {
+          const auto m =
+              this->importExprs[i].match(QString::fromStdString(p->value));
+          if (m.hasMatch()) {
             f = this->importFormat;
             b = true;
           }

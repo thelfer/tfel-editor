@@ -7,7 +7,7 @@
 
 #include <QtCore/QDebug>
 #include <QtCore/QDir>
-#include <QtCore/QRegExp>
+#include <QtCore/QRegularExpression>
 
 #include <QtGui/QSyntaxHighlighter>
 
@@ -35,11 +35,13 @@ namespace tfel::gui {
 
     void highlightBlock(const QString &l) override {
       static auto e = [] {
-        QRegExp r("^ \\*\\*\\*\\*\\*  ERREUR (\\d+) \\*\\*\\*\\*\\*");
-        r.setMinimal(true);
+        QRegularExpression r(
+            "^ \\*\\*\\*\\*\\*  ERREUR (\\d+) \\*\\*\\*\\*\\*");
+        r.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
         return r;
       }();
-      if (e.indexIn(l) == 0) {
+      const auto match = e.match(l);
+      if (match.hasMatch()) {
         this->setFormat(0, l.size(), this->error);
       } else if (l.startsWith(" $") || l.startsWith(" *")) {
         this->setFormat(0, l.size(), this->echo);

@@ -38,6 +38,7 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<BashMajorMode> proxy(
       "bash",
-      QVector<QRegExp>() << QRegExp("^" + fileNameRegExp() + "\\.bash$"));
+      QVector<QRegularExpression>()
+          << QRegularExpression("^" + fileNameRegExp() + "\\.bash$"));
 
 }  // end of namespace tfel::gui

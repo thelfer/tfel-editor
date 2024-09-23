@@ -9,8 +9,8 @@
 #define LIB_TFEL_GUI_LATEXMAJORMODE_HXX
 
 #include <QtCore/QPointer>
-
-#include <TFEL/GUI/SpellChecker.hxx>
+#include <QtCore/QRegularExpression>
+// #include <TFEL/GUI/SpellChecker.hxx>
 #include "TFEL/GUI/MajorModeBase.hxx"
 
 namespace tfel::gui {
@@ -79,7 +79,7 @@ namespace tfel::gui {
 
     QString getCommentSyntax() override;
 
-    SpellChecker &getSpellChecker();
+    //    SpellChecker &getSpellChecker();
 
     void setSpellCheckLanguage(const QString &) override;
 
@@ -128,16 +128,16 @@ namespace tfel::gui {
 
     virtual QString getTeXMasterFile();
 
-    QRegExp rb;
-    QRegExp re;
-    QRegExp rb2;
-    QRegExp re2;
+    QRegularExpression rb;
+    QRegularExpression re;
+    QRegularExpression rb2;
+    QRegularExpression re2;
 
     QCompleter *c;
 
     LaTeXSyntaxHighlighter *highlighter;
 
-    SpellChecker spellChecker;
+    //    SpellChecker spellChecker;
 
     QVector<QAction *> suggestions;
     //! absolute postion of the beginning of the mispelled word

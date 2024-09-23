@@ -30,6 +30,6 @@ tfel_editor_package(LicosMode
 
 target_link_libraries(TFELEditorLicosMode
   TFELEditor
-  Qt5::Core
-  Qt5::Widgets
+  Qt6::Core
+  Qt6::Widgets
   )

@@ -8,8 +8,6 @@
 #include <QtCore/QDir>
 #include <QtCore/QDebug>
 #include <QtCore/QFileInfo>
-#include <QtCore/QTextCodec>
-#include <QtCore/QTextDecoder>
 
 #include "TFEL/GUI/LicosStudy.hxx"
 
@@ -27,15 +25,10 @@ namespace tfel::gui {
         options(o) {}
 
   void LicosStudy::run() {
-    QObject::connect(
-        this->in,
-        static_cast<void (QLocalSocket::*)(QLocalSocket::LocalSocketError)>(
-            &QLocalSocket::error),
-        this, &LicosStudy::displayInputSocketError);
-    QObject::connect(this->process,
-                     static_cast<void (QProcess::*)(QProcess::ProcessError)>(
-                         &QProcess::error),
-                     this, &LicosStudy::processError);
+    QObject::connect(this->in, &QLocalSocket::errorOccurred, this,
+                     &LicosStudy::displayInputSocketError);
+    QObject::connect(this->process, &QProcess::errorOccurred, this,
+                     &LicosStudy::processError);
     QObject::connect(this->process,
                      static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(
                          &QProcess::finished),
@@ -63,11 +56,8 @@ namespace tfel::gui {
                         &LicosStudy::processInitialised);
     QString sname("licos.out");
     this->out = this->server->nextPendingConnection();
-    QObject::connect(
-        this->out,
-        static_cast<void (QLocalSocket::*)(QLocalSocket::LocalSocketError)>(
-            &QLocalSocket::error),
-        this, &LicosStudy::displayOutputSocketError);
+    QObject::connect(this->out, &QLocalSocket::errorOccurred, this,
+                     &LicosStudy::displayOutputSocketError);
     this->in->connectToServer(sname, QIODevice::ReadOnly);
     if (this->in->state() != QLocalSocket::ConnectedState) {
       this->fails(tr("Unable to connect to socket '%1'").arg(sname));
@@ -167,10 +157,7 @@ namespace tfel::gui {
 
   void LicosStudy::displayProcessOutput() {
     QByteArray data = this->process->readAllStandardOutput();
-    QTextCodec* codec = QTextCodec::codecForLocale();
-    QTextDecoder* decoder = codec->makeDecoder();
-    emit newProcessOutput(decoder->toUnicode(data));
-    delete decoder;
+    emit newProcessOutput(data);
   }  // end of LicosStudy::displayProcessOutput
 
   void LicosStudy::displayInputSocketError(QLocalSocket::LocalSocketError e) {
@@ -244,25 +231,16 @@ namespace tfel::gui {
 
   void LicosStudy::quit() {
     if (this->in != nullptr) {
-      QObject::disconnect(
-          this->in,
-          static_cast<void (QLocalSocket::*)(QLocalSocket::LocalSocketError)>(
-              &QLocalSocket::error),
-          this, &LicosStudy::displayInputSocketError);
+      QObject::disconnect(this->in, &QLocalSocket::errorOccurred, this,
+                          &LicosStudy::displayInputSocketError);
     }
     if (this->out != nullptr) {
-      QObject::disconnect(
-          this->out,
-          static_cast<void (QLocalSocket::*)(QLocalSocket::LocalSocketError)>(
-              &QLocalSocket::error),
-          this, &LicosStudy::displayOutputSocketError);
+      QObject::disconnect(this->out, &QLocalSocket::errorOccurred, this,
+                          &LicosStudy::displayOutputSocketError);
     }
     if (this->process != nullptr) {
-      QObject::disconnect(
-          this->process,
-          static_cast<void (QProcess::*)(QProcess::ProcessError)>(
-              &QProcess::error),
-          this, &LicosStudy::processError);
+      QObject::disconnect(this->process, &QProcess::errorOccurred, this,
+                          &LicosStudy::processError);
       QObject::disconnect(
           this->process,
           static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(

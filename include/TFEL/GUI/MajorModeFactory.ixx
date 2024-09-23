@@ -15,10 +15,11 @@
 namespace tfel::gui {
 
   template <typename T>
-  StandardMajorModeProxy<T>::StandardMajorModeProxy(const QString& n,
-                                                    const QVector<QRegExp>& e,
-                                                    const QString& i,
-                                                    const bool b)
+  StandardMajorModeProxy<T>::StandardMajorModeProxy(
+      const QString& n,
+      const QVector<QRegularExpression>& e,
+      const QString& i,
+      const bool b)
       : name(n), rexp(e), icon(i) {
     if (b) {
       auto& f = MajorModeFactory::getMajorModeFactory();

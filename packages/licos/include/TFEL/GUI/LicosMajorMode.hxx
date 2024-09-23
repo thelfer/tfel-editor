@@ -9,6 +9,7 @@
 #define LIB_TFEL_GUI_LICOSMAJORMODE_HXX
 
 #include <QtCore/QVector>
+#include <QtCore/QRegularExpression>
 #include "TFEL/GUI/MajorModeBase.hxx"
 
 namespace tfel::gui {
@@ -186,7 +187,7 @@ namespace tfel::gui {
 
     QCompleter *c;
 
-    QRegExp rlib;
+    QRegularExpression rlib;
 
     //     //! run licos
     //     QAction *ra;

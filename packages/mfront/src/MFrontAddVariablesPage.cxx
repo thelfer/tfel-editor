@@ -240,7 +240,7 @@ namespace tfel::gui {
     }
     try {
       auto bd = dsl->getBehaviourDescription();
-      for (const auto cv : variables) {
+      for (const auto &cv : variables) {
         (bd.*f)(h, cv, mfront::BehaviourData::UNREGISTRED);
       }
       (bd.*f)(h, v, mfront::BehaviourData::UNREGISTRED);

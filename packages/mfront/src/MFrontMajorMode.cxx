@@ -21,6 +21,7 @@
 #include "MFront/BehaviourDSLCommon.hxx"
 #include "MFront/DSLFactory.hxx"
 #include "TFEL/GUI/Debug.hxx"
+#include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/MFrontInitializer.hxx"
 #include "TFEL/GUI/MFrontSyntaxHighlighter.hxx"
 #include "TFEL/GUI/ProcessOutputFrame.hxx"
@@ -55,9 +56,9 @@ namespace tfel::gui {
       return r;
     }
 #ifdef Q_OS_WIN
-    const auto paths = QString(mfm).split(";", QString::SkipEmptyParts);
+    const auto paths = QString(mfm).split(";", Qt::SkipEmptyParts);
 #else  /* Q_OS_WIN */
-    const auto paths = QString(mfm).split(":", QString::SkipEmptyParts);
+    const auto paths = QString(mfm).split(":", Qt::SkipEmptyParts);
 #endif /* Q_OS_WIN */
     for (const auto &path : paths) {
 #ifdef Q_OS_WIN
@@ -533,9 +534,10 @@ namespace tfel::gui {
     b.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
     b.select(QTextCursor::LineUnderCursor);
     QString l = b.selectedText();
-    QRegExp r("^(@\\w+)");
-    if (r.indexIn(l) >= 0) {
-      QString k = r.cap(1);
+    QRegularExpression r("^(@\\w+)");
+    const auto match = r.match(l);
+    if (match.hasMatch()) {
+      QString k = match.captured(1);
       if (keys.indexOf(k) != -1) {
         auto ha = new QAction(QObject::tr("Help on %1").arg(k), m);
         ha->setIcon(QIcon::fromTheme("dialog-question"));
@@ -624,7 +626,8 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<MFrontMajorMode> proxy(
       "MFront",
-      QVector<QRegExp>() << QRegExp("^[\\w-0-9_\\.]+\\.mfront"),
+      QVector<QRegularExpression>()
+          << QRegularExpression(fileNameRegExp() + "\\.mfront"),
       ":/mfront/MFrontIcon.png");
 
 }  // end of namespace tfel::gui

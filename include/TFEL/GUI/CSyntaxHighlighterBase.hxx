@@ -57,7 +57,7 @@ namespace tfel::gui {
 
     tfel::utilities::CxxTokenizerOptions options;
     //
-    static const std::string& getRawStringDelimiter(const int);
+    static const std::string &getRawStringDelimiter(const int);
     //
     static int getRawStringDelimiterId(const std::string &);
     //

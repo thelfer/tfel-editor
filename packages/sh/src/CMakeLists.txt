@@ -16,6 +16,6 @@ tfel_editor_package(ShMode
 
 target_link_libraries(TFELEditorShMode
   TFELEditor
-  Qt5::Core
-  Qt5::Widgets
+  Qt6::Core
+  Qt6::Widgets
   )

@@ -75,9 +75,9 @@ namespace tfel::gui {
         return;
       }
 #ifdef Q_OS_WIN
-      const auto paths = QString(mfm).split(";", QString::SkipEmptyParts);
-#else /* Q_OS_WIN */
-      const auto paths = QString(mfm).split(":", QString::SkipEmptyParts);
+      const auto paths = QString(mfm).split(";", Qt::SkipEmptyParts);
+#else  /* Q_OS_WIN */
+      const auto paths = QString(mfm).split(":", Qt::SkipEmptyParts);
 #endif /* Q_OS_WIN */
       for (const auto& path : paths) {
 #ifdef Q_OS_WIN

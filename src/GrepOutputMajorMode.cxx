@@ -37,10 +37,10 @@ namespace tfel::gui {
     }  // end of GrepOutputSyntaxHighlighter
 
     void highlightBlock(const QString &text) override {
-      QRegExp expr("^([/-\\w|\\.]+):(\\d+):");
+      QRegularExpression expr("^([/-\\w|\\.]+):(\\d+):");
       expr.setMinimal(true);
-      int index = expr.indexIn(text);
-      if ((index == 0) && (expr.captureCount() == 2)) {
+      const auto match = expr.match(text);
+      if ((match.hasMatch()) && (match.captureCount() == 2)) {
         auto *d = new GrepUserData;
         auto n = expr.cap(2);
         bool b;

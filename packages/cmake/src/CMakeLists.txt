@@ -16,6 +16,6 @@ tfel_editor_package(CMakeMode
 
 target_link_libraries(TFELEditorCMakeMode
   TFELEditor
-  Qt5::Core
-  Qt5::Widgets
+  Qt6::Core
+  Qt6::Widgets
   )

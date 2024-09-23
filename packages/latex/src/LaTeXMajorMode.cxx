@@ -124,14 +124,14 @@ namespace tfel::gui {
   }  // end of LaTeXMajorMode::LaTeXMajorMode
 
   QString LaTeXMajorMode::getTeXMasterFile() {
-    QRegExp r("^\\s*%%% TeX-master: \"([\\w-0-9_\\./]+)\"\\s*$");
+    QRegularExpression r("^\\s*%%% TeX-master: \"([\\w-0-9_\\./]+)\"\\s*$");
     QTextCursor tc = this->textEdit.textCursor();
     tc.movePosition(QTextCursor::Start, QTextCursor::KeepAnchor);
     tc.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
     while (!tc.atEnd()) {
-      QString line = tc.block().text();
-      if (r.indexIn(line) != -1) {
-        return r.cap(1);
+      const auto m = r.match(tc.block().text());
+      if (m.hasMatch()) {
+        return m.captured(1);
       }
       tc.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
       tc.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
@@ -248,9 +248,10 @@ namespace tfel::gui {
         mp = rules.end();
         for (p = rules.begin(); p != rules.end(); ++p) {
           const Rule& rule = *p;
-          QRegExp e(rule.pattern);
-          int rp = e.indexIn(text, pos);
-          if (rp != -1) {
+          QRegularExpression e(rule.pattern);
+          const auto match = e.match(text, pos);
+          if (match.hasMatch()) {
+            const int rp = match.lastCapturedIndex();
             if ((cpos == -1) || (rp <= cpos)) {
               mp = p;
               cpos = rp;
@@ -267,9 +268,9 @@ namespace tfel::gui {
           }
           // treating the LaTeX command
           const Rule& rule = *mp;
-          QRegExp e(rule.pattern);
-          e.indexIn(text, pos);
-          int length = e.matchedLength();
+          QRegularExpression e(rule.pattern);
+          const auto match = e.match(text, pos);
+          const auto length = match.capturedLength();
           pos = cpos + length;
         } else {
           if (posl >= pos) {
@@ -283,68 +284,70 @@ namespace tfel::gui {
     }
   }
 
-  void LaTeXMajorMode::setSpellCheckLanguage(const QString& l) {
-    this->spellChecker.setSpellCheckLanguage(l);
+  void LaTeXMajorMode::setSpellCheckLanguage(const QString& /* l */) {
+    // this->spellChecker.setSpellCheckLanguage(l);
     if (this->highlighter != nullptr) {
       this->highlighter->rehighlight();
     }
   }  // end of LaTeXMajorMode::setSpellCheckLanguage
 
-  void LaTeXMajorMode::completeContextMenuForMispelledWord(QMenu* m,
-                                                           const QString& l,
-                                                           const int p,
-                                                           const int ap) {
-    int pos = 0;
-    while (pos != l.size()) {
-      if (l[pos].isLetter()) {
-        int npos = pos;
-        ++pos;
-        while ((pos != l.size()) && (l[pos].isLetter())) {
-          ++pos;
-        }
-        if ((p > npos) && (p < pos)) {
-          // found !
-          this->bmwp = ap + npos;
-          this->emwp = ap + pos;
-          const QString w = l.mid(npos, pos - npos);
-          if (!this->spellChecker.spell(w)) {
-            for (auto& pa : this->suggestions) {
-              delete pa;
-            }
-            this->suggestions.clear();
-            const auto ss = this->spellChecker.suggest(w);
-            for (const auto& s : ss) {
-              auto* a = new QAction(s, this);
-              a->setData(s);
-              this->suggestions.push_back(a);
-            }
-            if (this->suggestions.size() != 0) {
-              auto cactions = m->actions();
-              if (!cactions.isEmpty()) {
-                m->insertAction(*(cactions.begin()), m->addSeparator());
-              }
-              for (int i = this->suggestions.size(); i > 0; --i) {
-                auto* a = this->suggestions[i - 1];
-                cactions = m->actions();
-                if (cactions.isEmpty()) {
-                  m->addAction(a);
-                } else {
-                  m->insertAction(*(cactions.begin()), a);
-                }
-              }
-              QObject::connect(
-                  m, &QMenu::triggered, this,
-                  &LaTeXMajorMode::replaceMispelledWordBySuggestion);
-            }
-          }
-        }
-      } else {
-        ++pos;
-      }
-    }
+  void LaTeXMajorMode::completeContextMenuForMispelledWord(
+      QMenu* /* m */,
+      const QString& /* l */,
+      const int /* p */,
+      const int /* ap */) {
+    // int pos = 0;
+    // while (pos != l.size()) {
+    //   if (l[pos].isLetter()) {
+    //     int npos = pos;
+    //     ++pos;
+    //     while ((pos != l.size()) && (l[pos].isLetter())) {
+    //       ++pos;
+    //     }
+    //     if ((p > npos) && (p < pos)) {
+    //       // found !
+    //       this->bmwp = ap + npos;
+    //       this->emwp = ap + pos;
+    //       const QString w = l.mid(npos, pos - npos);
+    //       if (!this->spellChecker.spell(w)) {
+    //         for (auto& pa : this->suggestions) {
+    //           delete pa;
+    //         }
+    //         this->suggestions.clear();
+    //         const auto ss = this->spellChecker.suggest(w);
+    //         for (const auto& s : ss) {
+    //           auto* a = new QAction(s, this);
+    //           a->setData(s);
+    //           this->suggestions.push_back(a);
+    //         }
+    //         if (this->suggestions.size() != 0) {
+    //           auto cactions = m->actions();
+    //           if (!cactions.isEmpty()) {
+    //             m->insertAction(*(cactions.begin()), m->addSeparator());
+    //           }
+    //           for (int i = this->suggestions.size(); i > 0; --i) {
+    //             auto* a = this->suggestions[i - 1];
+    //             cactions = m->actions();
+    //             if (cactions.isEmpty()) {
+    //               m->addAction(a);
+    //             } else {
+    //               m->insertAction(*(cactions.begin()), a);
+    //             }
+    //           }
+    //           QObject::connect(
+    //               m, &QMenu::triggered, this,
+    //               &LaTeXMajorMode::replaceMispelledWordBySuggestion);
+    //         }
+    //       }
+    //     }
+    //   } else {
+    //     ++pos;
+    //   }
+    // }
   }  // end of LaTeXMajorMode::completeContextMenuForMispelledWord
 
-  SpellChecker& LaTeXMajorMode::getSpellChecker() { return this->spellChecker; }
+  //  SpellChecker& LaTeXMajorMode::getSpellChecker() { return
+  //  this->spellChecker; }
 
   void LaTeXMajorMode::replaceMispelledWordBySuggestion(QAction* a) {
     if (this->suggestions.indexOf(a) != -1) {
@@ -398,11 +401,11 @@ namespace tfel::gui {
         lines.push_back(QStringList());
       }
       if (cpos != -1) {
-        lines.back() << l.mid(0, cpos).split(' ', QString::SkipEmptyParts);
+        lines.back() << l.mid(0, cpos).split(' ', Qt::SkipEmptyParts);
         lines.back() << l.mid(cpos, l.size() - cpos);
         lines.push_back(QStringList());
       } else {
-        lines.back() << l.split(' ', QString::SkipEmptyParts);
+        lines.back() << l.split(' ', Qt::SkipEmptyParts);
       }
       cc.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor);
       cc.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
@@ -414,11 +417,11 @@ namespace tfel::gui {
         lines.push_back(QStringList());
       }
       if (cpos != -1) {
-        lines.back() << l.mid(0, cpos).split(' ', QString::SkipEmptyParts);
+        lines.back() << l.mid(0, cpos).split(' ', Qt::SkipEmptyParts);
         lines.back() << l.mid(cpos, l.size() - cpos);
         lines.push_back(QStringList());
       } else {
-        lines.back() << l.split(' ', QString::SkipEmptyParts);
+        lines.back() << l.split(' ', Qt::SkipEmptyParts);
       }
     }
     cc = bc;
@@ -443,8 +446,8 @@ namespace tfel::gui {
         QString indent;
         bool sk = false;
         if (((w == "\\[") || (w == "\\]") || (w == "\\medskip") ||
-             (this->rb.indexIn(w, 0) != -1) ||
-             (this->re.indexIn(w, 0) != -1))) {
+             (this->rb.match(w).hasMatch()) ||
+             (this->re.match(w).hasMatch()))) {
           if (size != 0) {
             cc.insertText("\n");
             size = 0;
@@ -462,7 +465,7 @@ namespace tfel::gui {
             cc.insertText("\n");
           }
           di = this->getIndentationIncrement(w);
-          be = this->re.indexIn(w, 0) == -1;
+          be = this->re.match(w).hasMatch();
           if (w[0] == '}') {
             be = false;
           }
@@ -481,7 +484,7 @@ namespace tfel::gui {
         } else {
           if (w.size() + size >= 72) {
             di = this->getIndentationIncrement(w);
-            be = this->re.indexIn(w, 0) == -1;
+            be = this->re.match(w).hasMatch();
             if (w[0] == '}') {
               be = false;
             }
@@ -501,7 +504,7 @@ namespace tfel::gui {
           } else {
             di = this->getIndentationIncrement(w);
             if (size == 0) {
-              be = this->re2.indexIn(w, 0) == -1;
+              be = this->re2.match(w).hasMatch();
               if (w[0] == '}') {
                 be = false;
               }
@@ -577,7 +580,7 @@ namespace tfel::gui {
     }
     QString l =
         LaTeXSyntaxHighlighter::stripComment(tc.block().text()).trimmed();
-    b = this->re2.indexIn(l, 0) == -1;
+    b = this->re2.match(l, 0).hasMatch();
     if (l.size() > 0) {
       if (l[0] == '}') {
         b = false;
@@ -595,8 +598,9 @@ namespace tfel::gui {
     int pos = 0;
     int ppos = 0;
     while (pos != -1) {
-      int pos1 = rb.indexIn(l, pos);
-      int pos2 = re.indexIn(l, pos);
+      const auto m1 = rb.match(l, pos);
+      int pos1 = m1.lastCapturedIndex();
+      int pos2 = re.match(l, pos).lastCapturedIndex();
       bool b1 = false;
       bool b2 = false;
       if ((pos1 != -1) && (pos2 == -1)) {
@@ -612,7 +616,7 @@ namespace tfel::gui {
       }
       if (b1) {
         pos = pos1;
-        if (l.mid(pos, rb.matchedLength()) != "\\begin{document}") {
+        if (l.mid(pos, m1.capturedLength()) != "\\begin{document}") {
           di += 1;
         }
         if (pos == -1) {
@@ -620,10 +624,10 @@ namespace tfel::gui {
         } else if (ppos != pos) {
           di += countNumberOfCurlyBraces(l.mid(ppos, pos - ppos));
         }
-        pos += rb.matchedLength();
+        pos += m1.capturedLength();
       } else if (b2) {
         pos = pos2;
-        if (l.mid(pos, rb.matchedLength()) != "\\end{document}") {
+        if (l.mid(pos, m1.capturedLength()) != "\\end{document}") {
           di -= 1;
         }
         if (pos == -1) {
@@ -633,7 +637,7 @@ namespace tfel::gui {
         } else if (ppos != pos) {
           di += countNumberOfCurlyBraces(l.mid(ppos, pos - ppos));
         }
-        pos += re.matchedLength();
+        pos += m1.capturedLength();
       } else {
         if (ppos != l.size()) {
           di += countNumberOfCurlyBraces(l.mid(ppos, l.size() - ppos));
@@ -671,7 +675,7 @@ namespace tfel::gui {
       QString l =
           LaTeXSyntaxHighlighter::stripComment(b.block().text()).trimmed();
       di = this->getIndentationIncrement(l);
-      bi = this->re2.indexIn(l, 0) == -1;
+      bi = this->re2.match(l).hasMatch();
       if (l.size() > 0) {
         if (l[0] == '}') {
           bi = false;
@@ -702,8 +706,9 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<LaTeXMajorMode> proxy(
       "LaTeX",
-      QVector<QRegExp>() << QRegExp("^[\\w-0-9_\\.]+\\.tex")
-                         << QRegExp("^[\\w-0-9_\\.]+\\.sty"),
+      QVector<QRegularExpression>()
+          << QRegularExpression("^[\\w-0-9_\\.]+\\.tex")
+          << QRegularExpression("^[\\w-0-9_\\.]+\\.sty"),
       ":/tfel/editor/languages/latex.png");
 
 }  // end of namespace tfel::gui

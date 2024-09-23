@@ -68,7 +68,7 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<MakefileMajorMode> proxy(
       "Makefile",
-      QVector<QRegExp>() << QRegExp("^Makefile$")
-                         << QRegExp("^Makefile\\.am$"));
+      QVector<QRegularExpression>() << QRegularExpression("^Makefile$")
+                                    << QRegularExpression("^Makefile\\.am$"));
 
 }  // end of namespace tfel::gui

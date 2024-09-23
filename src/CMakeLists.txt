@@ -52,7 +52,7 @@ tfel_editor_library(TFELEditor
   SecondaryTask.cxx
   SecondaryTaskManager.cxx
   Utilities.cxx
-  SpellChecker.cxx
+#  SpellChecker.cxx
   StandardFunctionCommand.cxx
   HunspellDictionariesManager.cxx
   RectangleMode.cxx
@@ -62,22 +62,22 @@ tfel_editor_library(TFELEditor
   TextEditQueryReplace.cxx
   TextEditReplaceFilter.cxx
   MajorModeFactory.cxx
-  GrepOutputMajorMode.cxx
+#  GrepOutputMajorMode.cxx
   CompilationOutputMajorMode.cxx
   ${Resources_RCC}
   ${TFEL_EDITOR_SOURCES})
 
 set(QT_LIBRARIES
-    Qt5::Core
-    Qt5::Widgets
-    Qt5::Network
-    Qt5::PrintSupport)
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Network
+    Qt6::PrintSupport)
 
 if(WebEngine_FOUND AND WebEngineWidgets_FOUND)
 set(QT_LIBRARIES
   ${QT_LIBRARIES}
-  Qt5::WebEngine
-  Qt5::WebEngineWidgets)  
+  Qt6::WebEngine
+  Qt6::WebEngineWidgets)  
 endif(WebEngine_FOUND AND WebEngineWidgets_FOUND)
 
 if(HUNSPELL_FOUND)

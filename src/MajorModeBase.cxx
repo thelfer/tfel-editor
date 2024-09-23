@@ -267,7 +267,7 @@ namespace tfel::gui {
           while ((li < l.size()) && (l[li].isSpace())) {
             ++li;
           }
-          if (l.midRef(li).startsWith(cs)) {
+          if (l.right(l.size() - li).startsWith(cs)) {
             b.clearSelection();
             b.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor,
                            li + cs.size());

@@ -16,6 +16,6 @@ target_link_libraries(TFELEditorTPlotPackage
   TFELEditorGnuplotMode
   TFELEditor
   TFELPlot
-  Qt5::Core
-  Qt5::Widgets
+  Qt6::Core
+  Qt6::Widgets
   )

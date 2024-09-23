@@ -215,7 +215,9 @@ namespace tfel::gui {
 
     virtual bool isReadOnly() = 0;
 
-    virtual bool find(const QString &, QTextDocument::FindFlags = nullptr) = 0;
+    virtual bool find(
+        const QString &,
+        QTextDocument::FindFlags = QTextDocument::FindCaseSensitively) = 0;
 
     virtual QTextCursor textCursor() const = 0;
 

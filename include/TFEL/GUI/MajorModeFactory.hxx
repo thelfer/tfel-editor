@@ -10,7 +10,7 @@
 
 #include <memory>
 #include <QtCore/QVector>
-#include <QtCore/QRegExp>
+#include <QtCore/QRegularExpression>
 #include <QtCore/QString>
 #include <QtGui/QIcon>
 #include "TFEL/GUI/Config.hxx"
@@ -55,10 +55,11 @@ namespace tfel::gui {
      * \param[in] e: supported file extensions
      * \param[in] i: major mode icon
      */
-    StandardMajorModeProxy(const QString&,
-                           const QVector<QRegExp>& = QVector<QRegExp>(),
-                           const QString& = QString(),
-                           const bool = true);
+    StandardMajorModeProxy(
+        const QString&,
+        const QVector<QRegularExpression>& = QVector<QRegularExpression>(),
+        const QString& = QString(),
+        const bool = true);
     //! \return the major mode name
     QString getName() const override;
     //! \return the major mode icon
@@ -79,7 +80,7 @@ namespace tfel::gui {
     //! major mode name
     const QString name;
     //! file extensions supported by the major mode
-    const QVector<QRegExp> rexp;
+    const QVector<QRegularExpression> rexp;
     //! major mode name
     const QString icon;
   };  // end of struct StandardMajorModeProxy
@@ -117,7 +118,7 @@ namespace tfel::gui {
                                    TextEditBase&) const;
 
     void addMajorMode(const MajorModeProxyPtr,
-                      const QVector<QRegExp>&,
+                      const QVector<QRegularExpression>&,
                       const bool = true);
 
     QStringList getAvailableMajorModesNames() const;
@@ -142,7 +143,7 @@ namespace tfel::gui {
 
     struct Proxy {
       MajorModeProxyPtr proxy;
-      QVector<QRegExp> rexp;
+      QVector<QRegularExpression> rexp;
     };
 
     QVector<Proxy> proxies;

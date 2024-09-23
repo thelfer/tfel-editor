@@ -419,11 +419,11 @@ namespace tfel::gui {
     const auto mpos = tc2.selectedText().size();
     if (c >= 1) {
       tc.movePosition(QTextCursor::NextCharacter, this->moveMode,
-                      std::min(c - 1, mpos));
+                      std::min(static_cast<qsizetype>(c - 1), mpos));
     } else {
       tc.movePosition(QTextCursor::EndOfLine, this->moveMode);
       tc.movePosition(QTextCursor::NextCharacter, this->moveMode,
-                      -std::min(-c + 1, mpos));
+                      -std::min(static_cast<qsizetype>(-c + 1), mpos));
     }
     this->setTextCursor(tc);
     this->centerCursor();

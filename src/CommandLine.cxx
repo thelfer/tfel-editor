@@ -8,10 +8,9 @@
 #include <QtCore/QDebug>
 #include <QtCore/QSettings>
 #include <QtGui/QKeyEvent>
+#include <QtGui/QFileSystemModel>
 #include <QtWidgets/QCompleter>
 #include <QtWidgets/QHBoxLayout>
-#include <QtWidgets/QDirModel>
-#include <QtWidgets/QFileSystemModel>
 #include <QtWidgets/QAbstractItemView>
 
 #include "TFEL/GUI/Utilities.hxx"
@@ -162,7 +161,7 @@ namespace tfel::gui {
         completions(nullptr),
         scompletions(nullptr),
         isUserEditingFinished(false) {
-    this->setBackgroundRole(QPalette::Foreground);
+    this->setBackgroundRole(QPalette::Base);
     this->setContentsMargins(0, 0, 0, 0);
     QSizePolicy s;
     s.setHorizontalPolicy(QSizePolicy::Fixed);
@@ -173,7 +172,7 @@ namespace tfel::gui {
     this->label->setContentsMargins(0, 0, 0, 0);
     this->label->setLineWidth(0);
     this->setLabel(l);
-    this->hl->setMargin(0);
+    //    this->hl->setMargin(0);
     this->hl->setSpacing(0);
     this->hl->setContentsMargins(0, 0, 0, 0);
     this->setStyleSheet("background: rgba(255,255,255,100%)");

@@ -34,7 +34,7 @@ namespace tfel::gui {
                                 << "debug"
                                 << "full");
     vlv->setCurrentIndex(2);
-    gl1->addWidget(new QLabel(QObject::tr("Verbose level"), nullptr, nullptr));
+    gl1->addWidget(new QLabel(QObject::tr("Verbose level")));
     gl1->addWidget(vlv, 0, 1);
     // advanced options
     auto *ao = new QGroupBox(QObject::tr("Advanced options"));
@@ -58,10 +58,8 @@ namespace tfel::gui {
                      &MTestStudyOptionsDialog::accept);
     QObject::connect(dbb, &QDialogButtonBox::rejected, this,
                      &MTestStudyOptionsDialog::reject);
-    QObject::connect(vlv,
-                     static_cast<void (QComboBox::*)(const QString &)>(
-                         &QComboBox::activated),
-                     this, &MTestStudyOptionsDialog::verboseLevelChanged);
+    QObject::connect(vlv, &QComboBox::currentTextChanged, this,
+                     &MTestStudyOptionsDialog::verboseLevelChanged);
     QObject::connect(
         qobject_cast<QCheckBox *>(gl2->itemAtPosition(1, 1)->widget()),
         &QCheckBox::toggled, this, &MTestStudyOptionsDialog::resultFile);

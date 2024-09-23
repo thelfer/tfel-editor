@@ -29,7 +29,7 @@ namespace tfel::gui {
     this->pbar = new QProgressBar;
     this->pbar->setMaximum(100);
     this->textEdit->setReadOnly(true);
-    vl->setMargin(0);
+    //    vl->setMargin(0);
     vl->setContentsMargins(0, 0, 0, 0);
     vl->setSpacing(0);
     vl->addLayout(hl);

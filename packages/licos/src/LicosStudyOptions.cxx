@@ -47,7 +47,7 @@ namespace tfel::gui {
                                 << "debug"
                                 << "full");
     wlv->setCurrentIndex(1);
-    gl1->addWidget(new QLabel(QObject::tr("Verbose level"), 0, 0));
+    gl1->addWidget(new QLabel(QObject::tr("Verbose level")), 0, 0);
     gl1->addWidget(vlv, 0, 1);
     gl1->addWidget(new QLabel(QObject::tr("Warning level")), 1, 0);
     gl1->addWidget(wlv, 1, 1);
@@ -71,14 +71,10 @@ namespace tfel::gui {
                      &LicosStudyOptionsDialog::accept);
     QObject::connect(dbb, &QDialogButtonBox::rejected, this,
                      &LicosStudyOptionsDialog::reject);
-    QObject::connect(vlv,
-                     static_cast<void (QComboBox::*)(const QString &)>(
-                         &QComboBox::activated),
-                     this, &LicosStudyOptionsDialog::verboseLevelChanged);
-    QObject::connect(wlv,
-                     static_cast<void (QComboBox::*)(const QString &)>(
-                         &QComboBox::activated),
-                     this, &LicosStudyOptionsDialog::warningLevelChanged);
+    QObject::connect(vlv, &QComboBox::currentTextChanged, this,
+                     &LicosStudyOptionsDialog::verboseLevelChanged);
+    QObject::connect(wlv, &QComboBox::currentTextChanged, this,
+                     &LicosStudyOptionsDialog::warningLevelChanged);
     QObject::connect(
         qobject_cast<QCheckBox *>(gl2->itemAtPosition(0, 1)->widget()),
         &QCheckBox::toggled, this,

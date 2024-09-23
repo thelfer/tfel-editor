@@ -76,6 +76,7 @@ namespace tfel::gui {
   };  // end of PythonMajorMode
 
   static StandardMajorModeProxy<PythonMajorMode> proxy(
-      "Python", QVector<QRegExp>() << QRegExp("^[\\w-]+\\.py$"));
+      "Python",
+      QVector<QRegularExpression>() << QRegularExpression("^[\\w-]+\\.py$"));
 
 }  // end of namespace tfel::gui

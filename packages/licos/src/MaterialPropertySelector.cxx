@@ -10,6 +10,7 @@
 #include <QtCore/QSet>
 #include <QtCore/QDebug>
 #include <QtCore/QProcess>
+#include <QtCore/QRegularExpression>
 #include <QtCore/QtAlgorithms>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QHeaderView>
@@ -194,8 +195,8 @@ namespace tfel::gui {
 
   QVector<MaterialProperty> MaterialPropertySelector::callMFMLaws(
       const QString& r) const {
-    static QRegExp rout("(" + fileNameRegExp() + ")\\s+\\((" +
-                        fileNameRegExp() + ")\\)");
+    static QRegularExpression rout("(" + fileNameRegExp() + ")\\s+\\((" +
+                                   fileNameRegExp() + ")\\)");
     QVector<MaterialProperty> mprops;
     QProcess p;
     p.start("mfm-laws", QStringList() << r);
@@ -209,10 +210,11 @@ namespace tfel::gui {
     QTextStream stream(&p);
     while (!stream.atEnd()) {
       QString line = stream.readLine();
-      if (rout.indexIn(line) >= 0) {
+      const auto match = rout.match(line);
+      if (match.hasMatch()) {
         MaterialProperty m;
-        m.function = rout.cap(1);
-        m.library = rout.cap(2);
+        m.function = match.captured(1);
+        m.library = match.captured(2);
         mprops.append(m);
       }
     }

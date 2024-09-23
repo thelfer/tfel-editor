@@ -56,7 +56,8 @@ namespace tfel::gui {
                                                    TextEditBase& t) const {
     for (const auto& p : this->proxies) {
       for (const auto& r : p.rexp) {
-        if (r.indexIn(f) >= 0) {
+        const auto match = r.match(f);
+        if (match.hasMatch()) {
           return p.proxy->getMajorMode(w, b, t);
         }
       }
@@ -69,7 +70,8 @@ namespace tfel::gui {
   QString MajorModeFactory::getMajorModeNameForFile(const QString& f) {
     for (const auto& p : this->proxies) {
       for (const auto& r : p.rexp) {
-        if (r.indexIn(f) >= 0) {
+        const auto match = r.match(f);
+        if (match.hasMatch()) {
           return p.proxy->getName();
         }
       }
@@ -78,7 +80,7 @@ namespace tfel::gui {
   }  // end of getMajorModeNameForFile
 
   void MajorModeFactory::addMajorMode(const MajorModeProxyPtr proxy,
-                                      const QVector<QRegExp>& e,
+                                      const QVector<QRegularExpression>& e,
                                       const bool b) {
     Proxy p;
     p.proxy = proxy;

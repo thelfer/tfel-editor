@@ -1,12 +1,13 @@
-find_package(Qt5 5.3 COMPONENTS
-  Core Widgets 
-  Xml Svg
+find_package(Qt6 6.2 COMPONENTS
+  Core Widgets Gui
+  Xml
+# Svg
   Network
   PrintSupport
   REQUIRED)
-find_package(Qt5 5.3 COMPONENTS
-  WebEngine
-  WebEngineWidgets)
+#find_package(Qt6 6.2 COMPONENTS
+#  WebEngine
+#  WebEngineWidgets)
 
 if(WebEngine_FOUND AND WebEngineWidgets_FOUND)
   add_definition("-DTFEL_GUI_HAVE_WEBENGINE")
@@ -15,7 +16,7 @@ endif(WebEngine_FOUND AND WebEngineWidgets_FOUND)
 macro(moc_source header_directory file)
   set(header_file "${header_directory}/${file}.hxx")
   set(moc_output  "moc_${file}.cxx")
-  QT5_GENERATE_MOC(${header_file} ${moc_output})
+  QT6_GENERATE_MOC(${header_file} ${moc_output})
 endmacro(moc_source)
 
 macro(moc_sources flist header_directory)
@@ -39,7 +40,7 @@ macro(qt_sources flist header_directory)
 endmacro(qt_sources)
 
 macro(qt_add_resources)
-  qt5_add_resources(${ARGN})
+  qt6_add_resources(${ARGN})
 endmacro(qt_add_resources)
 
 add_definitions("-DQT_DEPRECATED_WARNINGS")

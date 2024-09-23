@@ -47,9 +47,10 @@ namespace tfel::gui {
     b.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
     b.select(QTextCursor::LineUnderCursor);
     QString l = b.selectedText();
-    QRegExp r("^\\s*(\\w+)");
-    if (r.indexIn(l) >= 0) {
-      QString k = r.cap(1).toLower();
+    QRegularExpression r("^\\s*(\\w+)");
+    const auto match = r.match(l);
+    if (match.hasMatch()) {
+      QString k = match.captured(1).toLower();
       if (cmds.indexOf(k) != -1) {
         auto* const ha = new QAction(QObject::tr("Help on %1").arg(k), m);
         ha->setIcon(QIcon::fromTheme("dialog-question"));
@@ -107,7 +108,7 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<CMakeMajorMode> proxy(
       "CMake",
-      QVector<QRegExp>() << QRegExp("^CMakeLists\\.txt$")
-                         << QRegExp(".*\\.cmake$"));
+      QVector<QRegularExpression>() << QRegularExpression("^CMakeLists\\.txt$")
+                                    << QRegularExpression(".*\\.cmake$"));
 
 }  // end of namespace tfel::gui

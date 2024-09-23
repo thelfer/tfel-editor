@@ -10,10 +10,9 @@
 
 #include <QtCore/QVector>
 #include <QtWidgets/QDialog>
+#include "TFEL/GUI/MaterialPropertySelector.hxx"
 
 namespace tfel::gui {
-
-  struct MaterialProperty;
 
   struct TextEditBase;
 

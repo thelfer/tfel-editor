@@ -26,9 +26,9 @@ static void loadExternalPackages() {
   auto* userFiles = ::getenv("TFEL_EDITOR_LOAD_PATH");
   if (userFiles != nullptr) {
 #ifdef Q_OS_WIN
-    paths << QString(userFiles).split(";", QString::SkipEmptyParts);
+    paths << QString(userFiles).split(";", Qt::SkipEmptyParts);
 #else  /* Q_OS_WIN */
-    paths << QString(userFiles).split(":", QString::SkipEmptyParts);
+    paths << QString(userFiles).split(":", Qt::SkipEmptyParts);
 #endif /* Q_OS_WIN */
   }
   // add the standard path

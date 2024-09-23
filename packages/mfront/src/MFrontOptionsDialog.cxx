@@ -119,23 +119,15 @@ namespace tfel::gui {
     }
     //
     // actions
-    QObject::connect(interfaces,
-                     static_cast<void (QComboBox::*)(const QString &)>(
-                         &QComboBox::activated),
-                     this, [this](const QString &v) { this->opts.i = v; });
+    QObject::connect(interfaces, &QComboBox::currentTextChanged, this,
+                     [this](const QString &v) { this->opts.i = v; });
     QObject::connect(
-        atype,
-        static_cast<void (QComboBox::*)(const QString &)>(
-            &QComboBox::activated),
-        this, [this](const QString &v) { this->opts.analysis_type = v; });
-    QObject::connect(olvl,
-                     static_cast<void (QComboBox::*)(const QString &)>(
-                         &QComboBox::activated),
-                     this, [this](const QString &v) { this->opts.olvl = v; });
-    QObject::connect(vlv,
-                     static_cast<void (QComboBox::*)(const QString &)>(
-                         &QComboBox::activated),
-                     this, [this](const QString &v) { this->opts.vlvl = v; });
+        atype, &QComboBox::currentTextChanged, this,
+        [this](const QString &v) { this->opts.analysis_type = v; });
+    QObject::connect(olvl, &QComboBox::currentTextChanged, this,
+                     [this](const QString &v) { this->opts.olvl = v; });
+    QObject::connect(vlv, &QComboBox::currentTextChanged, this,
+                     [this](const QString &v) { this->opts.vlvl = v; });
     QObject::connect(
         rwarnings, &QCheckBox::stateChanged, this,
         [this](const int s) { this->opts.warning = s == Qt::Checked; });

@@ -5,12 +5,12 @@ include_directories("${TFEL_INCLUDE_PATH}")
 link_directories("${PROJECT_BINARY_DIR}/src")
 link_directories("${TFEL_LIBRARY_PATH}")
 
-tfel_editor_package(GnuplotMode
-  GnuplotSyntaxHighlighter
-  GnuplotMajorMode.cxx)
+# tfel_editor_package(GnuplotMode
+#   GnuplotSyntaxHighlighter
+#   GnuplotMajorMode.cxx)
 
-target_link_libraries(TFELEditorGnuplotMode
-  TFELEditor
-  Qt5::Core
-  Qt5::Widgets
-  )
+# target_link_libraries(TFELEditorGnuplotMode
+#   TFELEditor
+#   Qt6::Core
+#   Qt6::Widgets
+#   )

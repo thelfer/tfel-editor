@@ -8,6 +8,7 @@
 #ifndef LIB_CASTEMSYNTAXHIGHLIGHTER_HXX
 #define LIB_CASTEMSYNTAXHIGHLIGHTER_HXX
 
+#include <QtCore/QRegularExpression>
 #include <QtGui/QSyntaxHighlighter>
 
 namespace tfel::gui {
@@ -22,7 +23,7 @@ namespace tfel::gui {
      * a simple wrapper around the highligthing rule
      */
     struct HighlightingRule {
-      QRegExp pattern;
+      QRegularExpression pattern;
       QTextCharFormat format;
     };  // end of struct HighlightingRule
 

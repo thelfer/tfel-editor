@@ -6,7 +6,6 @@
  */
 
 #include <stdexcept>
-#include <QtCore/QRegExp>
 #include <QtGui/QStandardItemModel>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QCheckBox>
@@ -25,10 +24,10 @@ namespace tfel {
     ImportMFMMaterialProperty::Options::Options() = default;
     ImportMFMMaterialProperty::Options::Options(Options&&) = default;
     ImportMFMMaterialProperty::Options::Options(const Options&) = default;
-    ImportMFMMaterialProperty::Options& ImportMFMMaterialProperty::Options::
-    operator=(Options&&) = default;
-    ImportMFMMaterialProperty::Options& ImportMFMMaterialProperty::Options::
-    operator=(const Options&) = default;
+    ImportMFMMaterialProperty::Options&
+    ImportMFMMaterialProperty::Options::operator=(Options&&) = default;
+    ImportMFMMaterialProperty::Options&
+    ImportMFMMaterialProperty::Options::operator=(const Options&) = default;
 
     ImportMFMMaterialProperty::ImportMFMMaterialProperty(EditorWidget& q,
                                                          const Options& o,
@@ -85,10 +84,8 @@ namespace tfel {
         isl->setBuddy(this->isb);
         this->isb->addItem(".+");
         this->isb->addItems(db.getMaterialPropertiesInterfaces());
-        QObject::connect(this->isb,
-                         static_cast<void (QComboBox::*)(const QString&)>(
-                             &QComboBox::activated),
-                         bfpm, &MFMFilterProxyModel::setInterfaceFilter);
+        QObject::connect(this->isb, &QComboBox::currentTextChanged, bfpm,
+                         &MFMFilterProxyModel::setInterfaceFilter);
         fg->addWidget(isl, 2, 0);
         fg->addWidget(this->isb, 2, 1);
       }

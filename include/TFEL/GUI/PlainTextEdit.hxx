@@ -71,7 +71,9 @@ namespace tfel::gui {
 
     bool isReadOnly() override;
 
-    bool find(const QString&, QTextDocument::FindFlags = nullptr) override;
+    bool find(
+        const QString&,
+        QTextDocument::FindFlags = QTextDocument::FindCaseSensitively) override;
 
     QTextCursor textCursor() const override;
 

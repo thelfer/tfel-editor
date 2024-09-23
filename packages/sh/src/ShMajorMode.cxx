@@ -43,6 +43,8 @@ namespace tfel::gui {
   ShMajorMode::~ShMajorMode() = default;
 
   static StandardMajorModeProxy<ShMajorMode> proxy(
-      "sh", QVector<QRegExp>() << QRegExp("^" + fileNameRegExp() + "\\.sh$"));
+      "sh",
+      QVector<QRegularExpression>()
+          << QRegularExpression("^" + fileNameRegExp() + "\\.sh$"));
 
 }  // end of namespace tfel::gui

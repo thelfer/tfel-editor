@@ -12,7 +12,6 @@
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
 #include <QtCore/QSettings>
-#include <QtCore/QTextCodec>
 #include <QtCore/QTextStream>
 #include <QtCore/QStandardPaths>
 #include <QtCore/QStringListModel>
@@ -31,76 +30,13 @@
 
 namespace tfel::gui {
 
-  struct CodecSelectionDialog : public QDialog {
-    CodecSelectionDialog(const QString& file, QWidget* const p)
-        : QDialog(p),
-          model(new QStringListModel(this)),
-          view(new QListView(this)) {
-      auto* mlayout = new QVBoxLayout;
-      auto* l = new QLabel(QObject::tr("Select encoding for file '%1'")
-                               .arg(QFileInfo(file).fileName()));
-      auto codecs_ = QTextCodec::availableCodecs();
-      QStringList codecs;
-      for (int i = 0; i != codecs_.size(); ++i) {
-        codecs.append(codecs_[i]);
-      }
-      codecs.sort();
-      model->setStringList(codecs);
-      QSettings s;
-      view->setModel(model);
-      if (s.contains("previously selected codec")) {
-        auto c = s.value("previously selected codec").toString();
-        view->setCurrentIndex(model->index(codecs.indexOf(c)));
-      }
-      auto* bb =
-          new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-      connect(bb, &QDialogButtonBox::accepted, this,
-              &CodecSelectionDialog::accept);
-      connect(bb, &QDialogButtonBox::rejected, this,
-              &CodecSelectionDialog::reject);
-      mlayout->addWidget(l);
-      mlayout->addWidget(view);
-      mlayout->addWidget(bb);
-      this->setLayout(mlayout);
-    }  // end of CodecSelectionDialog
-
-    QString selectedCodec() const {
-      const auto index = this->view->currentIndex();
-      if (!index.isValid()) {
-        return QString();
-      }
-      const auto ml = this->model->stringList();
-      if (ml.size() <= index.row()) {
-        return QString();
-      }
-      const auto c = ml.at(index.row());
-      QSettings s;
-      s.setValue("previously selected codec", c);
-      return c;
-    }  // end of selectedCodec
-
-   private:
-    QStringListModel* model;
-    QListView* view;
-  };  // end of
-
-  static bool valid_utf8_file(const QString& f) {
-    std::ifstream ifs(f.toStdString().c_str());
-    if (!ifs) {
-      return false;  // even better, throw here
-    }
-    std::istreambuf_iterator<char> it(ifs.rdbuf());
-    std::istreambuf_iterator<char> eos;
-    return utf8::is_valid(it, eos);
-  }
-
   PlainTextEdit::PlainTextEdit(EditorWidget& g, Buffer& b)
       : TextEditBase(g, b), e(new QPlainTextEdit(this)) {
     this->initialize(this->e);
 #pragma message("warning")
     auto* hl = new QHBoxLayout;
     setQAbstractScrollAreaInLayout(hl, this->e);
-    this->e->setTabStopWidth(40);
+    //    this->e->setTabStopWidth(40);
     this->e->setWordWrapMode(QTextOption::WrapAnywhere);
     this->e->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     this->setLayout(hl);
@@ -113,7 +49,7 @@ namespace tfel::gui {
     this->initialize(this->e);
     auto* hl = new QHBoxLayout;
     setQAbstractScrollAreaInLayout(hl, this->e);
-    this->e->setTabStopWidth(40);
+    //    this->e->setTabStopWidth(40);
     this->e->setWordWrapMode(QTextOption::WrapAnywhere);
     this->e->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     this->e->setContextMenuPolicy(Qt::NoContextMenu);
@@ -133,23 +69,12 @@ namespace tfel::gui {
       }
       // check if utf8
       QTextStream in(&file);
-      const auto u = valid_utf8_file(f);
-      if (!u) {
-        // select codec
-        CodecSelectionDialog d(f, this);
-        if (d.exec() == QDialog::Accepted) {
-          const auto codec = d.selectedCodec();
-          if (!codec.isEmpty()) {
-            in.setCodec(codec.toStdString().c_str());
-          }
-        }
-      } else {
-        in.setCodec("UTF-8");
-      }
+      in.setAutoDetectUnicode(true);
+      in.setEncoding(QStringConverter::Utf8);
       QApplication::setOverrideCursor(Qt::WaitCursor);
       this->setPlainText(in.readAll());
       QApplication::restoreOverrideCursor();
-      this->document()->setModified(!u);
+      //      this->document()->setModified(!u);
       this->moveCursor(QTextCursor::Start, QTextCursor::MoveAnchor);
       // setting file name
       this->setFileName(f);
@@ -309,11 +234,12 @@ namespace tfel::gui {
 
     QString file_raw;
     QString file_num;
-    QRegExp expr("(.*)(\\d.*)");
-    int p = 0;
-    if (expr.indexIn(file_sans, p) != -1) {
-      file_raw = expr.cap(1);
-      file_num = expr.cap(2);
+    QRegularExpression expr("(.*)(\\d.*)");
+
+    const auto match = expr.match(file_sans);
+    if (match.hasMatch()) {
+      file_raw = match.captured(1);
+      file_num = match.captured(2);
     } else {
       file_raw = file_sans;
     }

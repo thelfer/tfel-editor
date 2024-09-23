@@ -43,11 +43,11 @@ namespace tfel::gui {
       this->latexWarning.setForeground(Qt::darkYellow);
       this->latexError.setForeground(Qt::red);
       this->latexLineError.setForeground(Qt::darkRed);
-      err.setMinimal(true);
-      err2.setMinimal(true);
-      err3.setMinimal(true);
-      warning.setMinimal(true);
-      warning2.setMinimal(true);
+      err.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
+      err2.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
+      err3.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
+      warning.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
+      warning2.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
     }  // end of LaTeXOutputSyntaxHighlighter
 
     void highlightBlock(const QString &text) override {
@@ -59,24 +59,25 @@ namespace tfel::gui {
         }
       } else {
         // warnings
-        if (warning.indexIn(text) != -1) {
+        if (warning.match(text).hasMatch()) {
           this->setFormat(0, text.size(), this->latexWarning);
           this->setCurrentBlockState(1);
         }
-        if (warning2.indexIn(text) != -1) {
+        if (warning2.match(text).hasMatch()) {
           this->setFormat(0, text.size(), this->latexWarning);
         }
         // errors
-        if (err.indexIn(text) != -1) {
+        if (err.match(text).hasMatch()) {
           this->setFormat(0, text.size(), this->latexError);
         }
-        if (err2.indexIn(text) != -1) {
+        if (err2.match(text).hasMatch()) {
           this->setFormat(0, text.size(), this->latexLineError);
         }
-        if (err3.indexIn(text) != -1) {
+        const auto match3 = err3.match(text);
+        if (match3.hasMatch()) {
           auto *d = new LaTeXUserData;
-          const auto f = err3.cap(1);
-          const auto l = err3.cap(2);
+          const auto f = match3.captured(1);
+          const auto l = match3.captured(2);
           bool b;
           d->file = f;
           d->line = l.toInt(&b);
@@ -87,22 +88,24 @@ namespace tfel::gui {
             this->setCurrentBlockUserData(d);
           }
         }
-        QRegExp file("\\(([\\./][\\w-0-9_/\\.]+)");
-        int pos = 0;
-        while ((pos = file.indexIn(text, pos)) != -1) {
+        QRegularExpression file("\\(([\\./][\\w-0-9_/\\.]+)");
+        auto match = file.match(text);
+        while (match.hasMatch()) {
+          const auto pos = match.lastCapturedIndex();
           // removing the first character
-          this->setFormat(pos + 1, file.cap(1).size(), this->latexFile);
-          pos += file.matchedLength();
+          const auto l = match.capturedLength();
+          this->setFormat(pos + 1, l, this->latexFile);
+          match = file.match(text, pos + l);
         }
       }
     }
 
    protected:
-    QRegExp err;
-    QRegExp err2;
-    QRegExp err3;
-    QRegExp warning;
-    QRegExp warning2;
+    QRegularExpression err;
+    QRegularExpression err2;
+    QRegularExpression err3;
+    QRegularExpression warning;
+    QRegularExpression warning2;
 
     QTextCharFormat latexWarning;
     QTextCharFormat latexError;

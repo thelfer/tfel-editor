@@ -17,15 +17,15 @@ namespace tfel::gui {
     this->commentFormat.setForeground(Qt::red);
     this->outOfBoundsFormat.setForeground(Qt::darkRed);
     HighlightingRule rq;
-    rq.pattern = QRegExp("'.*'");
-    rq.pattern.setMinimal(true);
+    rq.pattern = QRegularExpression("'.*'");
+    rq.pattern.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
     rq.format = this->quotationFormat;
     this->highlightingRules.append(rq);
     // castem keys
     const QStringList &keys = CastemMajorMode::getKeysList();
     foreach (const QString &pattern, keys) {
       HighlightingRule rule;
-      rule.pattern = QRegExp("\\b" + pattern.toUpper() + "\\w*\\b");
+      rule.pattern = QRegularExpression("\\b" + pattern.toUpper() + "\\w*\\b");
       rule.format = this->keyFormat;
       this->highlightingRules.append(rule);
     }
@@ -40,12 +40,13 @@ namespace tfel::gui {
       return;
     }
     foreach (const HighlightingRule &rule, highlightingRules) {
-      QRegExp expression(rule.pattern);
-      int index = expression.indexIn(text);
-      while (index >= 0) {
-        int length = expression.matchedLength();
+      QRegularExpression expression(rule.pattern);
+      auto match = expression.match(text);
+      while (match.hasMatch()) {
+        const auto index = match.lastCapturedIndex();
+        const auto length = match.capturedLength();
         this->setFormat(index, length, rule.format);
-        index = expression.indexIn(text, index + length);
+        match = expression.match(text, index + length);
       }
     }
     // if text is longer than 80 characters

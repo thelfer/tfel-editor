@@ -10,6 +10,7 @@
 
 #include <string>
 #include <vector>
+#include <QtCore/QRegularExpression>
 #include "TFEL/GUI/CSyntaxHighlighterBase.hxx"
 
 namespace tfel::gui {
@@ -39,7 +40,7 @@ namespace tfel::gui {
 
     static std::vector<std::string> buildBlocksList();
 
-    QVector<QRegExp> importExprs;
+    QVector<QRegularExpression> importExprs;
 
     QTextCharFormat optFormat;
     QTextCharFormat importFormat;

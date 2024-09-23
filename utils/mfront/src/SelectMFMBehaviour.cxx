@@ -6,7 +6,6 @@
  */
 
 #include <stdexcept>
-#include <QtCore/QRegExp>
 #include <QtGui/QStandardItemModel>
 #include <QtWidgets/QCheckBox>
 #include "TFEL/System/ExternalLibraryManager.hxx"
@@ -79,10 +78,8 @@ namespace tfel::gui {
       isl->setBuddy(this->isb);
       this->isb->addItem(".+");
       this->isb->addItems(db.getBehavioursInterfaces());
-      QObject::connect(this->isb,
-                       static_cast<void (QComboBox::*)(const QString&)>(
-                           &QComboBox::activated),
-                       bfpm, &MFMFilterProxyModel::setInterfaceFilter);
+      QObject::connect(this->isb, &QComboBox::currentTextChanged, bfpm,
+                       &MFMFilterProxyModel::setInterfaceFilter);
     }
     // hypothesis
     auto* const hsl = new QLabel(QObject::tr("Hypothesis"));

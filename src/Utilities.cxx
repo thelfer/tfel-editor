@@ -59,7 +59,7 @@ namespace tfel::gui {
     auto* s = a->verticalScrollBar();
     hl->addWidget(s);
     hl->addWidget(a);
-    hl->setMargin(0);
+    //    hl->setMargin(0);
     hl->setContentsMargins(0, 0, 0, 0);
     hl->setSpacing(0);
   }
@@ -114,9 +114,7 @@ namespace tfel::gui {
     return r;
   }
 
-  QString fileNameRegExp() {
-    return "[\\w-0-9_\\./]+";
-  }  // end of fileNameRegExp
+  QString fileNameRegExp() { return "[\\w0-9._+-]+"; }  // end of fileNameRegExp
 
   void clearMenu(QMenu* const m) {
     for (auto* a : m->actions()) {

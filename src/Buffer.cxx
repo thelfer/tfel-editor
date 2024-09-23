@@ -155,13 +155,13 @@ namespace tfel::gui {
     this->api->setSizePolicy(qs);
     this->mi->setSizePolicy(qs);
     this->ti->setSizePolicy(qs);
-    hl->setMargin(0);
+    //    hl->setMargin(0);
     hl->setContentsMargins(0, 0, 0, 0);
     hl->setSpacing(0);
     this->splitter->addWidget(this->e);
     this->splitter->addWidget(this->stw);
     hl->addWidget(this->splitter);
-    vl->setMargin(0);
+    //    vl->setMargin(0);
     vl->setContentsMargins(0, 0, 0, 0);
     vl->setSpacing(0);
     //    vl->addWidget(this->e);

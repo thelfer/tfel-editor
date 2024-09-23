@@ -63,8 +63,7 @@ namespace tfel::gui {
         convergence_criterion_label(
             new QLabel(QObject::tr("Convergence criterion"))),
         convergence_criterion(new LineEdit(w)),
-        implicit_parameter_label(
-            new QLabel(QObject::tr("Implicit parameter"))),
+        implicit_parameter_label(new QLabel(QObject::tr("Implicit parameter"))),
         implicit_parameter(new LineEdit(w)),
         perturbation_value_label(new QLabel(QObject::tr("Perturbation value"))),
         perturbation_value(new LineEdit(w)),

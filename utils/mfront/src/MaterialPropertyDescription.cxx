@@ -43,11 +43,13 @@ namespace tfel {
     CastemMaterialPropertyDescription::CastemMaterialPropertyDescription(
         const CastemMaterialPropertyDescription&) = default;
 
-    CastemMaterialPropertyDescription& CastemMaterialPropertyDescription::
-    operator=(CastemMaterialPropertyDescription&&) = default;
+    CastemMaterialPropertyDescription&
+    CastemMaterialPropertyDescription::operator=(
+        CastemMaterialPropertyDescription&&) = default;
 
-    CastemMaterialPropertyDescription& CastemMaterialPropertyDescription::
-    operator=(const CastemMaterialPropertyDescription&) = default;
+    CastemMaterialPropertyDescription&
+    CastemMaterialPropertyDescription::operator=(
+        const CastemMaterialPropertyDescription&) = default;
 
   }  // end of namespace gui
 }  // end of namespace tfel

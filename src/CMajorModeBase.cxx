@@ -9,6 +9,7 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QProcess>
 #include <QtCore/QTemporaryFile>
+#include <QtCore/QRegularExpression>
 #include <QtGui/QTextBlock>
 #include <QtGui/QTextCursor>
 #include <QtGui/QTextDocumentWriter>
@@ -226,7 +227,7 @@ namespace tfel::gui {
                         QTextCursor& c,
                         const QTextCursor& b,
                         const QTextCursor& e) {
-    QRegExp rcursor("(\\d+)");
+    QRegularExpression rcursor("(\\d+)");
     const auto cf = textEdit.getFileName();
     QTemporaryFile tmp(cf);
     if (!tmp.open()) {
@@ -268,12 +269,13 @@ namespace tfel::gui {
     }
     QTextStream in(cformat.readAll());
     auto pr = in.readLine();
-    if (rcursor.indexIn(pr, 0) == -1) {
+    const auto match = rcursor.match(pr);
+    if (!match.hasMatch()) {
       editor.displayInformativeMessage(
           QObject::tr("analysis of 'clang-format' output failed"));
       return;
     }
-    const auto cpos = rcursor.cap(1).toInt();
+    const auto cpos = match.captured(1).toInt();
     c.movePosition(QTextCursor::Start, QTextCursor::MoveAnchor);
     c.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
     c.insertText(in.readAll());

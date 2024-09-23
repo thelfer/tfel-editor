@@ -6,7 +6,7 @@
  */
 
 #include <QtCore/QDebug>
-#include <QtCore/QRegExp>
+#include <QtCore/QRegularExpression>
 #include "TFEL/GUI/LaTeXMajorMode.hxx"
 #include "TFEL/GUI/LaTeXSyntaxHighlighter.hxx"
 
@@ -62,23 +62,25 @@ namespace tfel::gui {
     HighlightingRule rule;
     // rule.format  = QVector<QTextCharFormat>() << this->keyFormat <<
     // this->boldFormat;
-    // rule.pattern = QRegExp("(\\\\textbf)\\{(\\w+)\\}");
+    // rule.pattern = QRegularExpression("(\\\\textbf)\\{(\\w+)\\}");
     // rule.pattern.setMinimal(true);
     // rules.append(rule);
     // rule.format  = QVector<QTextCharFormat>() << this->keyFormat <<
     // this->itFormat;
-    // rule.pattern = QRegExp("(\\\\textit)\\{(\\w+)\\}");
+    // rule.pattern = QRegularExpression("(\\\\textit)\\{(\\w+)\\}");
     // rule.pattern.setMinimal(true);
     // rules.append(rule);
     rule.format = QVector<QTextCharFormat>(1, keyFormat);
-    rule.pattern = QRegExp("\\\\\\w+");
+    rule.pattern = QRegularExpression("\\\\\\w+");
     rules.append(rule);
     rule.format = QVector<QTextCharFormat>() << envFormat << keyFormat;
-    rule.pattern = QRegExp("(\\\\begin)\\{(\\w+)\\}");
-    rule.pattern.setMinimal(true);
+    rule.pattern = QRegularExpression("(\\\\begin)\\{(\\w+)\\}");
+    rule.pattern.setPatternOptions(
+        QRegularExpression::InvertedGreedinessOption);
     rules.append(rule);
-    rule.pattern = QRegExp("(\\\\end)\\{(\\w+)\\}");
-    rule.pattern.setMinimal(true);
+    rule.pattern = QRegularExpression("(\\\\end)\\{(\\w+)\\}");
+    rule.pattern.setPatternOptions(
+        QRegularExpression::InvertedGreedinessOption);
     rules.append(rule);
     return rules;
   }  // end of LaTeXSyntaxHighlighter::buildHighlightingRules
@@ -111,9 +113,10 @@ namespace tfel::gui {
       int cpos = -1;
       auto mp = rules.end();
       for (auto p = rules.begin(); p != rules.end(); ++p) {
-        QRegExp e(p->pattern);
-        const auto rp = e.indexIn(l, pos);
-        if (rp != -1) {
+        QRegularExpression e(p->pattern);
+        const auto m = e.match(l, pos);
+        if (m.hasMatch()) {
+          const auto rp = m.lastCapturedIndex();
           if ((cpos == -1) || (rp <= cpos)) {
             mp = p;
             cpos = rp;
@@ -126,15 +129,16 @@ namespace tfel::gui {
         }
         // treating the LaTeX command
         const auto& rule = *mp;
-        QRegExp e(rule.pattern);
-        e.indexIn(l, pos);
-        int length = e.matchedLength();
+        QRegularExpression e(rule.pattern);
+        const auto m = e.match(l, pos);
+        const int length = m.capturedLength();
         if (rule.format.size() == 1) {
           this->setFormat(cpos, length, rule.format[0]);
         } else {
-          if (e.captureCount() == rule.format.size()) {
-            for (int i = 0; i != e.captureCount(); ++i) {
-              QString cap = e.cap(i + 1);
+#warning message("HERE")
+          if (m.lastCapturedIndex() == rule.format.size()) {
+            for (int i = 0; i != m.lastCapturedIndex(); ++i) {
+              QString cap = m.captured(i + 1);
               int cs = cap.size();
               cpos = l.indexOf(cap, cpos);
               this->setFormat(cpos, cs, rule.format[i]);
@@ -150,27 +154,27 @@ namespace tfel::gui {
     }
   }
 
-  void LaTeXSyntaxHighlighter::highLightMispellWords(const QString& l,
-                                                     const int p) {
-    using namespace std;
-    QTextCharFormat f;
-    auto& spellChecker = this->mode.getSpellChecker();
-    f.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
-    int pos = 0;
-    while (pos != l.size()) {
-      if (l[pos].isLetter()) {
-        const auto npos = pos;
-        ++pos;
-        while ((pos != l.size()) && (l[pos].isLetter())) {
-          ++pos;
-        }
-        if (!spellChecker.spell(l.mid(npos, pos - npos))) {
-          this->setFormat(p + npos, pos - npos, f);
-        }
-      } else {
-        ++pos;
-      }
-    }
+  void LaTeXSyntaxHighlighter::highLightMispellWords(const QString& /* l */,
+                                                     const int /* p */) {
+    // using namespace std;
+    // QTextCharFormat f;
+    // auto& spellChecker = this->mode.getSpellChecker();
+    // f.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+    // int pos = 0;
+    // while (pos != l.size()) {
+    //   if (l[pos].isLetter()) {
+    //     const auto npos = pos;
+    //     ++pos;
+    //     while ((pos != l.size()) && (l[pos].isLetter())) {
+    //       ++pos;
+    //     }
+    //     if (!spellChecker.spell(l.mid(npos, pos - npos))) {
+    //       this->setFormat(p + npos, pos - npos, f);
+    //     }
+    //   } else {
+    //     ++pos;
+    //   }
+    // }
   }  // end of LaTeXSyntaxHighlighter::highLightMispellWords
 
 }  // end of namespace tfel::gui

@@ -9,7 +9,7 @@
 #define LIB_TFEL_GUI_MFMFILTERPROXYMODEL_HXX
 
 #include <QtCore/QString>
-#include <QtCore/QRegExp>
+#include <QtCore/QRegularExpression>
 #include <QtCore/QSortFilterProxyModel>
 #include "TFEL/GUI/MFrontImportWidgetsConfig.hxx"
 
@@ -33,11 +33,11 @@ namespace tfel {
      protected:
       bool filterAcceptsRow(int, const QModelIndex&) const override;
       //! name filter
-      QRegExp name;
+      QRegularExpression name;
       //! interface filter
-      QRegExp mfront_interface;
+      QRegularExpression mfront_interface;
       //! material filter
-      QRegExp material;
+      QRegularExpression material;
       //! material knowledge
       QString mkt;
 

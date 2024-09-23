@@ -879,8 +879,9 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<CastemMajorMode> proxy(
       "Cast3M",
-      QVector<QRegExp>() << QRegExp("^" + fileNameRegExp() + ".dgibi")
-                         << QRegExp("^" + fileNameRegExp() + ".procedur"),
+      QVector<QRegularExpression>()
+          << QRegularExpression("^" + fileNameRegExp() + ".dgibi")
+          << QRegularExpression("^" + fileNameRegExp() + ".procedur"),
       ":/Cast3MIcon.png");
 
 }  // end of namespace tfel::gui

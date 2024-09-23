@@ -6,8 +6,6 @@
  */
 
 #include <QtCore/QDebug>
-#include <QtCore/QTextCodec>
-#include <QtCore/QTextDecoder>
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/ProcessOutputMajorModeBase.hxx"
 #include "TFEL/GUI/ProcessOutputFrame.hxx"
@@ -33,14 +31,7 @@ namespace tfel::gui {
     QObject::disconnect(this->process, &QProcess::readyReadStandardOutput, this,
                         &ProcessOutputFrame::displayProcessOutput);
     auto out = this->process->readAll();
-#ifdef Q_OS_WIN
-    auto* codec = QTextCodec::codecForName("cp850");
-#else  /*  Q_OS_WIN */
-    auto* codec = QTextCodec::codecForLocale();
-#endif /*  Q_OS_WIN */
-    auto* decoder = codec->makeDecoder();
-    this->appendPlainText(decoder->toUnicode(out));
-    delete decoder;
+    this->appendPlainText(out);
     QObject::connect(this->process, &QProcess::readyReadStandardOutput, this,
                      &ProcessOutputFrame::displayProcessOutput);
   }  // end of displayProcessOutput

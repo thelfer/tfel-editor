@@ -149,7 +149,7 @@ namespace tfel::gui {
         } catch (...) {
         }
       }
-      for (const auto& ihrn : c.isotropic_hardening_rules) {
+      for (const auto &ihrn : c.isotropic_hardening_rules) {
         append(",\nisotropic_hardening\n: \"" + ihrn + "\"");
         try {
           const auto &ihrf =
@@ -159,7 +159,7 @@ namespace tfel::gui {
         } catch (...) {
         }
       }
-      for (const auto& khrn : c.kinematic_hardening_rules) {
+      for (const auto &khrn : c.kinematic_hardening_rules) {
         append(",\nkinematic_hardening\n: \"" + khrn + "\"");
         try {
           const auto &khrf =

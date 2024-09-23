@@ -12,6 +12,7 @@
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
 #include <QtCore/QUrl>
+#include <QtCore/QRegularExpression>
 #include <QtGui/QDesktopServices>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMessageBox>
@@ -151,8 +152,7 @@ namespace tfel::gui {
     }
     userFiles = ::getenv("LICOS_USER_FILES");
     if (userFiles != nullptr) {
-      QStringList paths =
-          QString(userFiles).split(":", QString::SkipEmptyParts);
+      QStringList paths = QString(userFiles).split(":", Qt::SkipEmptyParts);
       QStringList::const_iterator p = paths.begin();
       QStringList::const_iterator pe = paths.end();
       while (p != pe) {
@@ -193,7 +193,7 @@ namespace tfel::gui {
   }  // end of LicosMajorMode::getLicosFile
 
   QString LicosMajorMode::getFileInPath(const QString &f, const QString &path) {
-    QStringList paths = QString(path).split(":", QString::SkipEmptyParts);
+    QStringList paths = QString(path).split(":", Qt::SkipEmptyParts);
     QStringList::const_iterator p = paths.begin();
     QStringList::const_iterator pe = paths.end();
     QString r;
@@ -253,7 +253,7 @@ namespace tfel::gui {
     // vp->setCursor(Qt::PointingHandCursor);
     t.setMouseTracking(true);
     // regular expression
-    rlib.setMinimal(true);
+    rlib.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
     // actions
     this->createActions();
   }  // end of LicosMajorMode::LicosMajorMode
@@ -542,14 +542,15 @@ namespace tfel::gui {
       }
       QListIterator<QString> pe(errors);
       pe.toBack();
-      QRegExp r("^Parsing error at line (\\d+) in file '([\\w\\./]+)'.$");
+      QRegularExpression r(
+          "^Parsing error at line (\\d+) in file '([\\w\\./]+)'.$");
       QString file;
       int line = -1;
       while (pe.hasPrevious()) {
-        const QString &l = pe.previous();
-        if (r.indexIn(l) >= 0) {
-          file = r.cap(2);
-          line = r.cap(1).toInt();
+        const auto m = r.match(pe.previous());
+        if (m.hasMatch()) {
+          file = m.captured(2);
+          line = m.captured(1).toInt();
         }
       }
       if (!file.isEmpty()) {
@@ -1030,16 +1031,17 @@ namespace tfel::gui {
   QString LicosMajorMode::getFileNameUnderCursor(const QTextCursor &tc,
                                                  const QString &e) {
     const QString l = tc.block().text();
-    QRegExp i("'(" + fileNameRegExp() + "\\." + e + ")'");
-    i.setMinimal(true);
-    int index = i.indexIn(l);
-    while (index >= 0) {
-      int length = i.matchedLength();
-      int p = this->positionInCurrentBlock(tc);
+    QRegularExpression i("'(" + fileNameRegExp() + "\\." + e + ")'");
+    i.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
+    auto m = i.match(l);
+    while (m.hasMatch()) {
+      const int index = m.lastCapturedIndex();
+      const int length = m.capturedLength();
+      const int p = this->positionInCurrentBlock(tc);
       if ((p > index) && (p < index + length)) {
-        return i.cap(1);
+        return m.captured(1);
       }
-      index = i.indexIn(l, index + length);
+      m = i.match(l, index + length);
     }
     return "";
   }
@@ -1087,15 +1089,15 @@ namespace tfel::gui {
 
   QString LicosMajorMode::libraryNameUnderCursor(const QTextCursor &tc) {
     const QString l = tc.block().text();
-    int index = this->rlib.indexIn(l);
-    while (index >= 0) {
-      int length = this->rlib.matchedLength();
-      int p = this->positionInCurrentBlock(tc);
+    auto m = this->rlib.match(l);
+    while (m.hasMatch()) {
+      const int index = m.lastCapturedIndex();
+      const int length = m.capturedLength();
+      const int p = this->positionInCurrentBlock(tc);
       if ((p > index) && (p < index + length)) {
-        const QString f = this->rlib.cap(1);
-        return f;
+        return m.captured(1);
       }
-      index = this->rlib.indexIn(l, index + length);
+      m = this->rlib.match(l, index + length);
     }
     return "";
   }  // end of LicosMajorMode::libraryNameUnderCursor
@@ -1215,8 +1217,8 @@ namespace tfel::gui {
               }
             } else if (!b.isSubKey(w)) {
               qDebug() << "error "
-                       << " (" << lineNumber << ") : " << w << " is unsupported"
-                       << endl;
+                       << " (" << lineNumber << ") : " << w
+                       << " is unsupported\n";
             }
           }
         }
@@ -1542,7 +1544,8 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<LicosMajorMode> proxy(
       "licos",
-      QVector<QRegExp>() << QRegExp("^" + fileNameRegExp() + "\\.ple"),
+      QVector<QRegularExpression>()
+          << QRegularExpression("^" + fileNameRegExp() + "\\.ple"),
       ":/LicosIcon.png");
 
 }  // end of namespace tfel::gui

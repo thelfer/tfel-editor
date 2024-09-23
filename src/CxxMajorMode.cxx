@@ -6,6 +6,7 @@
  */
 
 #include <QtCore/QDebug>
+#include <QtCore/QRegularExpression>
 
 #include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
@@ -52,16 +53,17 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<CxxMajorMode> proxy(
       "C++",
-      QVector<QRegExp>() << QRegExp(fileNameRegExp() + "\\.cxx$")
-                         << QRegExp(fileNameRegExp() + "\\.hxx$")
-                         << QRegExp(fileNameRegExp() + "\\.ixx$")
-                         << QRegExp(fileNameRegExp() + "\\.cpp$")
-                         << QRegExp(fileNameRegExp() + "\\.hpp$")
-                         << QRegExp(fileNameRegExp() + "\\.ipp$")
-                         << QRegExp(fileNameRegExp() + "\\.CC$")
-                         << QRegExp(fileNameRegExp() + "\\.hh$")
-                         << QRegExp(fileNameRegExp() + "\\.c$")
-                         << QRegExp(fileNameRegExp() + "\\.h$"),
+      QVector<QRegularExpression>()
+          << QRegularExpression(fileNameRegExp() + "\\.cxx$")
+          << QRegularExpression(fileNameRegExp() + "\\.hxx$")
+          << QRegularExpression(fileNameRegExp() + "\\.ixx$")
+          << QRegularExpression(fileNameRegExp() + "\\.cpp$")
+          << QRegularExpression(fileNameRegExp() + "\\.hpp$")
+          << QRegularExpression(fileNameRegExp() + "\\.ipp$")
+          << QRegularExpression(fileNameRegExp() + "\\.CC$")
+          << QRegularExpression(fileNameRegExp() + "\\.hh$")
+          << QRegularExpression(fileNameRegExp() + "\\.c$")
+          << QRegularExpression(fileNameRegExp() + "\\.h$"),
       ":/tfel/editor/languages/cxx.png");
 
 }  // end of namespace tfel::gui

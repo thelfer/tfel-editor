@@ -40,7 +40,7 @@
 #include <QtCore/QDir>
 #include <QtCore/QFile>
 #include <QtCore/QDebug>
-#include <QtCore/QTextCodec>
+// #include <QtCore/QTextCodec>
 #include <QtCore/QTextStream>
 #include <QtCore/QStringList>
 #include <QtCore/QCoreApplication>

@@ -9,10 +9,10 @@
 #include <QtGui/QTextCursor>
 
 #include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/ProcessOutputFrame.hxx"
 #include "TFEL/GUI/PipeTestSyntaxHighlighter.hxx"
 #include "TFEL/GUI/MajorModeFactory.hxx"
-
 #include "TFEL/GUI/PipeTestMajorMode.hxx"
 
 namespace tfel::gui {
@@ -60,6 +60,8 @@ namespace tfel::gui {
   PipeTestMajorMode::~PipeTestMajorMode() = default;
 
   static StandardMajorModeProxy<PipeTestMajorMode> proxy(
-      "PipeTest", QVector<QRegExp>() << QRegExp("^[\\w-]+\\.ptest"));
+      "PipeTest",
+      QVector<QRegularExpression>()
+          << QRegularExpression(fileNameRegExp() + "\\.ptest"));
 
 }  // end of namespace tfel::gui

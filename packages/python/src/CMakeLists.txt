@@ -9,6 +9,6 @@ tfel_editor_package(PythonMode
 
 target_link_libraries(TFELEditorPythonMode
   TFELEditor
-  Qt5::Core
-  Qt5::Widgets
+  Qt6::Core
+  Qt6::Widgets
   )

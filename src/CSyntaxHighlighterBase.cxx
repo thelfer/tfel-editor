@@ -15,7 +15,7 @@ namespace tfel::gui {
   std::vector<std::string> &CSyntaxHighlighterBase::getRawStringDelimiters() {
     static std::vector<std::string> delimiters;
     return delimiters;
-  } // end of getRawStringDelimiters
+  }  // end of getRawStringDelimiters
 
   const std::string &CSyntaxHighlighterBase::getRawStringDelimiter(
       const int i) {

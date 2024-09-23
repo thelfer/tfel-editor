@@ -10,6 +10,7 @@
 #include <QtCore/QFileInfo>
 #include <QtGui/QTextCursor>
 #include "TFEL/System/ExternalLibraryManager.hxx"
+#include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/Buffer.hxx"
 #include "TFEL/GUI/CommandFactory.hxx"
@@ -268,9 +269,10 @@ namespace tfel::gui {
     b.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
     b.select(QTextCursor::LineUnderCursor);
     const auto l = b.selectedText();
-    QRegExp r("^(@\\w+)");
-    if (r.indexIn(l) >= 0) {
-      const auto k = r.cap(1);
+    QRegularExpression r("^(@\\w+)");
+    const auto match = r.match(l);
+    if (match.hasMatch()) {
+      const auto k = match.captured(1);
       if (std::find(keys.begin(), keys.end(), k.toStdString()) != keys.end()) {
         auto* const ha = new QAction(QObject::tr("Help on %1").arg(k), m);
         const auto cactions = m->actions();
@@ -366,6 +368,8 @@ namespace tfel::gui {
   static StandardFunctionCommandProxy<runPTest> runPTestProxy("run-ptest");
 
   static StandardMajorModeProxy<MTestMajorMode> proxy(
-      "MTest", QVector<QRegExp>() << QRegExp("^[\\w-]+\\.mtest"));
+      "MTest",
+      QVector<QRegularExpression>()
+          << QRegularExpression(fileNameRegExp() + "\\.mtest"));
 
 }  // end of namespace tfel::gui

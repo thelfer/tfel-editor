@@ -7,7 +7,7 @@
 
 #include <QtCore/QDebug>
 #include <QtCore/QSettings>
-#include <QtWidgets/QAction>
+#include <QtGui/QAction>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMessageBox>

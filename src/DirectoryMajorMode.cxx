@@ -8,6 +8,7 @@
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
 #include <QtCore/QDateTime>
+#include <QtCore/QRegularExpression>
 #include <QtGui/QSyntaxHighlighter>
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
@@ -35,7 +36,7 @@ namespace tfel::gui {
      * \param[in] l: line
      */
     void highlightBlock(const QString& l) override {
-      const auto ls = l.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+      const auto ls = l.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
       if (ls.isEmpty()) {
         return;
       }
@@ -96,8 +97,8 @@ namespace tfel::gui {
         ((m == Qt::NoModifier) && (k == Qt::Key_Enter))) {
       auto tc = this->textEdit.textCursor();
       tc.select(QTextCursor::LineUnderCursor);
-      const auto l =
-          tc.selectedText().split(QRegExp("\\s+"), QString::SkipEmptyParts);
+      const auto l = tc.selectedText().split(QRegularExpression("\\s+"),
+                                             Qt::SkipEmptyParts);
       if (l.isEmpty()) {
         return true;
       }
@@ -122,8 +123,8 @@ namespace tfel::gui {
     auto mo = int{};
     const auto eis = QDir(this->directory).entryInfoList();
     for (const auto& ei : eis) {
-      mf = std::max(mf, ei.fileName().size());
-      mo = std::max(mo, ei.owner().size());
+      mf = std::max(static_cast<qsizetype>(mf), ei.fileName().size());
+      mo = std::max(static_cast<qsizetype>(mo), ei.owner().size());
     }
     this->textEdit.setReadOnly(false);
     this->textEdit.setFileName(this->directory);

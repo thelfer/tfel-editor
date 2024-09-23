@@ -38,8 +38,8 @@ namespace tfel::gui {
     return "major mode dedicated to the Markdown language";
   }  // end of MarkdownMajorMode::getDescription
 
-  void MarkdownMajorMode::setSpellCheckLanguage(const QString &l) {
-    this->spellChecker.setSpellCheckLanguage(l);
+  void MarkdownMajorMode::setSpellCheckLanguage(const QString & /* l */) {
+    // this->spellChecker.setSpellCheckLanguage(l);
     if (this->highlighter != nullptr) {
       this->highlighter->rehighlight();
     }
@@ -154,13 +154,13 @@ namespace tfel::gui {
     // The second member gives the indentation of the line.
     auto startsParagraph = [](QTextCursor tc) -> std::pair<int, int> {
       static auto f = [] {  // detect footnotes
-        QRegExp r("^\\s*\\[\\^\\d+\\]:");
-        r.setMinimal(true);
+        QRegularExpression r("^\\s*\\[\\^\\d+\\]:");
+        r.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
         return r;
       }();
       static auto el = [] {  // enumerated list
-        QRegExp r("^\\s*\\d+\\.\\s+");
-        r.setMinimal(true);
+        QRegularExpression r("^\\s*\\d+\\.\\s+");
+        r.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
         return r;
       }();
       tc.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
@@ -177,15 +177,15 @@ namespace tfel::gui {
         } else if ((c == '-') || (c == '*') || (c == '+')) {
           return {0, indent};
         } else if (c.isDigit()) {
-          const auto index = el.indexIn(l);
-          if (index == 0) {
+          const auto match = el.match(l);
+          if (match.hasMatch()) {
             return {0, indent};
           } else {
             return {1, 0};
           }
         } else if (c == '[') {
-          const auto index = f.indexIn(l);
-          if (index == 0) {
+          const auto match = f.match(l);
+          if (match.hasMatch()) {
             return {0, indent};
           } else {
             return {1, 0};
@@ -272,7 +272,7 @@ namespace tfel::gui {
       }
       // split the string
       const auto words =
-          p.split(QRegularExpression("\\s+"), QString::SkipEmptyParts);
+          p.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
       // remove the selected lines and insert the splitted string
       tc.beginEditBlock();
       tc.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor,
@@ -340,15 +340,16 @@ namespace tfel::gui {
     return CompiledLanguageMajorModeBase::keyPressEvent(ev);
   }  // end of MarkdownMajorMode::keyPressEvent
 
-  SpellChecker &MarkdownMajorMode::getSpellChecker() {
-    return this->spellChecker;
-  }  // end of MarkdownMajorMode::getSpellChecker
+  // SpellChecker &MarkdownMajorMode::getSpellChecker() {
+  //   return this->spellChecker;
+  // }  // end of MarkdownMajorMode::getSpellChecker
 
   MarkdownMajorMode::~MarkdownMajorMode() = default;
 
   static StandardMajorModeProxy<MarkdownMajorMode> proxy(
       "Markdown",
-      QVector<QRegExp>() << QRegExp("^" + fileNameRegExp() + ".md"),
+      QVector<QRegularExpression>()
+          << QRegularExpression("^" + fileNameRegExp() + ".md"),
       "x-office-document");
 
 }  // end of namespace tfel::gui
