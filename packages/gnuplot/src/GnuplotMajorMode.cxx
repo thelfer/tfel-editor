@@ -8,6 +8,7 @@
 #include <QtCore/QDir>
 #include <QtCore/QDebug>
 #include <QtGui/QSyntaxHighlighter>
+#include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/Buffer.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
@@ -80,7 +81,8 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<GnuplotMajorMode> proxy(
       "Gnuplot",
-      QVector<QRegExp>() << QRegExp("^[\\w-\\.0-9]+\\.gp")
-                         << QRegExp("^[\\w-\\.0-9]+\\.gnuplot"));
+      QVector<QRegularExpression>()
+      << QRegularExpression("^" + fileNameRegExp() + "\\.gp")
+      << QRegularExpression("^" + fileNameRegExp() + "\\.gnuplot"));
 
 }  // end of namespace tfel::gui

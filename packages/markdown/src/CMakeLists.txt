@@ -16,7 +16,4 @@ tfel_editor_package(MarkdownMode
 
 target_link_libraries(TFELEditorMarkdownMode
   TFELEditor
-  TFELUtilities
-  Qt6::Core
-  Qt6::Widgets
-  )
+  TFELUtilities)

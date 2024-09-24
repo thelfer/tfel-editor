@@ -31,7 +31,4 @@ target_link_libraries(TFELEditorMFrontImportWidgets
   TFELMTest
   TFELMFront
   TFELMaterial
-  TFELSystem
-  Qt6::Core
-  Qt6::Widgets
-  )
+  TFELSystem)

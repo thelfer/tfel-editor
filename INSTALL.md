@@ -1,39 +1,21 @@
 # Prerequisites
 
 - `cmake` development packages.
-- [`qt5` development packages]().
-    - On debian system, one shall install `libqt5svg5-dev`
+- [`qt6` development packages]().
+    - On debian system, one shall install `libqt6svg5-dev`
 - hunspell (optional). On debian system, one shall install
 - `TFEL/MFront` project
 - `tfel-plot` project (optional)
 - a decent C++-11 compiler. 
 
-### Ubuntu 18.1
+### Ubuntu
 
 The following packages are needed to get all the features of
-`TFEL/MFront`, `tfel-plot` and `tfel-editor` on Mageia 18.1:
+`TFEL/MFront`, `tfel-plot` and `tfel-editor`:
 
 ~~~~{.bash}
 $ sudo apt-get install git cmake g++ gfortran libboost-all-dev
-$ sudo apt-get install libqt5svg5-dev qtwebengine5-dev
-~~~~
-
-### Mageia 6.1
-
-The following packages are needed to get all the features of
-`TFEL/MFront`, `tfel-plot` and `tfel-editor` on Mageia 6.1:
-
-~~~~{.bash}
-dnf install make git cmake gcc-c++ gcc-gfortran lib64boost-python3_1.60.0.x86_64 lib64boost-devel.x86_64 lib64qt5webengine-devel.x86_64 lib64qt5sql-devel.x86_64 lib64qt5xml-devel.x86_64 lib64qt5svg-devel.x86_64
-~~~~
-
-### Fedora 29
-
-The following packages are needed to get all the features of
-`TFEL/MFront`, `tfel-plot` and `tfel-editor` on Mageia 6.1:
-
-~~~~{.bash}
-dnf install git cmake gcc-c++.x86_64 gcc-gfortran.x86_64 make.x86_64 boost-devel.x86_64 boost-python3-devel.x86_64 qt5-qtwebengine-devel.x86_64 qt5-qtsvg-devel.x86_64 python3-devel.x86_64
+$ sudo apt-get install libqt6svg6-dev
 ~~~~
 
 # Build instructions
@@ -56,7 +38,7 @@ The following variable affects the build of the editor:
 
 - `CMAKE_BUILD_TYPE`: type of build
 - `CMAKE_INSTALL_PREFIX`: path where `tfel-editor` will be installed
-- `Qt5_DIR`: path to where `Qt5` is installed (optional if `Qt` is
+- `Qt6_DIR`: path to where `Qt6` is installed (optional if `Qt` is
   installed system-wide or if appropriate environment variables, such as
   `PATH` and `LD_LIBRARY_PATH` has been set).
 - `enable-tfel-plot`: boolean value enabling/disabling the support of

@@ -29,7 +29,4 @@ tfel_editor_package(LicosMode
   LicosMaterialWizard.cxx)
 
 target_link_libraries(TFELEditorLicosMode
-  TFELEditor
-  Qt6::Core
-  Qt6::Widgets
-  )
+  TFELEditor)

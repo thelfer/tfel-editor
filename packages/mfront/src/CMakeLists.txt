@@ -35,7 +35,4 @@ target_link_libraries(TFELEditorMFrontMode
   TFELMaterial
   TFELUtilities
   TFELGlossary
-  TFELUnicodeSupport
-  Qt6::Core
-  Qt6::Widgets
-  )
+  TFELUnicodeSupport)

@@ -22,8 +22,5 @@ tfel_editor_package(CastemMode
 target_link_libraries(TFELEditorCastemMode
   TFELEditorMFrontImportWidgets
   TFELEditor
-  TFELGlossary
-  Qt6::Core
-  Qt6::Widgets
-  )
+  TFELGlossary)
   

@@ -15,7 +15,4 @@ tfel_editor_package(TPlotPackage
 target_link_libraries(TFELEditorTPlotPackage
   TFELEditorGnuplotMode
   TFELEditor
-  TFELPlot
-  Qt6::Core
-  Qt6::Widgets
-  )
+  TFELPlot)

@@ -15,7 +15,4 @@ tfel_editor_package(MakefileMode
   ${MakefileMode_SOURCES})
 
 target_link_libraries(TFELEditorMakefileMode
-  TFELEditor
-  Qt6::Core
-  Qt6::Widgets
-  )
+  TFELEditor)

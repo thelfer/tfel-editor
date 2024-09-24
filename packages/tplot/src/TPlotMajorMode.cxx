@@ -6,8 +6,9 @@
  */
 
 #include <QtCore/QDir>
-#include <QtCore/QDebug>
+#include <QtCore/QRegularExpression>
 #include <QtGui/QSyntaxHighlighter>
+#include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/Buffer.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
@@ -62,6 +63,6 @@ namespace tfel::gui {
   };  // end of TPlotMajorMode
 
   static StandardMajorModeProxy<TPlotMajorMode> proxy(
-      "TPlot", QVector<QRegExp>() << QRegExp("^[\\w-0-9_\\.]+\\.tplot"));
+						      "TPlot", QVector<QRegularExpression>() << QRegularExpression("^" + fileNameRegExp() + "\\.tplot"));
 
 }  // end of namespace tfel::gui

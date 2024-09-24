@@ -18,7 +18,4 @@ tfel_editor_package(BashMode
 
 target_link_libraries(TFELEditorBashMode
   TFELEditorShMode
-  TFELEditor
-  Qt6::Core
-  Qt6::Widgets
-  )
+  TFELEditor)

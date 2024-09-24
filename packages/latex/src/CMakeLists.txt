@@ -19,6 +19,4 @@ tfel_editor_package(LaTeXMode
   LaTeXOutputMajorMode.cxx)
 
 target_link_libraries(TFELEditorLaTeXMode
-  TFELEditor
-  Qt6::Core
-  Qt6::Widgets)
+  TFELEditor)
