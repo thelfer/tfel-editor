@@ -8,6 +8,7 @@
 #include <QtCore/QDebug>
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
+#include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/Buffer.hxx"
 #include "TFEL/GUI/PlainTextEdit.hxx"
@@ -707,8 +708,8 @@ namespace tfel::gui {
   static StandardMajorModeProxy<LaTeXMajorMode> proxy(
       "LaTeX",
       QVector<QRegularExpression>()
-          << QRegularExpression("^[\\w-0-9_\\.]+\\.tex")
-          << QRegularExpression("^[\\w-0-9_\\.]+\\.sty"),
+          << QRegularExpression("^" + fileNameRegExp() + "\\.tex")
+          << QRegularExpression("^" + fileNameRegExp() + "\\.sty"),
       ":/tfel/editor/languages/latex.png");
 
 }  // end of namespace tfel::gui
