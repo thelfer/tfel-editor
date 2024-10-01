@@ -60,10 +60,10 @@ namespace tfel::gui {
     // boldFormat.setFontWeight(QFont::Bold);
     // itFormat.setFontItalic(true);
     HighlightingRule rule;
-    // rule.format  = QVector<QTextCharFormat>() << this->keyFormat <<
-    // this->boldFormat;
-    // rule.pattern = QRegularExpression("(\\\\textbf)\\{(\\w+)\\}");
-    // rule.pattern.setMinimal(true);
+    //     rule.format = QVector<QTextCharFormat>()
+    //                   << this->keyFormat << this->boldFormat;
+    //     rule.pattern = QRegularExpression(R"((\textbf)\{(\w+)\})");
+    //     rule.pattern.setMinimal(true);
     // rules.append(rule);
     // rule.format  = QVector<QTextCharFormat>() << this->keyFormat <<
     // this->itFormat;
@@ -71,17 +71,23 @@ namespace tfel::gui {
     // rule.pattern.setMinimal(true);
     // rules.append(rule);
     rule.format = QVector<QTextCharFormat>(1, keyFormat);
-    rule.pattern = QRegularExpression("\\\\\\w+");
-    rules.append(rule);
+    rule.pattern = QRegularExpression(R"(\\\w+)");
+    if (rule.pattern.isValid()) {
+      rules.append(rule);
+    }
     rule.format = QVector<QTextCharFormat>() << envFormat << keyFormat;
-    rule.pattern = QRegularExpression("(\\\\begin)\\{(\\w+)\\}");
+    rule.pattern = QRegularExpression(R"((\\begin)\{(\w+)\})");
     rule.pattern.setPatternOptions(
         QRegularExpression::InvertedGreedinessOption);
-    rules.append(rule);
-    rule.pattern = QRegularExpression("(\\\\end)\\{(\\w+)\\}");
+    if (rule.pattern.isValid()) {
+      rules.append(rule);
+    }
+    rule.pattern = QRegularExpression(R"((\\end)\{(\w+)\})");
     rule.pattern.setPatternOptions(
         QRegularExpression::InvertedGreedinessOption);
-    rules.append(rule);
+    if (rule.pattern.isValid()) {
+      rules.append(rule);
+    }
     return rules;
   }  // end of LaTeXSyntaxHighlighter::buildHighlightingRules
 
@@ -113,6 +119,9 @@ namespace tfel::gui {
       int cpos = -1;
       auto mp = rules.end();
       for (auto p = rules.begin(); p != rules.end(); ++p) {
+        if (!p->pattern.isValid()) {
+          continue;
+        }
         QRegularExpression e(p->pattern);
         const auto m = e.match(l, pos);
         if (m.hasMatch()) {
@@ -129,24 +138,25 @@ namespace tfel::gui {
         }
         // treating the LaTeX command
         const auto& rule = *mp;
-        QRegularExpression e(rule.pattern);
-        const auto m = e.match(l, pos);
-        const int length = m.capturedLength();
-        if (rule.format.size() == 1) {
-          this->setFormat(cpos, length, rule.format[0]);
-        } else {
-#warning message("HERE")
-          if (m.lastCapturedIndex() == rule.format.size()) {
-            for (int i = 0; i != m.lastCapturedIndex(); ++i) {
-              QString cap = m.captured(i + 1);
-              int cs = cap.size();
-              cpos = l.indexOf(cap, cpos);
-              this->setFormat(cpos, cs, rule.format[i]);
-              cpos += cs;
+        if (rule.pattern.isValid()) {
+          QRegularExpression e(rule.pattern);
+          const auto m = e.match(l, pos);
+          const int length = m.capturedLength();
+          if (rule.format.size() == 1) {
+            this->setFormat(cpos, length, rule.format[0]);
+          } else {
+            if (m.lastCapturedIndex() == rule.format.size()) {
+              for (int i = 0; i != m.lastCapturedIndex(); ++i) {
+                QString cap = m.captured(i + 1);
+                int cs = cap.size();
+                cpos = l.indexOf(cap, cpos);
+                this->setFormat(cpos, cs, rule.format[i]);
+                cpos += cs;
+              }
             }
           }
+          pos = cpos + length;
         }
-        pos = cpos + length;
       } else {
         this->highLightMispellWords(l.mid(pos, l.size() - pos), pos);
         pos = l.size();

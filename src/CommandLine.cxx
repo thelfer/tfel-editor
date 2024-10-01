@@ -5,6 +5,7 @@
  * \date   05/07/2012
  */
 
+#include <QtCore/QDir>
 #include <QtCore/QDebug>
 #include <QtCore/QSettings>
 #include <QtGui/QKeyEvent>
@@ -67,8 +68,7 @@ namespace tfel::gui {
     if (ev->type() == QEvent::KeyPress) {
       auto* kev = static_cast<QKeyEvent*>(ev);
       if (kev->key() == Qt::Key_Tab) {
-        auto* c = this->completer();
-        if (c != nullptr) {
+        if (auto* c = this->completer(); c != nullptr) {
           this->complete();
         }
         ev->accept();
@@ -83,8 +83,8 @@ namespace tfel::gui {
     const auto m = ev->modifiers();
     const auto ctrl = m == Qt::ControlModifier;
     if ((ctrl) && (k == Qt::Key_G)) {
-      auto qle = qobject_cast<CommandLine*>(this->parent());
-      if (qle != nullptr) {
+      if (auto* qle = qobject_cast<CommandLine*>(this->parent());
+          qle != nullptr) {
         qle->cancel();
       }
       return;
@@ -108,12 +108,17 @@ namespace tfel::gui {
   }
 
   QString CommandLine::CustomLineEdit::findCompletion(bool& b) {
-    auto* c = this->completer();
     QString r;
     b = true;
-    if (c != nullptr) {
+    if (auto* const c = this->completer(); c != nullptr) {
       QStringList cc;
       c->setCompletionPrefix(this->text());
+      auto* m = qobject_cast<QFileSystemModel*>(c->model());
+      if (m == nullptr) {
+        return r;
+      }
+      QFileInfo fi(this->text());
+      m->setRootPath(fi.absolutePath());
       b = c->completionCount() == 1;
       for (int i = 0; c->setCurrentRow(i); i++) {
         cc.append(c->currentCompletion());

@@ -37,14 +37,17 @@ namespace tfel::gui {
     }  // end of GrepOutputSyntaxHighlighter
 
     void highlightBlock(const QString &text) override {
-      QRegularExpression expr("^([/-\\w|\\.]+):(\\d+):");
-      expr.setMinimal(true);
+      QRegularExpression expr(R"(^([\/\-\w|\.]+):(\d+):)");
+      if (!expr.isValid()) {
+        return;
+      }
+      expr.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
       const auto match = expr.match(text);
-      if ((match.hasMatch()) && (match.captureCount() == 2)) {
+      if ((match.hasMatch()) && (match.lastCapturedIndex() == 2)) {
         auto *d = new GrepUserData;
-        auto n = expr.cap(2);
+        auto n = match.captured(2);
         bool b;
-        d->file = expr.cap(1);
+        d->file = match.captured(1);
         d->line = n.toInt(&b);
         if (!b) {
           delete d;

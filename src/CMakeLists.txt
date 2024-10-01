@@ -62,7 +62,7 @@ tfel_editor_library(TFELEditor
   TextEditQueryReplace.cxx
   TextEditReplaceFilter.cxx
   MajorModeFactory.cxx
-#  GrepOutputMajorMode.cxx
+  GrepOutputMajorMode.cxx
   CompilationOutputMajorMode.cxx
   ${Resources_RCC}
   ${TFEL_EDITOR_SOURCES})

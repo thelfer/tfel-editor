@@ -79,17 +79,16 @@ namespace tfel::gui {
 #endif /* TFEL_GUI_HAVE_WEBENGINE */
 
   QString commonPart(const QString& s1, const QString& s2) {
-    QString r;
-    int l = qMin(s1.size(), s2.size());
+    const auto l = qMin(s1.size(), s2.size());
     if (l == 0) {
       return QString();
     }
-    r.reserve(l);
+    QString r;
     for (int i = 0; i != l; ++i) {
       if (s1[i] != s2[i]) {
         break;
       }
-      r[i] = s1[i];
+      r += s1[i];
     }
     return r;
   }  // end of commonPart
@@ -102,13 +101,15 @@ namespace tfel::gui {
       return l[0];
     }
     auto r = commonPart(l[0], l[1]);
-    for (int i = 2; i != l.size(); ++i) {
-      const auto& s = l[i];
-      if (!s.startsWith(r)) {
-        r = commonPart(r, s);
-      }
-      if (r.isEmpty()) {
-        return "";
+    if(l.size() > 2){
+      for (int i = 2; i != l.size(); ++i) {
+	const auto& s = l[i];
+	if (!s.startsWith(r)) {
+	  r = commonPart(r, s);
+	}
+	if (r.isEmpty()) {
+	  return "";
+	}
       }
     }
     return r;

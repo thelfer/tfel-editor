@@ -125,7 +125,10 @@ namespace tfel::gui {
   }  // end of LaTeXMajorMode::LaTeXMajorMode
 
   QString LaTeXMajorMode::getTeXMasterFile() {
-    QRegularExpression r("^\\s*%%% TeX-master: \"([\\w-0-9_\\./]+)\"\\s*$");
+    QRegularExpression r(R("^\s*%%% TeX-master: \"([\w-0-9_\./]+)\"\s*$)");
+    if (!r.isValid()) {
+      return {};
+    }
     QTextCursor tc = this->textEdit.textCursor();
     tc.movePosition(QTextCursor::Start, QTextCursor::KeepAnchor);
     tc.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
@@ -137,7 +140,7 @@ namespace tfel::gui {
       tc.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
       tc.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
     }
-    return QString();
+    return {};
   }  // end of LaTeXMajorMode::getTeXMasterFile
 
   QString LaTeXMajorMode::getName() const {
