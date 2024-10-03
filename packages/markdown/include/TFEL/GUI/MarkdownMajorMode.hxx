@@ -9,7 +9,7 @@
 #define LIB_TFEL_GUI_MFRONTMAJORMODE_HXX
 
 #include <QtGui/QSyntaxHighlighter>
-// #include <TFEL/GUI/SpellChecker.hxx>
+#include <TFEL/GUI/SpellChecker.hxx>
 #include "TFEL/GUI/CompiledLanguageMajorModeBase.hxx"
 
 namespace tfel::gui {
@@ -51,7 +51,7 @@ namespace tfel::gui {
 
     QIcon getIcon() const override;
 
-    //    SpellChecker &getSpellChecker();
+    SpellChecker &getSpellChecker();
 
     //! destructor
     ~MarkdownMajorMode() override;
@@ -65,7 +65,7 @@ namespace tfel::gui {
 
    protected:
     //! checking
-    //    SpellChecker spellChecker;
+    SpellChecker spellChecker;
     QSyntaxHighlighter *highlighter = nullptr;
 
    private:

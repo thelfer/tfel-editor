@@ -28,24 +28,24 @@ namespace tfel::gui {
                                        Buffer &b,
                                        TextEditBase &t)
       : CompiledLanguageMajorModeBase(w, b, t) {
-  }  // end of MarkdownMajorMode::MarkdownMajorMode
+  }  // end of MarkdownMajorMode
 
   QString MarkdownMajorMode::getName() const {
     return "Markdown";
-  }  // end of MarkdownMajorMode::getName
+  }  // end of getName
 
   QString MarkdownMajorMode::getDescription() const {
     return "major mode dedicated to the Markdown language";
-  }  // end of MarkdownMajorMode::getDescription
+  }  // end of getDescription
 
-  void MarkdownMajorMode::setSpellCheckLanguage(const QString & /* l */) {
-    // this->spellChecker.setSpellCheckLanguage(l);
+  void MarkdownMajorMode::setSpellCheckLanguage(const QString &l) {
+    this->spellChecker.setSpellCheckLanguage(l);
     if (this->highlighter != nullptr) {
       this->highlighter->rehighlight();
     }
-  }  // end of MarkdownMajorMode::setSpellCheckLanguage
+  }  // end of setSpellCheckLanguage
 
-  void MarkdownMajorMode::format() {}  // end of MarkdownMajorMode::format()
+  void MarkdownMajorMode::format() {}  // end of format()
 
   QMenu *MarkdownMajorMode::getSpecificMenu() {
     auto *t = qobject_cast<QWidget *>(this->parent());
@@ -60,23 +60,23 @@ namespace tfel::gui {
 
   QCompleter *MarkdownMajorMode::getCompleter() {
     return nullptr;
-  }  // end of MarkdownMajorMode::getCompleter
+  }  // end of getCompleter
 
   QString MarkdownMajorMode::getCompletionPrefix() {
     return "";
-  }  // end of MarkdownMajorMode::getCompletionPrefix
+  }  // end of getCompletionPrefix
 
   QIcon MarkdownMajorMode::getIcon() const {
     return QIcon::fromTheme("x-office-document");
-  }  // end of MarkdownMajorMode::getIcon()
+  }  // end of getIcon()
 
   void MarkdownMajorMode::setSyntaxHighlighter(QTextDocument *const d) {
     this->highlighter = new MarkdownSyntaxHighlighter(*this, d);
-  }  // end of MarkdownMajorMode::setSyntaxHighlighter
+  }  // end of setSyntaxHighlighter
 
   void MarkdownMajorMode::completeContextMenu(QMenu *const,
                                               const QTextCursor &) {
-  }  // end of MarkdownMajorMode::completeContextMenu
+  }  // end of completeContextMenu
 
   void MarkdownMajorMode::runPandoc() {
     if (this->textEdit.isModified()) {
@@ -87,15 +87,15 @@ namespace tfel::gui {
       return;
     }
     this->startPandoc();
-  }  // end of MarkdownMajorMode::runPandoc()
+  }  // end of runPandoc()
 
   QString MarkdownMajorMode::getLanguageName() const {
     return "markdown";
-  }  // end of MarkdownMajorMode::getLanguageName
+  }  // end of getLanguageName
 
   QString MarkdownMajorMode::getDefaultCompilationCommand() const {
     return "pandoc ";
-  }  // end of MarkdownMajorMode::getDefaultCompilationCommand
+  }  // end of getDefaultCompilationCommand
 
   void MarkdownMajorMode::startPandoc() {
     const auto n = this->textEdit.getCompleteFileName();
@@ -112,7 +112,7 @@ namespace tfel::gui {
     //     QObject::connect(s, &MarkdownOutputFrame::finished, this,
     //                      &MarkdownMajorMode::AnalysisFinished);
     //     this->buffer.addSlave(QObject::tr("Markdown Output"), s);
-  }  // end of MarkdownMajorMode::startPandoc
+  }  // end of startPandoc
 
   bool MarkdownMajorMode::handleShortCut(const int k1,
                                          const Qt::KeyboardModifiers m,
@@ -140,7 +140,7 @@ namespace tfel::gui {
       return true;
     }
     return CompiledLanguageMajorModeBase::handleShortCut(k1, m, k2);
-  }  // end of MarkdownMajorMode::handleShortCut
+  }  // end of handleShortCut
 
   bool MarkdownMajorMode::keyPressEvent(QKeyEvent *const ev) {
     const auto k = ev->key();
@@ -338,11 +338,11 @@ namespace tfel::gui {
       return true;
     }
     return CompiledLanguageMajorModeBase::keyPressEvent(ev);
-  }  // end of MarkdownMajorMode::keyPressEvent
+  }  // end of keyPressEvent
 
-  // SpellChecker &MarkdownMajorMode::getSpellChecker() {
-  //   return this->spellChecker;
-  // }  // end of MarkdownMajorMode::getSpellChecker
+  SpellChecker &MarkdownMajorMode::getSpellChecker() {
+    return this->spellChecker;
+  }  // end of getSpellChecker
 
   MarkdownMajorMode::~MarkdownMajorMode() = default;
 

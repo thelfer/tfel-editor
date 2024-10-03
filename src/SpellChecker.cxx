@@ -39,12 +39,11 @@
 
 #include <QtCore/QDir>
 #include <QtCore/QFile>
-#include <QtCore/QDebug>
-// #include <QtCore/QTextCodec>
 #include <QtCore/QTextStream>
 #include <QtCore/QStringList>
+#include <QtCore/QStandardPaths>
 #include <QtCore/QCoreApplication>
-
+#include <QtCore/QRegularExpression>
 #include <QtGui/QDesktopServices>
 
 #include "TFEL/GUI/SpellChecker.hxx"
@@ -110,23 +109,28 @@ namespace tfel::gui {
         new Hunspell(affixFilePathBA.constData(), dictFilePathBA.constData());
     // detect encoding analyzing the SET option in the affix
     // file
-    this->_encoding = "ISO8859-1";
+    this->_encoding = QStringConverter::Latin1;
     QFile _affixFile(affixFile);
     if (_affixFile.open(QIODevice::ReadOnly)) {
       QTextStream stream(&_affixFile);
-      QRegExp enc_detector("^\\s*SET\\s+([A-Z0-9\\-]+)\\s*",
-                           Qt::CaseInsensitive);
+      QRegularExpression enc_detector("^\\s*SET\\s+([A-Z0-9\\-]+)\\s*");
+      enc_detector.setPatternOptions(QRegularExpression::CaseInsensitiveOption);
       for (QString line = stream.readLine(); !line.isEmpty();
            line = stream.readLine()) {
-        if (enc_detector.indexIn(line) > -1) {
-          _encoding = enc_detector.cap(1);
+        const auto match = enc_detector.match(line);
+        if (match.hasMatch()) {
+          const auto oencoding = QStringConverter::encodingForName(
+              match.captured(1).toStdString().c_str());
+          if (oencoding.has_value()) {
+            this->_encoding = *oencoding;
+          }
           break;
         }
       }
       _affixFile.close();
     }
-    this->_codec =
-        QTextCodec::codecForName(this->_encoding.toLatin1().constData());
+    //     this->_codec =
+    //         QTextCodec::codecForName(this->_encoding.toLatin1().constData());
     if (!this->_userDictionary.isEmpty()) {
       QFile userDictonaryFile(this->_userDictionary);
       if (userDictonaryFile.open(QIODevice::ReadOnly)) {
@@ -183,7 +187,8 @@ namespace tfel::gui {
     //         this->_codec->fromUnicode(word).constData());
     QStringList suggestions;
     for (int i = 0; i < numSuggestions; ++i) {
-      suggestions << this->_codec->toUnicode(suggestWordList[i]);
+      QStringDecoder decoder(this->_encoding);
+      suggestions << decoder(suggestWordList[i]);
       free(suggestWordList[i]);
     }
     return suggestions;
@@ -219,7 +224,9 @@ namespace tfel::gui {
 
   void SpellChecker::put_word(const QString &word) {
 #ifdef TFEL_GUI_HUNSPELL_SUPPORT
-    this->_hunspell->add(_codec->fromUnicode(word).constData());
+    QStringEncoder encoder(this->_encoding);
+    QByteArray s = encoder(word);
+    this->_hunspell->add(s.constData());
 #else
     static_cast<void>(word);
 #endif /* TFEL_GUI_HUNSPELL_SUPPORT */

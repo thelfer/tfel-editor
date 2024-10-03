@@ -10,7 +10,7 @@
 
 #include <QtCore/QPointer>
 #include <QtCore/QRegularExpression>
-// #include <TFEL/GUI/SpellChecker.hxx>
+#include <TFEL/GUI/SpellChecker.hxx>
 #include "TFEL/GUI/MajorModeBase.hxx"
 
 namespace tfel::gui {
@@ -79,7 +79,7 @@ namespace tfel::gui {
 
     QString getCommentSyntax() override;
 
-    //    SpellChecker &getSpellChecker();
+    SpellChecker &getSpellChecker();
 
     void setSpellCheckLanguage(const QString &) override;
 
@@ -137,7 +137,7 @@ namespace tfel::gui {
 
     LaTeXSyntaxHighlighter *highlighter;
 
-    //    SpellChecker spellChecker;
+    SpellChecker spellChecker;
 
     QVector<QAction *> suggestions;
     //! absolute postion of the beginning of the mispelled word

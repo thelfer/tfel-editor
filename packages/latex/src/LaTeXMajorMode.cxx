@@ -288,70 +288,68 @@ namespace tfel::gui {
     }
   }
 
-  void LaTeXMajorMode::setSpellCheckLanguage(const QString& /* l */) {
-    // this->spellChecker.setSpellCheckLanguage(l);
+  void LaTeXMajorMode::setSpellCheckLanguage(const QString& l) {
+    this->spellChecker.setSpellCheckLanguage(l);
     if (this->highlighter != nullptr) {
       this->highlighter->rehighlight();
     }
   }  // end of LaTeXMajorMode::setSpellCheckLanguage
 
-  void LaTeXMajorMode::completeContextMenuForMispelledWord(
-      QMenu* /* m */,
-      const QString& /* l */,
-      const int /* p */,
-      const int /* ap */) {
-    // int pos = 0;
-    // while (pos != l.size()) {
-    //   if (l[pos].isLetter()) {
-    //     int npos = pos;
-    //     ++pos;
-    //     while ((pos != l.size()) && (l[pos].isLetter())) {
-    //       ++pos;
-    //     }
-    //     if ((p > npos) && (p < pos)) {
-    //       // found !
-    //       this->bmwp = ap + npos;
-    //       this->emwp = ap + pos;
-    //       const QString w = l.mid(npos, pos - npos);
-    //       if (!this->spellChecker.spell(w)) {
-    //         for (auto& pa : this->suggestions) {
-    //           delete pa;
-    //         }
-    //         this->suggestions.clear();
-    //         const auto ss = this->spellChecker.suggest(w);
-    //         for (const auto& s : ss) {
-    //           auto* a = new QAction(s, this);
-    //           a->setData(s);
-    //           this->suggestions.push_back(a);
-    //         }
-    //         if (this->suggestions.size() != 0) {
-    //           auto cactions = m->actions();
-    //           if (!cactions.isEmpty()) {
-    //             m->insertAction(*(cactions.begin()), m->addSeparator());
-    //           }
-    //           for (int i = this->suggestions.size(); i > 0; --i) {
-    //             auto* a = this->suggestions[i - 1];
-    //             cactions = m->actions();
-    //             if (cactions.isEmpty()) {
-    //               m->addAction(a);
-    //             } else {
-    //               m->insertAction(*(cactions.begin()), a);
-    //             }
-    //           }
-    //           QObject::connect(
-    //               m, &QMenu::triggered, this,
-    //               &LaTeXMajorMode::replaceMispelledWordBySuggestion);
-    //         }
-    //       }
-    //     }
-    //   } else {
-    //     ++pos;
-    //   }
-    // }
+  void LaTeXMajorMode::completeContextMenuForMispelledWord(QMenu* m,
+                                                           const QString& l,
+                                                           const int p,
+                                                           const int ap) {
+    int pos = 0;
+    while (pos != l.size()) {
+      if (l[pos].isLetter()) {
+        int npos = pos;
+        ++pos;
+        while ((pos != l.size()) && (l[pos].isLetter())) {
+          ++pos;
+        }
+        if ((p > npos) && (p < pos)) {
+          // found !
+          this->bmwp = ap + npos;
+          this->emwp = ap + pos;
+          const QString w = l.mid(npos, pos - npos);
+          if (!this->spellChecker.spell(w)) {
+            for (auto& pa : this->suggestions) {
+              delete pa;
+            }
+            this->suggestions.clear();
+            const auto ss = this->spellChecker.suggest(w);
+            for (const auto& s : ss) {
+              auto* a = new QAction(s, this);
+              a->setData(s);
+              this->suggestions.push_back(a);
+            }
+            if (this->suggestions.size() != 0) {
+              auto cactions = m->actions();
+              if (!cactions.isEmpty()) {
+                m->insertAction(*(cactions.begin()), m->addSeparator());
+              }
+              for (int i = this->suggestions.size(); i > 0; --i) {
+                auto* a = this->suggestions[i - 1];
+                cactions = m->actions();
+                if (cactions.isEmpty()) {
+                  m->addAction(a);
+                } else {
+                  m->insertAction(*(cactions.begin()), a);
+                }
+              }
+              QObject::connect(
+                  m, &QMenu::triggered, this,
+                  &LaTeXMajorMode::replaceMispelledWordBySuggestion);
+            }
+          }
+        }
+      } else {
+        ++pos;
+      }
+    }
   }  // end of LaTeXMajorMode::completeContextMenuForMispelledWord
 
-  //  SpellChecker& LaTeXMajorMode::getSpellChecker() { return
-  //  this->spellChecker; }
+  SpellChecker& LaTeXMajorMode::getSpellChecker() { return this->spellChecker; }
 
   void LaTeXMajorMode::replaceMispelledWordBySuggestion(QAction* a) {
     if (this->suggestions.indexOf(a) != -1) {

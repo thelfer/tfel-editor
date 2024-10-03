@@ -164,27 +164,27 @@ namespace tfel::gui {
     }
   }
 
-  void LaTeXSyntaxHighlighter::highLightMispellWords(const QString& /* l */,
-                                                     const int /* p */) {
-    // using namespace std;
-    // QTextCharFormat f;
-    // auto& spellChecker = this->mode.getSpellChecker();
-    // f.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
-    // int pos = 0;
-    // while (pos != l.size()) {
-    //   if (l[pos].isLetter()) {
-    //     const auto npos = pos;
-    //     ++pos;
-    //     while ((pos != l.size()) && (l[pos].isLetter())) {
-    //       ++pos;
-    //     }
-    //     if (!spellChecker.spell(l.mid(npos, pos - npos))) {
-    //       this->setFormat(p + npos, pos - npos, f);
-    //     }
-    //   } else {
-    //     ++pos;
-    //   }
-    // }
+  void LaTeXSyntaxHighlighter::highLightMispellWords(const QString& l,
+                                                     const int p) {
+    using namespace std;
+    QTextCharFormat f;
+    auto& spellChecker = this->mode.getSpellChecker();
+    f.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+    int pos = 0;
+    while (pos != l.size()) {
+      if (l[pos].isLetter()) {
+        const auto npos = pos;
+        ++pos;
+        while ((pos != l.size()) && (l[pos].isLetter())) {
+          ++pos;
+        }
+        if (!spellChecker.spell(l.mid(npos, pos - npos))) {
+          this->setFormat(p + npos, pos - npos, f);
+        }
+      } else {
+        ++pos;
+      }
+ }
   }  // end of LaTeXSyntaxHighlighter::highLightMispellWords
 
 }  // end of namespace tfel::gui

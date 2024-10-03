@@ -74,9 +74,7 @@ namespace tfel::gui {
 
     QString _userDictionary;
 
-    QString _encoding;
-
-    QTextCodec *_codec;
+    QStringConverter::Encoding _encoding = QStringConverter::Latin1;
   };
 
 }  // end of namespace tfel::gui

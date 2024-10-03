@@ -52,7 +52,7 @@ tfel_editor_library(TFELEditor
   SecondaryTask.cxx
   SecondaryTaskManager.cxx
   Utilities.cxx
-#  SpellChecker.cxx
+  SpellChecker.cxx
   StandardFunctionCommand.cxx
   HunspellDictionariesManager.cxx
   RectangleMode.cxx

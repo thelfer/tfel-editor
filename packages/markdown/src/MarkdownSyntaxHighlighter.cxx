@@ -86,9 +86,8 @@ namespace tfel::gui {
       set_invalid_state();
       return;
     }
-    //    auto &sc = this->mode.getSpellChecker();
-    auto spell_check = [this /*, &sc*/](const Token &t,
-                                        const QTextCharFormat &f) {
+    auto &sc = this->mode.getSpellChecker();
+    auto spell_check = [this, &sc](const Token &t, const QTextCharFormat &f) {
       if (t.value.empty()) {
         return;
       }
@@ -96,11 +95,11 @@ namespace tfel::gui {
         return;
       }
       const auto w = QString::fromStdString(t.value);
-      // if (!sc.spell(w)) {
-      //   QTextCharFormat nf(f);
-      //   nf.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
-      //   this->setFormat(t.offset, t.value.size(), nf);
-      // }
+      if (!sc.spell(w)) {
+        QTextCharFormat nf(f);
+        nf.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+        this->setFormat(t.offset, t.value.size(), nf);
+      }
     };
     auto spell_check_all_tokens = [&tokens,
                                    &spell_check](const QTextCharFormat &f) {
