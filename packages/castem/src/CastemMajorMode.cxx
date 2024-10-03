@@ -677,6 +677,15 @@ namespace tfel::gui {
     tc.movePosition(QTextCursor::StartOfWord, QTextCursor::MoveAnchor);
     tc.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
     tc.removeSelectedText();
+    if (!tc.atStart()) {
+      tc.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor);
+      if (tc.selectedText() == "'") {
+        tc.removeSelectedText();
+      } else {
+        tc.movePosition(QTextCursor::NextCharacter,
+                        QTextCursor::MoveAnchor);
+      }
+    }
     tc.insertText("'" + w.toUpper() + "' ");
     t.setTextCursor(tc);
   }  // end of completeCurrentWord

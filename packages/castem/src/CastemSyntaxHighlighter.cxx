@@ -22,10 +22,9 @@ namespace tfel::gui {
     rq.format = this->quotationFormat;
     this->highlightingRules.append(rq);
     // castem keys
-    const QStringList &keys = CastemMajorMode::getKeysList();
-    foreach (const QString &pattern, keys) {
+    foreach (const QString &pattern, CastemMajorMode::getKeysList()) {
       HighlightingRule rule;
-      rule.pattern = QRegularExpression("\\b" + pattern.toUpper() + "\\w*\\b");
+      rule.pattern = QRegularExpression("(\\b" + pattern.toUpper() + "\\w*\\b)");
       rule.format = this->keyFormat;
       this->highlightingRules.append(rule);
     }
@@ -43,8 +42,8 @@ namespace tfel::gui {
       QRegularExpression expression(rule.pattern);
       auto match = expression.match(text);
       while (match.hasMatch()) {
-        const auto index = match.lastCapturedIndex();
-        const auto length = match.capturedLength();
+        const auto index = match.capturedStart(0);
+        const auto length = match.capturedLength(0);
         this->setFormat(index, length, rule.format);
         match = expression.match(text, index + length);
       }
