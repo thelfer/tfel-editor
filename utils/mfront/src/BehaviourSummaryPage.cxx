@@ -7,19 +7,15 @@
 
 #include "TFEL/GUI/BehaviourSummaryPage.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  BehaviourSummaryPage::BehaviourSummaryPage(QWidget *const p)
+      : QWizardPage(p) {}  // end of BehaviourSummaryPage::BehaviourSummaryPage
 
-    BehaviourSummaryPage::BehaviourSummaryPage(QWidget *const p)
-        : QWizardPage(p) {
-    }  // end of BehaviourSummaryPage::BehaviourSummaryPage
+  int BehaviourSummaryPage::nextId() const {
+    return -1;
+  }  // end of BehaviourSummaryPage::nextId()
 
-    int BehaviourSummaryPage::nextId() const {
-      return -1;
-    }  // end of BehaviourSummaryPage::nextId()
+  BehaviourSummaryPage::~BehaviourSummaryPage() = default;
 
-    BehaviourSummaryPage::~BehaviourSummaryPage() = default;
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui

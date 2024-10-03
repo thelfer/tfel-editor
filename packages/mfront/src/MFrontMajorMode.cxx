@@ -627,7 +627,7 @@ namespace tfel::gui {
   static StandardMajorModeProxy<MFrontMajorMode> proxy(
       "MFront",
       QVector<QRegularExpression>()
-          << QRegularExpression(fileNameRegExp() + "\\.mfront"),
+          << QRegularExpression("^" + fileNameRegExp() + "\\.mfront"),
       ":/mfront/MFrontIcon.png");
 
 }  // end of namespace tfel::gui

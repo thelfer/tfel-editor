@@ -14,60 +14,57 @@
 #include "TFEL/GUI/LineEdit.hxx"
 #include "TFEL/GUI/BehaviourDescription.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  /*!
+   * \brief a wizard page used to select a behaviour from a shared
+   * library.
+   */
+  struct TFEL_GUI_MIW_VISIBILITY_EXPORT SelectBehaviourPage
+      : public QWizardPage {
+    SelectBehaviourPage(EditorWidget &);
+
+    int nextId() const override;
+
+    bool validatePage() override;
+    //! \return the current behaviour description
+    BehaviourDescription getBehaviourDescription() const;
+    //! destructor
+    ~SelectBehaviourPage();
+
+   private slots:
 
     /*!
-     * \brief a wizard page used to select a behaviour from a shared
-     * library.
+     * \brief update the list of behaviours when a library
+     * is selected.
      */
-    struct TFEL_GUI_MIW_VISIBILITY_EXPORT SelectBehaviourPage
-        : public QWizardPage {
-      SelectBehaviourPage(EditorWidget &);
+    virtual void updateBehaviourList();
+    /*!
+     * \brief update the list of modelling hypotheses when a behaviour
+     * is selected.
+     */
+    virtual void updateModellingHypotheses();
 
-      int nextId() const override;
+    virtual void selectLibrary();
 
-      bool validatePage() override;
-      //! \return the current behaviour description
-      BehaviourDescription getBehaviourDescription() const;
-      //! destructor
-      ~SelectBehaviourPage();
+   signals:
 
-     private slots:
+    void behaviourDescriptionChanged(const BehaviourDescription &);
 
-      /*!
-       * \brief update the list of behaviours when a library
-       * is selected.
-       */
-      virtual void updateBehaviourList();
-      /*!
-       * \brief update the list of modelling hypotheses when a behaviour
-       * is selected.
-       */
-      virtual void updateModellingHypotheses();
+   protected:
+    //! list of behaviours declared in the selected library
+    QComboBox *bl;
+    //! list of modelling hypothesis for the selected behaviour
+    QComboBox *mh;
+    //! the library location
+    LineEdit *le;
+    //! select library button
+    QPushButton *slb;
 
-      virtual void selectLibrary();
+   private:
+    Q_OBJECT
+  };  // end of struct SelectBehaviourPage
 
-     signals:
-
-      void behaviourDescriptionChanged(const BehaviourDescription &);
-
-     protected:
-      //! list of behaviours declared in the selected library
-      QComboBox *bl;
-      //! list of modelling hypothesis for the selected behaviour
-      QComboBox *mh;
-      //! the library location
-      LineEdit *le;
-      //! select library button
-      QPushButton *slb;
-
-     private:
-      Q_OBJECT
-    };  // end of struct SelectBehaviourPage
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_SELECTBEHAVIOURPAGE_HXX */

@@ -1,184 +1,127 @@
-/*! 
+/*!
  * \file  BuildInformation.cxx
  * \brief
  * \author Helfer Thomas
  * \brief 28 sept. 2012
  */
 
-#include"TFEL/GUI/BuildInformation.hxx"
+#include "TFEL/GUI/BuildInformation.hxx"
 
-namespace tfel{
+namespace tfel::gui {
 
-  namespace gui{
-  
-    const char *
-    BuildInformation::getInstallationDirectory()
-    {
-      return "@prefix@";
-    }
+  const char* BuildInformation::getInstallationDirectory() {
+    return "@prefix@";
+  }
 
-    const char *
-    BuildInformation::getDataDirectory()
-    {
-      return "@prefix@/share/tfel-editor/packages";
-    }
-  
-    const char *
-    BuildInformation::getVersionName()
-    {
-      return PACKAGE_NAME;
-    }
+  const char* BuildInformation::getDataDirectory() {
+    return "@prefix@/share/tfel-editor/packages";
+  }
 
-    const char *
-    BuildInformation::getVersionNumber()
-    {
-      return VERSION;
-    }
+  const char* BuildInformation::getVersionName() { return PACKAGE_NAME; }
 
-    const char *
-    BuildInformation::getVersionIdentifier()
-    {
-      return VERSION;
-    }
+  const char* BuildInformation::getVersionNumber() { return VERSION; }
 
-    const char *
-    BuildInformation::getBugReportAdress()
-    {
-      return PACKAGE_BUGREPORT;
-    }
+  const char* BuildInformation::getVersionIdentifier() { return VERSION; }
 
-    const char *
-    BuildInformation::getCompilerName()
-    {
-      return "@CXX@";
-    }
+  const char* BuildInformation::getBugReportAdress() {
+    return PACKAGE_BUGREPORT;
+  }
 
-    const char *
-    BuildInformation::getBuildCpu()
-    {
-      return "@build_cpu@";
-    }
+  const char* BuildInformation::getCompilerName() { return "@CXX@"; }
 
-    const char *
-    BuildInformation::getBuildOs()
-    {
-      return "@build_os@";
-    }
+  const char* BuildInformation::getBuildCpu() { return "@build_cpu@"; }
 
-    const char *
-    BuildInformation::getHostCpu()
-    {
-      return "@host_cpu@";
-    }
+  const char* BuildInformation::getBuildOs() { return "@build_os@"; }
 
-    const char *
-    BuildInformation::getHostOs()
-    {
-      return "@host_os@";
-    }
+  const char* BuildInformation::getHostCpu() { return "@host_cpu@"; }
 
-    const char *
-    BuildInformation::getTargetCpu()
-    {
-      return "@target_cpu@";
-    }
+  const char* BuildInformation::getHostOs() { return "@host_os@"; }
 
-    const char *
-    BuildInformation::getTargetOs()
-    {
-      return "@target_os@";
-    }
+  const char* BuildInformation::getTargetCpu() { return "@target_cpu@"; }
 
-    const char *
-    BuildInformation::getSVNRevision()
-    {
-      return "";
-    }
+  const char* BuildInformation::getTargetOs() { return "@target_os@"; }
 
-    QString
-    BuildInformation::getHeader(const QString& s)
-    {
-      QString target_cpu  = getTargetCpu();
-      QString build_cpu   = getBuildCpu();
-      QString host_cpu    = getHostCpu();
-      QString target_os   = getTargetOs();
-      QString build_os    = getBuildOs();
-      QString host_os     = getHostOs();
-      QString svn_revision = getSVNRevision();
+  const char* BuildInformation::getSVNRevision() { return ""; }
 
-      QString header;
+  QString BuildInformation::getHeader(const QString& s) {
+    QString target_cpu = getTargetCpu();
+    QString build_cpu = getBuildCpu();
+    QString host_cpu = getHostCpu();
+    QString target_os = getTargetOs();
+    QString build_os = getBuildOs();
+    QString host_os = getHostOs();
+    QString svn_revision = getSVNRevision();
 
-      header  = s;
-      header += getVersionName();
+    QString header;
+
+    header = s;
+    header += getVersionName();
+    header += "\n";
+    header += s;
+    header += "Version : ";
+    header += getVersionNumber();
+    header += "\n";
+    header += "subversion revision : ";
+    header += svn_revision;
+    header += "\n";
+    if ((target_cpu != build_cpu) || (target_cpu != host_cpu) ||
+        (target_os != build_os) || (target_os != host_os)) {
+      header += s;
+      header += "Compiled with ";
+      header += getCompilerName();
+      header += " : ";
       header += "\n";
       header += s;
-      header += "Version : ";
-      header +=  getVersionNumber();
+      header += "- target cpu  : ";
+      header += target_cpu;
       header += "\n";
-      header += "subversion revision : ";
-      header += svn_revision;
-      header += "\n";
-      if((target_cpu != build_cpu)|| (target_cpu != host_cpu) ||
-	 (target_os  != build_os) || (target_os  != host_os)){
-	header += s;
-	header += "Compiled with ";
-	header +=  getCompilerName();
-	header +=  " : ";
-	header += "\n";
-	header += s;
-	header += "- target cpu  : ";
-	header += target_cpu;
-	header += "\n";
-	header += s;
-	header += "\n";
-	header += s;
-	header += "- target os   : " ;
-	header += target_os ;
-	header += "\n";
-	header += s;
-	header += "\n";
-	header += s;
-	header += "- build cpu   : ";
-	header += build_cpu  ;
-	header += "\n";
-	header += s;
-	header += "\n";
-	header += s;
-	header += "- build os    : ";
-	header +=  build_os;
-	header += "\n";
-	header += s;
-	header += "\n";
-	header += s;
-	header += "- host cpu    : ";
-	header += host_cpu;
-	header += "\n";
-	header += s;
-	header += "\n";
-	header += s;
-	header += "- host os     : ";
-	header += host_os;
-	header += "\n";
-      } else {
-	header += s;
-	header += "Compiled with ";
-	header += getCompilerName();
-	header += " on ";
-	header += target_cpu;
-	header += " - ";
-	header += target_os;
-	header += "\n";
-      }
       header += s;
-      header += "Please submit bug at " ;
-      header +=  getBugReportAdress() ;
-      header +=  "\n";
-
-      return header;
-
+      header += "\n";
+      header += s;
+      header += "- target os   : ";
+      header += target_os;
+      header += "\n";
+      header += s;
+      header += "\n";
+      header += s;
+      header += "- build cpu   : ";
+      header += build_cpu;
+      header += "\n";
+      header += s;
+      header += "\n";
+      header += s;
+      header += "- build os    : ";
+      header += build_os;
+      header += "\n";
+      header += s;
+      header += "\n";
+      header += s;
+      header += "- host cpu    : ";
+      header += host_cpu;
+      header += "\n";
+      header += s;
+      header += "\n";
+      header += s;
+      header += "- host os     : ";
+      header += host_os;
+      header += "\n";
+    } else {
+      header += s;
+      header += "Compiled with ";
+      header += getCompilerName();
+      header += " on ";
+      header += target_cpu;
+      header += " - ";
+      header += target_os;
+      header += "\n";
     }
+    header += s;
+    header += "Please submit bug at ";
+    header += getBugReportAdress();
+    header += "\n";
 
-  } // end of namespace gui
+    return header;
+  }
 
-} // end of namespace tfel
+}  // end of namespace tfel::gui
 

@@ -12,38 +12,35 @@
 #include "TFEL/GUI/BehaviourDescription.hxx"
 #include "TFEL/GUI/SelectMFMBehaviour.hxx"
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  // forward declaration
+  struct EditorWidget;
 
-    // forward declaration
-    struct EditorWidget;
+  struct TFEL_GUI_MIW_VISIBILITY_EXPORT ImportMFMBehaviour : QDialog {
+    //! a simple alias
+    using Options = SelectMFMBehaviour::Options;
+    /*!
+     * \brief constructor
+     * \param[in] q: editor widget
+     * \param[in] o: options
+     * \param[in] p: parent
+     */
+    ImportMFMBehaviour(EditorWidget& q,
+                       const Options& o,
+                       QWidget* const p = nullptr);
+    //! \return the selected behaviour.
+    BehaviourDescription getSelectedBehaviour() const;
+    //! destructor
+    ~ImportMFMBehaviour() override;
 
-    struct TFEL_GUI_MIW_VISIBILITY_EXPORT ImportMFMBehaviour : QDialog {
-      //! a simple alias
-      using Options = SelectMFMBehaviour::Options;
-      /*!
-       * \brief constructor
-       * \param[in] q: editor widget
-       * \param[in] o: options
-       * \param[in] p: parent
-       */
-      ImportMFMBehaviour(EditorWidget& q,
-                         const Options& o,
-                         QWidget* const p = nullptr);
-      //! \return the selected behaviour.
-      BehaviourDescription getSelectedBehaviour() const;
-      //! destructor
-      ~ImportMFMBehaviour() override;
+   protected:
+    SelectMFMBehaviour* b;
 
-     protected:
-      SelectMFMBehaviour* b;
+   private:
+    Q_OBJECT
+  };  // end of struct ImportMFMBehaviour
 
-     private:
-      Q_OBJECT
-    };  // end of struct ImportMFMBehaviour
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_TFEL_GUI_IMPORTMFMBEHAVIOUR_HXX */

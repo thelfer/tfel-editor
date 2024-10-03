@@ -10,28 +10,25 @@
 
 #include <QtWidgets/QWizardPage>
 
-namespace tfel {
+namespace tfel::gui {
 
-  namespace gui {
+  //! Page summarizing the selected behaviour
+  struct BehaviourSummaryPage : public QWizardPage {
+    /*!
+     * \brief constructor
+     * \param[in] p: parent widget
+     */
+    BehaviourSummaryPage(QWidget* const = nullptr);
 
-    //! Page summarizing the selected behaviour
-    struct BehaviourSummaryPage : public QWizardPage {
-      /*!
-       * \brief constructor
-       * \param[in] p: parent widget
-       */
-      BehaviourSummaryPage(QWidget* const = nullptr);
+    int nextId() const override;
 
-      int nextId() const override;
+    // destructor
+    ~BehaviourSummaryPage() override;
 
-      // destructor
-      ~BehaviourSummaryPage() override;
+   private:
+    Q_OBJECT
+  };  // end of BehaviourSummaryPage
 
-     private:
-      Q_OBJECT
-    };  // end of BehaviourSummaryPage
-
-  }  // end of namespace gui
-}  // end of namespace tfel
+}  // end of namespace tfel::gui
 
 #endif /* LIB_BEHAVIOURSUMMARYPAGE_HXX */
