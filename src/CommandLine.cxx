@@ -40,8 +40,8 @@ namespace tfel::gui {
       delete this->c_;
     }
     this->c_ = c;
+    QLineEdit::setCompleter(c);
     if (b) {
-      QLineEdit::setCompleter(c);
       this->completerHandledByQLineEdit = true;
     } else {
       this->completerHandledByQLineEdit = false;
@@ -100,7 +100,7 @@ namespace tfel::gui {
   }  // end of keyPressEvent
 
   void CommandLine::CustomLineEdit::complete() {
-    bool b;
+    auto b = bool{};
     const auto c = this->findCompletion(b);
     if (!c.isEmpty()) {
       this->setText(c);
@@ -114,11 +114,10 @@ namespace tfel::gui {
       QStringList cc;
       c->setCompletionPrefix(this->text());
       auto* m = qobject_cast<QFileSystemModel*>(c->model());
-      if (m == nullptr) {
-        return r;
+      if (m != nullptr) {
+        QFileInfo fi(this->text());
+        m->setRootPath(fi.absolutePath());
       }
-      QFileInfo fi(this->text());
-      m->setRootPath(fi.absolutePath());
       b = c->completionCount() == 1;
       for (int i = 0; c->setCurrentRow(i); i++) {
         cc.append(c->currentCompletion());
@@ -126,9 +125,11 @@ namespace tfel::gui {
       r = commonPart(cc);
       const auto base = this->extractBaseForCompletion(r);
       if ((r == this->text()) && (cc.size() != 1) && (!cc.empty())) {
-        for (int i = 0; i != cc.size(); ++i) {
-          QFileInfo fn(cc[i]);
-          cc[i] = fn.fileName();
+        if (m != nullptr) {
+          for (int i = 0; i != cc.size(); ++i) {
+            QFileInfo fn(cc[i]);
+            cc[i] = fn.fileName();
+          }
         }
         this->lineEdit.showCompletions(base, cc);
       }

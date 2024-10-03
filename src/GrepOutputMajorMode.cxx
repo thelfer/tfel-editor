@@ -37,26 +37,47 @@ namespace tfel::gui {
     }  // end of GrepOutputSyntaxHighlighter
 
     void highlightBlock(const QString &text) override {
-      QRegularExpression expr(R"(^([\/\-\w|\.]+):(\d+):)");
-      if (!expr.isValid()) {
-        return;
-      }
-      expr.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
-      const auto match = expr.match(text);
-      if ((match.hasMatch()) && (match.lastCapturedIndex() == 2)) {
-        auto *d = new GrepUserData;
-        auto n = match.captured(2);
-        bool b;
-        d->file = match.captured(1);
-        d->line = n.toInt(&b);
-        if (!b) {
-          delete d;
+      {
+        // output with line number
+        QRegularExpression expr(R"(^([\/\-\w|\.]+):(\d+):)");
+        if (!expr.isValid()) {
           return;
         }
-        const auto l = d->file.size();
-        this->setFormat(0, l, this->line);
-        this->setFormat(l + 1, n.size(), this->number);
-        this->setCurrentBlockUserData(d);
+        expr.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
+        const auto match = expr.match(text);
+        if ((match.hasMatch()) && (match.lastCapturedIndex() == 2)) {
+          auto *d = new GrepUserData;
+          auto n = match.captured(2);
+          bool b;
+          d->file = match.captured(1);
+          d->line = n.toInt(&b);
+          if (!b) {
+            delete d;
+            return;
+          }
+          const auto l = d->file.size();
+          this->setFormat(0, l, this->line);
+          this->setFormat(l + 1, n.size(), this->number);
+          this->setCurrentBlockUserData(d);
+          return;
+        }
+      }
+      {
+        // output without line number
+        QRegularExpression expr(R"(^([\/\-\w|\.]+):)");
+        if (!expr.isValid()) {
+          return;
+        }
+        expr.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
+        const auto match = expr.match(text);
+        if ((match.hasMatch()) && (match.lastCapturedIndex() == 1)) {
+          auto *d = new GrepUserData;
+          d->file = match.captured(1);
+          d->line = 0;
+          this->setFormat(0, d->file.size(), this->line);
+          this->setCurrentBlockUserData(d);
+          return;
+        }
       }
     }
 

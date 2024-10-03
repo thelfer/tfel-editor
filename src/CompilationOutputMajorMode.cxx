@@ -41,40 +41,40 @@ namespace tfel::gui {
 
     void highlightBlock(const QString &l) override {
       static auto e1 = [] {
-        QRegularExpression r("^([/-\\w|\\.]+):(\\d+):(\\d+): fatal error:");
+        QRegularExpression r(R"(^([\/^\-\w|\.]+):(\d+):(\d+): fatal error:)");
         r.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
         return r;
       }();
       static auto e2 = [] {
-        QRegularExpression r("^([/-\\w|\\.]+):(\\d+):(\\d+): error:");
+        QRegularExpression r(R"(^([\/^\-\w|\.]+):(\d+):(\d+): error:)");
         r.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
         return r;
       }();
       // qt-moc error
       static auto e3 = [] {
-        QRegularExpression r("^([/-\\w|\\.]+):(\\d+): Error:");
+        QRegularExpression r(R"(^([\/^\-\w|\.]+):(\d+): Error:)");
         r.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
         return r;
       }();
       static auto b = [] {
         QRegularExpression r(
-            "^([/-\\w|\\.]+):(\\d+):(\\d+):   required from here");
+            R"(^([\/^\-\w|\.]+):(\d+):(\d+):   required from here)");
         r.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
         return r;
       }();
       static auto w = [] {
-        QRegularExpression r("^([/-\\w|\\.]+):(\\d+):(\\d+): warning:");
+        QRegularExpression r(R"(^([\/^\-\w|\.]+):(\d+):(\d+): warning:)");
         r.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
         return r;
       }();
       static auto n1 = [] {
-        QRegularExpression r("^([/-\\w|\\.]+):(\\d+):(\\d+): note:");
+        QRegularExpression r(R"(^([\/^\-\w|\.]+):(\d+):(\d+): note:)");
         r.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
         return r;
       }();
       // qt-moc note
       static auto n2 = [] {
-        QRegularExpression r("^([/-\\w|\\.]+):(\\d+): Note:");
+        QRegularExpression r(R"(^([\/^\-\w|\.]+):(\d+): Note:)");
         r.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
         return r;
       }();

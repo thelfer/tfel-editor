@@ -115,17 +115,17 @@ namespace tfel::gui {
 
   LaTeXMajorMode::LaTeXMajorMode(EditorWidget& w, Buffer& b, TextEditBase& t)
       : MajorModeBase(w, b, t, &t),
-        rb("\\\\begin\\{\\w+\\}"),
-        re("\\\\end\\{\\w+\\}"),
-        rb2("^\\s*\\\\begin\\{\\w+\\}"),
-        re2("^\\s*\\\\end\\{\\w+\\}"),
+        rb(R"(\\begin\{\w+\})"),
+        re(R"(\\end\{\w+\})"),
+        rb2(R"(^\s*\\begin\{\w+\})"),
+        re2(R"(^\s*\\end\{\w+\})"),
         c(0),
         highlighter(nullptr) {
     qDebug() << "TeX-master : " << this->getTeXMasterFile();
   }  // end of LaTeXMajorMode::LaTeXMajorMode
 
   QString LaTeXMajorMode::getTeXMasterFile() {
-    QRegularExpression r(R("^\s*%%% TeX-master: \"([\w-0-9_\./]+)\"\s*$)");
+    QRegularExpression r(R"(^\s*%%% TeX-master: \"([\w-0-9_\./]+)\"\s*$)");
     if (!r.isValid()) {
       return {};
     }

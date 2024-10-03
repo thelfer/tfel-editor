@@ -227,7 +227,7 @@ namespace tfel::gui {
                         QTextCursor& c,
                         const QTextCursor& b,
                         const QTextCursor& e) {
-    QRegularExpression rcursor("(\\d+)");
+    QRegularExpression rcursor(R"((\d+))");
     const auto cf = textEdit.getFileName();
     QTemporaryFile tmp(cf);
     if (!tmp.open()) {
