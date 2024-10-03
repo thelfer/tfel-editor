@@ -1,7 +1,7 @@
 /*!
  * \file  LicosTokenizer.hxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   18/09/2012
  */
 

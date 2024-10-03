@@ -1,7 +1,7 @@
 /*!
  * \file  SpellChecker.hxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \brief 02 oct. 2012
  */
 

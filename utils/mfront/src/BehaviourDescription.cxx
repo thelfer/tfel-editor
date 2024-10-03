@@ -1,7 +1,7 @@
 /*!
  * \file   BehaviourDescription.cxx
  * \brief
- * \author th202608
+ * \author Thomas Helfer
  * \date   01/03/2018
  */
 

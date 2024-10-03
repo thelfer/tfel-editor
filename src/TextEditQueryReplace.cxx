@@ -1,7 +1,7 @@
 /*!
  * \file  TextEditQueryReplace.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   06/08/2012
  */
 

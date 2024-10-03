@@ -1,7 +1,7 @@
 /*!
  * \file   MFrontImportWidgetsConfig.hxx
  * \brief
- * \author th202608
+ * \author Thomas Helfer
  * \date   12/03/2018
  */
 

@@ -1,7 +1,7 @@
 /*!
  * \file  LicosOutputFrame.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   01/08/2012
  */
 

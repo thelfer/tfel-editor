@@ -1,7 +1,7 @@
 /*!
  * \file   packages/mfront/src/MFrontMajorMode.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   07/08/2012
  */
 

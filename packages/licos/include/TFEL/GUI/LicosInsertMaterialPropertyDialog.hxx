@@ -1,7 +1,7 @@
 /*!
  * \file  LicosInsertMaterialPropertiesDialog.hxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   17/12/2012
  */
 

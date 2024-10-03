@@ -1,7 +1,7 @@
 /*!
  * \file  CastemMajorMode.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   05/08/2012
  */
 

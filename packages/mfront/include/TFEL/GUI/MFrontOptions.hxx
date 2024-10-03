@@ -1,7 +1,7 @@
 /*!
  * \file  MFrontOptions.hxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \dat    04/06/2012
  */
 

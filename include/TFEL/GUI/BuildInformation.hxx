@@ -1,7 +1,7 @@
 /*!
  * \file  BuildInformation.hxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   28/09/2012
  */
 

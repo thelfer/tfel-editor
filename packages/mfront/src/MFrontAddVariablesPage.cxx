@@ -1,7 +1,7 @@
 /*!
  * \file   MFrontAddVariablesPage.cxx
  * \brief
- * \author th202608
+ * \author Thomas Helfer
  * \date   07/08/2019
  */
 

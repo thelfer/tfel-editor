@@ -1,7 +1,7 @@
 /*!
  * \file  QWebEngineViewWrapper.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   07/12/2012
  */
 

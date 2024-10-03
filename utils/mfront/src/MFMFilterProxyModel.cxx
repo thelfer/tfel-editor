@@ -1,7 +1,7 @@
 /*!
  * \file   MFMFilterProxyModel.cxx
  * \brief
- * \author th202608
+ * \author Thomas Helfer
  * \date   21/02/2018
  */
 

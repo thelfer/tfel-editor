@@ -1,7 +1,7 @@
 /*!
  * \file  MajorModeBase.hxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   04/07/2012
  */
 

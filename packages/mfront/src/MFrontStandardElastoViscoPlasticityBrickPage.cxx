@@ -1,7 +1,7 @@
 /*!
  * \file   MFrontStandardElastoViscoPlasticityBrickPage.cxx
  * \brief
- * \author th202608
+ * \author Thomas Helfer
  * \date   27/07/2019
  */
 

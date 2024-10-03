@@ -1,7 +1,7 @@
 /*!
  * \file  ProcessInteractionFrame.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   24/10/2012
  */
 

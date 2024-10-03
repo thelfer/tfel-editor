@@ -1,7 +1,7 @@
 /*!
  * \file  BashMajorMode.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   26/08/2012
  */
 

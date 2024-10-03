@@ -1,7 +1,7 @@
 /*!
  * \file  SpellChecker.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   02/10/2012
  */
 

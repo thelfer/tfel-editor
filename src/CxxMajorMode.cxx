@@ -1,7 +1,7 @@
 /*!
  * \file  CxxMajorMode.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   03/07/2012
  */
 

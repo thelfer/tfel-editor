@@ -1,7 +1,7 @@
 /*!
  * \file  TextEditBase.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \brief 19/08/2012
  */
 

@@ -1,7 +1,7 @@
 /*!
  * \file  LicosMainBlock.hxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   17/09/2012
  */
 

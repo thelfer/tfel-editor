@@ -11,7 +11,7 @@ namespace tfel::gui {
 
   GnuplotSyntaxHighlighter::GnuplotSyntaxHighlighter(QTextDocument* p)
       : CSyntaxHighlighterBase(p) {
-    for (const std::string& key : {"set", "plot", "splot"}) {
+    for (const std::string key : {"set", "plot", "splot"}) {
       HighlightingRule rule;
       rule.key = key;
       rule.format = this->keyFormat;

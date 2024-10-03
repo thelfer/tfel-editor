@@ -1,7 +1,7 @@
 /*!
  * \file  ShortCutStyle.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   01/10/2012
  */
 

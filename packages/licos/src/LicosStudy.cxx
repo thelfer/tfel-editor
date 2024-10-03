@@ -1,7 +1,7 @@
 /*!
  * \file  LicosStudy.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \brief 20/05/2012
  */
 

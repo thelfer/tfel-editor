@@ -1,7 +1,7 @@
 /*!
  * \file  RectangleMode.hxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   30/09/2012
  */
 

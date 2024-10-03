@@ -1,7 +1,7 @@
 /*!
  * \file  HunspellDictionariesManager.hxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   03/10/2012
  */
 

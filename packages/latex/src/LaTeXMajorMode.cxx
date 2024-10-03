@@ -1,7 +1,7 @@
 /*!
  * \file  LaTeXMajorMode.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   18/08/2012
  */
 

@@ -1,7 +1,7 @@
 /*!
  * \file  MaterialPropertySelector.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   14/12/2012
  */
 

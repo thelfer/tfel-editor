@@ -1,7 +1,7 @@
 /*!
  * \file  TPlotMajorMode.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   26/09/2012
  */
 

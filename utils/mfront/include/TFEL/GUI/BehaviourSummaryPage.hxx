@@ -1,7 +1,7 @@
 /*!
  * \file   BehaviourSummaryPage.hxx
  * \brief
- * \author th202608
+ * \author Thomas Helfer
  * \date   15/03/2018
  */
 

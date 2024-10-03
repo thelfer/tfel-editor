@@ -1,7 +1,7 @@
 /*!
  * \file   MFrontTemplateGenerationOptionsPage.cxx
  * \brief
- * \author th202608
+ * \author Thomas Helfer
  * \date   07/09/2019
  */
 

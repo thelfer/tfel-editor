@@ -1,7 +1,7 @@
 /*!
  * \file  MTestStudyOptions.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   04/06/2012
  */
 

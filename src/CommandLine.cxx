@@ -1,7 +1,7 @@
 /*!
  * \file  CommandLine.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   05/07/2012
  */
 

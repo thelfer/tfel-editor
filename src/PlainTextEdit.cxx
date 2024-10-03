@@ -1,7 +1,7 @@
 /*!
  * \file  PlainTextEdit.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   19/08/2012
  */
 

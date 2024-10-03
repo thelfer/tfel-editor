@@ -1,7 +1,7 @@
 /*!
  * \file  LicosMaterialWizard.hxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   27/09/2012
  */
 

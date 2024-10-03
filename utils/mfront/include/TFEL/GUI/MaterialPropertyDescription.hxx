@@ -1,7 +1,7 @@
 /*!
  * \file   MaterialPropertyDescription.hxx
  * \brief
- * \author th202608
+ * \author Thomas Helfer
  * \date   05/03/2018
  */
 

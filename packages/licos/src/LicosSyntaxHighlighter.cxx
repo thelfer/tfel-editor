@@ -1,7 +1,7 @@
 /*!
  * \file  LicosSyntaxHighlighter.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \brief  03/07/2012
  */
 

@@ -1,7 +1,7 @@
 /*!
  * \file  MajorModeFactory.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \date   30/06/2012
  */
 

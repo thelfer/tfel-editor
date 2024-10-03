@@ -1,7 +1,7 @@
 /*!
  * \file   MFrontBehaviourWizardPages.hxx
  * \brief
- * \author th202608
+ * \author Thomas Helfer
  * \date   01/09/2019
  */
 

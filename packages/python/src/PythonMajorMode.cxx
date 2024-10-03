@@ -1,7 +1,7 @@
 /*!
  * \file  PythonMajorMode.cxx
  * \brief
- * \author Helfer Thomas
+ * \author Thomas Helfer
  * \brief  26/09/2012
  */
 
