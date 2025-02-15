@@ -24,7 +24,8 @@ namespace tfel::gui {
     // castem keys
     foreach (const QString &pattern, CastemMajorMode::getKeysList()) {
       HighlightingRule rule;
-      rule.pattern = QRegularExpression("(\\b" + pattern.toUpper() + "\\w*\\b)");
+      rule.pattern =
+          QRegularExpression("(\\b" + pattern.toUpper() + "\\w*\\b)");
       rule.format = this->keyFormat;
       this->highlightingRules.append(rule);
     }

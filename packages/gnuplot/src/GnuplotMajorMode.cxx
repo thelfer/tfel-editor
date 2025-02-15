@@ -82,7 +82,7 @@ namespace tfel::gui {
   static StandardMajorModeProxy<GnuplotMajorMode> proxy(
       "Gnuplot",
       QVector<QRegularExpression>()
-      << QRegularExpression("^" + fileNameRegExp() + "\\.gp")
-      << QRegularExpression("^" + fileNameRegExp() + "\\.gnuplot"));
+          << QRegularExpression("^" + fileNameRegExp() + "\\.gp")
+          << QRegularExpression("^" + fileNameRegExp() + "\\.gnuplot"));
 
 }  // end of namespace tfel::gui

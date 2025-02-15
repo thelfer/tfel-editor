@@ -682,8 +682,7 @@ namespace tfel::gui {
       if (tc.selectedText() == "'") {
         tc.removeSelectedText();
       } else {
-        tc.movePosition(QTextCursor::NextCharacter,
-                        QTextCursor::MoveAnchor);
+        tc.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor);
       }
     }
     tc.insertText("'" + w.toUpper() + "' ");

@@ -27,8 +27,7 @@ namespace tfel::gui {
   MarkdownMajorMode::MarkdownMajorMode(EditorWidget &w,
                                        Buffer &b,
                                        TextEditBase &t)
-      : CompiledLanguageMajorModeBase(w, b, t) {
-  }  // end of MarkdownMajorMode
+      : CompiledLanguageMajorModeBase(w, b, t) {}  // end of MarkdownMajorMode
 
   QString MarkdownMajorMode::getName() const {
     return "Markdown";

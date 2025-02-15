@@ -104,87 +104,86 @@ namespace tfel::gui {
   }
 
   void LaTeXSyntaxHighlighter::highlightBlock(const QString& text) {
-    const auto& rules = LaTeXSyntaxHighlighter::getHighlightingRules();
-    // remove comments
-    int c = LaTeXSyntaxHighlighter::startOfComment(text);
-    QString l;
-    if (c != -1) {
-      this->setFormat(c, text.size() - c, this->commentFormat);
-      l = text.mid(0, c);
-    } else {
-      l = text.mid(0, c);
-    }
-    int pos = 0;
-    while (pos != l.size()) {
-      int cpos = -1;
-      auto mp = rules.end();
-      for (auto p = rules.begin(); p != rules.end(); ++p) {
-        if (!p->pattern.isValid()) {
-          continue;
-        }
-        QRegularExpression e(p->pattern);
-        const auto m = e.match(l, pos);
-        if (m.hasMatch()) {
-          const auto rp = m.lastCapturedIndex();
-          if ((cpos == -1) || (rp <= cpos)) {
-            mp = p;
-            cpos = rp;
-          }
-        }
-      }
-      if (cpos != -1) {
-        if (cpos != pos) {
-          this->highLightMispellWords(l.mid(pos, cpos - pos), pos);
-        }
-        // treating the LaTeX command
-        const auto& rule = *mp;
-        if (rule.pattern.isValid()) {
-          QRegularExpression e(rule.pattern);
-          const auto m = e.match(l, pos);
-          const int length = m.capturedLength();
-          if (rule.format.size() == 1) {
-            this->setFormat(cpos, length, rule.format[0]);
-          } else {
-            if (m.lastCapturedIndex() == rule.format.size()) {
-              for (int i = 0; i != m.lastCapturedIndex(); ++i) {
-                QString cap = m.captured(i + 1);
-                int cs = cap.size();
-                cpos = l.indexOf(cap, cpos);
-                this->setFormat(cpos, cs, rule.format[i]);
-                cpos += cs;
-              }
-            }
-          }
-          pos = cpos + length;
-        }
-      } else {
-        this->highLightMispellWords(l.mid(pos, l.size() - pos), pos);
-        pos = l.size();
-      }
-    }
+    //     const auto& rules = LaTeXSyntaxHighlighter::getHighlightingRules();
+    //     // remove comments
+    //     int c = LaTeXSyntaxHighlighter::startOfComment(text);
+    //     QString l;
+    //     if (c != -1) {
+    //       this->setFormat(c, text.size() - c, this->commentFormat);
+    //       l = text.mid(0, c);
+    //     } else {
+    //       l = text.mid(0, c);
+    //     }
+    //     int pos = 0;
+    //     while (pos != l.size()) {
+    //       int cpos = -1;
+    //       auto mp = rules.end();
+    //       for (auto p = rules.begin(); p != rules.end(); ++p) {
+    //         if (!p->pattern.isValid()) {
+    //           continue;
+    //         }
+    //         const auto match = p->pattern.match(l, pos);
+    //         if (match.hasMatch()) {
+    //           const auto rp = match.lastCapturedIndex();
+    //           if ((cpos == -1) || (rp <= cpos)) {
+    //             mp = p;
+    //             cpos = pos + rp;
+    //           }
+    //         }
+    //       }
+    //       if (cpos == -1) {
+    //         this->highLightMispellWords(l.mid(pos, l.size() - pos), pos);
+    //         break;
+    //       }
+    //       if (cpos != pos) {
+    //         this->highLightMispellWords(l.mid(pos, cpos - pos), pos);
+    //       }
+    //       // treating the LaTeX command
+    //       const auto& rule = *mp;
+    //       if (rule.pattern.isValid()) {
+    //         auto& e(rule.pattern);
+    //         const auto m = e.match(l, cpos);
+    //         const int length = m.capturedLength();
+    //         pos = qMin(cpos + length, l.size());
+    //         if (rule.format.size() == 1) {
+    //           this->setFormat(cpos + m.lastCapturedIndex(), length,
+    //           rule.format[0]);
+    //         } else {
+    //           if (m.lastCapturedIndex() == rule.format.size()) {
+    //             for (int i = 0; i != m.lastCapturedIndex(); ++i) {
+    //               const auto cstart = m.capturedStart(i + 1);
+    //               const auto clength = m.capturedEnd(i + 1) - cstart;
+    //               cpos += cstart;
+    //               this->setFormat(cpos, clength, rule.format[i]);
+    //               cpos += clength;
+    //             }
+    //           }
+    //         }
+    //       }
+    //     }
   }
 
-  void LaTeXSyntaxHighlighter::highLightMispellWords(const QString& l,
-                                                     const int p) {
-    using namespace std;
-    QTextCharFormat f;
-    auto& spellChecker = this->mode.getSpellChecker();
-    f.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
-    int pos = 0;
-    while (pos != l.size()) {
-      if (l[pos].isLetter()) {
-        const auto npos = pos;
-        ++pos;
-        while ((pos != l.size()) && (l[pos].isLetter())) {
-          ++pos;
-        }
-        if (!spellChecker.spell(l.mid(npos, pos - npos))) {
-          this->setFormat(p + npos, pos - npos, f);
-        }
-      } else {
-        ++pos;
-      }
- }
+  void LaTeXSyntaxHighlighter::highLightMispellWords(const QString& /* l */,
+                                                     const int /* p */) {
+    //     using namespace std;
+    //     QTextCharFormat f;
+    //     auto& spellChecker = this->mode.getSpellChecker();
+    //     f.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+    //     int pos = 0;
+    //     while (pos != l.size()) {
+    //       if (l[pos].isLetter()) {
+    //         const auto npos = pos;
+    //         ++pos;
+    //         while ((pos != l.size()) && (l[pos].isLetter())) {
+    //           ++pos;
+    //         }
+    //         if (!spellChecker.spell(l.mid(npos, pos - npos))) {
+    //           this->setFormat(p + npos, pos - npos, f);
+    //         }
+    //       } else {
+    //         ++pos;
+    //       }
+    //     }
   }  // end of LaTeXSyntaxHighlighter::highLightMispellWords
 
 }  // end of namespace tfel::gui

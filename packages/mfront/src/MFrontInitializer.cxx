@@ -7,11 +7,13 @@
 
 #include "MFront/InitDSLs.hxx"
 #include "MFront/InitInterfaces.hxx"
+#include "MFront/MFrontWarningMode.hxx"
 #include "TFEL/GUI/MFrontInitializer.hxx"
 
 namespace tfel::gui {
 
   MFrontInitializer::MFrontInitializer() {
+    mfront::setWarningMode(false);
     mfront::initDSLs();
     mfront::initInterfaces();
   }  // end of MFrontInitializer::MFrontInitializer

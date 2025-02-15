@@ -101,15 +101,15 @@ namespace tfel::gui {
       return l[0];
     }
     auto r = commonPart(l[0], l[1]);
-    if(l.size() > 2){
+    if (l.size() > 2) {
       for (int i = 2; i != l.size(); ++i) {
-	const auto& s = l[i];
-	if (!s.startsWith(r)) {
-	  r = commonPart(r, s);
-	}
-	if (r.isEmpty()) {
-	  return "";
-	}
+        const auto& s = l[i];
+        if (!s.startsWith(r)) {
+          r = commonPart(r, s);
+        }
+        if (r.isEmpty()) {
+          return "";
+        }
       }
     }
     return r;

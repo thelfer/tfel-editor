@@ -41,11 +41,7 @@ namespace tfel::gui {
     }
     this->c_ = c;
     QLineEdit::setCompleter(c);
-    if (b) {
-      this->completerHandledByQLineEdit = true;
-    } else {
-      this->completerHandledByQLineEdit = false;
-    }
+    this->completerHandledByQLineEdit = b;
   }  // end of setCompleter
 
   QCompleter* CommandLine::CustomLineEdit::completer() const {
@@ -102,7 +98,7 @@ namespace tfel::gui {
   void CommandLine::CustomLineEdit::complete() {
     auto b = bool{};
     const auto c = this->findCompletion(b);
-    if (!c.isEmpty()) {
+    if ((b) && (!c.isEmpty())) {
       this->setText(c);
     }
   }
@@ -113,8 +109,7 @@ namespace tfel::gui {
     if (auto* const c = this->completer(); c != nullptr) {
       QStringList cc;
       c->setCompletionPrefix(this->text());
-      auto* m = qobject_cast<QFileSystemModel*>(c->model());
-      if (m != nullptr) {
+      if (auto* m = qobject_cast<QFileSystemModel*>(c->model()); m != nullptr) {
         QFileInfo fi(this->text());
         m->setRootPath(fi.absolutePath());
       }
@@ -125,7 +120,8 @@ namespace tfel::gui {
       r = commonPart(cc);
       const auto base = this->extractBaseForCompletion(r);
       if ((r == this->text()) && (cc.size() != 1) && (!cc.empty())) {
-        if (m != nullptr) {
+        if (auto* m = qobject_cast<QFileSystemModel*>(c->model());
+            m != nullptr) {
           for (int i = 0; i != cc.size(); ++i) {
             QFileInfo fn(cc[i]);
             cc[i] = fn.fileName();
@@ -382,7 +378,9 @@ namespace tfel::gui {
       dm->setRootPath(QDir::currentPath());
       dm->setNameFilterDisables(false);
       c->setModel(dm);
+      c->setWrapAround(true);
       c->setCompletionMode(QCompleter::InlineCompletion);
+      c->setMaxVisibleItems(1);
       this->setCompleter(c, false);
     }  // end of FilePathLineEdit
 
@@ -415,24 +413,15 @@ namespace tfel::gui {
     }
 
     virtual void setText(const QString& c, const bool b) {
-      if (b) {
-        QFileInfo f(c);
-        if (f.exists()) {
-          if (f.isDir()) {
-            if (!c.endsWith(QDir::separator())) {
-              QLineEdit::setText(c + QDir::separator());
-            } else {
-              QLineEdit::setText(c);
-            }
-          } else {
-            QLineEdit::setText(c);
-          }
-        } else {
-          QLineEdit::setText(c);
-        }
-      } else {
-        QLineEdit::setText(c);
+      if (!b) {
+        return;
       }
+      QFileInfo f(c);
+      if ((f.exists()) && (f.isDir()) && (!c.endsWith(QDir::separator()))) {
+        QLineEdit::setText(c + QDir::separator());
+        return;
+      }
+      QLineEdit::setText(c);
     }
   };
 
