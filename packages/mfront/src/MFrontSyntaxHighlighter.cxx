@@ -25,7 +25,7 @@ namespace tfel::gui {
     } catch (std::exception&) {
       return;
     }
-    this->mfrontKeyFormat.setForeground(Qt::blue);
+    this->mfrontKeyFormat.setForeground(Qt::darkBlue);
     for (const auto& k : keys) {
       HighlightingRule rule;
       rule.key = k;

@@ -41,6 +41,7 @@ namespace tfel::gui {
       : QWidget(&g), editor(g), buffer(b) {
     auto& dm = HunspellDictionariesManager::getHunspellDictionariesManager();
     this->spellCheckLanguage = dm.getDefaultSpellCheckLanguage();
+    //
   }  // end of TextEditBase::TextEditBase
 
   EditorWidget& TextEditBase::getEditorWidget() {
@@ -459,7 +460,8 @@ namespace tfel::gui {
   void TextEditBase::highlightCurrentLine() {
     QList<QTextEdit::ExtraSelection> e;
     QTextEdit::ExtraSelection selection;
-    auto lineColor = QColor(Qt::yellow).lighter(180);
+    auto lineColor = QColor(Qt::darkYellow);
+    lineColor.setAlpha(60);
     selection.format.setBackground(lineColor);
     selection.format.setProperty(QTextFormat::FullWidthSelection, true);
     selection.cursor = textCursor();

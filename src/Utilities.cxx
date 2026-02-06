@@ -6,6 +6,7 @@
  */
 
 #include <QtCore/QDir>
+#include <QtCore/QSettings>
 #include <QtCore/QFileInfo>
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QLabel>
@@ -42,9 +43,15 @@ namespace tfel::gui {
   }  // end of findFileInDirectoryOrParentDirectory()
 
   void setFontSizeAndContentsMargins(QWidget* const w) {
-    auto f = w->font();
-    f.setPointSize(8);
-    w->setFont(f);
+    QSettings s;
+    if (s.contains("font/textedit")) {
+      auto f = s.value("font/textedit").value<QFont>();
+      f.setStyleStrategy(QFont::PreferAntialias);
+      w->setFont(f);
+    }
+    //     auto f = w->font();
+    //     //    f.setPointSize(8);
+    //     w->setFont(f);
     w->setContentsMargins(0, 0, 0, 0);
   }  // end of setQLabelFontSize
 

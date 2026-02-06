@@ -30,7 +30,6 @@ namespace tfel::gui {
       : QMainWindow(p) {
     auto &s = ShortCutStyle::getShortCutStyle();
     // this->setAttribute(Qt::WA_TranslucentBackground);
-    // this->setStyleSheet("background: rgba(255,255,255,100%)");
     auto *e = new EditorWidget(this);
     this->setCentralWidget(e);
     this->createMainMenu();

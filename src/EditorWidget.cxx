@@ -76,16 +76,24 @@ namespace tfel::gui {
   }  // end of getRealPath
 
   static void setQLineEditFont(LineEdit* l) {
-    auto f = l->font();
-    f.setPointSize(8);
-    l->setFont(f);
+    QSettings s;
+    if (s.contains("font/textedit")) {
+      auto f = s.value("font/textedit").value<QFont>();
+      f.setStyleStrategy(QFont::PreferAntialias);
+      l->setFont(f);
+    }
+    //    auto f = l->font();
+    //    f.setPointSize(8);
     l->setContentsMargins(0, 0, 0, 0);
   }  // end of setQLineEditFont
 
   static void setCommandLineFont(CommandLine* l) {
-    auto f = l->font();
-    f.setPointSize(8);
-    l->setFont(f);
+    QSettings s;
+    if (s.contains("font/textedit")) {
+      auto f = s.value("font/textedit").value<QFont>();
+      f.setStyleStrategy(QFont::PreferAntialias);
+      l->setFont(f);
+    }
     l->setContentsMargins(0, 0, 0, 0);
   }  // end of setCommandLineFont
 
@@ -281,7 +289,7 @@ namespace tfel::gui {
 
   Buffer* EditorWidget::createNewBuffer(const QString& f) {
     QSettings settings;
-    Buffer* b;
+    Buffer* b = nullptr;
     if (f.isEmpty()) {
       b = new Buffer(this->nid, *this);
       b->setSecondaryTasksOrientation(
@@ -318,6 +326,12 @@ namespace tfel::gui {
   }  // end of EditorWidget::createNewBuffer
 
   void EditorWidget::removeBuffer(Buffer* const b) {
+    if (b == nullptr) {
+      return;
+    }
+    if (this->buffers->indexOf(b) == -1) {
+      return;
+    }
     const auto n = b->getBufferName();
     this->bHistory.removeAll(n);
     // removing the buffer in the secondary task manager, cleaning
@@ -346,8 +360,7 @@ namespace tfel::gui {
   void EditorWidget::updateBufferName(Buffer* b,
                                       const QString& o,
                                       const QString& n) {
-    int p = this->buffers->indexOf(b);
-    if (p == -1) {
+    if (this->buffers->indexOf(b) == -1) {
       return;
     }
     for (int i = 0; i < this->bHistory.size(); ++i) {
@@ -694,6 +707,9 @@ namespace tfel::gui {
 
   void EditorWidget::setCurrentBuffer(Buffer* const b) {
     if (b == nullptr) {
+      return;
+    }
+    if (this->buffers->indexOf(b) == -1) {
       return;
     }
     this->buffers->setCurrentWidget(b);

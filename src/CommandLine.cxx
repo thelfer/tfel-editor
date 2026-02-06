@@ -177,8 +177,8 @@ namespace tfel::gui {
     //    this->hl->setMargin(0);
     this->hl->setSpacing(0);
     this->hl->setContentsMargins(0, 0, 0, 0);
-    this->setStyleSheet("background: rgba(255,255,255,100%)");
-    this->label->setStyleSheet("background: rgba(255,255,255,100%)");
+    // this->setStyleSheet("background: rgba(255,255,255,100%)");
+    // this->label->setStyleSheet("background: rgba(255,255,255,100%)");
     this->hl->addWidget(this->label);
     // this->vl->setMargin(0);
     // this->vl->setSpacing(0);
@@ -274,7 +274,7 @@ namespace tfel::gui {
     this->input->setContentsMargins(0, 0, 0, 0);
     this->input->setFont(this->label->font());
     this->input->setFrame(false);
-    this->input->setStyleSheet("background: rgba(255,255,255,100%)");
+    // this->input->setStyleSheet("background: rgba(255,255,255,100%)");
     this->hl->addWidget(this->input);
     QObject::connect(this->input, &CommandLine::CustomLineEdit::returnPressed,
                      this, &CommandLine::userEditingFinished);

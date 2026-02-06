@@ -63,7 +63,8 @@ namespace tfel::gui {
           << QRegularExpression(fileNameRegExp() + "\\.CC$")
           << QRegularExpression(fileNameRegExp() + "\\.hh$")
           << QRegularExpression(fileNameRegExp() + "\\.c$")
-          << QRegularExpression(fileNameRegExp() + "\\.h$"),
+          << QRegularExpression(fileNameRegExp() + "\\.h$")
+          << QRegularExpression(fileNameRegExp() + "\\.cu$"),
       ":/tfel/editor/languages/cxx.png");
 
 }  // end of namespace tfel::gui

@@ -48,7 +48,7 @@ namespace tfel::gui {
     this->keyFormat.setFontWeight(QFont::Bold);
     this->numberFormat.setForeground(Qt::darkRed);
     this->stringFormat.setForeground(Qt::darkGreen);
-    this->commentFormat.setForeground(Qt::red);
+    this->commentFormat.setForeground(QColor(Qt::darkRed).lighter(130));
   }
 
   void CSyntaxHighlighterBase::highlightBlock(const QString &text) {

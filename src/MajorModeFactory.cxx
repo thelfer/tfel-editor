@@ -90,6 +90,13 @@ namespace tfel::gui {
       auto& f = CommandFactory::getCommandFactory();
       auto cp = std::make_shared<MajorModeChangeCommandProxy>(n + "-mode", n);
       f.addCommand(cp);
+      //
+      const auto n2 = n.toLower();
+      if (n2 != n) {
+        auto cp2 =
+            std::make_shared<MajorModeChangeCommandProxy>(n2 + "-mode", n);
+        f.addCommand(cp2);
+      }
     }
     this->proxies.push_front(p);
   }  // end of getMajorMode

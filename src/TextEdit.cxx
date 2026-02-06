@@ -27,6 +27,10 @@ namespace tfel::gui {
     setQAbstractScrollAreaInLayout(hl, this->e);
     this->e->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     this->e->setContextMenuPolicy(Qt::NoContextMenu);
+    //
+    QFontMetrics fm(font());
+    this->e->setCursorWidth(fm.averageCharWidth());
+    //
     this->setLayout(hl);
   }  // end of TextEdit::TextEdit()
 
