@@ -5,14 +5,14 @@ macro(tfel_editor_project tfel_editor_version_major tfel_editor_version_minor)
   # the version number.
   set(TFEL_EDITOR_VERSION_MAJOR "${tfel_editor_version_major}")
   set(TFEL_EDITOR_VERSION_MINOR "${tfel_editor_version_minor}")
-  add_definitions("-DVERSION=\\\"\"${tfel_editor_version_major}.${tfel_editor_version_minor}\"\\\"")
+  add_definitions("-DVERSION=\"${tfel_editor_version_major}.${tfel_editor_version_minor}\"")
 endmacro(tfel_editor_project)
 
 set(PACKAGE_BUGREPORT "tfel-contact@cea.fr")
-add_definitions("-DPACKAGE_BUGREPORT=\\\"\"${PACKAGE_BUGREPORT}\"\\\"")
-add_definitions("-DPACKAGE_NAME=\\\"\"${PACKAGE_NAME}\"\\\"")
-add_definitions("-DPACKAGE=\\\"\"${PACKAGE_NAME}\"\\\"")
-add_definitions("-DPACKAGE_VERSION=\\\"\"${tfel_editor_version_major}.${tfel_editor_version_minor}\"\\\"")
+add_definitions("-DPACKAGE_BUGREPORT=\"${PACKAGE_BUGREPORT}\"")
+add_definitions("-DPACKAGE_NAME=\"${PACKAGE_NAME}\"")
+add_definitions("-DPACKAGE=\"${PACKAGE_NAME}\"")
+add_definitions("-DPACKAGE_VERSION=\"${tfel_editor_version_major}.${tfel_editor_version_minor}\"")
 
 macro(install_header dir file)
   install(FILES ${dir}/${file}
