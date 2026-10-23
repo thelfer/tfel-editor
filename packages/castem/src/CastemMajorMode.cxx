@@ -665,7 +665,7 @@ namespace tfel::gui {
   }  // end of CastemMajorMode::getIcon()
 
   void CastemMajorMode::setSyntaxHighlighter(QTextDocument* d) {
-    new CastemSyntaxHighlighter(d);
+    this->setHighlighter(new CastemSyntaxHighlighter(d));
   }
 
   QCompleter* CastemMajorMode::getCompleter() {

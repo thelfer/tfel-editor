@@ -37,7 +37,7 @@ namespace tfel::gui {
   }  // end of ShMajorMode::getCommentSyntax
 
   void ShMajorMode::setSyntaxHighlighter(QTextDocument* const d) {
-    new ShSyntaxHighlighter(d);
+    this->setHighlighter(new ShSyntaxHighlighter(d));
   }  // end of ShMajorMode::setSyntaxHighlighter
 
   ShMajorMode::~ShMajorMode() = default;

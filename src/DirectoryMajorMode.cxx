@@ -85,7 +85,7 @@ namespace tfel::gui {
   }  // end of getIcon
 
   void DirectoryMajorMode::setSyntaxHighlighter(QTextDocument* d) {
-    new DirectorySyntaxHighlighter(this->directory, d);
+    this->setHighlighter(new DirectorySyntaxHighlighter(this->directory, d));
   }  // end of setSyntaxHighlighter
 
   void DirectoryMajorMode::format() {}  // end of format

@@ -119,8 +119,7 @@ namespace tfel::gui {
         re(R"(\\end\{\w+\})"),
         rb2(R"(^\s*\\begin\{\w+\})"),
         re2(R"(^\s*\\end\{\w+\})"),
-        c(0),
-        highlighter(nullptr) {
+        c(0) {
     qDebug() << "TeX-master : " << this->getTeXMasterFile();
   }  // end of LaTeXMajorMode::LaTeXMajorMode
 
@@ -152,7 +151,10 @@ namespace tfel::gui {
   }  // end of LaTeXMajorMode::LaTeXMajorMode
 
   void LaTeXMajorMode::setSyntaxHighlighter(QTextDocument* const d) {
-    this->highlighter = new LaTeXSyntaxHighlighter(*this, d);
+    // MajorMode::setHighlighter releases the previous highlighter: a document
+    // accepts several highlighters and they all apply, so overwriting the
+    // pointer alone left the stale one active and accumulating.
+    this->setHighlighter(new LaTeXSyntaxHighlighter(*this, d));
   }  // end of LaTeXMajorMode::setSyntaxHighlighter
 
   QCompleter* LaTeXMajorMode::getCompleter() {

@@ -70,7 +70,10 @@ namespace tfel::gui {
   }  // end of getIcon()
 
   void MarkdownMajorMode::setSyntaxHighlighter(QTextDocument *const d) {
-    this->highlighter = new MarkdownSyntaxHighlighter(*this, d);
+    // MajorMode::setHighlighter releases the previous highlighter: a document
+    // accepts several highlighters and they all apply, so overwriting the
+    // pointer alone left the stale one active and accumulating.
+    this->setHighlighter(new MarkdownSyntaxHighlighter(*this, d));
   }  // end of setSyntaxHighlighter
 
   void MarkdownMajorMode::completeContextMenu(QMenu *const,

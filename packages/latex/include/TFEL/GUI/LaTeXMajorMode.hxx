@@ -135,8 +135,6 @@ namespace tfel::gui {
 
     QCompleter *c;
 
-    LaTeXSyntaxHighlighter *highlighter;
-
     SpellChecker spellChecker;
 
     QVector<QAction *> suggestions;

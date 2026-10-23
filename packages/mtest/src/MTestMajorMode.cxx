@@ -258,7 +258,7 @@ namespace tfel::gui {
   }
 
   void MTestMajorMode::setSyntaxHighlighter(QTextDocument* const d) {
-    new MTestSyntaxHighlighter(d);
+    this->setHighlighter(new MTestSyntaxHighlighter(d));
   }  // end of MTestMajorMode::setSyntaxHighlighter
 
   void MTestMajorMode::completeContextMenu(QMenu* const m,

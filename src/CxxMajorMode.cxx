@@ -46,7 +46,7 @@ namespace tfel::gui {
   }  // end of keyPressEvent
 
   void CxxMajorMode::setSyntaxHighlighter(QTextDocument *const d) {
-    new CxxSyntaxHighlighter(d);
+    this->setHighlighter(new CxxSyntaxHighlighter(d));
   }  // end of setSyntaxHighlighter
 
   CxxMajorMode::~CxxMajorMode() = default;

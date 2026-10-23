@@ -66,7 +66,6 @@ namespace tfel::gui {
    protected:
     //! checking
     SpellChecker spellChecker;
-    QSyntaxHighlighter *highlighter = nullptr;
 
    private:
     Q_OBJECT

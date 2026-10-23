@@ -519,16 +519,11 @@ namespace tfel::gui {
   }  // end of MFrontMajorMode::getIcon()
 
   void MFrontMajorMode::setSyntaxHighlighter(QTextDocument *const d) {
-    if (this->highlighter != nullptr) {
-      // the previous highlighter must be deleted, otherwise the
-      // highlighters accumulate and memory is only freed when the
-      // document is closed. This can seriously impact the
-      // performance
-      // of editor.
-      this->highlighter->deleteLater();
-    }
-    this->highlighter = new MFrontSyntaxHighlighter(
-        d, getDSLName(this->editor, this->textEdit));
+    // the previous highlighter is released by MajorMode::setHighlighter:
+    // a document accepts several highlighters and they all apply, so
+    // accumulating them slows the editor down until the buffer is closed.
+    this->setHighlighter(new MFrontSyntaxHighlighter(
+        d, getDSLName(this->editor, this->textEdit)));
   }  // end of MFrontMajorMode::setSyntaxHighlighter
 
   void MFrontMajorMode::updateSyntaxHighlighterAndCompleter() {

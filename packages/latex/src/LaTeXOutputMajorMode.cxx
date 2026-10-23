@@ -130,7 +130,7 @@ namespace tfel::gui {
     }  // end of getDescription
 
     void setSyntaxHighlighter(QTextDocument *d) override {
-      new LaTeXOutputSyntaxHighlighter(d);
+      this->setHighlighter(new LaTeXOutputSyntaxHighlighter(d));
     }  // end of setSyntaxHighlighter
 
     bool mousePressEvent(QMouseEvent *e) override {

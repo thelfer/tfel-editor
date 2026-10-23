@@ -31,7 +31,7 @@ namespace tfel::gui {
   }  // end of BashMajorMode::BashMajorMode
 
   void BashMajorMode::setSyntaxHighlighter(QTextDocument* const d) {
-    new BashSyntaxHighlighter(d);
+    this->setHighlighter(new BashSyntaxHighlighter(d));
   }  // end of BashMajorMode::setSyntaxHighlighter
 
   BashMajorMode::~BashMajorMode() = default;

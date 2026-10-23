@@ -44,7 +44,7 @@ namespace tfel::gui {
   }  // end of MakefileMajorMode::getCommentSyntax
 
   void MakefileMajorMode::setSyntaxHighlighter(QTextDocument* const d) {
-    new MakefileSyntaxHighlighter(d);
+    this->setHighlighter(new MakefileSyntaxHighlighter(d));
   }  // end of MakefileMajorMode::setSyntaxHighlighter
 
   void MakefileMajorMode::format() {}

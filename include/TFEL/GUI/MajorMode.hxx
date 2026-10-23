@@ -10,6 +10,7 @@
 
 #include <QtCore/QStringList>
 #include <QtGui/QTextDocument>
+#include <QtGui/QSyntaxHighlighter>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QCompleter>
 #include "TFEL/GUI/Config.hxx"
@@ -41,6 +42,12 @@ namespace tfel::gui {
    public:
     /*!
      * \brief hightlight the current document
+     *
+     * Implementations must install the highlighter through setHighlighter(),
+     * which replaces the previous one. A QTextDocument accepts several
+     * highlighters at once and they all apply, so simply leaking a new one
+     * does not merely waste memory: it keeps the stale formatting active and
+     * redoes the work on every refresh.
      */
     virtual void setSyntaxHighlighter(QTextDocument* const) = 0;
 
@@ -111,6 +118,25 @@ namespace tfel::gui {
     virtual void setSpellCheckLanguage(const QString&) = 0;
     //! destructor
     virtual ~MajorMode();
+
+   protected:
+    /*!
+     * \brief install the given syntax highlighter, replacing the one
+     * currently in use by this mode.
+     *
+     * \param[in] h: highlighter to install. The highlighter is owned by the
+     * document it was built with, as QSyntaxHighlighter requires; this method
+     * only remembers it so that the next call can release it.
+     *
+     * A QTextDocument accepts several highlighters at once and they all
+     * apply, so the previous one has to go: keeping it does not merely waste
+     * memory, it keeps the stale formatting active and repeats the work on
+     * every refresh.
+     */
+    void setHighlighter(QSyntaxHighlighter* const);
+
+    //! current syntax highlighter, null if the mode has none
+    QSyntaxHighlighter* highlighter = nullptr;
 
    private:
     Q_OBJECT
