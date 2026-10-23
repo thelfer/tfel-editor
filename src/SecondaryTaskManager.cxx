@@ -7,6 +7,7 @@
 
 #include "TFEL/GUI/Debug.hxx"
 #include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/QAbstractScrollAreaWrapper.hxx"
 #include "TFEL/GUI/SecondaryTaskManager.hxx"
 
 namespace tfel::gui {
@@ -21,16 +22,44 @@ namespace tfel::gui {
       SecondaryTaskManager&&) = default;
   SecondaryTaskManager::~SecondaryTaskManager() = default;
 
+  // A task is registered under the widget that the tab widget holds, which is
+  // the QAbstractScrollAreaWrapper built around a QAbstractScrollArea. Callers
+  // however hold one of two identities: the widget they handed to
+  // Buffer::attachSecondaryTask (the inner widget) or the widget that call
+  // returned (the wrapper). Resolve either against the registered one so that
+  // both keep working, instead of silently doing nothing.
+  static bool taskMatches(const SecondaryTask& t, QWidget* const w) {
+    if (t.w == w) {
+      return true;
+    }
+    if ((t.w == nullptr) || (w == nullptr)) {
+      return false;
+    }
+    if (auto* const wrapper = qobject_cast<QAbstractScrollAreaWrapper*>(t.w)) {
+      if (wrapper->getWrappedObject() == w) {
+        return true;
+      }
+    }
+    if (auto* const wrapper = qobject_cast<QAbstractScrollAreaWrapper*>(w)) {
+      if (wrapper->getWrappedObject() == t.w) {
+        return true;
+      }
+    }
+    return false;
+  }  // end of taskMatches
+
   static std::vector<SecondaryTask>::iterator wfind(
       std::vector<SecondaryTask>& v, QWidget* const w) {
-    return std::find_if(v.begin(), v.end(),
-                        [w](const SecondaryTask& t) { return t.w == w; });
+    return std::find_if(v.begin(), v.end(), [w](const SecondaryTask& t) {
+      return taskMatches(t, w);
+    });
   }  // end of wfind
 
   static std::vector<SecondaryTask>::const_iterator wfind(
       const std::vector<SecondaryTask>& v, QWidget* const w) {
-    return std::find_if(v.begin(), v.end(),
-                        [w](const SecondaryTask& t) { return t.w == w; });
+    return std::find_if(v.begin(), v.end(), [w](const SecondaryTask& t) {
+      return taskMatches(t, w);
+    });
   }  // end of wfind
 
   void SecondaryTaskManager::removeBuffer(Buffer* const b) {
@@ -57,7 +86,9 @@ namespace tfel::gui {
       }
       if (!found) {
         debug("deleting widget associated with task:", t.title);
-        t.w->deleteLater();
+        if (t.w != nullptr) {
+          t.w->deleteLater();
+        }
       }
     }
   }  // end of SecondaryTaskManager::removeBuffer
@@ -72,7 +103,7 @@ namespace tfel::gui {
       return;
     }
     for (auto& t : pb->second) {
-      t.current = (t.w == w);
+      t.current = taskMatches(t, w);
     }
   }  // end of SecondaryTaskManager::setCurrentSecondaryTask
 
@@ -83,7 +114,7 @@ namespace tfel::gui {
     }
     for (auto& b : this->bufferTasks) {
       for (auto& ta : b.second) {
-        if (ta.w == w) {
+        if (taskMatches(ta, w)) {
           ta.title = t;
           if (b.first->isVisible()) {
             b.first->refreshSecondaryTaskTabWidget();
@@ -100,7 +131,7 @@ namespace tfel::gui {
     }
     for (auto& b : this->bufferTasks) {
       for (auto& ta : b.second) {
-        if (ta.w == w) {
+        if (taskMatches(ta, w)) {
           ta.icon = i;
           if (b.first->isVisible()) {
             b.first->refreshSecondaryTaskTabWidget();
