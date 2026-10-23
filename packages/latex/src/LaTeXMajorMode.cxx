@@ -118,8 +118,7 @@ namespace tfel::gui {
         rb(R"(\\begin\{\w+\})"),
         re(R"(\\end\{\w+\})"),
         rb2(R"(^\s*\\begin\{\w+\})"),
-        re2(R"(^\s*\\end\{\w+\})"),
-        c(0) {
+        re2(R"(^\s*\\end\{\w+\})") {
     qDebug() << "TeX-master : " << this->getTeXMasterFile();
   }  // end of LaTeXMajorMode::LaTeXMajorMode
 
@@ -156,10 +155,6 @@ namespace tfel::gui {
     // pointer alone left the stale one active and accumulating.
     this->setHighlighter(new LaTeXSyntaxHighlighter(*this, d));
   }  // end of LaTeXMajorMode::setSyntaxHighlighter
-
-  QCompleter* LaTeXMajorMode::getCompleter() {
-    return this->c;
-  }  // end of LaTeXMajorMode::getCompleter
 
   void LaTeXMajorMode::completeCurrentWord(TextEditBase& t, const QString& w) {
     MajorModeBase::completeCurrentWord(t, w);
@@ -704,9 +699,9 @@ namespace tfel::gui {
     return "%";
   }  // end of LaTeXMajorMode::getCommentSyntax
 
-  LaTeXMajorMode::~LaTeXMajorMode() {
-    delete this->c;
-  }  // end of LaTeXMajorMode::~LaTeXMajorMode()
+  // `delete this->c` used to live here. Since c was never assigned, it was a
+  // delete of a null pointer: a no-op, and dead code.
+  LaTeXMajorMode::~LaTeXMajorMode() = default;
 
   static StandardMajorModeProxy<LaTeXMajorMode> proxy(
       "LaTeX",
