@@ -9,6 +9,7 @@
 #define LIB_TFEL_GUI_COMMANDLINE_HXX
 
 #include <QtCore/QPointer>
+#include <QtCore/QStringList>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QHBoxLayout>
@@ -54,7 +55,18 @@ namespace tfel::gui {
     //! cancel editing
     virtual void cancel();
 
-    virtual void showCompletions(const QString &, const QStringList &);
+    /*!
+     * \brief display the different completions in a secondary task
+     * \param[in] b : directory in which the completion is performed, or more
+     * generally base shared by all the completions, an empty string if there
+     * is none
+     * \param[in] cl : list of completions
+     *
+     * \note The completions are displayed once the text of the line edit has
+     * been updated as they are hidden each time this text changes (see
+     * CommandLine::hideCompletions).
+     */
+    virtual void showCompletions(const QString &b, const QStringList &cl);
 
     virtual void hideCompletions();
 
@@ -98,10 +110,22 @@ namespace tfel::gui {
 
       void keyPressEvent(QKeyEvent *) override;
       /*!
-       * \param[in] b : if true, call the QLineEdit::setCompleter
+       * \param[in] c : completer
+       * \param[in] b : if true, the completer is handled by the base
+       * `QLineEdit`, which inserts the first completion matching the text as
+       * soon as the user types. If false, the completer is only used as a
+       * source of completions: nothing is inserted while typing and the
+       * completion is performed by the complete() method, triggered by the
+       * tabulation key, which inserts the common part of all the completions
+       * and displays the completions in a secondary task when they are
+       * several.
        */
       virtual void setCompleter(QCompleter *const, const bool);
 
+      /*!
+       * \return the completer used as a source of completions, which is not
+       * necessarily installed on the base `QLineEdit` (see setCompleter)
+       */
       virtual QCompleter *completer() const;
 
       ~CustomLineEdit() override;
@@ -122,18 +146,42 @@ namespace tfel::gui {
       virtual void complete();
 
       /*!
-       * \return a completion for the given input. An empty string is
-       * returned if no completion is available.
-       * \param[out] b : set to true if only one completion is
-       * avaiable
+       * \return the common part of all the completions matching the text of
+       * the line edit. An empty string is returned if nothing matches.
+       * \param[out] b : set to true if only one completion is available
        */
       virtual QString findCompletion(bool &);
 
       virtual QString extractBaseForCompletion(const QString &);
 
+      /*!
+       * \brief insert a completion in the line edit
+       * \param[in] c : common part of all the completions
+       * \param[in] b : true if this completion is the only one
+       */
+      virtual void insertCompletion(const QString &, const bool);
+
+      /*!
+       * \return the common part of the given completions
+       * \param[in] cs : completions matching the text of the line edit
+       * \param[in] ns : name under which each completion is displayed
+       * \param[out] b : set to true if only one completion is available
+       *
+       * \note The names of the completions are stored, as they shall be
+       * displayed once the text of the line edit has been updated: the
+       * completions are indeed hidden each time the text changes (see
+       * CommandLine::showCompletions).
+       */
+      QString handleCompletions(const QStringList &,
+                                const QStringList &,
+                                bool &);
+
       CommandLine &lineEdit;
       QCompleter *c_ = nullptr;
       bool completerHandledByQLineEdit = false;
+      //! names under which the completions found by the last call to
+      //! findCompletion shall be displayed, if they are several
+      QStringList completionList;
     };
 
     void setLineEdit(CustomLineEdit *const);
