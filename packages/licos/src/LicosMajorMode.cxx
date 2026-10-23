@@ -270,9 +270,15 @@ namespace tfel::gui {
     this->setHighlighter(new LicosSyntaxHighlighter(d));
   }  // end of LicosMajorMode::setSyntaxHighlighter
 
-  LicosMajorMode::~LicosMajorMode() {
-    delete this->c;
-  }  // end of LicosMajorMode::~LicosMajorMode()
+  // The completer is parented to the TextEditBase, which owns it, exactly as
+  // every other mode does (CastemMajorMode, MFrontMajorMode, MTestMajorMode,
+  // PipeTestMajorMode and the other mode in this file all pass the text edit
+  // as parent and never delete it). This destructor used to `delete this->c`,
+  // which freed a sibling that Qt owns. It did not crash only because
+  // ~QObject::deleteChildren() iterates forward and the mode is added to the
+  // text edit's child list before the completer, so the mode is destroyed
+  // first and the already-removed completer is skipped.
+  LicosMajorMode::~LicosMajorMode() = default;
 
   QCompleter *LicosMajorMode::getCompleter() {
     return this->c;
