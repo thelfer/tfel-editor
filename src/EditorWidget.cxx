@@ -531,7 +531,9 @@ namespace tfel::gui {
     } else {
       this->minibuffer->setCurrentWidget(this->ui.back());
     }
-    this->buffers->currentWidget()->setFocus();
+    if (auto* const cw = this->buffers->currentWidget()) {
+      cw->setFocus();
+    }
     p->deleteLater();
   }  // end of EditorWidget::removeUserInput
 
@@ -739,10 +741,15 @@ namespace tfel::gui {
   };
 
   std::vector<QMenu*> EditorWidget::getCurrentBufferSpecificMenus() {
-    if (this->buffers->count() == 0) {
+    // guard the pointer that is dereferenced, not the count: the count is
+    // nonzero whenever a non-Buffer widget happens to be current, and the
+    // cast is what can actually yield null here. Every sibling method in this
+    // file (changeBuffer, closeCurrentBuffer, saveCurrentBuffer) checks the
+    // cast.
+    auto* b = qobject_cast<Buffer*>(this->buffers->currentWidget());
+    if (b == nullptr) {
       return std::vector<QMenu*>();
     }
-    auto* b = qobject_cast<Buffer*>(this->buffers->currentWidget());
     return b->getSpecificMenus();
   }  // end of EditorWidget::getCurrentBufferMenu()
 
@@ -775,7 +782,17 @@ namespace tfel::gui {
   }  // end of EditorWidget::launchCommand
 
   Buffer& EditorWidget::getCurrentBuffer() {
-    return *(qobject_cast<Buffer*>(this->buffers->currentWidget()));
+    auto* b = qobject_cast<Buffer*>(this->buffers->currentWidget());
+    if (b == nullptr) {
+      // The constructor creates no buffer, so the stacked widget is genuinely
+      // empty between construction and MainWindow's first createEmptyBuffer().
+      // The 39 call sites that take this by reference rely on that window
+      // being unreachable; materialise the buffer instead, which is what
+      // removeBuffer() already does when the last buffer is killed.
+      this->createEmptyBuffer();
+      b = qobject_cast<Buffer*>(this->buffers->currentWidget());
+    }
+    return *b;
   }  // end of EditorWidget::getCurrentBuffer
 
   void EditorWidget::closeBuffer(Buffer& buffer, const bool b) {
