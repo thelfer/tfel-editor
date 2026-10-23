@@ -6,6 +6,7 @@
  */
 
 #include <iostream>
+#include <algorithm>
 
 #include <QtCore/QFile>
 #include <QtCore/QTimer>
@@ -485,11 +486,14 @@ namespace tfel::gui {
     if (l == nullptr) {
       return;
     }
-    if (std::find(this->ui.begin(), this->ui.end(), l) != this->ui.end()) {
+    const auto found =
+        std::find_if(this->ui.begin(), this->ui.end(),
+                     [l](const auto& e) { return e.first == l; });
+    if (found != this->ui.end()) {
       return;
     }
     if (!this->ui.empty()) {
-      if (this->ui.back()->isBlocking()) {
+      if (this->ui.back().second) {
         this->displayInformativeMessage(
             QObject::tr("command attemted "
                         "to use minibuffer "
@@ -497,18 +501,23 @@ namespace tfel::gui {
         return;
       }
     }
-    this->ui.push_back(l);
-    setCommandLineFont(this->ui.back());
-    this->minibuffer->addWidget(this->ui.back());
-    this->minibuffer->setCurrentWidget(this->ui.back());
-    this->ui.back()->setFocus();
-    if (this->ui.back()->isBlocking()) {
+    // record the blocking state now, while the command line is still an
+    // object of its most derived type: once it is being destroyed, a virtual
+    // call to isBlocking() would dispatch to CommandLine::isBlocking() and
+    // report false for an input that really was blocking
+    const auto blocking = l->isBlocking();
+    this->ui.push_back({l, blocking});
+    setCommandLineFont(this->ui.back().first);
+    this->minibuffer->addWidget(this->ui.back().first);
+    this->minibuffer->setCurrentWidget(this->ui.back().first);
+    this->ui.back().first->setFocus();
+    if (blocking) {
       this->buffers->setEnabled(false);
     }
-    QObject::connect(this->ui.back(), &CommandLine::finished, this,
+    QObject::connect(this->ui.back().first, &CommandLine::finished, this,
                      static_cast<void (EditorWidget::*)(CommandLine*)>(
                          &EditorWidget::removeUserInput));
-    QObject::connect(this->ui.back(), &CommandLine::destroyed, this,
+    QObject::connect(this->ui.back().first, &CommandLine::destroying, this,
                      static_cast<void (EditorWidget::*)(CommandLine*)>(
                          &EditorWidget::removeUserInput));
   }
@@ -517,19 +526,24 @@ namespace tfel::gui {
     if (this->ui.empty()) {
       return;
     }
-    if (std::find(this->ui.begin(), this->ui.end(), p) == this->ui.end()) {
+    const auto it = std::find_if(this->ui.begin(), this->ui.end(),
+                                 [p](const auto& e) { return e.first == p; });
+    if (it == this->ui.end()) {
       return;
     }
-    if (p->isBlocking()) {
-      Q_ASSERT(p == this->ui.back());
+    // the blocking state is read from the record, not from p: p may be on its
+    // way out, in which case the virtual call would report false and the
+    // buffers would stay disabled forever
+    if (it->second) {
+      Q_ASSERT(it->first == this->ui.back().first);
       this->buffers->setEnabled(true);
     }
     this->minibuffer->removeWidget(p);
-    this->ui.erase(std::find(this->ui.begin(), this->ui.end(), p));
+    this->ui.erase(it);
     if (this->ui.empty()) {
       this->minibuffer->setCurrentWidget(this->eui);
     } else {
-      this->minibuffer->setCurrentWidget(this->ui.back());
+      this->minibuffer->setCurrentWidget(this->ui.back().first);
     }
     this->buffers->currentWidget()->setFocus();
     p->deleteLater();
@@ -539,12 +553,12 @@ namespace tfel::gui {
     if (this->ui.empty()) {
       return;
     }
-    this->removeUserInput(this->ui.back());
+    this->removeUserInput(this->ui.back().first);
   }  // end of EditorWidget::removeUserInput
 
   void EditorWidget::removeUserInputs() {
     while (!this->ui.empty()) {
-      this->removeUserInput(this->ui.back());
+      this->removeUserInput(this->ui.back().first);
     }
   }  // end of EditorWidget::removeUserInputs
 
@@ -554,13 +568,13 @@ namespace tfel::gui {
 
   void EditorWidget::focusUserInput() {
     if (!this->ui.empty()) {
-      this->ui.back()->setFocus();
+      this->ui.back().first->setFocus();
     }
   }  // end of EditorWidget::focusUserInput
 
   void EditorWidget::resetUserInput() {
     if (!this->ui.empty()) {
-      this->minibuffer->setCurrentWidget(this->ui.back());
+      this->minibuffer->setCurrentWidget(this->ui.back().first);
     } else {
       this->minibuffer->setCurrentWidget(this->eui);
     }

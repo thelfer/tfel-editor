@@ -62,7 +62,18 @@ namespace tfel::gui {
 
     void finished(CommandLine *);
 
-    void destroyed(CommandLine *);
+    /*!
+     * \brief emitted while the command line is being destroyed, so that the
+     * editor can drop it from the minibuffer.
+     *
+     * This signal is deliberately not called \c destroyed: a signal of that
+     * name hides QObject::destroyed(QObject*). It is emitted from
+     * CommandLine::~CommandLine(), where the QWidget part of the object is
+     * still alive, and not from QObject::destroyed, which only fires once
+     * QWidget::~QWidget has run and the widget can no longer be removed from
+     * its layout.
+     */
+    void destroying(CommandLine *);
 
     void textChanged(const QString &);
 

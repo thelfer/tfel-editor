@@ -9,6 +9,7 @@
 #define LIB_TFEL_GUI_EDITORWIDGET_HXX
 
 #include <vector>
+#include <utility>
 #include <QtCore/QString>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QWidget>
@@ -217,8 +218,13 @@ namespace tfel::gui {
     QStackedWidget *minibuffer;
     //! user message
     LineEdit *um;
-    //! user input
-    std::vector<CommandLine *> ui;
+    //! user input: the command line and whether it was blocking when it was
+    //! pushed. The blocking state is recorded because it cannot be recovered
+    //! from the command line itself: by the time a command line is destroyed,
+    //! its most derived destructor has returned, so a virtual call to
+    //! isBlocking() would dispatch to CommandLine::isBlocking() and report
+    //! false for an input that really was blocking.
+    std::vector<std::pair<CommandLine *, bool>> ui;
     //! empty line edit
     LineEdit *eui;
     //! the list of tokens pasted/killed

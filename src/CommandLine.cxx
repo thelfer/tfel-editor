@@ -326,7 +326,10 @@ namespace tfel::gui {
     if ((this->completions != nullptr) && (this->scompletions != nullptr)) {
       this->buffer.removeSecondaryTask(this->scompletions);
     }
-    emit destroyed(this);
+    // emitted here, and not through QObject::destroyed, so that the receiver
+    // still finds a live QWidget: at this point the QWidget part of the object
+    // is intact, whereas QObject::destroyed only fires after ~QWidget has run.
+    emit destroying(this);
   }  // end CommandLine::~CommandLine()
 
   struct YesOrNoUserInput::YesOrNoLineEdit : CommandLine::CustomLineEdit {
