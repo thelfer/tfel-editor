@@ -224,6 +224,13 @@ namespace tfel::gui {
 
   void SpellChecker::put_word(const QString &word) {
 #ifdef TFEL_GUI_HUNSPELL_SUPPORT
+    // _hunspell is null by default and is set back to null whenever no
+    // dictionary is found, which is the common case on a machine without
+    // hunspell data. spell() and suggest() both guard it; this method is
+    // reached from the public ignoreWord() and addToUserWordlist().
+    if (!this->_hunspell) {
+      return;
+    }
     QStringEncoder encoder(this->_encoding);
     QByteArray s = encoder(word);
     this->_hunspell->add(s.constData());
