@@ -56,6 +56,14 @@ namespace tfel::gui {
      */
     QString getErrorMessage() const;
 
+    /*!
+     * \brief ask the running study to stop, without blocking the caller.
+     *
+     * The request is delivered through the thread's own event loop, so the
+     * study is terminated asynchronously and the caller stays responsive.
+     */
+    void requestStop();
+
     ~LicosStudyThread() override;
 
    signals:

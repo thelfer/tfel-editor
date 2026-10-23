@@ -53,11 +53,23 @@ namespace tfel::gui {
     return this->errorMessage;
   }  // end of LicosStudyThread::getErrorMessage
 
+  void LicosStudyThread::requestStop() {
+    if (this->isFinished()) {
+      return;
+    }
+    // The request must be emitted before the event loop is asked to quit, and
+    // above all before waiting for the thread: killProcess is connected to the
+    // LicosStudy that run() holds on its stack, so the connection dies as soon
+    // as that function returns. Emitting it after wait() made the kill path a
+    // silent no-op that could never stop a running study.
+    emit killProcess();
+    this->quit();
+  }  // end of LicosStudyThread::requestStop
+
   LicosStudyThread::~LicosStudyThread() {
     if (!this->isFinished()) {
-      this->quit();
+      this->requestStop();
       this->wait();
-      emit killProcess();
     }
   }  // end of LicosStudyThread::~LicosStudyThread()
 

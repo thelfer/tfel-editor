@@ -68,10 +68,19 @@ namespace tfel::gui {
     emit finished(s, e);
   }
 
-  void LicosOutputFrame::closeEvent(QCloseEvent *) {
+  void LicosOutputFrame::closeEvent(QCloseEvent *e) {
     if (this->licos != nullptr) {
+      // requestStop() does not block: deleteLater() on a running thread ends
+      // up in ~LicosStudyThread, whose wait() would freeze the GUI thread
+      // until the study finished on its own.
+      this->licos->requestStop();
       this->licos->deleteLater();
+      // null the pointer, as studyFinished() does: deleteLater() only queues
+      // the removal, so leaving the pointer set makes it dangle as soon as the
+      // deferred delete is processed
+      this->licos = nullptr;
     }
+    e->accept();
   }  // end of LicosOutputFrame::closeEvent
 
 }  // end of namespace tfel::gui
