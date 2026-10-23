@@ -188,8 +188,14 @@ namespace tfel::gui {
                      &Buffer::updatePosition);
     QObject::connect(this->e, &PlainTextEdit::cursorPositionChanged, this,
                      &Buffer::updateDate);
+    // updateBufferName and not updateBufferInformations is connected here: a
+    // major mode change may follow a file name change (see
+    // TextEditBase::setFileName which sets the file name and emits
+    // majorModeChanged before fileNameChanged) and updateBufferInformations
+    // displays the name of the buffer, which holds the suffix re-chosen by
+    // updateBufferName
     QObject::connect(this->e, &PlainTextEdit::majorModeChanged, this,
-                     &Buffer::updateBufferInformations);
+                     &Buffer::updateBufferName);
     QObject::connect(this->e, &PlainTextEdit::majorModeChanged, this,
                      [this] { emit mainFrameMajorModeChanged(); });
     QObject::connect(this->stw, &SecondaryTaskTabWidget::tabCloseRequested,
@@ -241,9 +247,15 @@ namespace tfel::gui {
     const auto o = this->getBufferName();
     this->bufferNameSuffix =
         this->editor.chooseBufferNameSuffix(this, this->getBufferRawName());
+    // the suffix is known from now on, so the information of the buffer,
+    // which displays the name of this buffer, can be refreshed
     this->updateBufferInformations();
     const auto n = this->getBufferName();
-    emit bufferNameChanged(this, o, n);
+    // the name may be unchanged: this method is called when the major mode
+    // changes too and that does not modify the name of the buffer
+    if (o != n) {
+      emit bufferNameChanged(this, o, n);
+    }
   }  // end of updateBufferName()
 
   std::vector<QMenu *> Buffer::getSpecificMenus() {
@@ -298,8 +310,16 @@ namespace tfel::gui {
     // getBufferName() holds the suffix which distinguishes the buffers
     // visiting files with the same base name, so it shall not be appended
     // once again. This method must be called once this suffix has been
-    // chosen, that is by updateBufferName only, or afterwards
-    this->bni->setText("<b>" + this->getBufferName() + "</b>");
+    // chosen: updateBufferName re-chooses it and is the only caller, so this
+    // requirement holds, even when a major mode change announces that the
+    // visited file has been modified (see TextEditBase::setFileName).
+    //
+    // The name is escaped as the surrounding bold tags make the label parse
+    // its text as rich text: without an escape, the <1> suffix of a buffer
+    // visiting CMakeLists.txt for instance is taken for an html tag and the
+    // name is displayed without any suffix, as all the buffers visiting
+    // files with the same base name look alike
+    this->bni->setText("<b>" + this->getBufferName().toHtmlEscaped() + "</b>");
     this->updatePosition();
     const auto ic = this->e->getIcon();
     if (!ic.isNull()) {
