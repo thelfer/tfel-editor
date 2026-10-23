@@ -60,16 +60,26 @@ namespace tfel::gui {
     sa->setWidget(cw);
     sa->setWidgetResizable(true);
     //
-    qDeleteAll(this->children());
-    this->mpsws.swap(mpsws_new);
-    auto* const l = this->layout();
-    if (l != nullptr) {
+    // Drop the previous content. The scroll area is a child of this page, so
+    // deleting it destroys its whole subtree, including the selector widgets
+    // that this->mpsws still points at: the vector is emptied first so that it
+    // never holds dangling pointers, not even for a single statement.
+    //
+    // This replaces qDeleteAll(this->children()), which also deleted the page's
+    // own layout. ~QLayout clears parentWidget()->layout, so the
+    // this->layout() lookup below was already null and the delete there was
+    // dead code. Deleting a whole children() list is unsafe in general: a child
+    // that owns another child of the same parent yields a double delete.
+    this->mpsws.clear();
+    qDeleteAll(this->findChildren<QScrollArea*>());
+    if (auto* const l = this->layout()) {
       delete l;
     }
     //
     auto* const cl = new QVBoxLayout;
     cl->addWidget(sa);
     this->setLayout(cl);
+    this->mpsws.swap(mpsws_new);
   }  // end of
   // MaterialPropertiesSelectionPage::updateMaterialPropertiesList
 
