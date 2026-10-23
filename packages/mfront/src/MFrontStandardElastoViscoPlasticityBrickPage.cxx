@@ -126,6 +126,14 @@ namespace tfel::gui {
         return opts;
       }();
       const auto dsl = p->getBehaviourDSL(o);
+      // getBehaviourDSL() returns a null shared_ptr when the choices made in
+      // the behaviour page are inconsistent or when the temporary file cannot
+      // be written. getBehaviourDescription() is pure virtual, so calling it
+      // on a null pointer loads the vptr from address 0: a SIGSEGV, which the
+      // catch below cannot catch because a signal is not an exception.
+      if (dsl == nullptr) {
+        return;
+      }
       const auto bd = dsl->getBehaviourDescription();
       write_options(sp->getOptions(bd, false));
     } catch (...) {
