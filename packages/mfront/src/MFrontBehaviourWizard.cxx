@@ -88,11 +88,16 @@ namespace tfel::gui {
     try {
       const auto& n = this->im->getSelectedDomainSpecificLanguage();
       const auto dsl = this->im->getBehaviourDSL({});
-      const auto dsld = this->getBehaviourDSLDescription();
-      const auto o = this->tgop->getTemplateGenerationOptions();
+      // getBehaviourDSL() returns a null shared_ptr when the choices made in
+      // the behaviour page are inconsistent or when the temporary file cannot
+      // be written. The check must precede any call dereferencing dsl:
+      // getBehaviourDSLDescription() is pure virtual, so calling it on a null
+      // pointer is a SIGSEGV that no catch below could turn into a diagnostic.
       if (dsl == nullptr) {
         return;
       }
+      const auto dsld = this->getBehaviourDSLDescription();
+      const auto o = this->tgop->getTemplateGenerationOptions();
       this->variables->complete(*dsl);
       try {
         dsl->endsInputFileProcessing();
