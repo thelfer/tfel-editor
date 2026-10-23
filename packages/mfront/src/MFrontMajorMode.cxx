@@ -149,13 +149,28 @@ namespace tfel::gui {
     const auto dsln_mkt = [&editor, &t] {
       auto &f = mfront::DSLFactory::getDSLFactory();
       const auto name = getDSLName(editor, t);
-      const auto dsl = f.createNewDSL(name.toStdString())->getTargetType();
-      if (dsl == mfront::AbstractDSL::MATERIALPROPERTYDSL) {
-        return std::make_pair(name, MFrontOptionsDialog::MATERIALPROPERTY);
-      } else if (dsl == mfront::AbstractDSL::BEHAVIOURDSL) {
+      try {
+        // createNewDSL raises a std::runtime_error for an unregistered DSL
+        // name, which a simple typo in the @DSL token is enough to trigger.
+        // Nothing in the chain from here to QApplication::exec() catches, so
+        // the exception would reach std::terminate and kill the editor with
+        // no diagnostic and the edits lost. The sibling at the end of this
+        // file already guards the identical call.
+        const auto dsl = f.createNewDSL(name.toStdString())->getTargetType();
+        if (dsl == mfront::AbstractDSL::MATERIALPROPERTYDSL) {
+          return std::make_pair(name, MFrontOptionsDialog::MATERIALPROPERTY);
+        } else if (dsl == mfront::AbstractDSL::BEHAVIOURDSL) {
+          return std::make_pair(name, MFrontOptionsDialog::BEHAVIOUR);
+        }
+        return std::make_pair(name, MFrontOptionsDialog::MODEL);
+      } catch (std::exception &e) {
+        editor.displayInformativeMessage("runMFront: " + QString(e.what()));
+        return std::make_pair(name, MFrontOptionsDialog::BEHAVIOUR);
+      } catch (...) {
+        editor.displayInformativeMessage(
+            QObject::tr("runMFront: unknown exception"));
         return std::make_pair(name, MFrontOptionsDialog::BEHAVIOUR);
       }
-      return std::make_pair(name, MFrontOptionsDialog::MODEL);
     }();
     const auto &mkt = dsln_mkt.second;
     QSettings s;
