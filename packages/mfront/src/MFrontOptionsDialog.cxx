@@ -20,7 +20,7 @@
 #include "MFront/ModelInterfaceFactory.hxx"
 #include "MFront/DSLFactory.hxx"
 #include "MFront/ImplicitDSLBase.hxx"
-#include "MFront/NonLinearSystemSolver.hxx"
+#include "MFront/AbstractNonLinearSystemSolver.hxx"
 #include "TFEL/GUI/Debug.hxx"
 #include "TFEL/GUI/LineEdit.hxx"
 #include "TFEL/GUI/MFrontOptions.hxx"
