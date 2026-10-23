@@ -71,7 +71,7 @@ namespace tfel::gui {
     }  // end of getDescription
 
     void setSyntaxHighlighter(QTextDocument *d) override {
-      new CastemOutputSyntaxHighlighter(d);
+      this->setHighlighter(new CastemOutputSyntaxHighlighter(d));
     }  // end of setSyntaxHighlighter
 
     void format() override {}  // end of format

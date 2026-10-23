@@ -107,7 +107,7 @@ namespace tfel::gui {
     }  // end of getDescription
 
     void setSyntaxHighlighter(QTextDocument *d) override {
-      new GrepOutputSyntaxHighlighter(d);
+      this->setHighlighter(new GrepOutputSyntaxHighlighter(d));
     }  // end of setSyntaxHighlighter
 
     bool mousePressEvent(QMouseEvent *e) override {

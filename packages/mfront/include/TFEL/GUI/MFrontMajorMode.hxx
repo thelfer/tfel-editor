@@ -65,8 +65,6 @@ namespace tfel::gui {
     QCompleter *c = nullptr;
     //! current dsl
     QString current_dsl;
-    // current syntax highlighter
-    MFrontSyntaxHighlighter *highlighter = nullptr;
 
    private:
     Q_OBJECT

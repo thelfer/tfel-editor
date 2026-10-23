@@ -47,7 +47,7 @@ namespace tfel::gui {
     }  // end of getDescription
 
     void setSyntaxHighlighter(QTextDocument* d) override {
-      new GnuplotSyntaxHighlighter(d);
+      this->setHighlighter(new GnuplotSyntaxHighlighter(d));
     }  // end of setSyntaxHighlighter
 
     bool mousePressEvent(QMouseEvent*) override { return false; }

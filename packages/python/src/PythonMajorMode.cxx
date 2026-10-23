@@ -60,7 +60,7 @@ namespace tfel::gui {
     }  // end of getDescription
 
     void setSyntaxHighlighter(QTextDocument* d) override {
-      new PythonSyntaxHighlighter(d);
+      this->setHighlighter(new PythonSyntaxHighlighter(d));
     }  // end of setSyntaxHighlighter
 
     bool mousePressEvent(QMouseEvent*) override { return false; }

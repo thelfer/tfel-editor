@@ -267,7 +267,7 @@ namespace tfel::gui {
   }  // end of LicosMajorMode::LicosMajorMode
 
   void LicosMajorMode::setSyntaxHighlighter(QTextDocument *const d) {
-    new LicosSyntaxHighlighter(d);
+    this->setHighlighter(new LicosSyntaxHighlighter(d));
   }  // end of LicosMajorMode::setSyntaxHighlighter
 
   LicosMajorMode::~LicosMajorMode() {

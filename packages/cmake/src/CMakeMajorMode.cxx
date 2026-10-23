@@ -82,7 +82,7 @@ namespace tfel::gui {
   }  // end of CMakeMajorMode::getCommentSyntax
 
   void CMakeMajorMode::setSyntaxHighlighter(QTextDocument* const d) {
-    new CMakeSyntaxHighlighter(d);
+    this->setHighlighter(new CMakeSyntaxHighlighter(d));
   }  // end of CMakeMajorMode::setSyntaxHighlighter
 
   void CMakeMajorMode::format() {}

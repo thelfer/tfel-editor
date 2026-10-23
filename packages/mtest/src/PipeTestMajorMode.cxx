@@ -46,7 +46,7 @@ namespace tfel::gui {
   QString PipeTestMajorMode::getScheme() const { return "ptest"; }
 
   void PipeTestMajorMode::setSyntaxHighlighter(QTextDocument* const d) {
-    new PipeTestSyntaxHighlighter(d);
+    this->setHighlighter(new PipeTestSyntaxHighlighter(d));
   }  // end of PipeTestMajorMode::setSyntaxHighlighter
 
   const std::vector<std::string>& PipeTestMajorMode::getKeyWordsList() const {
