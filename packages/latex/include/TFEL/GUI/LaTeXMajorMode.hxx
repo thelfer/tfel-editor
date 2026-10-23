@@ -40,8 +40,6 @@ namespace tfel::gui {
      */
     void completeContextMenu(QMenu *const, const QTextCursor &) override;
 
-    QCompleter *getCompleter() override;
-
     void completeCurrentWord(TextEditBase &, const QString &) override;
 
     QMenu *getSpecificMenu() override;
@@ -132,8 +130,6 @@ namespace tfel::gui {
     QRegularExpression re;
     QRegularExpression rb2;
     QRegularExpression re2;
-
-    QCompleter *c;
 
     SpellChecker spellChecker;
 
