@@ -29,6 +29,10 @@ namespace tfel::gui {
     const auto* s = ::getenv("SHELL");
     if (s == nullptr) {
       this->editor.displayInformativeMessage(QObject::tr("no shell defined"));
+      // the warning is not enough: falling through hands the null pointer to
+      // run(), which turns it into an empty program and silently starts
+      // nothing. The sibling analyseUsingMFM() returns after its warning.
+      return;
     }
     this->run(c, s, QStringList() << "-c" << c);
 #endif /* Q_OS_WIN */
