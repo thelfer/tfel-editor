@@ -795,6 +795,11 @@ namespace tfel::gui {
     const auto shell = ::getenv("SHELL");
     if (shell == nullptr) {
       this->editor.displayInformativeMessage(QObject::tr("no shell defined"));
+      // the warning is not enough: falling through starts a QProcess with a
+      // null program, which fails silently and leaves the user staring at an
+      // empty *search for ...* buffer. The sibling analyseUsingMFM() returns
+      // after its warning.
+      return;
     }
     auto &b = this->editor.getCurrentBuffer();
     auto *po = new ProcessOutputFrame(this->editor, b);
