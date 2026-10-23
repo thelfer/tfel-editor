@@ -57,6 +57,14 @@ namespace tfel::gui {
   mfront::BehaviourDSLDescription
   MFrontBehaviourWizard::getBehaviourDSLDescription() const {
     const auto dsl = this->im->getBehaviourDSL({});
+    // getBehaviourDSL() returns a null shared_ptr when the choices made in
+    // the behaviour page are inconsistent or when the temporary file cannot
+    // be written. getBehaviourDSLDescription() is pure virtual, so calling it
+    // on a null pointer would load the vptr from address 0: a SIGSEGV that no
+    // catch (...) could turn into a diagnostic.
+    if (dsl == nullptr) {
+      return {};
+    }
     auto dsldd = dsl->getBehaviourDSLDescription();
     try {
       const auto b = this->im->getSelectedBrick();
