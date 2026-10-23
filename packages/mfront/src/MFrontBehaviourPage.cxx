@@ -262,6 +262,18 @@ namespace tfel::gui {
       const auto &n = this->getSelectedDomainSpecificLanguage();
       const auto dsl = std::dynamic_pointer_cast<mfront::AbstractBehaviourDSL>(
           f.createNewDSL(n.toStdString()));
+      // the cast is null when the selected DSL is not a behaviour DSL. It is
+      // currently unreachable because updateDSLList() filters on
+      // getTargetType() == BEHAVIOURDSL, but that filter only happens to
+      // agree with the cast. getBehaviourDSLDescription() is pure virtual, so
+      // calling it on a null pointer is a SIGSEGV that the catch below cannot
+      // catch. The sibling getCurrentBehaviourDSLDescription() guards the same
+      // cast.
+      if (dsl == nullptr) {
+        this->editor.displayInformativeMessage(
+            QObject::tr("the selected DSL is not a behaviour DSL"));
+        return true;
+      }
       const auto &dsld = dsl->getBehaviourDSLDescription();
       QTextDocument t;
       QTextCursor tc(&t);
