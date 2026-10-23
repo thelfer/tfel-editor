@@ -361,6 +361,11 @@ namespace tfel::gui {
 #ifdef TFEL_GUI_HAVE_WEBENGINE
     if (pw != nullptr) {
       auto *w = new QWebEngineViewWrapper(pw, this);
+      // left registering the inner widget on purpose: this branch is not
+      // compiled (WebEngine is never found, see cmake/modules/qt.cmake) and
+      // QWebEngineViewWrapper has no getWrappedObject(), so the identity
+      // resolution in SecondaryTaskManager could not undo it. Re-enable
+      // together with an accessor if WebEngine ever comes back.
       st.w = s;
       this->editor.attachSecondaryTask(this, st);
       if (this->isVisible()) {
@@ -374,7 +379,12 @@ namespace tfel::gui {
     if (p != nullptr) {
 #endif /* TFEL_GUI_HAVE_WEBENGINE */
       auto *w = new QAbstractScrollAreaWrapper(p, this);
-      st.w = s;
+      // register the wrapper, not the wrapped widget: the wrapper is what the
+      // tab widget holds and what attachSecondaryTask returns, so the registry
+      // and the tab must agree on one identity. Registering the inner widget
+      // here is what kept tasks from ever being unregistered and leaked the
+      // wrapper.
+      st.w = w;
       this->editor.attachSecondaryTask(this, st);
       if (this->isVisible()) {
         this->stw->addTab(w, st.title);
@@ -572,8 +582,15 @@ namespace tfel::gui {
 
   void Buffer::closeSecondaryTask(int i) {
     debug("Buffer::closeSecondaryTask: removing tab", i);
-    this->editor.detachSecondaryTask(this, this->stw->widget(i));
+    auto *const w = this->stw->widget(i);
+    if (w == nullptr) {
+      return;
+    }
+    // detachSecondaryTask queues a deleteLater on the widget, so the tab must
+    // go first: if the removal is refused, the deferred delete still fires and
+    // the tab widget is left holding a dangling page.
     this->stw->removeTab(i);
+    this->editor.detachSecondaryTask(this, w);
     if (this->stw->count() == 0) {
       this->stw->hide();
     }
@@ -591,6 +608,14 @@ namespace tfel::gui {
 
   void Buffer::updateMenu() { emit updatedMenu(); }  // end of updateMenu
 
-  Buffer::~Buffer() = default;
+  // Unregister this buffer's secondary tasks. The registry is owned by the
+  // EditorWidget, which outlives any single buffer, so without this a Buffer
+  // could leave entries behind whose widget is already gone.
+  //
+  // The call is qualified with SecondaryTaskManager:: on purpose:
+  // EditorWidget::removeBuffer overrides it and does full UI work, including
+  // createEmptyBuffer() and deleteLater on the buffer being destroyed, which
+  // must not happen from a destructor.
+  Buffer::~Buffer() { this->editor.SecondaryTaskManager::removeBuffer(this); }
 
 }  // end of namespace tfel::gui
