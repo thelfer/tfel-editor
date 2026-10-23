@@ -1344,24 +1344,29 @@ namespace tfel::gui {
     }
     if (e->button() == Qt::RightButton) {
 #ifndef QT_NO_CONTEXTMENU
-      QPointer<QMenu> m(new QMenu());
+      // a plain stack object: QPointer is a non-owning watcher that never
+      // deletes anything, so holding the menu in one leaked a QMenu on every
+      // right click. The actions are not double freed by ~QMenu: QMenu::
+      // addAction only associates them with the menu, it does not reparent
+      // them, and they stay children of the TextEditBase.
+      QMenu m;
       this->createContextMenuActions();
       if (this->isUndoRedoEnabled()) {
-        m->addAction(this->ua);
-        m->addAction(this->ra);
+        m.addAction(this->ua);
+        m.addAction(this->ra);
       }
       if (!this->isReadOnly()) {
-        m->addAction(this->ca);
+        m.addAction(this->ca);
       }
-      m->addAction(this->coa);
+      m.addAction(this->coa);
       if (!this->isReadOnly()) {
-        m->addAction(this->pa);
+        m.addAction(this->pa);
       }
-      m->addAction(this->sa);
+      m.addAction(this->sa);
       if (this->mode != nullptr) {
-        this->mode->completeContextMenu(m, this->cursorForPosition(e->pos()));
+        this->mode->completeContextMenu(&m, this->cursorForPosition(e->pos()));
       }
-      m->exec(e->globalPos());
+      m.exec(e->globalPos());
       e->accept();
       return true;
 #endif
