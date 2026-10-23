@@ -52,7 +52,25 @@ namespace tfel::gui {
 
     virtual void changeBuffer(const int);
 
-    virtual QString chooseBufferNameSuffix(Buffer *, const QString &);
+    /*!
+     * \brief re-choose the suffix of the name of every buffer and refresh
+     * their information
+     *
+     * The suffix of a buffer visiting a file is the first parent directory of
+     * this file which makes its name differ from the names of the buffers
+     * visiting a file with the same name: two buffers visiting
+     * `.../tfel/src/tfel/src/CMakeLists.txt` and
+     * `.../tfel-editor/src/tfel-editor/src/CMakeLists.txt` are named
+     * `CMakeLists.txt <tfel>` and `CMakeLists.txt <tfel-editor>`. Buffers
+     * which do not visit any file are distinguished by a counter, as their
+     * empty raw name holds no directory information.
+     *
+     * \note The suffix of a buffer depends on the files visited by all the
+     * buffers, so the whole set of buffers must be handled at once: this
+     * method shall be called every time a buffer is created, closed or visits
+     * another file.
+     */
+    virtual void updateBufferNameSuffixes();
 
     virtual std::vector<QMenu *> getCurrentBufferSpecificMenus();
 

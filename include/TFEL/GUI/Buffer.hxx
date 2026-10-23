@@ -52,6 +52,18 @@ namespace tfel::gui {
 
     virtual QString getBufferNameSuffix() const;
 
+    /*!
+     * \brief set the suffix of the name of this buffer and refresh its
+     * information
+     * \param[in] s: new suffix, empty if the name of this buffer needs none
+     *
+     * \note The suffix of a buffer visiting a file is the first parent
+     * directory of this file which makes its name differ from the names of the
+     * buffers visiting a file with the same name, so it depends on all the
+     * buffers: it shall be set by EditorWidget::updateBufferNameSuffixes only.
+     */
+    virtual void setBufferNameSuffix(const QString &s);
+
     virtual QString getBufferRawName() const;
 
     virtual PlainTextEdit &getMainFrame();

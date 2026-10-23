@@ -169,11 +169,11 @@ namespace tfel::gui {
     //    vl->addWidget(this->stw);
     vl->addLayout(hl);
     vl->addLayout(this->info);
-    // the name of the buffer is refreshed here instead of its information
-    // only: updateBufferInformations displays the name of the buffer, which
-    // holds the suffix chosen by updateBufferName, so this suffix must be
-    // chosen first
-    this->updateBufferName();
+    // the information of the buffer is displayed now, the suffix of its name
+    // being chosen once the buffer is added to the stack of buffers, as the
+    // suffix depends on the files visited by all the buffers (see
+    // EditorWidget::updateBufferNameSuffixes)
+    this->updateBufferInformations();
     this->setLayout(vl);
     // timer
     QObject::connect(this->timer, &QTimer::timeout, this, &Buffer::updateDate);
@@ -193,7 +193,7 @@ namespace tfel::gui {
     // TextEditBase::setFileName which sets the file name and emits
     // majorModeChanged before fileNameChanged) and updateBufferInformations
     // displays the name of the buffer, which holds the suffix re-chosen by
-    // updateBufferName
+    // EditorWidget::updateBufferNameSuffixes
     QObject::connect(this->e, &PlainTextEdit::majorModeChanged, this,
                      &Buffer::updateBufferName);
     QObject::connect(this->e, &PlainTextEdit::majorModeChanged, this,
@@ -228,14 +228,30 @@ namespace tfel::gui {
     const auto s = this->getBufferNameSuffix();
     const auto f = this->getBufferRawName();
     if (!s.isEmpty()) {
-      return f + " <" + s + ">";
+      // the separating space is dropped when the buffer visits no file, as
+      // there is nothing in front of the suffix
+      return f.isEmpty() ? ("<" + s + ">") : (f + " <" + s + ">");
     }
     return f;
   }  // end of getBufferName
 
   QString Buffer::getBufferNameSuffix() const {
     return this->bufferNameSuffix;
-  }  // end of setBufferName
+  }  // end of getBufferNameSuffix
+
+  void Buffer::setBufferNameSuffix(const QString &s) {
+    const auto o = this->getBufferName();
+    this->bufferNameSuffix = s;
+    // the suffix is known from now on, so the information of the buffer,
+    // which displays the name of this buffer, can be refreshed
+    this->updateBufferInformations();
+    const auto n = this->getBufferName();
+    // the name may be left untouched: the suffixes of all the buffers are
+    // re-chosen at once, and only a few of them usually change
+    if (o != n) {
+      emit bufferNameChanged(this, o, n);
+    }
+  }  // end of setBufferNameSuffix
 
   void Buffer::focusInEvent(QFocusEvent *) {
     if (!this->e->hasFocus()) {
@@ -244,18 +260,9 @@ namespace tfel::gui {
   }  // end of focusInEvent
 
   void Buffer::updateBufferName() {
-    const auto o = this->getBufferName();
-    this->bufferNameSuffix =
-        this->editor.chooseBufferNameSuffix(this, this->getBufferRawName());
-    // the suffix is known from now on, so the information of the buffer,
-    // which displays the name of this buffer, can be refreshed
-    this->updateBufferInformations();
-    const auto n = this->getBufferName();
-    // the name may be unchanged: this method is called when the major mode
-    // changes too and that does not modify the name of the buffer
-    if (o != n) {
-      emit bufferNameChanged(this, o, n);
-    }
+    // the suffix of the name of this buffer depends on the files visited by
+    // all the other buffers, so the whole set of buffers is refreshed
+    this->editor.updateBufferNameSuffixes();
   }  // end of updateBufferName()
 
   std::vector<QMenu *> Buffer::getSpecificMenus() {
@@ -308,17 +315,17 @@ namespace tfel::gui {
 
   void Buffer::updateBufferInformations() {
     // getBufferName() holds the suffix which distinguishes the buffers
-    // visiting files with the same base name, so it shall not be appended
-    // once again. This method must be called once this suffix has been
-    // chosen: updateBufferName re-chooses it and is the only caller, so this
-    // requirement holds, even when a major mode change announces that the
-    // visited file has been modified (see TextEditBase::setFileName).
+    // visiting files with the same name, so it shall not be appended once
+    // again. This method must be called once this suffix has been chosen: it
+    // always is as the only caller is setBufferNameSuffix, which is called
+    // with the new suffix, apart from the very first display performed by
+    // initialize
     //
     // The name is escaped as the surrounding bold tags make the label parse
-    // its text as rich text: without an escape, the <1> suffix of a buffer
+    // its text as rich text: without an escape, the <tfel> suffix of a buffer
     // visiting CMakeLists.txt for instance is taken for an html tag and the
-    // name is displayed without any suffix, as all the buffers visiting
-    // files with the same base name look alike
+    // name is displayed with no suffix at all, so that all the buffers
+    // visiting files with the same name look alike
     this->bni->setText("<b>" + this->getBufferName().toHtmlEscaped() + "</b>");
     this->updatePosition();
     const auto ic = this->e->getIcon();

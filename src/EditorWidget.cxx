@@ -9,6 +9,7 @@
 #include <algorithm>
 
 #include <QtCore/QFile>
+#include <QtCore/QMap>
 #include <QtCore/QTimer>
 #include <QtCore/QDebug>
 #include <QtCore/QSettings>
@@ -82,8 +83,8 @@ namespace tfel::gui {
    *
    * \note The name of a buffer is made of the base name of the visited file
    * and, when several buffers visit files with the same base name, of a
-   * suffix which makes this name unique (see
-   * EditorWidget::chooseBufferNameSuffix). A buffer is thus designated
+   * suffix holding the first parent directory which makes this name unique
+   * (see EditorWidget::updateBufferNameSuffixes). A buffer is thus designated
    * either by its complete name or, when this is not ambiguous, by the base
    * name of the visited file.
    *
@@ -308,6 +309,10 @@ namespace tfel::gui {
       this->buffers->addWidget(b);
       emit bufferAdded();
     }
+    // the suffix of the name of a buffer depends on the file it visits and on
+    // the files visited by all the other buffers: all the suffixes are
+    // re-chosen once this buffer is held by the widget handling the buffers
+    this->updateBufferNameSuffixes();
     this->setCurrentBuffer(b);
   }  // end of ::openFile(const QString&)
 
@@ -330,6 +335,9 @@ namespace tfel::gui {
   void EditorWidget::createEmptyBuffer() {
     auto* b = this->createNewBuffer();
     this->buffers->addWidget(b);
+    // the suffix of the name of the buffers which do not visit any file is a
+    // counter which depends on how many such buffers exist
+    this->updateBufferNameSuffixes();
     this->setCurrentBuffer(b);
     emit bufferAdded();
   }  // end of ::createEmptyBuffer()
@@ -385,6 +393,10 @@ namespace tfel::gui {
     // lonely task
     SecondaryTaskManager::removeBuffer(b);
     this->buffers->removeWidget(b);
+    // the suffix of the name of the other buffers may be made useless by the
+    // removal of this buffer: it shall be re-chosen before the buffers history
+    // is used again as it holds the names of the buffers
+    this->updateBufferNameSuffixes();
     // creating empty buffer is necessary
     if (this->buffers->count() == 0) {
       this->createEmptyBuffer();
@@ -708,38 +720,133 @@ namespace tfel::gui {
     }
   }  // end of EditorWidget::changeBuffer
 
-  QString EditorWidget::chooseBufferNameSuffix(Buffer* b, const QString& f) {
-    if (f.isEmpty()) {
-      return "";
+  /*!
+   * \brief a buffer and the information used to choose the suffix of its name
+   */
+  struct BufferSuffixInfo {
+    //! buffer
+    Buffer* b;
+    //! file visited by the buffer, empty if the buffer visits no file
+    QString path;
+    /*!
+     * \brief parent directories of the visited file, from the visited file to
+     * the root directory, so that the first element is the directory holding
+     * the visited file
+     */
+    QStringList dirs;
+  };  // end of BufferSuffixInfo
+
+  /*!
+   * \brief return the parent directories of the path visited by a buffer
+   * \param[in] f: path of the file, or of the directory, visited by a buffer
+   * \return the parent directories of the given path, from this path to the
+   * root directory, an empty list if the given path is empty
+   */
+  static QStringList getParentDirectories(const QString& f) {
+    // the last component is the file (or the directory) itself, which is what
+    // the raw name of the buffer holds: it is discarded
+    auto d = f.split('/', Qt::SkipEmptyParts);
+    if (!d.empty()) {
+      d.removeLast();
     }
-    QFileInfo info(f);
-    const auto n = info.fileName();
-    QString s;
-    int m = 0;
-    bool found = true;
-    while (found) {
-      found = false;
-      for (int i = 0; (i != this->buffers->count()) && (!found); ++i) {
-        auto* ob = qobject_cast<Buffer*>(this->buffers->widget(i));
-        if (ob != nullptr) {
-          if (ob != b) {
-            // the name of another buffer is made of its raw name and of
-            // its own suffix: comparing to getBufferName() would only
-            // detect the buffers with no suffix and several buffers
-            // visiting files with the same base name would end-up sharing
-            // the same name
-            found = ((n == ob->getBufferRawName()) &&
-                     (s == ob->getBufferNameSuffix()));
-          }
+    // the directories are reversed as the suffix of the name of a buffer is
+    // built from the file it visits, the first parent directory which makes a
+    // difference being looked for first
+    std::reverse(d.begin(), d.end());
+    return d;
+  }  // end of getParentDirectories
+
+  /*!
+   * \brief choose the suffix of the name of buffers visiting files with the
+   * same name
+   * \param[in,out] v: buffers visiting files with the same name
+   * \param[in] depth: index in the parent directories of the visited files at
+   * which the comparison is performed
+   *
+   * The given buffers are split according to the parent directory of the file
+   * they visit at the given depth. A buffer which is alone in its split gets
+   * this parent directory as suffix: this is the first parent directory which
+   * makes its name differ from the names of the other buffers. The buffers
+   * sharing this parent directory are handled again at the next depth as this
+   * directory can not tell them apart. When the parent directories are
+   * exhausted, which happens when a buffer visits a file held by a parent
+   * directory of the files visited by the other buffers, the complete path is
+   * used as suffix.
+   */
+  static void assignSuffixes(QList<BufferSuffixInfo>& v, const int depth) {
+    QMap<QString, QList<BufferSuffixInfo>> s;
+    for (const auto& i : v) {
+      const auto k = (depth < i.dirs.size()) ? i.dirs[depth] : QString();
+      s[k].append(i);
+    }
+    if (s.size() == 1) {
+      if (s.firstKey().isEmpty()) {
+        // the parent directories of all the given buffers are exhausted: the
+        // visited path is the only information left to tell them apart. Two
+        // buffers visiting the same file can not happen (see
+        // EditorWidget::getBufferVisitingFile), so such buffers can only be
+        // the result of a save as operation
+        for (auto& i : v) {
+          i.b->setBufferNameSuffix(i.path);
         }
+        return;
       }
-      if (found) {
-        ++m;
-        s = QString::number(m);
+      // all the given buffers visit files held by the same directory
+      assignSuffixes(v, depth + 1);
+      return;
+    }
+    for (auto it = s.begin(); it != s.end(); ++it) {
+      auto& g = it.value();
+      if (g.size() == 1) {
+        // this parent directory makes this buffer differ from the others
+        g[0].b->setBufferNameSuffix(it.key().isEmpty() ? g[0].path : it.key());
+      } else {
+        assignSuffixes(g, depth + 1);
       }
     }
-    return s;
-  }  // end of EditorWidget::chooseBufferName
+  }  // end of assignSuffixes
+
+  void EditorWidget::updateBufferNameSuffixes() {
+    // the suffix of the name of a buffer depends on the files visited by all
+    // the buffers, so all of them are handled at once. The buffers are
+    // gathered first as setting the suffix of a buffer emits the
+    // bufferNameChanged signal, which may create or remove buffers
+    QList<BufferSuffixInfo> v;
+    for (int i = 0; i != this->buffers->count(); ++i) {
+      auto* b = qobject_cast<Buffer*>(this->buffers->widget(i));
+      if (b == nullptr) {
+        continue;
+      }
+      BufferSuffixInfo bi;
+      bi.b = b;
+      bi.path = b->getMainFrame().getCompleteFileName();
+      bi.dirs = getParentDirectories(bi.path);
+      v.append(bi);
+    }
+    // only the buffers visiting files with the same name need a suffix: the
+    // grouping is performed on the raw name, that is on what is displayed
+    QMap<QString, QList<BufferSuffixInfo>> g;
+    for (const auto& b : v) {
+      g[b.b->getBufferRawName()].append(b);
+    }
+    for (auto it = g.begin(); it != g.end(); ++it) {
+      auto& s = it.value();
+      if (s.size() == 1) {
+        s[0].b->setBufferNameSuffix(QString());
+        continue;
+      }
+      if (it.key().isEmpty()) {
+        // buffers which do not visit any file: the empty raw name they share
+        // holds no directory information, so a counter tells them apart, the
+        // first buffer of the group keeping no suffix
+        for (int j = 0; j != s.size(); ++j) {
+          s[j].b->setBufferNameSuffix(j == 0 ? QString() : QString::number(j));
+        }
+        continue;
+      }
+      assignSuffixes(s, 0);
+    }
+  }  // end of EditorWidget::updateBufferNameSuffixes
 
   void EditorWidget::changeBuffer() {
     auto* cb = qobject_cast<Buffer*>(this->buffers->currentWidget());
