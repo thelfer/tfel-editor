@@ -76,6 +76,52 @@ namespace tfel::gui {
     return fi.absoluteFilePath();
   }  // end of getRealPath
 
+  /*!
+   * \brief return the buffer designated by the given name, nullptr if no
+   * buffer matches or if the designation is ambiguous.
+   *
+   * \note The name of a buffer is made of the base name of the visited file
+   * and, when several buffers visit files with the same base name, of a
+   * suffix which makes this name unique (see
+   * EditorWidget::chooseBufferNameSuffix). A buffer is thus designated
+   * either by its complete name or, when this is not ambiguous, by the base
+   * name of the visited file.
+   *
+   * \param[in] w: widget holding the buffers
+   * \param[in] n: name of the buffer
+   * \param[in] e: buffer which shall not be returned, even if its name
+   * matches. It is used to disambiguate a name shared by several buffers, so
+   * that switching to such a name still designates another buffer.
+   */
+  static Buffer* findBuffer(QStackedWidget& w,
+                            const QString& n,
+                            Buffer* const e) {
+    Buffer* exact = nullptr;
+    Buffer* raw = nullptr;
+    bool ambiguous = false;
+    for (int i = 0; i != w.count(); ++i) {
+      auto* b = qobject_cast<Buffer*>(w.widget(i));
+      if ((b == nullptr) || (b == e)) {
+        continue;
+      }
+      if (b->getBufferName() == n) {
+        if (exact == nullptr) {
+          exact = b;
+        }
+      } else if (b->getBufferRawName() == n) {
+        if (raw == nullptr) {
+          raw = b;
+        } else {
+          ambiguous = true;
+        }
+      }
+    }
+    if (exact != nullptr) {
+      return exact;
+    }
+    return ambiguous ? nullptr : raw;
+  }  // end of findBuffer
+
   static void setQLineEditFont(LineEdit* l) {
     QSettings s;
     if (s.contains("font/textedit")) {
@@ -636,14 +682,16 @@ namespace tfel::gui {
   }
 
   void EditorWidget::changeBuffer(const QString& n) {
-    for (int i = 0; i != this->buffers->count(); ++i) {
-      auto* b = qobject_cast<Buffer*>(this->buffers->widget(i));
-      if (b != nullptr) {
-        if (b->getBufferName() == n) {
-          this->setCurrentBuffer(b);
-          return;
-        }
-      }
+    // the current buffer is discarded first: when several buffers visit
+    // files with the same base name, the name of the current buffer can
+    // designate another buffer too, and switching shall not be a no-op
+    auto* const cb = qobject_cast<Buffer*>(this->buffers->currentWidget());
+    auto* b = findBuffer(*this->buffers, n, cb);
+    if (b == nullptr) {
+      b = findBuffer(*this->buffers, n, nullptr);
+    }
+    if (b != nullptr) {
+      this->setCurrentBuffer(b);
     }
   }  // end of EditorWidget::changeBuffer
 
@@ -675,7 +723,12 @@ namespace tfel::gui {
         auto* ob = qobject_cast<Buffer*>(this->buffers->widget(i));
         if (ob != nullptr) {
           if (ob != b) {
-            found = ((n == ob->getBufferName()) &&
+            // the name of another buffer is made of its raw name and of
+            // its own suffix: comparing to getBufferName() would only
+            // detect the buffers with no suffix and several buffers
+            // visiting files with the same base name would end-up sharing
+            // the same name
+            found = ((n == ob->getBufferRawName()) &&
                      (s == ob->getBufferNameSuffix()));
           }
         }
@@ -693,24 +746,28 @@ namespace tfel::gui {
     if (cb == nullptr) {
       return;
     }
-    const auto& bn = cb->getBufferName();
     QStringList bnames;
+    //! the only other buffer, nullptr if there is none or several ones
+    Buffer* ob = nullptr;
     for (int i = 0; i != this->buffers->count(); ++i) {
       auto* b = qobject_cast<Buffer*>(this->buffers->widget(i));
-      if (b == nullptr) {
+      // the current buffer is discarded by identity: two buffers visiting
+      // files with the same base name can share the same name and both of
+      // them shall be selectable
+      if ((b == nullptr) || (b == cb)) {
         continue;
       }
-      const auto& n = b->getBufferName();
-      if (bn != n) {
-        bnames.append(n);
-      }
+      bnames.append(b->getBufferName());
+      ob = b;
     }
     if (bnames.empty()) {
       this->displayInformativeMessage(QObject::tr("no other buffer"));
       return;
     }
     if (bnames.size() == 1) {
-      this->changeBuffer(bnames[0]);
+      // switching by the buffer name is not enough here: another buffer may
+      // share the same name, so the buffer itself is used
+      this->setCurrentBuffer(ob);
       return;
     }
     if (this->bHistory.size() >= 2) {

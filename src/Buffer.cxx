@@ -169,7 +169,11 @@ namespace tfel::gui {
     //    vl->addWidget(this->stw);
     vl->addLayout(hl);
     vl->addLayout(this->info);
-    this->updateBufferInformations();
+    // the name of the buffer is refreshed here instead of its information
+    // only: updateBufferInformations displays the name of the buffer, which
+    // holds the suffix chosen by updateBufferName, so this suffix must be
+    // chosen first
+    this->updateBufferName();
     this->setLayout(vl);
     // timer
     QObject::connect(this->timer, &QTimer::timeout, this, &Buffer::updateDate);
@@ -197,8 +201,7 @@ namespace tfel::gui {
                          this->editor.setCurrentSecondaryTask(this, c);
                        }
                      });
-    this->updateBufferName();
-  }
+  }  // end of Buffer::initialize
 
   int Buffer::getId() const { return this->id; }  // end of getId
 
@@ -292,13 +295,11 @@ namespace tfel::gui {
   }
 
   void Buffer::updateBufferInformations() {
-    const auto &s = this->getBufferNameSuffix();
-    if (s.isEmpty()) {
-      this->bni->setText("<b>" + this->getBufferName() + "</b>");
-    } else {
-      this->bni->setText("<b>" + this->getBufferName() + " &lt;" + s +
-                         "&gt;</b>");
-    }
+    // getBufferName() holds the suffix which distinguishes the buffers
+    // visiting files with the same base name, so it shall not be appended
+    // once again. This method must be called once this suffix has been
+    // chosen, that is by updateBufferName only, or afterwards
+    this->bni->setText("<b>" + this->getBufferName() + "</b>");
     this->updatePosition();
     const auto ic = this->e->getIcon();
     if (!ic.isNull()) {
