@@ -53,15 +53,19 @@ namespace tfel::gui {
     gl1->addWidget(wlv, 1, 1);
     // advanced options
     auto *ao = new QGroupBox(QObject::tr("Advanced options"));
+    auto *amd = new QCheckBox;
+    auto *fpe = new QCheckBox;
+    auto *gdb = new QCheckBox;
+    auto *dbg = new QCheckBox;
     gl2->addWidget(new QLabel(QObject::tr("Allow missing dependencies")), 0, 0);
-    gl2->addWidget(new QCheckBox, 0, 1, Qt::AlignHCenter);
+    gl2->addWidget(amd, 0, 1, Qt::AlignHCenter);
     gl2->addWidget(new QLabel(QObject::tr("Trac floatting point exceptions")),
                    1, 0);
-    gl2->addWidget(new QCheckBox, 1, 1, Qt::AlignHCenter);
+    gl2->addWidget(fpe, 1, 1, Qt::AlignHCenter);
     gl2->addWidget(new QLabel(QObject::tr("Launch gdb on crash")), 2, 0);
-    gl2->addWidget(new QCheckBox, 2, 1, Qt::AlignHCenter);
+    gl2->addWidget(gdb, 2, 1, Qt::AlignHCenter);
     gl2->addWidget(new QLabel(QObject::tr("Debug mode")), 3, 0);
-    gl2->addWidget(new QCheckBox, 3, 1, Qt::AlignHCenter);
+    gl2->addWidget(dbg, 3, 1, Qt::AlignHCenter);
     ao->setLayout(gl2);
     ao->setFlat(true);
     auto dbb =
@@ -75,20 +79,23 @@ namespace tfel::gui {
                      &LicosStudyOptionsDialog::verboseLevelChanged);
     QObject::connect(wlv, &QComboBox::currentTextChanged, this,
                      &LicosStudyOptionsDialog::warningLevelChanged);
-    QObject::connect(
-        qobject_cast<QCheckBox *>(gl2->itemAtPosition(0, 1)->widget()),
-        &QCheckBox::toggled, this,
-        &LicosStudyOptionsDialog::allowMissingDependenciesChecked);
-    QObject::connect(
-        qobject_cast<QCheckBox *>(gl2->itemAtPosition(1, 1)->widget()),
-        &QCheckBox::toggled, this, &LicosStudyOptionsDialog::fpeChecked);
-    QObject::connect(
-        qobject_cast<QCheckBox *>(gl2->itemAtPosition(2, 1)->widget()),
-        &QCheckBox::toggled, this,
-        &LicosStudyOptionsDialog::printBackTraceChecked);
-    QObject::connect(
-        qobject_cast<QCheckBox *>(gl2->itemAtPosition(3, 1)->widget()),
-        &QCheckBox::toggled, this, &LicosStudyOptionsDialog::debugModeChecked);
+    // the checkboxes are connected through the locals they were created in:
+    // this used to re-read them from the layout with
+    // qobject_cast<QCheckBox *>(gl2->itemAtPosition(r, c)->widget()), and
+    // itemAtPosition() returns null for a vacant cell. The cells were
+    // populated, so it worked, but inserting a row above one of these shifts
+    // the index and the deref happens during dialog construction. A failed
+    // qobject_cast passed as the sender of connect() is no better: it only
+    // returns false and logs a warning, so the checkbox would silently stop
+    // working instead of failing loudly.
+    QObject::connect(amd, &QCheckBox::toggled, this,
+                     &LicosStudyOptionsDialog::allowMissingDependenciesChecked);
+    QObject::connect(fpe, &QCheckBox::toggled, this,
+                     &LicosStudyOptionsDialog::fpeChecked);
+    QObject::connect(gdb, &QCheckBox::toggled, this,
+                     &LicosStudyOptionsDialog::printBackTraceChecked);
+    QObject::connect(dbg, &QCheckBox::toggled, this,
+                     &LicosStudyOptionsDialog::debugModeChecked);
     vl->addLayout(gl1);
     vl->addWidget(ao);
     vl->addLayout(hl);
