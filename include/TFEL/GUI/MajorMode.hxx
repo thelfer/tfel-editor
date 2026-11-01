@@ -8,6 +8,7 @@
 #ifndef LIB_TFEL_GUI_MAJORMODE_HXX
 #define LIB_TFEL_GUI_MAJORMODE_HXX
 
+#include <QtCore/QPointer>
 #include <QtCore/QStringList>
 #include <QtGui/QTextDocument>
 #include <QtGui/QSyntaxHighlighter>
@@ -116,8 +117,15 @@ namespace tfel::gui {
     virtual void indentRegion(const QTextCursor&) = 0;
 
     virtual void setSpellCheckLanguage(const QString&) = 0;
-    //! destructor
-    virtual ~MajorMode();
+    /*!
+     * \brief destructor
+     *
+     * The syntax highlighter installed by this mode is released: it is a child
+     * of the document, so keeping it alive would leave it registered on that
+     * document, still highlighting it after the mode is gone, whereas many
+     * highlighters refer to their mode.
+     */
+    ~MajorMode() override;
 
    protected:
     /*!
@@ -126,7 +134,8 @@ namespace tfel::gui {
      *
      * \param[in] h: highlighter to install. The highlighter is owned by the
      * document it was built with, as QSyntaxHighlighter requires; this method
-     * only remembers it so that the next call can release it.
+     * only remembers it so that the next call, and the destructor, can
+     * release it.
      *
      * A QTextDocument accepts several highlighters at once and they all
      * apply, so the previous one has to go: keeping it does not merely waste
@@ -135,8 +144,14 @@ namespace tfel::gui {
      */
     void setHighlighter(QSyntaxHighlighter* const);
 
-    //! current syntax highlighter, null if the mode has none
-    QSyntaxHighlighter* highlighter = nullptr;
+    /*!
+     * \brief current syntax highlighter, null if the mode has none.
+     *
+     * A QPointer, not a raw pointer: the highlighter is owned by the document,
+     * which may outlive it, and a raw pointer would then be dereferenced by
+     * setSpellCheckLanguage() after the highlighter is gone.
+     */
+    QPointer<QSyntaxHighlighter> highlighter;
 
    private:
     Q_OBJECT

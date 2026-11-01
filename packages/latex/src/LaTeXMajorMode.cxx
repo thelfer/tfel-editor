@@ -123,7 +123,9 @@ namespace tfel::gui {
   }  // end of LaTeXMajorMode::LaTeXMajorMode
 
   QString LaTeXMajorMode::getTeXMasterFile() {
-    QRegularExpression r(R"(^\s*%%% TeX-master: \"([\w-0-9_\./]+)\"\s*$)");
+    // `[\w0-9_...]`, not `[\w-0-9_...]`: PCRE (used by QRegularExpression,
+    // unlike QRegExp) rejects a range starting on a class escape
+    QRegularExpression r(R"(^\s*%%% TeX-master: \"([\w0-9_\./]+)\"\s*$)");
     if (!r.isValid()) {
       return {};
     }
@@ -221,73 +223,30 @@ namespace tfel::gui {
 
   void LaTeXMajorMode::completeContextMenu(QMenu* const m,
                                            const QTextCursor& tc) {
-    typedef LaTeXSyntaxHighlighter::HighlightingRule Rule;
-    typedef QVector<Rule> Rules;
     MajorModeBase::completeContextMenu(m, tc);
-    if (this->highlighter != nullptr) {
-      QTextCursor bl(tc);
-      bl.movePosition(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
-      int posl = tc.position() - bl.position();
-      const auto text = tc.block().text();
-      const auto& rules = LaTeXSyntaxHighlighter::getHighlightingRules();
-      // remove comments
-      int pc = LaTeXSyntaxHighlighter::startOfComment(text);
-      QString l;
-      if (pc != -1) {
-        if (posl >= pc) {
-          return;
-        }
-        l = text.mid(0, pc);
-      } else {
-        l = text.mid(0, pc);
-      }
-      int pos = 0;
-      while (pos != l.size()) {
-        int cpos = -1;
-        Rules::const_iterator mp;
-        Rules::const_iterator p;
-        mp = rules.end();
-        for (p = rules.begin(); p != rules.end(); ++p) {
-          const Rule& rule = *p;
-          QRegularExpression e(rule.pattern);
-          const auto match = e.match(text, pos);
-          if (match.hasMatch()) {
-            const int rp = match.lastCapturedIndex();
-            if ((cpos == -1) || (rp <= cpos)) {
-              mp = p;
-              cpos = rp;
-            }
-          }
-        }
-        if (cpos != -1) {
-          if (cpos != pos) {
-            if ((posl >= pos) && (posl <= cpos)) {
-              this->completeContextMenuForMispelledWord(
-                  m, text.mid(pos, cpos - pos), posl - pos,
-                  bl.position() + pos);
-            }
-          }
-          // treating the LaTeX command
-          const Rule& rule = *mp;
-          QRegularExpression e(rule.pattern);
-          const auto match = e.match(text, pos);
-          const auto length = match.capturedLength();
-          pos = cpos + length;
-        } else {
-          if (posl >= pos) {
-            this->completeContextMenuForMispelledWord(
-                m, text.mid(pos, text.size() - pos), posl - pos,
-                bl.position() + pos);
-          }
-          pos = l.size();
-        }
-      }
+    if (this->highlighter.isNull()) {
+      return;
     }
-  }
+    // position of the cursor relative to the beginning of its own line
+    auto bl = QTextCursor(tc);
+    bl.movePosition(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
+    const auto posl = tc.position() - bl.position();
+    const auto text = tc.block().text();
+    // a misspelled word can only be in a portion of the line which is neither
+    // a comment nor a LaTeX command
+    for (const auto& p : LaTeXSyntaxHighlighter::parseLine(text).plainText) {
+      if ((posl < p.first) || (posl >= p.first + p.second)) {
+        continue;
+      }
+      this->completeContextMenuForMispelledWord(m, text.mid(p.first, p.second),
+                                                posl - p.first,
+                                                bl.position() + p.first);
+    }
+  }  // end of LaTeXMajorMode::completeContextMenu
 
   void LaTeXMajorMode::setSpellCheckLanguage(const QString& l) {
     this->spellChecker.setSpellCheckLanguage(l);
-    if (this->highlighter != nullptr) {
+    if (!this->highlighter.isNull()) {
       this->highlighter->rehighlight();
     }
   }  // end of LaTeXMajorMode::setSpellCheckLanguage
@@ -598,8 +557,15 @@ namespace tfel::gui {
     int ppos = 0;
     while (pos != -1) {
       const auto m1 = rb.match(l, pos);
-      int pos1 = m1.lastCapturedIndex();
-      int pos2 = re.match(l, pos).lastCapturedIndex();
+      const auto m2 = re.match(l, pos);
+      // The starting position of a match is given by capturedStart().
+      // lastCapturedIndex() must not be used for that: it returns the
+      // index of the last capture group of the pattern (0 here, as
+      // rb/re have no groups), or -1 when there is no match. Using it
+      // as a position made this loop never advance (e.g. on any line
+      // containing \end{...}), which hung format() and indentLine().
+      const int pos1 = m1.hasMatch() ? m1.capturedStart() : -1;
+      const int pos2 = m2.hasMatch() ? m2.capturedStart() : -1;
       bool b1 = false;
       bool b2 = false;
       if ((pos1 != -1) && (pos2 == -1)) {
@@ -614,36 +580,29 @@ namespace tfel::gui {
         }
       }
       if (b1) {
-        pos = pos1;
-        if (l.mid(pos, m1.capturedLength()) != "\\begin{document}") {
+        if (l.mid(pos1, m1.capturedLength()) != "\\begin{document}") {
           di += 1;
         }
-        if (pos == -1) {
-          di += countNumberOfCurlyBraces(l.mid(ppos, l.size() - ppos));
-        } else if (ppos != pos) {
-          di += countNumberOfCurlyBraces(l.mid(ppos, pos - ppos));
+        if (ppos != pos1) {
+          di += countNumberOfCurlyBraces(l.mid(ppos, pos1 - ppos));
         }
-        pos += m1.capturedLength();
+        ppos = pos1 + m1.capturedLength();
+        pos = ppos;
       } else if (b2) {
-        pos = pos2;
-        if (l.mid(pos, m1.capturedLength()) != "\\end{document}") {
+        if (l.mid(pos2, m2.capturedLength()) != "\\end{document}") {
           di -= 1;
         }
-        if (pos == -1) {
-          if (ppos != l.size()) {
-            di += countNumberOfCurlyBraces(l.mid(ppos, l.size() - ppos));
-          }
-        } else if (ppos != pos) {
-          di += countNumberOfCurlyBraces(l.mid(ppos, pos - ppos));
+        if (ppos != pos2) {
+          di += countNumberOfCurlyBraces(l.mid(ppos, pos2 - ppos));
         }
-        pos += m1.capturedLength();
+        ppos = pos2 + m2.capturedLength();
+        pos = ppos;
       } else {
         if (ppos != l.size()) {
           di += countNumberOfCurlyBraces(l.mid(ppos, l.size() - ppos));
         }
         pos = -1;
       }
-      ppos = pos;
     }
     return di;
   }

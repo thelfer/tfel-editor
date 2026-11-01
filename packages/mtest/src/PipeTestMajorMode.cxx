@@ -62,6 +62,6 @@ namespace tfel::gui {
   static StandardMajorModeProxy<PipeTestMajorMode> proxy(
       "PipeTest",
       QVector<QRegularExpression>()
-          << QRegularExpression(fileNameRegExp() + "\\.ptest"));
+          << QRegularExpression("^" + fileNameRegExp() + "\\.ptest"));
 
 }  // end of namespace tfel::gui

@@ -135,9 +135,9 @@ namespace tfel::gui {
 
     QVector<QAction *> suggestions;
     //! absolute postion of the beginning of the mispelled word
-    int bmwp;
+    int bmwp = 0;
     //! absolute postion of the end of the mispelled word
-    int emwp;
+    int emwp = 0;
 
     QPointer<ProcessOutputFrame> po;
 

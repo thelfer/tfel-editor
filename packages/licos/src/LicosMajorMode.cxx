@@ -1046,7 +1046,7 @@ namespace tfel::gui {
     i.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
     auto m = i.match(l);
     while (m.hasMatch()) {
-      const int index = m.lastCapturedIndex();
+      const int index = m.capturedStart();
       const int length = m.capturedLength();
       const int p = this->positionInCurrentBlock(tc);
       if ((p > index) && (p < index + length)) {
@@ -1102,7 +1102,7 @@ namespace tfel::gui {
     const QString l = tc.block().text();
     auto m = this->rlib.match(l);
     while (m.hasMatch()) {
-      const int index = m.lastCapturedIndex();
+      const int index = m.capturedStart();
       const int length = m.capturedLength();
       const int p = this->positionInCurrentBlock(tc);
       if ((p > index) && (p < index + length)) {

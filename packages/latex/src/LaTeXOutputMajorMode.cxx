@@ -36,9 +36,9 @@ namespace tfel::gui {
         : QSyntaxHighlighter(p),
           err("^! "),
           err2("^l.(\\d+) "),
-          err3("^([\\./][\\w-0-9_/\\.]+):(\\d+): "),
+          err3("^([\\./][\\w0-9_/\\.]+):(\\d+): "),
           warning("^[\\w ]+Warning: "),
-          warning2("^No file ([\\w-0-9_/\\.]+).") {
+          warning2("^No file ([\\w0-9_/\\.]+).") {
       this->latexFile.setForeground(Qt::blue);
       this->latexWarning.setForeground(Qt::darkYellow);
       this->latexError.setForeground(Qt::red);
@@ -88,14 +88,17 @@ namespace tfel::gui {
             this->setCurrentBlockUserData(d);
           }
         }
-        QRegularExpression file("\\(([\\./][\\w-0-9_/\\.]+)");
+        QRegularExpression file("\\(([\\./][\\w0-9_/\\.]+)");
         auto match = file.match(text);
         while (match.hasMatch()) {
-          const auto pos = match.lastCapturedIndex();
+          // the starting position of a match is given by capturedStart(),
+          // not by lastCapturedIndex(), which returns the index of the
+          // last capture group of the pattern (1 here), not a position
+          const auto pos = match.capturedStart(0);
           // removing the first character
-          const auto l = match.capturedLength();
+          const auto l = match.capturedLength(1);
           this->setFormat(pos + 1, l, this->latexFile);
-          match = file.match(text, pos + l);
+          match = file.match(text, pos + match.capturedLength(0));
         }
       }
     }

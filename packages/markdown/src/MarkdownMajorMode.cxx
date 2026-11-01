@@ -39,7 +39,7 @@ namespace tfel::gui {
 
   void MarkdownMajorMode::setSpellCheckLanguage(const QString &l) {
     this->spellChecker.setSpellCheckLanguage(l);
-    if (this->highlighter != nullptr) {
+    if (!this->highlighter.isNull()) {
       this->highlighter->rehighlight();
     }
   }  // end of setSpellCheckLanguage
