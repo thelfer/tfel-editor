@@ -12,7 +12,6 @@
 #include <QtCore/QRegularExpression>
 #include <QtGui/QTextBlock>
 #include <QtGui/QTextCursor>
-#include <QtGui/QTextDocumentWriter>
 
 #include "TFEL/GUI/CMajorModeBase.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
@@ -235,16 +234,19 @@ namespace tfel::gui {
           QObject::tr("can't open temporary file"));
       return;
     }
-    QTextDocumentWriter writer;
-    writer.setFormat("plaintext");
     QFile tmp2(tmp.fileName());
-    writer.setDevice(&tmp2);
-    if (!writer.write(textEdit.document())) {
+    const auto text = textEdit.document()->toPlainText();
+    if (!tmp2.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
       editor.displayInformativeMessage(
           QObject::tr("can't write buffer in temporary file"));
       return;
     }
+    tmp2.write(text.toUtf8());
     tmp2.close();
+    // clang-format's '-cursor' option and the reported cursor are byte
+    // offsets in the UTF-8 encoded buffer, while Qt positions are
+    // offsets in UTF-16 code units: the two must be converted.
+    const auto cursorOffset = text.left(c.position()).toUtf8().size();
     QProcess cformat;
     cformat.setWorkingDirectory(QFileInfo(cf).canonicalPath());
     const auto ln = b.blockNumber();
@@ -254,7 +256,7 @@ namespace tfel::gui {
                   QStringList()
                       << "-assume-filename=cxx" << ("-lines=" + lb + ':' + le)
                       << ("-style=file")
-                      << ("-cursor=" + QString::number(c.position()))
+                      << ("-cursor=" + QString::number(cursorOffset))
                       << tmp.fileName());
     if (!cformat.waitForStarted()) {
       editor.displayInformativeMessage(
@@ -267,19 +269,28 @@ namespace tfel::gui {
           QObject::tr("call to 'clang-format' failed"));
       return;
     }
-    QTextStream in(cformat.readAll());
-    auto pr = in.readLine();
-    const auto match = rcursor.match(pr);
+    // the standard output of clang-format is the JSON description of
+    // the cursor position on the first line and the formatted code on
+    // the next lines
+    const auto output = cformat.readAll();
+    const auto newlinePos = output.indexOf('\n');
+    const auto header = (newlinePos >= 0)
+                            ? QString::fromUtf8(output.left(newlinePos))
+                            : QString();
+    const auto match = rcursor.match(header);
     if (!match.hasMatch()) {
       editor.displayInformativeMessage(
           QObject::tr("analysis of 'clang-format' output failed"));
       return;
     }
     const auto cpos = match.captured(1).toInt();
+    const auto formatted = output.mid(newlinePos + 1);
     c.movePosition(QTextCursor::Start, QTextCursor::MoveAnchor);
     c.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
-    c.insertText(in.readAll());
-    c.setPosition(cpos);
+    c.insertText(QString::fromUtf8(formatted));
+    c.setPosition(QString::fromUtf8(
+                      formatted.left(qMin<qsizetype>(cpos, formatted.size())))
+                      .size());
   }  // end of do_indent
 
   void CMajorModeBase::indent(const QTextCursor& b,
@@ -306,7 +317,7 @@ namespace tfel::gui {
         if (!tc.selectedText().trimmed().isEmpty()) {
           break;
         }
-        tc.movePosition(QTextCursor::Up, QTextCursor::MoveAnchor);
+        tc.movePosition(QTextCursor::PreviousBlock, QTextCursor::MoveAnchor);
       }
       tc.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
       tc.beginEditBlock();
@@ -372,7 +383,12 @@ namespace tfel::gui {
     QTextCursor b(tc);
     QTextCursor e(tc);
     QTextCursor c(tc);
-    c.setPosition(tc.selectionEnd());
+    // the real cursor position, and not the end of the selection, is
+    // passed to clang-format as the '-cursor' anchor: clang-format
+    // reports the position of this anchor in the reformatted text,
+    // which keeps the cursor next to the character it was next to
+    // before the indentation.
+    c.setPosition(tc.position());
     if (tc.selectionStart() > tc.selectionEnd()) {
       b.setPosition(tc.selectionEnd());
       e.setPosition(tc.selectionStart());

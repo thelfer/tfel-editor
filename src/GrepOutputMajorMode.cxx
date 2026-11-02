@@ -123,7 +123,7 @@ namespace tfel::gui {
         }
         auto *d = static_cast<GrepUserData *>(ud);
         auto b = c;
-        b.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
+        b.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
         const auto pos = c.position() - b.position();
         if (pos < d->file.size()) {
           auto &cb = this->editor.getCurrentBuffer();
@@ -161,7 +161,7 @@ namespace tfel::gui {
         }
         auto *d = static_cast<GrepUserData *>(ud);
         auto b = c;
-        b.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
+        b.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
         const auto pos = c.position() - b.position();
         if (pos < d->file.size()) {
           auto &cb = this->editor.getCurrentBuffer();

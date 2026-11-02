@@ -160,9 +160,22 @@ namespace tfel::gui {
         e.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
       }
     }
+    // when the paragraph reaches the end of the document, the loop above
+    // can stop on the last block without testing it, as the atEnd check
+    // triggers first. If this last block is empty (which is the case when
+    // the file ends with a line break), the paragraph ends on the previous
+    // block: stopping on the empty last block would make the callers
+    // consume the last line break of the file, removing a blank line.
+    if ((!b.block().text().trimmed().isEmpty()) &&
+        (e.block().text().trimmed().isEmpty())) {
+      e.movePosition(QTextCursor::PreviousBlock, QTextCursor::MoveAnchor);
+      e.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
+    }
   }  // end of MajorModeBase::findBeginningAndEndOfTheParagraph
 
-  void MajorModeBase::doIndentLine(const QTextCursor& tc, const int i) const {
+  void MajorModeBase::doIndentLine(const QTextCursor& tc,
+                                   const int i,
+                                   const bool updateEditorCursor) const {
     QTextCursor nc(tc);
     nc.movePosition(QTextCursor::NoMove, QTextCursor::MoveAnchor);
     QString l = nc.block().text();
@@ -188,8 +201,108 @@ namespace tfel::gui {
     if (pos >= 0) {
       nc.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor, pos);
     }
-    this->textEdit.setTextCursor(nc);
+    if (updateEditorCursor) {
+      this->textEdit.setTextCursor(nc);
+    }
   }  // end of MajorModeBase::doIndentLine
+
+  MajorModeBase::CursorMark MajorModeBase::getCursorMark(
+      const QTextCursor& tc) const {
+    return {tc.blockNumber(), tc.positionInBlock(),
+            countNumberOfSpacesAtBeginningOfString(tc.block().text())};
+  }  // end of MajorModeBase::getCursorMark
+
+  void MajorModeBase::restoreCursorMark(const CursorMark& m) const {
+    auto tc = QTextCursor(this->textEdit.document());
+    const auto block =
+        this->textEdit.document()->findBlockByNumber(m.blockNumber);
+    const auto l = block.text();
+    auto column = m.column;
+    if (!l.trimmed().isEmpty()) {
+      // as in doIndentLine, the cursor is attached to the first non
+      // blank character of the line if it was in the blanks at the
+      // beginning of the line. Blank lines are not touched by the
+      // indentation algorithms: their column is preserved.
+      column = countNumberOfSpacesAtBeginningOfString(l) +
+               qMax(m.column - m.firstNonBlankColumn, 0);
+    }
+    tc.setPosition(block.position() + qMin(column, l.size()));
+    this->textEdit.setTextCursor(tc);
+  }  // end of MajorModeBase::restoreCursorMark
+
+  MajorModeBase::AnchorMark MajorModeBase::getAnchorMark(
+      const QTextCursor& b, const QTextCursor& c) const {
+    auto m = AnchorMark{};
+    auto tc = QTextCursor(this->textEdit.document());
+    tc.setPosition(b.position());
+    tc.setPosition(c.position(), QTextCursor::KeepAnchor);
+    // `QTextCursor::selectedText` represents the line breaks of the selection
+    // by a paragraph separator, which is a blank character: counting the non
+    // blank characters of the selection is all what is needed, no matter how
+    // the region is spread over the lines.
+    for (const auto& cl : tc.selectedText()) {
+      if (!cl.isSpace()) {
+        ++m.nonBlanks;
+      }
+    }
+    // The character on the left of the cursor. A cursor standing at the end of
+    // a line is on the right of the last character of this line and not on the
+    // left of the first character of the next one: the line break, which is a
+    // blank character, separates them. A cursor in the blanks at the beginning
+    // of its line is attached to the first non blank character of this line, as
+    // `doIndentLine` does.
+    const auto l = tc.block().text();
+    const auto p = tc.positionInBlock();
+    m.leftOfWord = ((p < l.size()) && (!l[p].isSpace())) ||
+                   (p < countNumberOfSpacesAtBeginningOfString(l));
+    return m;
+  }  // end of MajorModeBase::getAnchorMark
+
+  void MajorModeBase::restoreAnchorMark(const AnchorMark& m,
+                                        const int first_,
+                                        const int last_) const {
+    const auto first = qMin(first_, last_);
+    const auto last = qMax(first_, last_);
+    // `selectedText` maps its characters one to one to the positions of the
+    // document: the index of a character in the selection is its offset from
+    // the beginning of the region.
+    auto tc = QTextCursor(this->textEdit.document());
+    tc.setPosition(first);
+    tc.setPosition(last, QTextCursor::KeepAnchor);
+    const auto l = tc.selectedText();
+    auto n = int{};    // number of non blank characters met so far
+    auto k = int{-1};  // index of the last non blank character met so far
+    auto p = int{0};   // index of the visited character
+    for (; p != l.size(); ++p) {
+      if (l[p].isSpace()) {
+        continue;
+      }
+      ++n;
+      k = p;
+      // the cursor goes on the left of the non blank character which follows
+      // the `nonBlanks` characters preceding it, or on its right when it did
+      // not stand on the left of a non blank character. `nonBlanks` being
+      // null, the two cases match: this is the cursor which was in the blanks
+      // at the beginning of the region, and it is attached to the first non
+      // blank character of this region, as `doIndentLine` does.
+      if ((n > m.nonBlanks) || ((n == m.nonBlanks) && (!m.leftOfWord))) {
+        break;
+      }
+    }
+    if (p == l.size()) {
+      // the reformatted region holds less non blank characters than the mark
+      // expects: the cursor is placed on the right of the last non blank
+      // character of the region, or at its beginning when it holds none.
+      p = qMax(k + 1, 0);
+    } else if (!m.leftOfWord && (m.nonBlanks != 0)) {
+      // the cursor did not stand on the left of a non blank character: it goes
+      // on the right of the last non blank character which precedes it
+      p = k + 1;
+    }
+    auto nc = QTextCursor(this->textEdit.document());
+    nc.setPosition(first + qMin(p, last - first));
+    this->textEdit.setTextCursor(nc);
+  }  // end of MajorModeBase::restoreAnchorMark
 
   QVector<QString> MajorModeBase::getSelectedLines(
       const QTextCursor& tc) const {

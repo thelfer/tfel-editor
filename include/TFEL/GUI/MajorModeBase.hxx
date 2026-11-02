@@ -127,8 +127,95 @@ namespace tfel::gui {
      * ensure the cursor remains correctly positionned.
      * \param[in] tc : text cursor
      * \param[in] i  : indentation
+     * \param[in] updateEditorCursor : move the editor's cursor to the
+     * indented line. Shall be false when indenting multiple lines: calling
+     * `TextEditBase::setTextCursor` for each line forces the editor to
+     * relayout the viewport in the middle of a large pending edit, which
+     * can crash Qt's text layout (QTextLine::naturalTextRect). The caller
+     * is then responsible for setting the editor's cursor once the whole
+     * region has been indented.
      */
-    void doIndentLine(const QTextCursor&, const int) const;
+    void doIndentLine(const QTextCursor&,
+                      const int,
+                      const bool updateEditorCursor = true) const;
+    /*!
+     * a description of the cursor position which is not affected by
+     * the indentation of the lines: the cursor is described by its
+     * offset to the first non blank character of its line, which is
+     * preserved by indentation. If the cursor is in the blanks at the
+     * beginning of the line (negative offset), it is restored on the
+     * first non blank character of the line (as `doIndentLine` does).
+     */
+    struct CursorMark {
+      //! number of the block containing the cursor
+      int blockNumber;
+      //! column of the cursor in its block
+      int column;
+      //! column of the first non blank character of the block
+      int firstNonBlankColumn;
+    };
+    /*!
+     * memorize the position of the given cursor, so that it can be
+     * restored once the region has been indented
+     * \param[in] tc : text cursor
+     */
+    CursorMark getCursorMark(const QTextCursor&) const;
+    /*!
+     * restore the editor's cursor from a cursor mark. The block
+     * containing the mark is expected to be at the same position of
+     * the document than when the mark was taken: indenting a region
+     * shall not add nor remove lines.
+     * \param[in] m : cursor mark
+     */
+    void restoreCursorMark(const CursorMark&) const;
+    /*!
+     * a description of the cursor position which survives a reflow of the
+     * region containing the cursor. Reformatting a region (see
+     * `MajorMode::format`) moves its words from one line to another, adds
+     * and removes blanks and may change the number of lines: neither a plain
+     * offset nor a line and a column can be reused. The words themselves are
+     * left untouched, though, so the cursor is described by the number of non
+     * blank characters which precede it in the region and by the side of the
+     * adjacent character it stands on.
+     */
+    struct AnchorMark {
+      //! number of non blank characters which precede the cursor
+      int nonBlanks;
+      //! the cursor stands on the left of a non blank character, either because
+      //! it is in the middle of a word or because it was in the blanks at the
+      //! beginning of its line
+      bool leftOfWord;
+    };
+    /*!
+     * memorize the position of the given cursor in the region which starts at
+     * `b` and ends at `c`, so that it can be restored once this region has
+     * been reformatted
+     * \param[in] b : beginning of the region. Shall not be after `c`.
+     * \param[in] c : cursor, and end of the region
+     */
+    AnchorMark getAnchorMark(const QTextCursor& b, const QTextCursor& c) const;
+    /*!
+     * restore the editor's cursor from an anchor mark. `[first,last]` shall be
+     * the region the mark was taken in, once reformatted: the cursor is placed
+     * on the left of the (`nonBlanks`+1)-th non blank character of this region,
+     * or right after its `nonBlanks`-th non blank character when the cursor did
+     * not stand on the left of a non blank character. A mark which does not fit
+     * in the region anymore, because words have been dropped, is restored on
+     * the right of the last non blank character of the region. As in
+     * `doIndentLine`, a cursor which was in the blanks at the beginning of the
+     * region is attached to its first non blank character. \param[in] m :
+     * anchor mark \param[in] first : position of the beginning of the
+     * reformatted region \param[in] last : position of the end of the
+     * reformatted region
+     *
+     * \note The bounds are positions and not text cursors: a cursor standing at
+     * the beginning of a region which is rewritten in place is moved to the end
+     * of the inserted text, so it cannot delimit the reformatted region
+     * anymore.
+     */
+    void restoreAnchorMark(const AnchorMark& m,
+                           const int first,
+                           const int last) const;
     /*!
      * an helper function which returns the beginning b and the end e
      * of the selection of the cursor tc. This function guarantees

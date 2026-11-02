@@ -96,7 +96,7 @@ namespace tfel::gui {
     if (((m == Qt::NoModifier) && (k == Qt::Key_Return)) ||
         ((m == Qt::NoModifier) && (k == Qt::Key_Enter))) {
       auto tc = this->textEdit.textCursor();
-      tc.select(QTextCursor::LineUnderCursor);
+      tc.select(QTextCursor::BlockUnderCursor);
       const auto l = tc.selectedText().split(QRegularExpression("\\s+"),
                                              Qt::SkipEmptyParts);
       if (l.isEmpty()) {

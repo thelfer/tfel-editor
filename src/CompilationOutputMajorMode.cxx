@@ -192,7 +192,7 @@ namespace tfel::gui {
         }
         auto *d = static_cast<CompilationOutputUserData *>(ud);
         auto b = c;
-        b.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
+        b.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
         const auto pos = c.position() - b.position();
         if (pos < d->file.size()) {
           auto &cb = this->editor.getCurrentBuffer();
@@ -221,7 +221,7 @@ namespace tfel::gui {
         }
         auto *d = static_cast<CompilationOutputUserData *>(ud);
         auto b = c;
-        b.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
+        b.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
         const auto pos = c.position() - b.position();
         if (pos < d->file.size()) {
           auto &cb = this->editor.getCurrentBuffer();
@@ -256,7 +256,7 @@ namespace tfel::gui {
           this->textEdit.setTextCursor(c);
           break;
         }
-        c.movePosition(QTextCursor::Down, QTextCursor::KeepAnchor);
+        c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
       };
     }  // end of processFinished
 

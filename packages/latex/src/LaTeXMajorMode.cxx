@@ -340,6 +340,14 @@ namespace tfel::gui {
     QTextCursor ec;
     QTextCursor cc;
     this->findBeginningAndEndOfTheParagraph(bc, ec);
+    // the position of the cursor is memorized before the paragraph is
+    // rewritten and restored once it has been: reflowing a paragraph moves its
+    // words from one line to another and may change the number of lines, so the
+    // cursor cannot be restored from a plain offset. Without it, removing the
+    // paragraph and inserting it back leaves the editor's cursor at the end of
+    // the inserted text.
+    const auto fp = bc.position();
+    const auto m = this->getAnchorMark(bc, this->textEdit.textCursor());
     cc = bc;
     cc.beginEditBlock();
     QVector<QStringList> lines;
@@ -347,21 +355,19 @@ namespace tfel::gui {
     ec.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
     while ((!cc.atEnd()) && (cc <= ec)) {
       QString l = cc.block().text();
+      // a group is created for each line of the paragraph, so that an
+      // empty group unambiguously denotes a blank line of the source,
+      // which the reformatting must restore as such.
+      lines.push_back(QStringList());
       if (l.trimmed().isEmpty()) {
-        lines.push_back(QStringList());
-        lines.push_back(QStringList());
         cc.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor);
         cc.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
         continue;
       }
       int cpos = LaTeXSyntaxHighlighter::startOfComment(l);
-      if (lines.isEmpty()) {
-        lines.push_back(QStringList());
-      }
       if (cpos != -1) {
         lines.back() << l.mid(0, cpos).split(' ', Qt::SkipEmptyParts);
         lines.back() << l.mid(cpos, l.size() - cpos);
-        lines.push_back(QStringList());
       } else {
         lines.back() << l.split(' ', Qt::SkipEmptyParts);
       }
@@ -371,13 +377,10 @@ namespace tfel::gui {
     if (ec.atEnd()) {
       QString l = cc.block().text();
       int cpos = LaTeXSyntaxHighlighter::startOfComment(l);
-      if (lines.isEmpty()) {
-        lines.push_back(QStringList());
-      }
+      lines.push_back(QStringList());
       if (cpos != -1) {
         lines.back() << l.mid(0, cpos).split(' ', Qt::SkipEmptyParts);
         lines.back() << l.mid(cpos, l.size() - cpos);
-        lines.push_back(QStringList());
       } else {
         lines.back() << l.split(' ', Qt::SkipEmptyParts);
       }
@@ -393,7 +396,46 @@ namespace tfel::gui {
     int di;
     bool be;
     this->getLineIndentation(cc, i, di, be);
+    // the paragraph is written back word by word. started tells whether
+    // the first word has been emitted and breaks counts the line breaks
+    // emitted since this word, so that insertLineBreaks only emits the
+    // line breaks which are still missing: reformatting a paragraph
+    // never introduces a blank line, while the blank lines of the source
+    // paragraph (the empty groups) are emitted back and never removed.
+    bool started = false;
+    int breaks = 0;
+    auto insertLineBreaks = [&cc, &started, &breaks, &size](const int n) {
+      if (!started) {
+        return;
+      }
+      if (n > breaks) {
+        cc.insertText(QString(n - breaks, '\n'));
+        breaks = n;
+      }
+      size = 0;
+    };
+    int blanks = 0;
     for (pl = lines.begin(); pl != lines.end(); ++pl) {
+      if (pl->isEmpty()) {
+        // a blank line of the source paragraph: restore it, but only
+        // between two groups containing words, as emitting it before
+        // the first or after the last word would introduce a blank line.
+        if (started) {
+          bool content_after = false;
+          for (auto pe = pl; pe != lines.end(); ++pe) {
+            if (!pe->isEmpty()) {
+              content_after = true;
+              break;
+            }
+          }
+          if (content_after) {
+            ++blanks;
+            insertLineBreaks(blanks + 1);
+          }
+        }
+        continue;
+      }
+      blanks = 0;
       QVector<QStringList>::const_iterator pl2 = pl;
       QStringList::const_iterator pw;
       ++pl2;
@@ -406,24 +448,19 @@ namespace tfel::gui {
         if (((w == "\\[") || (w == "\\]") || (w == "\\medskip") ||
              (this->rb.match(w).hasMatch()) ||
              (this->re.match(w).hasMatch()))) {
-          if (size != 0) {
-            cc.insertText("\n");
-            size = 0;
-          }
+          insertLineBreaks(1);
           sk = true;
         }
-        if (((w == "\\item") ||
-             ((w.startsWith("\\item<") && (w.endsWith('>'))))) &&
-            (size != 0)) {
-          cc.insertText("\n");
-          size = 0;
+        if ((w == "\\item") ||
+            ((w.startsWith("\\item<") && (w.endsWith('>'))))) {
+          insertLineBreaks(1);
         }
         if (w.size() >= 72) {
-          if (size != 0) {
-            cc.insertText("\n");
-          }
+          insertLineBreaks(1);
           di = this->getIndentationIncrement(w);
-          be = this->re.match(w).hasMatch();
+          // be: the word does not close an environment; see
+          // LaTeXMajorMode::getLineIndentation for the polarity
+          be = !this->re.match(w).hasMatch();
           if (w[0] == '}') {
             be = false;
           }
@@ -438,11 +475,18 @@ namespace tfel::gui {
           }
           cc.insertText(indent + w + "\n");
           i += di;
-          size = qMax(i, 0);
+          started = true;
+          // the word stands on a line of its own: the current line is
+          // empty. The previous implementation set the size to the
+          // indentation level instead, so the next \begin{...}, \end{...}
+          // or \item word added one more line break, introducing a
+          // blank line.
+          breaks = 1;
+          size = 0;
         } else {
           if (w.size() + size >= 72) {
             di = this->getIndentationIncrement(w);
-            be = this->re.match(w).hasMatch();
+            be = !this->re.match(w).hasMatch();
             if (w[0] == '}') {
               be = false;
             }
@@ -450,19 +494,21 @@ namespace tfel::gui {
               if (i > 0) {
                 indent = QString(2 * i, ' ');
               }
-              size = qMax(w.size() + 2 * i, 0);
             } else {
               if (i + di > 0) {
                 indent = QString(2 * (i + di), ' ');
               }
-              size = qMax(w.size() + 2 * (i + di), 0);
             }
-            cc.insertText("\n" + indent + w);
+            insertLineBreaks(1);
+            cc.insertText(indent + w);
             i += di;
+            started = true;
+            breaks = 0;
+            size = indent.size() + w.size();
           } else {
             di = this->getIndentationIncrement(w);
             if (size == 0) {
-              be = this->re2.match(w).hasMatch();
+              be = !this->re2.match(w).hasMatch();
               if (w[0] == '}') {
                 be = false;
               }
@@ -470,32 +516,48 @@ namespace tfel::gui {
                 if (i > 0) {
                   indent = QString(2 * i, ' ');
                 }
-                size = qMax(2 * i + w.size(), 0);
               } else {
                 if (i + di > 0) {
                   indent = QString(2 * (i + di), ' ');
                 }
-                size = qMax(2 * (i + di) + w.size(), 0);
               }
               cc.insertText(indent + w);
               i += di;
-              size += w.size() + indent.size();
+              started = true;
+              breaks = 0;
+              size = indent.size() + w.size();
             } else {
               cc.insertText(' ' + w);
-              size += w.size() + 1u;
+              size += w.size() + 1;
               i += di;
+              started = true;
+              breaks = 0;
             }
           }
         }
         if (!((pl2 == lines.end()) && (pw2 == pl->end()))) {
-          if ((sk) || (w == "\\\\")) {
-            cc.insertText("\n");
-            size = 0;
+          // a comment must be closed by a line break, otherwise the text
+          // which follows is commented out
+          if ((sk) || (w == "\\\\") || (w.startsWith('%'))) {
+            insertLineBreaks(1);
           }
         }
       }
     }
+    // the reformatted paragraph never ends with a blank line: remove a
+    // last line break which left the cursor on an empty line, so that
+    // format() never introduces a blank line at the end of the paragraph
+    // it rewrites.
+    if ((started) && (cc.atBlockStart())) {
+      cc.deletePreviousChar();
+    }
     cc.endEditBlock();
+    if (started) {
+      // `cc` is the end of the reformatted paragraph. `bc` cannot be used
+      // anymore: rewriting the paragraph at its own position moved it to the
+      // end of the inserted text.
+      this->restoreAnchorMark(m, fp, cc.position());
+    }
   }  // end of LaTeXMajorMode::format
 
   bool LaTeXMajorMode::keyPressEvent(QKeyEvent* const e) {
@@ -509,6 +571,14 @@ namespace tfel::gui {
   }  // end of LaTeXMajorMode::keyPressEvent
 
   void LaTeXMajorMode::indentLine(const QTextCursor& tc) {
+    if (LaTeXSyntaxHighlighter::stripComment(tc.block().text())
+            .trimmed()
+            .isEmpty()) {
+      // empty lines are left untouched: reindenting a buffer shall
+      // never introduce blank lines, nor remove them, nor write trailing
+      // blanks on blank lines.
+      return;
+    }
     int i;
     int di;
     bool b;
@@ -538,7 +608,13 @@ namespace tfel::gui {
     }
     QString l =
         LaTeXSyntaxHighlighter::stripComment(tc.block().text()).trimmed();
-    b = this->re2.match(l, 0).hasMatch();
+    // b: the line does not close an environment. This test was written
+    // `re2.indexIn(l, 0) == -1` in the QRegExp era; QRegularExpression
+    // match(...).hasMatch() has the opposite sense, so the negation must
+    // be kept. Without it, \begin{...} lines are indented at 2 * (i + di)
+    // and \end{...} lines at 2 * i, which shifts the whole file by one
+    // indentation level.
+    b = !this->re2.match(l, 0).hasMatch();
     if (l.size() > 0) {
       if (l[0] == '}') {
         b = false;
@@ -580,6 +656,9 @@ namespace tfel::gui {
         }
       }
       if (b1) {
+        // \begin{document} does not open an indentation level: the body of
+        // the document, and the \begin{document} line itself, must remain
+        // at the same indentation level as before the command.
         if (l.mid(pos1, m1.capturedLength()) != "\\begin{document}") {
           di += 1;
         }
@@ -624,6 +703,11 @@ namespace tfel::gui {
       this->indentLine(tc);
       return;
     }
+    // the position of the cursor is memorized before the region is
+    // indented and restored once it has been indented, so that the
+    // cursor remains next to the character it was next to before the
+    // indentation.
+    const auto m = this->getCursorMark(tc);
     int i;
     int di;
     bool bi;
@@ -633,25 +717,31 @@ namespace tfel::gui {
       QString l =
           LaTeXSyntaxHighlighter::stripComment(b.block().text()).trimmed();
       di = this->getIndentationIncrement(l);
-      bi = this->re2.match(l).hasMatch();
+      if (l.isEmpty()) {
+        // empty lines are left untouched: reindenting a region shall
+        // never introduce blank lines, nor remove them, nor write
+        // trailing blanks on blank lines.
+        b.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor);
+        continue;
+      }
+      // see LaTeXMajorMode::getLineIndentation for the polarity
+      bi = !this->re2.match(l).hasMatch();
       if (l.size() > 0) {
         if (l[0] == '}') {
           bi = false;
         }
       }
       if (bi) {
-        MajorModeBase::doIndentLine(b, 2 * i);
+        // no setTextCursor for each line, see MajorModeBase::doIndentLine
+        MajorModeBase::doIndentLine(b, 2 * i, false);
       } else {
-        MajorModeBase::doIndentLine(b, 2 * (i + di));
+        MajorModeBase::doIndentLine(b, 2 * (i + di), false);
       }
       i += di;
       b.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor);
     }
-    b = e;
-    b.clearSelection();
-    b.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
     b.endEditBlock();
-    this->textEdit.setTextCursor(b);
+    this->restoreCursorMark(m);
   }  // end of LaTeXMajorMode::indentRegion
 
   QString LaTeXMajorMode::getCommentSyntax() {

@@ -64,7 +64,7 @@ namespace tfel::gui {
       if ((k1 == Qt::Key_C) && (k2 == Qt::Key_L) &&
           (m == Qt::ControlModifier)) {
         auto c = this->textEdit.textCursor();
-        c.select(QTextCursor::LineUnderCursor);
+        c.select(QTextCursor::BlockUnderCursor);
         const auto l = c.selectedText();
         auto& p = this->go->getProcess();
         p.write((l + "\n").toLatin1());

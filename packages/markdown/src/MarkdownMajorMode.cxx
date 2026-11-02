@@ -133,7 +133,9 @@ namespace tfel::gui {
           c.insertText(l + '\n');
         }
         if (!tc.atEnd()) {
-          tc.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor);
+          // iterate over the lines of the file (text blocks), not over
+          // the displayed lines which depend on the wrapping policy
+          tc.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor);
           tc.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
         }
       }
@@ -214,7 +216,7 @@ namespace tfel::gui {
         b.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
         while (!b.atStart()) {
           auto bp = b;
-          bp.movePosition(QTextCursor::Up, QTextCursor::MoveAnchor);
+          bp.movePosition(QTextCursor::PreviousBlock, QTextCursor::MoveAnchor);
           bp.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
           const auto rp = startsParagraph(bp);
           if (rp.first == -1) {
@@ -235,7 +237,7 @@ namespace tfel::gui {
       e.movePosition(QTextCursor::EndOfBlock);
       while (!e.atEnd()) {
         auto en = e;
-        en.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor);
+        en.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor);
         en.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
         const auto rn = startsParagraph(en);
         if (rn.first != 1) {
@@ -252,7 +254,7 @@ namespace tfel::gui {
       b.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
       p += b.selectedText().trimmed();
       if (!b.atEnd()) {
-        b.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor);
+        b.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor);
         b.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
         while (b <= e) {
           b.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
@@ -261,7 +263,7 @@ namespace tfel::gui {
           if (b.atEnd()) {
             break;
           }
-          b.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor);
+          b.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor);
           b.movePosition(QTextCursor::EndOfBlock, QTextCursor::MoveAnchor);
         }
         //         if (e.atEnd()) {
@@ -275,6 +277,22 @@ namespace tfel::gui {
       // split the string
       const auto words =
           p.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
+      // the cursor is anchored to the number of non blank characters
+      // between the beginning of the paragraph and the cursor: the
+      // reflow only moves blanks, the sequence of the non blank
+      // characters is left untouched, so this number identifies the
+      // same position in the paragraph before and after the reflow.
+      const auto cursor = this->textEdit.textCursor().position();
+      auto nonBlankCharactersBeforeCursor = 0;
+      {
+        const auto &doc = *this->textEdit.document();
+        for (auto i = tc.position(); i < cursor; ++i) {
+          if (!doc.characterAt(i).isSpace()) {
+            ++nonBlankCharactersBeforeCursor;
+          }
+        }
+      }
+      const auto paragraphStart = tc.position();
       // remove the selected lines and insert the splitted string
       tc.beginEditBlock();
       tc.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor,
@@ -320,6 +338,32 @@ namespace tfel::gui {
             lineStart = false;
           }
         }
+      }
+      // restore the cursor right after the n-th non blank character of
+      // the reformatted paragraph, n being the number of non blank
+      // characters which were before the cursor in the original
+      // paragraph.
+      {
+        const auto end = tc.position();
+        auto pos = paragraphStart;
+        if (nonBlankCharactersBeforeCursor == 0) {
+          // the cursor was before the first non blank character of the
+          // paragraph: place it on this character, after the inserted
+          // indentation.
+          pos += indent;
+        } else {
+          auto n = 0;
+          for (; pos < end; ++pos) {
+            if (!this->textEdit.document()->characterAt(pos).isSpace()) {
+              ++n;
+              if (n == nonBlankCharactersBeforeCursor) {
+                ++pos;
+                break;
+              }
+            }
+          }
+        }
+        tc.setPosition(qMin(pos, end));
       }
       tc.endEditBlock();
       this->textEdit.setTextCursor(tc);

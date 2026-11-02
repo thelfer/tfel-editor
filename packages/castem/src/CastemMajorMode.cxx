@@ -845,7 +845,7 @@ namespace tfel::gui {
 
   bool CastemMajorMode::sendLineToCastem() {
     auto tc = this->textEdit.textCursor();
-    tc.select(QTextCursor::LineUnderCursor);
+    tc.select(QTextCursor::BlockUnderCursor);
     return this->sendToCastem(tc.selectedText());
   }  // end of CastemMajorMode::sendLineToCastem
 
@@ -856,14 +856,21 @@ namespace tfel::gui {
     }
     QTextCursor b, e;
     this->beginAndEndOfSelection(b, e, tc);
-    e.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
-    e.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
-    while (b < e) {
-      b.select(QTextCursor::LineUnderCursor);
+    // the lines are handled as text blocks (i.e. as the lines of the
+    // file), and not as displayed lines which depend on the wrapping
+    // policy
+    e.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
+    b.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
+    const auto last = e.blockNumber();
+    while (b.blockNumber() <= last) {
+      b.select(QTextCursor::BlockUnderCursor);
       if (!this->sendToCastem(b.selectedText())) {
         return false;
       }
-      b.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor);
+      if (b.blockNumber() == last) {
+        break;
+      }
+      b.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor);
     }
     return true;
   }  // end of CastemMajorMode::sendRegionToCastem
@@ -873,12 +880,20 @@ namespace tfel::gui {
     auto e = b;
     b.movePosition(QTextCursor::Start, QTextCursor::MoveAnchor);
     e.movePosition(QTextCursor::End, QTextCursor::MoveAnchor);
-    while (b < e) {
-      b.select(QTextCursor::LineUnderCursor);
+    // the lines are handled as text blocks (i.e. as the lines of the
+    // file), and not as displayed lines which depend on the wrapping
+    // policy. The last block is only sent if it is not empty (i.e. if
+    // the buffer does not end with a new line)
+    const auto last = e.atBlockStart() ? e.blockNumber() - 1 : e.blockNumber();
+    while (b.blockNumber() <= last) {
+      b.select(QTextCursor::BlockUnderCursor);
       if (!this->sendToCastem(b.selectedText())) {
         return false;
       }
-      b.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor);
+      if (b.blockNumber() == last) {
+        break;
+      }
+      b.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor);
     }
     return true;
   }  // end of CastemMajorMode::sendBufferToCastem

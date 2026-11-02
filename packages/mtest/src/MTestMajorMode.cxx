@@ -266,8 +266,7 @@ namespace tfel::gui {
     const auto& keys = this->getKeyWordsList();
     MajorModeBase::completeContextMenu(m, tc);
     QTextCursor b(tc);
-    b.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
-    b.select(QTextCursor::LineUnderCursor);
+    b.select(QTextCursor::BlockUnderCursor);
     const auto l = b.selectedText();
     QRegularExpression r("^(@\\w+)");
     const auto match = r.match(l);

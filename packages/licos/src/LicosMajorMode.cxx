@@ -61,7 +61,7 @@ namespace tfel::gui {
         QTextCursor tc = this->textEdit.textCursor();
         QString s;
         if (!tc.hasSelection()) {
-          tc.select(QTextCursor::LineUnderCursor);
+          tc.select(QTextCursor::BlockUnderCursor);
         }
         s = tc.selectedText().trimmed();
         tc.removeSelectedText();
@@ -1262,48 +1262,30 @@ namespace tfel::gui {
   }  // end of LicosMajorMode::getLineIndentation
 
   void LicosMajorMode::indentLine(const QTextCursor &tc_) {
-    using namespace std;
     QTextCursor tc(tc_);
     // find the line indentation
     QVector<QSharedPointer<LicosBlock>> blocks;
     blocks.append(QSharedPointer<LicosBlock>(new LicosMainBlock));
     LicosTokenizer tokenizer;
-    // current position in line
-    int cp = tc.position();
-    tc.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
-    cp -= tc.position();
-    int i = this->getLineIndentation(blocks, tokenizer, tc);
-    tc.select(QTextCursor::LineUnderCursor);
-    const auto line = tc.selectedText();
-    // number of spaces at the beginning of the line
-    int p;
-    bool found = false;
-    for (p = 0; (p != line.size()) && (!found);) {
-      if (line[p].isSpace()) {
-        ++p;
-      } else {
-        found = true;
-      }
-    }
-    // remove spaces
-    cp -= p;
+    // `getLineIndentation` is called with a cursor at the beginning of
+    // the block, while `tc` keeps its original position: `doIndentLine`
+    // uses it to restore the cursor next to the character it was next
+    // to before the indentation.
+    auto bs(tc);
+    bs.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
+    int i = this->getLineIndentation(blocks, tokenizer, bs);
     // get real line indentation
-    int li = this->getIndentationIncrement(blocks, tokenizer, i, line,
-                                           tc.blockNumber());
+    int li = this->getIndentationIncrement(blocks, tokenizer, i,
+                                           tc.block().text(), tc.blockNumber());
     if (li <= 0) {
       li = 0;
     }
-    // remove selected text
-    tc.removeSelectedText();
-    tc.insertText(QString(li, ' ') + line.trimmed());
-    tc.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
-    if (cp <= 0) {
-      tc.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor, li);
-    } else {
-      tc.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor,
-                      li + cp);
-    }
-    this->textEdit.setTextCursor(tc);
+    // doIndentLine removes the previous indentation, replaces the
+    // line by its trimmed version preceded by the new indentation and
+    // keeps the cursor next to the character it was next to. Removing
+    // and inserting the whole block, including its line break, would
+    // merge the line with the next one.
+    MajorModeBase::doIndentLine(tc, li);
   }  // end of LicosMajorMode::indentLine
 
   void LicosMajorMode::indentRegion(const QTextCursor &tc) {
@@ -1323,22 +1305,33 @@ namespace tfel::gui {
       this->indentLine(tc);
       return;
     }
+    // the position of the cursor is memorized before the region is
+    // indented and restored once it has been indented, so that the
+    // cursor remains next to the character it was next to before the
+    // indentation.
+    const auto m = this->getCursorMark(tc);
     // find the line indentation
     QVector<QSharedPointer<LicosBlock>> blocks;
     blocks.append(QSharedPointer<LicosBlock>(new LicosMainBlock));
     LicosTokenizer tokenizer;
     int i = this->getLineIndentation(blocks, tokenizer, b);
+    b.beginEditBlock();
     while ((b <= e) && (!b.atEnd())) {
-      b.select(QTextCursor::LineUnderCursor);
-      QString line = b.selectedText().trimmed();
-      b.removeSelectedText();
+      const QString line = b.block().text().trimmed();
       int li = this->getIndentationIncrement(blocks, tokenizer, i, line,
                                              b.blockNumber() + 1);
-      b.insertText(QString(li, ' ') + line);
-      this->textEdit.setTextCursor(b);
+      if (li <= 0) {
+        li = 0;
+      }
+      // doIndentLine only replaces the contents of the line. Selecting
+      // and replacing the whole block, including its line break, would
+      // merge all the lines of the region into a single one.
+      // No setTextCursor for each line, see MajorModeBase::doIndentLine
+      MajorModeBase::doIndentLine(b, li, false);
       b.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor);
     }
-    this->textEdit.setTextCursor(b);
+    b.endEditBlock();
+    this->restoreCursorMark(m);
   }  // end of LicosMajorMode::indentRegion
 
   void LicosMajorMode::comment() {

@@ -415,14 +415,15 @@ namespace tfel::gui {
   void TextEditBase::gotoPosition(const int l, const int c) {
     this->gotoLine(l);
     auto tc = this->textCursor();
-    auto tc2 = tc;
-    tc2.select(QTextCursor::LineUnderCursor);
-    const auto mpos = tc2.selectedText().size();
+    // the position is relative to the line of the file (i.e. to the
+    // text block), and not to the displayed lines which depend on the
+    // wrapping policy
+    const auto mpos = static_cast<qsizetype>(tc.block().length() - 1);
     if (c >= 1) {
       tc.movePosition(QTextCursor::NextCharacter, this->moveMode,
                       std::min(static_cast<qsizetype>(c - 1), mpos));
     } else {
-      tc.movePosition(QTextCursor::EndOfLine, this->moveMode);
+      tc.movePosition(QTextCursor::EndOfBlock, this->moveMode);
       tc.movePosition(QTextCursor::NextCharacter, this->moveMode,
                       -std::min(static_cast<qsizetype>(-c + 1), mpos));
     }
@@ -885,10 +886,40 @@ namespace tfel::gui {
       this->editor.nextBuffer();
       return true;
     }
-    if (!(((m == Qt::ControlModifier) && (k == Qt::Key_P)) ||
-          ((m == Qt::ControlModifier) && (k == Qt::Key_N)))) {
+    const auto verticalMotion =
+        (((m == Qt::ControlModifier) &&
+          ((k == Qt::Key_P) || (k == Qt::Key_N))) ||
+         ((m == Qt::NoModifier) &&
+          ((k == Qt::Key_Up) || (k == Qt::Key_Down))));
+    if (!verticalMotion) {
       this->positions.clear();
     }
+    // vertical motion keeping the desired column, as in Emacs: the
+    // desired column of the lines crossed is saved in the positions
+    // map, which is reset by any other motion
+    auto moveLine = [this, &c](const bool down) {
+      int p = c.position() - c.block().position();
+      const auto bn = c.blockNumber();
+      if (this->positions.count(bn) != 0) {
+        p = this->positions[bn];
+      } else {
+        this->positions[bn] = p;
+      }
+      if (down) {
+        c.movePosition(QTextCursor::NextBlock, this->moveMode);
+      } else {
+        c.movePosition(QTextCursor::PreviousBlock, this->moveMode);
+      }
+      const auto bn2 = c.blockNumber();
+      if (this->positions.count(bn2) != 0) {
+        p = this->positions[bn2];
+      } else {
+        this->positions[bn2] = p;
+      }
+      const int npos = qMax(qMin(p, c.block().length() - 1), 0);
+      c.setPosition(c.block().position() + npos, this->moveMode);
+      this->setTextCursor(c);
+    };
     // treating standard keys
     QCompleter* completer = nullptr;
     if (this->mode != nullptr) {
@@ -1027,25 +1058,9 @@ namespace tfel::gui {
     } else if ((m == Qt::ControlModifier) && (k == Qt::Key_F)) {
       this->moveCursor(QTextCursor::NextCharacter, this->moveMode);
     } else if ((m == Qt::ControlModifier) && (k == Qt::Key_P)) {
-      int p = c.position() - c.block().position();
-      this->positions[c.block().blockNumber()] = p;
-      c.movePosition(QTextCursor::PreviousBlock, this->moveMode);
-      if (this->positions.count(c.block().blockNumber()) == 0) {
-        p = this->positions[c.block().blockNumber()];
-      }
-      int npos = qMax(qMin(p, c.block().length() - 1), 0);
-      c.movePosition(QTextCursor::NextCharacter, this->moveMode, npos);
-      this->setTextCursor(c);
+      moveLine(false);
     } else if ((m == Qt::ControlModifier) && (k == Qt::Key_N)) {
-      int p = c.position() - c.block().position();
-      this->positions[c.block().blockNumber()] = p;
-      c.movePosition(QTextCursor::NextBlock, this->moveMode);
-      if (this->positions.count(c.block().blockNumber()) == 0) {
-        p = this->positions[c.block().blockNumber()];
-      }
-      int npos = qMax(qMin(p, c.block().length() - 1), 0);
-      c.movePosition(QTextCursor::NextCharacter, this->moveMode, npos);
-      this->setTextCursor(c);
+      moveLine(true);
     } else if ((m == Qt::ControlModifier) && (k == Qt::Key_D)) {
       c.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor);
       c.deletePreviousChar();
@@ -1243,19 +1258,9 @@ namespace tfel::gui {
       } else if ((m == Qt::NoModifier) && (k == Qt::Key_Right)) {
         this->moveCursor(QTextCursor::NextCharacter, this->moveMode);
       } else if ((m == Qt::NoModifier) && (k == Qt::Key_Up)) {
-        int p = c.position() - c.block().position();
-        this->positions[c.block().blockNumber()] = p;
-        c.movePosition(QTextCursor::PreviousBlock, this->moveMode);
-        int npos = qMax(qMin(p, c.block().length() - 1), 0);
-        c.movePosition(QTextCursor::NextCharacter, this->moveMode, npos);
-        this->setTextCursor(c);
+        moveLine(false);
       } else if ((m == Qt::NoModifier) && (k == Qt::Key_Down)) {
-        int p = c.position() - c.block().position();
-        this->positions[c.block().blockNumber()] = p;
-        c.movePosition(QTextCursor::NextBlock, this->moveMode);
-        int npos = qMax(qMin(p, c.block().length() - 1), 0);
-        c.movePosition(QTextCursor::NextCharacter, this->moveMode, npos);
-        this->setTextCursor(c);
+        moveLine(true);
       } else if ((m == Qt::NoModifier) && (k == Qt::Key_Tab)) {
         /* indentation */
         if (this->mode != nullptr) {
