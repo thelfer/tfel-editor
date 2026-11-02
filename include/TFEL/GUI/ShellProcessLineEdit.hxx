@@ -1,6 +1,6 @@
 /*!
  * \file   ShellProcessLineEdit.hxx
- * \brief
+ * \brief input running the whole text typed with a shell.
  * \author Thomas Helfer
  * \date   15/02/2018
  */
@@ -25,6 +25,9 @@ namespace tfel::gui {
      * \param[in] c : command guess
      * \param[in] m : mode used to display the results
      * \param[in] p : parent
+     *
+     * \note unlike \c ProcessLineEdit, the whole text typed is the shell
+     * command: it is not split into a program and its arguments
      */
     ShellProcessLineEdit(const QString &,
                          const QString &,
@@ -34,6 +37,16 @@ namespace tfel::gui {
     ~ShellProcessLineEdit() override;
 
    protected:
+    /*!
+     * \brief hand the text the user typed over to a shell, which runs it and
+     * whose output is displayed
+     *
+     * The shell is \c cmd.exe on Windows, the \c SHELL environment variable
+     * elsewhere.
+     *
+     * \note an empty text is reported in the minibuffer and runs nothing, and
+     * so does a missing \c SHELL variable
+     */
     void treatUserInput() override;
 
    private:

@@ -1,6 +1,6 @@
 /*!
  * \file   MaterialPropertyDescription.hxx
- * \brief
+ * \brief description of a material property of the MFM database.
  * \author Thomas Helfer
  * \date   05/03/2018
  */
@@ -19,7 +19,9 @@ namespace tfel::gui {
    * \brief structure describing a constant material property
    */
   struct ConstantMaterialPropertyDescription {
+    //! name of the material property, as it is seen by the behaviour
     QString name;
+    //! value of the material property
     double value;
   };  // end of struct ConstantMaterialPropertyDescription
 
@@ -32,6 +34,10 @@ namespace tfel::gui {
      * \param[in] n: name
      * \param[in] l: library
      * \param[in] f: function
+     *
+     * \note the arguments of the function are read from
+     * \c tfel::system::ExternalLibraryManager; the list is empty when the
+     * library or the function can not be analysed
      */
     CastemMaterialPropertyDescription(const QString&,
                                       const QString&,
@@ -52,11 +58,15 @@ namespace tfel::gui {
     QString library;
     //! function
     QString function;
-    //! list of arguments
+    //! list of arguments, that is the names of the variables of `Cast3M`
     QStringList arguments;
   };  // end of struct CastemMaterialPropertyDescription
 
-  //! a simple alias
+  /*!
+   * \brief a simple alias: a material property is either a constant or a
+   * `Cast3M` one, and an empty variant is used for a material property the
+   * user has not defined yet
+   */
   using MaterialPropertyDescription =
       tfel::utilities::GenType<ConstantMaterialPropertyDescription,
                                CastemMaterialPropertyDescription>;

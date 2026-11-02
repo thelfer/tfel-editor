@@ -1,6 +1,6 @@
 /*!
  * \file  MajorMode.hxx
- * \brief
+ * \brief abstract interface all the major modes implement.
  * \author Thomas Helfer
  * \date   28/06/2012
  */
@@ -60,6 +60,18 @@ namespace tfel::gui {
      */
     virtual void completeContextMenu(QMenu* const, const QTextCursor&) = 0;
 
+    /*!
+     * \return the completer which provides the completions of the word under
+     * the cursor, a null pointer if the mode does not complete anything
+     *
+     * \note the mode owns the completer and keeps it for its whole life: it is
+     * created with the text edit it completes as widget, as
+     * \c MajorModeBase::completeCurrentWord ignores a completer whose widget is
+     * another text edit
+     *
+     * \note \c TextEditBase only queries this completer, it never creates nor
+     * installs one
+     */
     virtual QCompleter* getCompleter() = 0;
     /*!
      * \return the completion prefix
@@ -72,6 +84,16 @@ namespace tfel::gui {
      */
     virtual int getMinimalCompletionLength() = 0;
 
+    /*!
+     * \brief insert a completion the user selected in the completion popup
+     * \param[in] t : text edit the word is completed in
+     * \param[in] w : completion to insert
+     *
+     * \note the default implementation of \c MajorModeBase does nothing when
+     * the mode has no completer or when that completer belongs to another text
+     * edit. It otherwise inserts the part of \c w which is missing from the
+     * word, followed by a blank, and moves the editor's cursor
+     */
     virtual void completeCurrentWord(TextEditBase&, const QString&) = 0;
     /*!
      * \return a menu specific to the current mode
@@ -83,18 +105,33 @@ namespace tfel::gui {
     virtual QMenu* getSpecificMenu() = 0;
     //! \return the icon associated to the current mode
     virtual QIcon getIcon() const = 0;
-    //! \brief format a paragraph
+    /*!
+     * \brief format the text the cursor is in
+     *
+     * \note what is formatted depends on the mode: \c LaTeXMajorMode reflows
+     * the paragraph the cursor belongs to, \c CMajorModeBase lets
+     * \c clang-format rewrite the whole buffer and most of the other modes do
+     * nothing
+     *
+     * \note the mode is responsible for restoring the editor's cursor, which
+     * the reformatting would otherwise leave at the end of the rewritten text
+     * (see \c MajorModeBase::AnchorMark and \c CMajorModeBase::indent)
+     */
     virtual void format() = 0;
     //! \brief comment/uncomment a region
     virtual void comment() = 0;
     /*!
      * This method is called before any treatment by TextEditBase
      * and allows the mode to override default shortcuts
+     * \return true if the mode handled the event, in which case TextEditBase
+     * stops there and applies no shortcut of its own
      */
     virtual bool keyPressEvent(QKeyEvent* const) = 0;
     /*!
      * This method is called before any treatment by TextEditBase
      * and allows the mode to override default behaviour
+     * \return true if the mode handled the event, in which case TextEditBase
+     * ignores it
      */
     virtual bool mousePressEvent(QMouseEvent* const) = 0;
     /*!
@@ -116,6 +153,17 @@ namespace tfel::gui {
     //! \brief indent selected region
     virtual void indentRegion(const QTextCursor&) = 0;
 
+    /*!
+     * \brief set the language the spell checker of the mode uses
+     * \param[in] l : language name, as it is named by the installed
+     * dictionaries
+     *
+     * \note an unknown language, as well as the empty string, disables the
+     * spell checking. Modes which do not spell check their text do nothing
+     *
+     * \note the modes which spell check their text rehighlight the document
+     * so that the misspelled words are underlined in the new language
+     */
     virtual void setSpellCheckLanguage(const QString&) = 0;
     /*!
      * \brief destructor

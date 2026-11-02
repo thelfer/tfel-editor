@@ -1,6 +1,6 @@
 /*!
  * \file  LicosThermalBehaviourWizard.hxx
- * \brief
+ * \brief a wizard to introduce a thermal behaviour, declared but unused.
  * \author Thomas Helfer
  * \date   27/09/2012
  */
@@ -19,10 +19,22 @@ namespace tfel::gui {
   struct LicosThermalBehaviourWizard : public QWizard {
     /*!
      * Constructor
-     * \param[in] t :
+     * \param[in] t : text edit the thermal behaviour is to be inserted in, and
+     * the parent of the wizard in the Qt sense
+     *
+     * \note no implementation of this constructor is provided by the mode: the
+     * class is declared only, is never instantiated, and the member which would
+     * hold such a wizard, \c LicosMaterialWizard::tbw, is left null
      */
     LicosThermalBehaviourWizard(TextEditBase&);
 
+    /*!
+     * \brief check the page the user is on before the wizard moves to the next
+     * one
+     *
+     * \note no implementation of this override is provided by the mode either;
+     * the meaning it would give to a valid page is not known
+     */
     bool validateCurrentPage() override;
 
    protected:

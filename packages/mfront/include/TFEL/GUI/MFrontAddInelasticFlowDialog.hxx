@@ -1,7 +1,7 @@
 /*!
  * \file
  * packages/mfront/include/TFEL/GUI/MFrontAddInelasticFlowDialog.hxx
- * \brief
+ * \brief dialog which asks the inelastic flows and hardening rules of a brick.
  * \author Thomas Helfer
  * \date   07/08/2019
  */

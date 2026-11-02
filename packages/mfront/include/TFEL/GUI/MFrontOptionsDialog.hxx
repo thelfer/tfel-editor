@@ -1,6 +1,6 @@
 /*!
  * \file   MFrontOptionsDialog.hxx
- * \brief
+ * \brief dialog which gathers the options of the mfront command line.
  * \author Thomas Helfer
  * \date   16/03/2018
  */

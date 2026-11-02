@@ -1,6 +1,6 @@
 /*!
  * \file  MarkdownSyntaxHighlighter.hxx
- * \brief
+ * \brief MarkdownSyntaxHighlighter: highlights headers and metadata.
  * \author Thomas Helfer
  * \date   30/06/2012
  */

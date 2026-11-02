@@ -1,6 +1,6 @@
 /*!
  * \file  Command.hxx
- * \brief
+ * \brief abstract base class for all editor commands.
  * \author Thomas Helfer
  * \date   02/08/2012
  */

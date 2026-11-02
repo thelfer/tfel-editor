@@ -1,6 +1,6 @@
 /*!
  * \file  MTestSyntaxHighlighter.hxx
- * \brief
+ * \brief MTestSyntaxHighlighter: a syntax highlighter for MTest files.
  * \author Thomas Helfer
  * \date   30/06/2012
  */

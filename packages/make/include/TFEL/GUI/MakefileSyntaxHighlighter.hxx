@@ -1,6 +1,6 @@
 /*!
  * \file   MakefileSyntaxHighlighter.hxx
- * \brief
+ * \brief MakefileSyntaxHighlighter: highlights comments and targets.
  * \author Thomas Helfer
  * \date   03/07/2012
  */

@@ -1,6 +1,6 @@
 /*!
  * \file   MFrontBehaviourWizardPages.hxx
- * \brief
+ * \brief indices of the pages of the behaviour wizard of the mfront mode.
  * \author Thomas Helfer
  * \date   01/09/2019
  */

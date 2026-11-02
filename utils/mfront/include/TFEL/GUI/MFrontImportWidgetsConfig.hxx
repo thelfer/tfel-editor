@@ -1,6 +1,6 @@
 /*!
  * \file   MFrontImportWidgetsConfig.hxx
- * \brief
+ * \brief definition of the export macro of the import widgets.
  * \author Thomas Helfer
  * \date   12/03/2018
  */

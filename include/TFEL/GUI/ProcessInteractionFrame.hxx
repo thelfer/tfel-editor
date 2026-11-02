@@ -1,6 +1,6 @@
 /*!
  * \file  ProcessInteractionFrame.hxx
- * \brief
+ * \brief frame which interacts with a `QProcess` and shows its output.
  * \author Thomas Helfer
  * \date   01/08/2012
  */

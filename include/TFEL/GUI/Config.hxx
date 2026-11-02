@@ -1,6 +1,6 @@
 /*!
  * \file   TFEL/GUI/Config.hxx
- * \brief
+ * \brief definition of the TFEL_GUI_VISIBILITY_EXPORT export macro.
  * \author Thomas Helfer
  * \date   21/06/2013
  */

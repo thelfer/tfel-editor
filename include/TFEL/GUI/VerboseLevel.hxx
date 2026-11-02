@@ -1,6 +1,6 @@
 /*!
  * \file   VerboseLevel.hxx
- * \brief
+ * \brief verbose level of the logging facilities of the editor.
  * \author Thomas Helfer
  * \date   22/02/2018
  */

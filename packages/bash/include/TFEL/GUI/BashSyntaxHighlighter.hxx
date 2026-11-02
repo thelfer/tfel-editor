@@ -1,6 +1,6 @@
 /*!
  * \file   BashSyntaxHighlighter.hxx
- * \brief
+ * \brief BashSyntaxHighlighter: a syntax highlighter for bash files.
  * \author Thomas Helfer
  * \date   03/07/2012
  */

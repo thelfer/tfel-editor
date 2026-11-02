@@ -1,6 +1,6 @@
 /*!
  * \file  LicosBlock.hxx
- * \brief
+ * \brief LicosBlock: abstract base class for the blocks of a licos file.
  * \author Thomas Helfer
  * \date   17/09/2012
  */

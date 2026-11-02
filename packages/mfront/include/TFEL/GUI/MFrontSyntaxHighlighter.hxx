@@ -1,6 +1,6 @@
 /*!
  * \file  MFrontSyntaxHighlighter.hxx
- * \brief
+ * \brief MFrontSyntaxHighlighter: highlights the keywords of an MFront DSL.
  * \author Thomas Helfer
  * \date   30/07/2012
  */

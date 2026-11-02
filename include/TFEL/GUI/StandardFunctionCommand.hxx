@@ -1,6 +1,6 @@
 /*!
  * \file   StandardFunctionCommand.hxx
- * \brief
+ * \brief command built from a function or a lambda expression.
  * \author Thomas Helfer
  * \date   17/02/2018
  */

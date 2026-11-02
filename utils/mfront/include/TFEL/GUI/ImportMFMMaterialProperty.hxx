@@ -1,6 +1,6 @@
 /*!
  * \file   ImportMFMMaterialProperty.hxx
- * \brief
+ * \brief dialog selecting a material property of the MFM database.
  * \author Thomas Helfer
  * \date   19/02/2018
  */
@@ -37,7 +37,7 @@ namespace tfel::gui {
       Options(const Options&);
       //! \brief move assignement
       Options& operator=(Options&&);
-      //! \brief constructor
+      //! \brief copy assignement
       Options& operator=(const Options&);
       /*!
        * \brief name of the material property. This is used to
@@ -61,20 +61,56 @@ namespace tfel::gui {
      * \param[in] q: editor widget
      * \param[in] o: options
      * \param[in] p: parent
+     *
+     * The constructor analyses the galleries of `MFMHOME` and
+     * `MFRONTGALLERYHOME` through \c MFMDataBase::load and shows their material
+     * properties in the tree view, so the dialog only reflects the contents of
+     * those directories at the time it is built
+     *
+     * \note the loaded model and the proxy model are given the dialog as parent
+     * and are released with it; the other widgets are reparented by the layout
+     *
+     * \note `Ok` accepts the dialog, `Cancel` rejects it and double clicking a
+     * row accepts it as well
+     *
+     * \note `o.name` and `o.material` pre-fill the corresponding filters;
+     * `o.minterface` restricts the list to that interface and hides the
+     * interface selection
      */
     ImportMFMMaterialProperty(EditorWidget&,
                               const Options& o,
                               QWidget* const p = nullptr);
-    //! \return the selected library
+    /*!
+     * \return the path of the library which holds the selected material
+     * property, that is the fourth column of the selected row
+     *
+     * \note an empty string is returned when no row or several rows are
+     * selected
+     */
     QString getLibrary() const;
-    //! \return the selected function
+    /*!
+     * \return the name of the selected material property, that is the entry
+     * point of the library, which is the second column of the selected row
+     *
+     * \note an empty string is returned when no row or several rows are
+     * selected
+     */
     QString getFunction() const;
     //! destructor
     ~ImportMFMMaterialProperty() override;
 
    protected:
+    //! tree view showing the material properties of the galleries
     QTreeView* view;
-    // interface
+    /*!
+     * \brief combo box listing the interfaces of the material properties, the
+     * first entry being the regular expression `.+` which shows all of them
+     *
+     * \note it is only shown, and only connected to the interface filter of the
+     * proxy model, when the interface is not imposed by \c Options::minterface:
+     * in that case it is left out of the layout of the dialog and the interface
+     * column of the tree view is hidden as well
+     */
     QComboBox* isb;
 
    private:

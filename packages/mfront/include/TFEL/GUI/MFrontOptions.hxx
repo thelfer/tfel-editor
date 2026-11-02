@@ -1,6 +1,6 @@
 /*!
  * \file  MFrontOptions.hxx
- * \brief
+ * \brief MFrontOptions: the options of a run of the mfront command.
  * \author Thomas Helfer
  * \dat    04/06/2012
  */

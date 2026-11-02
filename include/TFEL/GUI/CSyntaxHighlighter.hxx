@@ -1,6 +1,6 @@
 /*!
  * \file  CSyntaxHighlighter.hxx
- * \brief
+ * \brief syntax highlighter for C-based languages.
  * \author Thomas Helfer
  * \date   30/06/2012
  */
@@ -14,11 +14,20 @@ namespace tfel::gui {
 
   /*!
    * \brief a syntaxt highlighter for C-based languages
+   *
+   * \note no highlighting rule is registered: only the strings, the numbers,
+   * the comments and the preprocessor directives are highlighted, with the
+   * formats defined by `CSyntaxHighlighterBase`
+   *
+   * \note no major mode uses this highlighter directly: `CxxSyntaxHighlighter`
+   * adds the keywords of the C++ language to it
    */
   struct TFEL_GUI_VISIBILITY_EXPORT CSyntaxHighlighter
       : public CSyntaxHighlighterBase {
     /*!
      * \param[in] t : text document to be highlighted
+     *
+     * \note the highlighter registers itself on the document, which owns it
      */
     CSyntaxHighlighter(QTextDocument *const);
     //! destructor

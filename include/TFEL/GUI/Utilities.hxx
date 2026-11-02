@@ -1,6 +1,6 @@
 /*!
  * \file  Utilities.hxx
- * \brief
+ * \brief miscellaneous functions used all over the editor.
  * \author Thomas Helfer
  * \date   01/08/2012
  */
@@ -36,25 +36,102 @@ namespace tfel::gui {
    * \param[in] f: file name
    * \return if found, the absolute path to the file, an empty string
    * otherwise
+   *
+   * \note the returned path is the directory which contains the file, the
+   * file name is not part of it
+   *
+   * \note when the file is not found in `d`, the path of the parent
+   * directory is returned without checking that the file exists there, as
+   * the loop over the parent directories returns at the first iteration
+   *
+   * \note an empty string is returned when `d` does not exist or has no
+   * parent directory
    */
   TFEL_GUI_VISIBILITY_EXPORT QString
   findFileInDirectoryOrParentDirectory(const QString&, const QString&);
 
+  /*!
+   * \return the regular expression matching a file name, that is, a sequence
+   * of letters, digits, dots, underscores, pluses and minuses
+   *
+   * \note the language modes use it to build the regular expressions which
+   * associate a file name with a major mode
+   */
   TFEL_GUI_VISIBILITY_EXPORT QString fileNameRegExp();
 
+  /*!
+   * \brief apply the font of the text editing areas to a widget and remove
+   * its contents margins
+   * \param[in] w: widget
+   *
+   * \note the font is the one stored in the "font/textedit" entry of the
+   * settings, antialiased; the widget keeps its own font if that entry does
+   * not exist
+   *
+   * \note the contents margins are set to zero so that the widget fits the
+   * neighbouring ones without any gap
+   */
   void setFontSizeAndContentsMargins(QWidget* const);
 
+  /*!
+   * \brief apply the font of the text editing areas to a label, remove its
+   * contents margins and set its own margin to zero
+   * \param[in] l: label
+   *
+   * \note this is setFontSizeAndContentsMargins plus `QLabel::setMargin(0)`,
+   * which is what removes the space the label reserves around its text
+   */
   void setQLabelFontSizeAndMargins(QLabel* const);
 
+  /*!
+   * \brief insert a scroll area in a layout with its scroll bar drawn
+   * beside it, as the main editing areas do
+   * \param[in] hl: layout the scroll area is added to, which takes it over
+   * \param[in] a: scroll area
+   *
+   * \note the scroll bar of the scroll area itself is turned off and the
+   * `QScrollBar` widget it uses is added to the layout, so the area is not
+   * narrowed by its own scroll bar
+   *
+   * \note the contents margins and the spacing of the layout are set to
+   * zero
+   */
   void setQAbstractScrollAreaInLayout(QHBoxLayout* const,
                                       QAbstractScrollArea* const);
 
 #ifdef TFEL_GUI_HAVE_WEBENGINE
+  /*!
+   * \brief insert a web view in a layout
+   * \param[in] hl: layout the view is added to, which takes it over
+   * \param[in] a: web view
+   *
+   * \note the contents margins and the spacing of the layout are set to
+   * zero; the scroll bar handling of setQAbstractScrollAreaInLayout is not
+   * applied, the view keeps its own scroll bar
+   *
+   * \note this function only exists when the Qt WebEngine modules have been
+   * found when configuring
+   */
   void setQWebEngineViewInLayout(QHBoxLayout* const, QWebEngineView* const);
 #endif /* TFEL_GUI_HAVE_WEBENGINE */
 
+  /*!
+   * \brief compute the part both strings start with
+   * \param[in] s1: first string
+   * \param[in] s2: second string
+   * \return the common part, empty if the strings do not share their first
+   * character or if one of them is empty
+   */
   QString commonPart(const QString&, const QString&);
 
+  /*!
+   * \brief compute the part all the strings start with, which is the text
+   * the line edit is completed with
+   * \param[in] l: list of strings, typically the possible completions
+   * \return the common part, the only string of the list if it holds a
+   * single string, an empty string if the list is empty or if the strings
+   * share nothing
+   */
   QString commonPart(const QStringList&);
 
   /*!
@@ -67,7 +144,12 @@ namespace tfel::gui {
    *
    * The code is based on:
    * https://stackoverflow.com/questions/9399840/how-to-iterate-through-a-menus-actions-in-qt
-   * \param[in] m: menu bar
+   * \param[in] m: menu whose actions are freed
+   *
+   * \note the actions and the submenus are scheduled for deletion with
+   * `deleteLater()`: they still belong to the menu until the event loop
+   * runs, which is when they are actually freed. Separators are left
+   * untouched as they are owned by the menu
    */
   TFEL_GUI_VISIBILITY_EXPORT void clearMenu(QMenu* const);
 
@@ -82,14 +164,22 @@ namespace tfel::gui {
    * The code is based on:
    * https://stackoverflow.com/questions/9399840/how-to-iterate-through-a-menus-actions-in-qt
    * \param[in] m: menu bar
+   *
+   * \note as in clearMenu, the actions and the submenus are scheduled for
+   * deletion with `deleteLater()` and the top level actions of the menu bar
+   * are handled as those of a menu: separators are left untouched
    */
   TFEL_GUI_VISIBILITY_EXPORT void clearMenuBar(QMenuBar* const);
 
 #ifdef Q_OS_UNIX
 
   //! \return the user' login
+  //! \note this is the name of the password entry of the effective user
+  //! identifier of the process, an empty string if there is no such entry
   TFEL_GUI_VISIBILITY_EXPORT QString getLoginName();
   //! \return the user' name
+  //! \note this is the full name stored in that same password entry, an
+  //! empty string if there is no such entry
   TFEL_GUI_VISIBILITY_EXPORT QString getUserName();
 
 #endif /* Q_OS_UNIX */

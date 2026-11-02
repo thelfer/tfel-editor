@@ -1,6 +1,6 @@
 /*!
  * \file   MFrontBehaviourWizard.hxx
- * \brief
+ * \brief wizard gathering the pages which generate a new behaviour file.
  * \author Thomas Helfer
  * \date   26/02/2018
  */

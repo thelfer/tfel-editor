@@ -1,6 +1,6 @@
 /*!
  * \file   MFrontMetaDataPage.hxx
- * \brief
+ * \brief wizard page collecting the name, material, author and date.
  * \author Thomas Helfer
  * \date   27/07/2019
  */
@@ -20,20 +20,36 @@ namespace tfel::gui {
   struct TextEditBase;
   struct LineEdit;
 
+  /*!
+   * \brief a wizard page which collects the metadata of the material knowledge
+   * to be created: its name, the material it belongs to, its author and the
+   * date of the creation
+   */
   struct MFrontMetaDataPage : public QWizardPage {
     //! list of supported material knowledge
     enum MaterialKnowledgeType {
-      MATERIALPROPERTY,
-      BEHAVIOUR,
-      MODEL
-    };  // end of enum MaterialKnowledgeType
+      MATERIALPROPERTY,  //!< a material property
+      BEHAVIOUR,         //!< a behaviour
+      MODEL              //!< a model
+    };                   // end of enum MaterialKnowledgeType
     /*!
      * \brief constructor
-     * \param[in] w: editor widget
-     * \param[in] cd: current document
-     * \param[in] t: knowledge type
-     * \param[in] n: next page
-     * \param[in] p: parent
+     * \param[in] w: editor widget, used by the line edits of the page
+     * \param[in] cd: current document, which the metadata are written in
+     * \param[in] t: knowledge type. It selects the title of the page, the label
+     * of the name and the validator which checks that the name is a valid
+     * MFront entry point name
+     * \param[in] n: identifier of the page the wizard goes to when this one is
+     * accepted
+     * \param[in] p: parent, that is the wizard the page belongs to
+     *
+     * \note the author line edit is pre-filled with the name of the current
+     * user under Unix and the date edit with the current date
+     *
+     * \note the four fields are created here and are reparented to the page by
+     * its layout, so the page owns them
+     *
+     * \note only the \c BEHAVIOUR type is used by the editor today
      */
     MFrontMetaDataPage(EditorWidget &,
                        TextEditBase &,
@@ -41,12 +57,32 @@ namespace tfel::gui {
                        const int,
                        QWizard *const);
 
+    /*!
+     * \return always true: an invalid name is not caught here, only the
+     * validator of the line edit restricts what the user can type
+     */
     bool validatePage() override;
 
+    //! \return the identifier given to the constructor as next page
     int nextId() const override;
-    //! \brief write the output of the wizard
+    /*!
+     * \brief write the output of the wizard
+     *
+     * The name is always written as a \c @Behaviour declaration, whatever the
+     * kind of knowledge the page was created for. The material and the author
+     * declarations are only written when the corresponding fields are not empty
+     * and the date is written as \c dd/mm/yyyy, followed by an empty
+     * \c @Description block.
+     *
+     * \note the text is inserted at the cursor of the document, which is left
+     * at the end of it
+     */
     virtual void write() const;
-    //! destructor
+    /*!
+     * \brief destructor
+     *
+     * The widgets of the page are children of the page and are released by Qt
+     */
     ~MFrontMetaDataPage() override;
 
    protected:

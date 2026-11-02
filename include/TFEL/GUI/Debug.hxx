@@ -1,6 +1,6 @@
 /*!
  * \file   Debug.hxx
- * \brief
+ * \brief debug: send arguments to the debug stream when verbose.
  * \author Thomas Helfer
  * \date   23/02/2018
  */

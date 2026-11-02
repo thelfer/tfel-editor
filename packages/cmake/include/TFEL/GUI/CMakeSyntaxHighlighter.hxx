@@ -1,6 +1,6 @@
 /*!
  * \file   CMakeSyntaxHighlighter.hxx
- * \brief
+ * \brief CMakeSyntaxHighlighter: a syntax highlighter for CMake files.
  * \author Thomas Helfer
  * \date   03/07/2012
  */

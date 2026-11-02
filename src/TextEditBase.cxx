@@ -889,8 +889,7 @@ namespace tfel::gui {
     const auto verticalMotion =
         (((m == Qt::ControlModifier) &&
           ((k == Qt::Key_P) || (k == Qt::Key_N))) ||
-         ((m == Qt::NoModifier) &&
-          ((k == Qt::Key_Up) || (k == Qt::Key_Down))));
+         ((m == Qt::NoModifier) && ((k == Qt::Key_Up) || (k == Qt::Key_Down))));
     if (!verticalMotion) {
       this->positions.clear();
     }
@@ -1182,10 +1181,6 @@ namespace tfel::gui {
           new ShellProcessLineEdit("shell command:", "", "", this->editor);
       l->setInputHistorySettingAddress("command/shell/history");
       this->editor.setUserInput(l);
-    } else if (((m == Qt::AltModifier) && (k == Qt::Key_Percent)) ||
-               ((m == (Qt::AltModifier | Qt::ShiftModifier)) &&
-                (k == Qt::Key_Percent))) {
-      this->editor.setUserInput(new TextEditQueryReplace(*this, this->editor));
     } else if (((m == Qt::AltModifier) && (k == Qt::Key_Percent)) ||
                ((m == (Qt::AltModifier | Qt::ShiftModifier)) &&
                 (k == Qt::Key_Percent))) {

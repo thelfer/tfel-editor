@@ -1,6 +1,6 @@
 /*!
  * \file   ShSyntaxHighlighter.hxx
- * \brief
+ * \brief ShSyntaxHighlighter: a syntax highlighter for sh files.
  * \author Thomas Helfer
  * \date   03/07/2012
  */

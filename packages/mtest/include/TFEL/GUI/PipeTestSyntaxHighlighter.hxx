@@ -1,6 +1,6 @@
 /*!
  * \file  PipeTestSyntaxHighlighter.hxx
- * \brief
+ * \brief syntax highlighter for the input files of the pipe scheme.
  * \author Thomas Helfer
  * \date   30/06/2012
  */

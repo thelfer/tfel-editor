@@ -1,6 +1,6 @@
 /*!
  * \file   GnuplotSyntaxHiglighter.hxx
- * \brief
+ * \brief GnuplotSyntaxHighlighter: a syntax highlighter for gnuplot files.
  * \author Thomas Helfer
  * \date   23/01/2016
  */
@@ -26,10 +26,34 @@
 
 namespace tfel::gui {
 
+  /*!
+   * \brief syntax highlighter class for `gnuplot` files
+   *
+   * The highlighter reuses the tokenizer of \c CSyntaxHighlighterBase with
+   * options tailored to `gnuplot`: `#` starts a comment, `C` style
+   * comments and preprocessor directives are not treated and single quotes
+   * are string delimiters.
+   */
   struct TFELEDITOR_GNUPLOTMODE_VISIBILITY_EXPORT GnuplotSyntaxHighlighter
       : public CSyntaxHighlighterBase {
+    /*!
+     * \brief constructor
+     * \param[in] p : document to be highlighted
+     *
+     * \note the commands \c set, \c plot and \c splot are registered as
+     * keywords, highlighted with \c keyFormat
+     */
     GnuplotSyntaxHighlighter(QTextDocument *);
+    /*!
+     * \brief highlight the current line
+     * \param[in] l : current line
+     *
+     * A line starting with `#` is highlighted as a comment and nothing
+     * else is done; any other line is handed to
+     * \c CSyntaxHighlighterBase::highlightBlock
+     */
     void highlightBlock(const QString &) override;
+    //! destructor
     ~GnuplotSyntaxHighlighter() override;
   };  // end of struct GnuplotSyntaxHighlighter
 

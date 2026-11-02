@@ -52,19 +52,25 @@ namespace tfel::gui {
     return this->bOK;
   }  // end of TextEditReplaceFilter::isOk
 
+  bool TextEditReplaceFilter::isInsideWorkingRegion(
+      const QTextCursor& nc) const {
+    if (nc.isNull()) {
+      return false;
+    }
+    if (this->hasSelection) {
+      return nc.position() <= this->ec.position();
+    }
+    return true;
+  }  // end of TextEditReplaceFilter::isInsideWorkingRegion
+
   bool TextEditReplaceFilter::findNext() {
     const auto tc = this->textEdit.textCursor();
     const auto nc = this->textEdit.document()->find(this->s1, tc, this->opts);
-    const auto c = [this, nc] {
-      if (this->hasSelection) {
-        return (!nc.isNull()) && (!nc.atEnd()) && (nc < this->ec);
-      }
-      return (!nc.isNull()) && (!nc.atEnd());
-    }();
-    if (c) {
-      this->textEdit.setTextCursor(nc);
+    if (!this->isInsideWorkingRegion(nc)) {
+      return false;
     }
-    return c;
+    this->textEdit.setTextCursor(nc);
+    return true;
   }  // end of TextEditReplaceFilter::findNext
 
   bool TextEditReplaceFilter::filterKeyPressEvent(QKeyEvent* const ev) {
@@ -113,11 +119,7 @@ namespace tfel::gui {
           tc.removeSelectedText();
           tc.insertText(s2);
           auto nc = document->find(s1, tc, this->opts);
-          if (this->hasSelection) {
-            c = (!nc.isNull()) && (!nc.atEnd()) && (nc < this->ec);
-          } else {
-            c = (!nc.isNull()) && (!nc.atEnd());
-          }
+          c = this->isInsideWorkingRegion(nc);
           if (c) {
             tc = nc;
           }
