@@ -14,6 +14,7 @@
 #include "TFEL/Glossary/Glossary.hxx"
 #include "TFEL/Glossary/GlossaryEntry.hxx"
 #include "TFEL/GUI/Utilities.hxx"
+#include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/Buffer.hxx"
 #include "TFEL/GUI/ProcessOutputFrame.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
@@ -617,15 +618,38 @@ namespace tfel::gui {
   }  // end of CastemMajorMode::sendToCastem
 
   bool CastemMajorMode::startCastem() {
+    // A failed frame must leave the secondary-task machinery consistently:
+    // Buffer::closeSecondaryTask itself is a protected slot, so use its
+    // public equivalent when the frame is the current task, and otherwise
+    // detachSecondaryTask, which deletes the widget once no buffer refers
+    // to it anymore (QTabWidget drops the page on destruction). A bare
+    // close() would leave the registry holding a dangling pointer, which
+    // the next attachSecondaryTask would dereference.
+    auto cleanup = [this] {
+      if (auto* f = this->co) {
+        if (this->buffer.getCurrentSecondaryTask() == f) {
+          this->buffer.closeCurrentSecondaryTask();
+        } else {
+          this->editor.detachSecondaryTask(&(this->buffer), f);
+        }
+        this->co = nullptr;
+      }
+    };
     if (this->co == nullptr) {
       this->co = new ProcessInteractionFrame(this->editor, this->buffer);
       this->co->setMajorMode("castem-output");
-      if (this->co == nullptr) {
-        return false;
-      }
+      // no null check here: operator new throws rather than returning null and
+      // the line above already dereferenced the pointer (QT-22).
       this->co->setAttribute(Qt::WA_DeleteOnClose);
+      // the frame is deleted through deleteLater (WA_DeleteOnClose), so its
+      // destruction may be delayed until after a replacement is already up:
+      // only forget co if co still designates this very frame.
       QObject::connect(this->co, &QObject::destroyed, this,
-                       [this] { this->co = nullptr; });
+                       [this, f = this->co] {
+                         if (this->co == f) {
+                           this->co = nullptr;
+                         }
+                       });
       QDir d(this->textEdit.getDirectory());
       auto& p = co->getProcess();
       if (d.exists()) {
@@ -633,20 +657,37 @@ namespace tfel::gui {
       } else {
         p.setWorkingDirectory(QDir::current().absolutePath());
       }
+      // report and clean up start failures through the signal, as LicosStudy
+      // does: waitForStarted() would freeze the GUI thread instead (QT-22).
+      QObject::connect(&p, &QProcess::errorOccurred, this,
+                       [this, cleanup](QProcess::ProcessError e) {
+                         if (e == QProcess::FailedToStart) {
+                           this->editor.displayInformativeMessage(
+                               QObject::tr("castem could not be started"));
+                           cleanup();
+                         }
+                       });
 #ifdef _WIN32
       p.start("castem17.bat", QStringList());
 #else
       p.start("castem2018_PLEIADES", QStringList());
 #endif
-      p.waitForStarted();
       this->buffer.attachSecondaryTask("* castem *", this->co);
-      if (p.state() != QProcess::Running) {
+      // without the wait, a program that is not there is already NotRunning
+      // (or becomes it through errorOccurred): Starting is fine, it is the
+      // event loop's job from there on.
+      if (p.state() == QProcess::NotRunning) {
+        cleanup();
         return false;
       }
     }
     auto& p = co->getProcess();
-    if (p.state() != QProcess::Running) {
-      this->co = nullptr;
+    if (p.state() == QProcess::NotRunning) {
+      // close the old frame before retrying: it is the tab's page and is only
+      // released through the detach machinery (QT-22). cleanup() clears co,
+      // and the destroyed guard cannot clobber the replacement thanks to its
+      // frame-identity check.
+      cleanup();
       return this->startCastem();
     }
     return true;
