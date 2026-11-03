@@ -105,11 +105,6 @@ namespace tfel::gui {
     virtual PlainTextEdit &getMainFrame();
     //! \return the current SecondaryTask if any, nullptr otherwise
     virtual QWidget *getCurrentSecondaryTask();
-    /*!
-     * \return the title of the current SecondaryTask if any,
-     * an empty string otherwise
-     */
-    virtual QString getCurrentSecondaryTaskTitle() const;
 
     /*!
      * \return the menus specific to the major mode of the main frame, as
