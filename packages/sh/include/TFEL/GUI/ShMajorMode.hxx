@@ -30,9 +30,9 @@ namespace tfel::gui {
   /*!
    * \brief a major mode for editing `sh` files
    *
-   * The mode only brings syntax highlighting and a comment syntax: it
-   * defines no completion and no specific menu, so the defaults of
-   * \c MajorModeBase apply.
+   * The mode brings syntax highlighting, a comment syntax and completion
+   * over the POSIX shell control words and builtins; it defines no
+   * specific menu, so the defaults of \c MajorModeBase apply.
    *
    * \note the mode is registered by a \c StandardMajorModeProxy static
    * initialiser at the end of `ShMajorMode.cxx`, which associates it with
@@ -40,6 +40,16 @@ namespace tfel::gui {
    */
   struct TFELEDITOR_SHMODE_VISIBILITY_EXPORT ShMajorMode
       : public MajorModeBase {
+    /*!
+     * \return the words the completer of the mode is built from: the POSIX
+     * shell control words and builtins
+     *
+     * \note the list is static on purpose: querying the running shell
+     * (`compgen`) from the constructor would block the GUI thread; the
+     * derived bash mode adds its own words through \c setCompleterList
+     */
+    static const QStringList& getKeyWordsList();
+
     /*!
      * \brief constructor
      * \param[in] w : editor widget the mode belongs to
@@ -50,6 +60,28 @@ namespace tfel::gui {
 
     //! \return the name of the mode, "sh"
     QString getName() const override;
+
+    /*!
+     * \return the completer installed by the constructor, parented to the
+     * mode and displayed over the text edit
+     */
+    QCompleter* getCompleter() override;
+
+   protected:
+    /*!
+     * \brief replace the words offered by the completer of the mode
+     * \param[in] l : the new words
+     *
+     * \note used by the derived bash mode to offer the bash builtins and
+     * keywords on top of the POSIX ones; the model of the completer is
+     * reused, not replaced
+     */
+    void setCompleterList(const QStringList& l);
+
+    //! the completer of the mode
+    QCompleter* c;
+
+   public:
 
     //! \return a fixed description of the mode
     QString getDescription() const override;
