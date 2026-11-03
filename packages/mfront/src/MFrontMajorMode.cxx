@@ -560,8 +560,9 @@ namespace tfel::gui {
           const auto dsl = getDSLName(this->editor, this->textEdit);
           p.start("mfront", QStringList()
                                 << ("--help-keyword=" + dsl + ":" + k));
-          p.waitForStarted();
-          p.waitForFinished(1000);
+          // no waitForStarted()/waitForFinished(): they spin the GUI thread,
+          // the first without any timeout, and the frame shows the output as
+          // it arrives anyway (ProcessOutputFrame tracks the process).
         }
         nf->moveCursor(QTextCursor::Start, QTextCursor::MoveAnchor);
       });
