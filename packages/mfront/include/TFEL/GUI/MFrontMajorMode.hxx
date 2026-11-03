@@ -9,6 +9,7 @@
 #define LIB_TFEL_GUI_MFRONTMAJORMODE_HXX
 
 #include <QtCore/QTimer>
+#include <QtCore/QStringListModel>
 #include "TFEL/GUI/CxxMajorMode.hxx"
 
 namespace tfel::gui {
@@ -190,10 +191,19 @@ namespace tfel::gui {
     /*!
      * \brief completer of the keywords of the DSL in use
      *
-     * Created by the constructor, with the text edit as widget; its model is
-     * replaced by updateSyntaxHighlighterAndCompleter() when the DSL changes
+     * Created by the constructor, with the text edit as widget; it completes
+     * on \c keywordsModel, which \c updateSyntaxHighlighterAndCompleter
+     * updates in place when the DSL changes
      */
     QCompleter *c = nullptr;
+    /*!
+     * \brief model of the keyword completions, owned by the mode
+     *
+     * \c QCompleter::setModel borrows the models it is given, so the mode
+     * keeps the only model and refreshes it with \c setStringList instead of
+     * replacing it (issue #66)
+     */
+    QStringListModel *keywordsModel = nullptr;
     /*!
      * \brief name of the DSL the syntax highlighter, the completer and the
      * menus were built for

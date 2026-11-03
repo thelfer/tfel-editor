@@ -32,9 +32,9 @@ namespace tfel::gui {
         inelastic_flows(new QComboBox),
         stress_criteria(new QComboBox),
         plastic_potentials(new QComboBox),
-        isotropic_hardening_rules_selected(new QListView),
+        isotropic_hardening_rules_selected(new QListView(this)),
         isotropic_hardening_rules(new QComboBox),
-        kinematic_hardening_rules_selected(new QListView),
+        kinematic_hardening_rules_selected(new QListView(this)),
         kinematic_hardening_rules(new QComboBox) {
     this->setWindowTitle("Add a new inelastic flow");
     const auto o = [] {
@@ -95,7 +95,9 @@ namespace tfel::gui {
       auto* m = dynamic_cast<QStringListModel*>(
           this->isotropic_hardening_rules_selected->model());
       if (m == nullptr) {
-        m = new QStringListModel;
+        // QAbstractItemView::setModel borrows: the dialog must own the model
+        // (issue #66)
+        m = new QStringListModel(this);
         this->isotropic_hardening_rules_selected->setModel(m);
       }
       auto ihrs = m->stringList();
@@ -116,7 +118,9 @@ namespace tfel::gui {
       auto* m = dynamic_cast<QStringListModel*>(
           this->kinematic_hardening_rules_selected->model());
       if (m == nullptr) {
-        m = new QStringListModel;
+        // same as for the isotropic hardening rules: the view borrows the
+        // model, the dialog owns it (issue #66)
+        m = new QStringListModel(this);
         this->kinematic_hardening_rules_selected->setModel(m);
       }
       auto khrs = m->stringList();
