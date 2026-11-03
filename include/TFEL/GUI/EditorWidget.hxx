@@ -11,6 +11,7 @@
 #include <vector>
 #include <utility>
 #include <QtCore/QString>
+#include <QtCore/QTimer>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QHBoxLayout>
@@ -502,6 +503,15 @@ namespace tfel::gui {
     std::vector<std::pair<CommandLine *, bool>> ui;
     //! empty line edit
     LineEdit *eui;
+    /*!
+     * \brief single-shot timer which clears the informative message label
+     *
+     * \note a single timer, restarted by every \c displayInformativeMessage
+     * call and connected once to \c resetUserInput: unlike stacked
+     * \c QTimer::singleShot calls, a later message can no longer let an
+     * earlier timer erase it
+     */
+    QTimer messageTimer;
     //! the list of tokens pasted/killed
     QStringList killRing;
     //! id of the next buffer
