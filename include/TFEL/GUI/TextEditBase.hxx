@@ -8,7 +8,6 @@
 #ifndef LIB_TFEL_GUI_TEXTEDITBASE_HXX
 #define LIB_TFEL_GUI_TEXTEDITBASE_HXX
 
-#include <map>
 #include <functional>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
@@ -858,14 +857,6 @@ namespace tfel::gui {
      * `QTextCursor::KeepAnchor`
      */
     QTextCursor::MoveMode moveMode = QTextCursor::MoveAnchor;
-    /*!
-     * save the previous positions of the cursor for Ctrl-P/Ctrl-N
-     * moves
-     *
-     * \note the keys are the block numbers and the values the desired
-     * columns; the map is cleared by any other motion
-     */
-    std::map<int, int> positions;
 
     /*!
      * \brief absolute path of the file visited by the buffer; empty
