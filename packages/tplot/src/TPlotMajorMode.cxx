@@ -64,7 +64,6 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<TPlotMajorMode> proxy(
       "TPlot",
-      QVector<QRegularExpression>()
-          << QRegularExpression("^" + fileNameRegExp() + "\\.tplot"));
+      QVector<QRegularExpression>() << suffixRegExp("tplot"));
 
 }  // end of namespace tfel::gui
