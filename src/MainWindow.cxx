@@ -226,7 +226,16 @@ namespace tfel::gui {
     using HunspellDictionaries = HunspellDictionariesManager;
 #endif /* TFEL_GUI_HUNSPELL_SUPPORT */
     auto &s = ShortCutStyle::getShortCutStyle();
+    // QMenu::clear() removes the actions but leaves the submenus it
+    // created behind as invisible children -- the Dictionaries submenu
+    // and its per-dictionary actions piled up on every call (twice per
+    // shortcut-style toggle), exactly the trap src/Utilities.cxx
+    // (clearMenu) exists for. This menu must not use clearMenu itself:
+    // fa/esca/qsca are owned here and only removed, not deleted.
+    const auto submenus = this->om->findChildren<QMenu *>();
     this->om->clear();
+    for (auto *sm : submenus)
+      sm->deleteLater();
     // font
     this->om->addAction(this->fa);
 #ifdef TFEL_GUI_HUNSPELL_SUPPORT
