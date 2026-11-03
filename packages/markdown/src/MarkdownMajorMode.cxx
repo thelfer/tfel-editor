@@ -208,7 +208,12 @@ namespace tfel::gui {
       auto b = tc;
       const auto r = startsParagraph(b);
       if (r.first == -1) {
-        return true;
+        // the cursor is not in a paragraph (empty line, '#' heading,
+        // '%' preamble, ...): let the key reach the generic handling so
+        // Tab indents (returning true here swallowed Tab outright and
+        // made indentation impossible in a Markdown buffer) and Alt-q
+        // falls through to its generic binding
+        return false;
       }
       auto inList = r.first == 0;
       auto indent = r.second;
