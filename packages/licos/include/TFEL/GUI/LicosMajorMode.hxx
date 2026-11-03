@@ -499,22 +499,6 @@ namespace tfel::gui {
     virtual void createAnalyseUsingMFMAction(const QString &);
 
     /*!
-     * \brief search a word in the files of a given extension, recursively, from
-     * the given directory, and show the result in a secondary task named
-     * "*search for ... *" whose major mode is "grep output"
-     * \param[in] s : word to search
-     * \param[in] w : directory the search starts from
-     * \param[in] ext : extension of the files to search, without the dot
-     *
-     * \note the search runs `grep -nH` in a shell, so the `SHELL` environment
-     * variable must be defined: the reason for its absence is reported in the
-     * minibuffer and no process is started
-     *
-     * \note nothing at all is done when \c w is empty
-     */
-    virtual void search(const QString &, const QString &, const QString &);
-
-    /*!
      * \return the value of the `LICOSHOME` environment variable, the
      * installation directory of licos
      *
