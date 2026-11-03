@@ -177,14 +177,15 @@ namespace tfel::gui {
     QString _userDictionary;
 
     /*!
-     * \brief encoding declared by the `SET` option of the affix file of
-     * the loaded dictionary, `Latin1` when the affix file does not declare
-     * any encoding
+     * \brief encoding of the words `hunspell` works with: the one declared
+     * by the `SET` option of the affix file when it declares one, the one
+     * the dictionary file's content could be read as, else UTF-8, the
+     * encoding most dictionaries use and the only safe assumption
      *
-     * \note only suggest and put_word use it, to decode the suggestions and
-     * to encode the words they give to `hunspell`
+     * \note \c spell, \c suggest and \c put_word all use it, to encode the
+     * words they give to `hunspell` and to decode the suggestions it returns
      */
-    QStringConverter::Encoding _encoding = QStringConverter::Latin1;
+    QStringConverter::Encoding _encoding = QStringConverter::Utf8;
   };
 
 }  // end of namespace tfel::gui

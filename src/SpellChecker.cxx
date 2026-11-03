@@ -109,7 +109,7 @@ namespace tfel::gui {
         new Hunspell(affixFilePathBA.constData(), dictFilePathBA.constData());
     // detect encoding analyzing the SET option in the affix
     // file
-    this->_encoding = QStringConverter::Latin1;
+    this->_encoding = QStringConverter::Utf8;
     QFile _affixFile(affixFile);
     if (_affixFile.open(QIODevice::ReadOnly)) {
       QTextStream stream(&_affixFile);
@@ -128,6 +128,28 @@ namespace tfel::gui {
         }
       }
       _affixFile.close();
+    } else if (QFile dictFileReader(dictFile);
+               dictFileReader.open(QIODevice::ReadOnly)) {
+      // issue #70: an affix file which cannot be read says nothing;
+      // assuming Latin-1 then makes the checker treat a UTF-8 dictionary
+      // (every modern one) as Latin-1. Guess from the dictionary file's
+      // own bytes instead: if they are valid UTF-8, they are UTF-8.
+      bool may_be_latin1 = false;
+      QByteArray carry;
+      while (!may_be_latin1 && !dictFileReader.atEnd()) {
+        QByteArray buffer = carry + dictFileReader.read(65536);
+        QStringDecoder decoder(QStringConverter::Utf8,
+                               QStringConverter::Flag::Default |
+                                   QStringConverter::Flag::ConvertInvalidToNull);
+        // invalid sequences become U+0000 in the *decoded* output, which is
+        // what must be tested for, not the input bytes
+        const QString decoded = decoder(buffer);
+        may_be_latin1 = decoded.contains(QChar::Null);
+        carry = buffer.right(3);
+      }
+      if (may_be_latin1) {
+        this->_encoding = QStringConverter::Latin1;
+      }
     }
     //     this->_codec =
     //         QTextCodec::codecForName(this->_encoding.toLatin1().constData());
@@ -163,10 +185,11 @@ namespace tfel::gui {
     if (!this->_hunspell) {
       return true;
     }
-    const auto w = word.toStdString();
-    return this->_hunspell->spell(w.c_str()) != 0;
-//     return this->_hunspell->spell(
-//                this->_codec->fromUnicode(word).constData()) != 0;
+    // issue #70: toStdString() is always UTF-8 while put_word() encodes
+    // with _encoding, so an added word was stored in bytes spell() never
+    // asked about; encode both sides the same way
+    const QByteArray w = QStringEncoder(this->_encoding)(word);
+    return (!w.isEmpty()) && (this->_hunspell->spell(w.constData()) != 0);
 #else  /* TFEL_GUI_HUNSPELL_SUPPORT */
     static_cast<void>(word);
     return true;
@@ -180,11 +203,12 @@ namespace tfel::gui {
     }
     char **suggestWordList;
     // Encode from Unicode to the encoding used by current dictionary
-    const auto w = word.toStdString();
-    int numSuggestions = this->_hunspell->suggest(&suggestWordList, w.c_str());
-    //     int numSuggestions = this->_hunspell->suggest(
-    //         &suggestWordList,
-    //         this->_codec->fromUnicode(word).constData());
+    // (issue #70: the same encoding the suggestions are decoded with)
+    const QByteArray w = QStringEncoder(this->_encoding)(word);
+    if (w.isEmpty()) {
+      return {};
+    }
+    int numSuggestions = this->_hunspell->suggest(&suggestWordList, w.constData());
     QStringList suggestions;
     for (int i = 0; i < numSuggestions; ++i) {
       QStringDecoder decoder(this->_encoding);
