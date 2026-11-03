@@ -1087,6 +1087,14 @@ namespace tfel::gui {
 
   EditorWidget::~EditorWidget() {
     this->removeUserInputs();
+    // the SecondaryTaskManager base is destroyed before the QWidget base
+    // (reverse declaration order), so the Buffer::~Buffer unregistration
+    // hook would otherwise run on a destroyed map and abort the shutdown
+    // ("double free or corruption (fasttop)", issue #118). Unregister the
+    // buffers here, while both the manager and the buffers are alive.
+    for (auto* b : this->findChildren<Buffer*>()) {
+      SecondaryTaskManager::removeBuffer(b);
+    }
     this->buffers->deleteLater();
     this->minibuffer->deleteLater();
   }

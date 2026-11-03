@@ -30,6 +30,14 @@ namespace tfel::gui {
   struct CommandLine;
 
   //! \brief a wigdet providing an emacs-inspired editor
+  //
+  // \warning C++ destroys base subobjects in reverse declaration order,
+  // so this \c QWidget-first declaration (which `Q_OBJECT` and `moc`
+  // impose) destroys the `SecondaryTaskManager` sub-object *before*
+  // `~QWidget` deletes the buffer children, whose `~Buffer` calls back
+  // into the manager. `~EditorWidget` therefore unregisters all buffers
+  // from the manager in its body (issue #118); do not move that cleanup
+  // out of the destructor.
   struct TFEL_GUI_VISIBILITY_EXPORT EditorWidget : public QWidget,
                                                    public SecondaryTaskManager {
     /*!
