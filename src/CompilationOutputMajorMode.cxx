@@ -256,7 +256,11 @@ namespace tfel::gui {
           this->textEdit.setTextCursor(c);
           break;
         }
-        c.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor);
+        // MoveAnchor, not KeepAnchor: the scan must not leave the lines
+        // it crossed selected, as the first typed character or a
+        // kill-line would then replace the whole selection (same bug
+        // class as issue: Ctrl+K killing the active region)
+        c.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor);
       };
     }  // end of processFinished
 

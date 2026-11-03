@@ -905,37 +905,16 @@ namespace tfel::gui {
       this->editor.nextBuffer();
       return true;
     }
-    const auto verticalMotion =
-        (((m == Qt::ControlModifier) &&
-          ((k == Qt::Key_P) || (k == Qt::Key_N))) ||
-         ((m == Qt::NoModifier) && ((k == Qt::Key_Up) || (k == Qt::Key_Down))));
-    if (!verticalMotion) {
-      this->positions.clear();
-    }
-    // vertical motion keeping the desired column, as in Emacs: the
-    // desired column of the lines crossed is saved in the positions
-    // map, which is reset by any other motion
+    // vertical motion of the displayed lines, keeping the goal column as
+    // in Emacs: QTextCursor::Up/Down step over the visual lines, so a
+    // soft-wrapped paragraph is crossed one displayed line at a time, and
+    // the document layout remembers the column the descent started at
+    // across shorter lines. Stepping with NextBlock/PreviousBlock made one
+    // Up/Down press jump over all the displayed lines of a wrapped
+    // paragraph at once (issue: weird multi-line behaviour of the arrows)
     auto moveLine = [this, &c](const bool down) {
-      int p = c.position() - c.block().position();
-      const auto bn = c.blockNumber();
-      if (this->positions.count(bn) != 0) {
-        p = this->positions[bn];
-      } else {
-        this->positions[bn] = p;
-      }
-      if (down) {
-        c.movePosition(QTextCursor::NextBlock, this->moveMode);
-      } else {
-        c.movePosition(QTextCursor::PreviousBlock, this->moveMode);
-      }
-      const auto bn2 = c.blockNumber();
-      if (this->positions.count(bn2) != 0) {
-        p = this->positions[bn2];
-      } else {
-        this->positions[bn2] = p;
-      }
-      const int npos = qMax(qMin(p, c.block().length() - 1), 0);
-      c.setPosition(c.block().position() + npos, this->moveMode);
+      c.movePosition(down ? QTextCursor::Down : QTextCursor::Up,
+                     this->moveMode);
       this->setTextCursor(c);
     };
     // treating standard keys
@@ -1053,9 +1032,20 @@ namespace tfel::gui {
             this->setTextCursor(c);
           }
         } else {
+          // kill-line kills up to the end of the line, never beyond:
+          // moving with KeepAnchor would extend an active region
+          // (Ctrl-Space mark, moved for instance by Alt-<) and
+          // removeSelectedText() would also wipe the text between the
+          // end of the line and the other end of the region, which
+          // killed the whole file when the mark was at its end. Killing
+          // a region is the job of Ctrl-W (kill-region).
+          c.clearSelection();
           c.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
           this->addToKillRing(c.selectedText());
           c.removeSelectedText();
+          // the cursor of the widget still holds the old region otherwise,
+          // so the next Ctrl-K would kill the remaining part of the buffer
+          this->setTextCursor(c);
         }
         this->moveMode = QTextCursor::MoveAnchor;
       }
