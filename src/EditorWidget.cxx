@@ -566,6 +566,11 @@ namespace tfel::gui {
             QObject::tr("command attemted "
                         "to use minibuffer "
                         "while in minibuffer"));
+        // the caller allocated the input and handed the ownership over
+        // (see the setUserInput documentation); CommandLine parents its
+        // line edit and its completer to the editor, so a refused input
+        // would stay a live, invisible child forever
+        l->deleteLater();
         return;
       }
     }
@@ -956,6 +961,7 @@ namespace tfel::gui {
           QObject::tr("command attemted "
                       "to use minibuffer "
                       "while in minibuffer"));
+      return;
     }
     auto* l = new EditorWidget::Command(*this);
     l->setInputHistorySettingAddress("command/history");
