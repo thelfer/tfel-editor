@@ -246,6 +246,9 @@ namespace tfel::gui {
     this->minibuffer->addWidget(this->um);
     this->minibuffer->addWidget(this->eui);
     this->minibuffer->setContentsMargins(0, 0, 0, 0);
+    this->messageTimer.setSingleShot(true);
+    QObject::connect(&this->messageTimer, &QTimer::timeout, this,
+                     &EditorWidget::resetUserInput);
     QSizePolicy s;
     s.setHorizontalPolicy(QSizePolicy::Minimum);
     s.setVerticalPolicy(QSizePolicy::Maximum);
@@ -533,11 +536,10 @@ namespace tfel::gui {
     if (d) {
       std::clog << m.toStdString() << '\n';
     }
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-    QTimer::singleShot(t, this, SLOT(resetUserInput()));
-#else
-    QTimer::singleShot(t, this, &EditorWidget::resetUserInput);
-#endif
+    // one single-shot timer restarted per message: two messages in flight
+    // now keep the label of the most recent one until its own display time,
+    // instead of the earlier timer erasing the later message.
+    this->messageTimer.start(t);
   }  // end of EditorWidget::displayInformativeMessage
 
   void EditorWidget::setUserInput(CommandLine* const l) {
