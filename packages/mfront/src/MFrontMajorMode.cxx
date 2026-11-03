@@ -345,7 +345,14 @@ namespace tfel::gui {
   MFrontMajorMode::MFrontMajorMode(EditorWidget &w, Buffer &b, TextEditBase &t)
       : CxxMajorMode(w, b, t) {
     MFrontInitializer::init();
-    this->c = new QCompleter(this->getKeyWordsList(), &t);
+    // issue #66: one keyword model, owned by the mode and reused through
+    // setStringList(): QCompleter::setModel() only borrows models handed to
+    // it, so every `setModel(new QStringListModel(...))` on a DSL change
+    // dropped the previous model without deleting it (the completer's own
+    // ownership only covers the model of its container constructor)
+    this->keywordsModel = new QStringListModel(this->getKeyWordsList(), this);
+    this->c = new QCompleter(&t);
+    this->c->setModel(this->keywordsModel);
     this->c->setWidget(&t);
     this->c->setCaseSensitivity(Qt::CaseInsensitive);
     this->c->setCompletionMode(QCompleter::PopupCompletion);
@@ -542,7 +549,9 @@ namespace tfel::gui {
     // the debounce timer schedules this call itself (issue #64)
     if (!this->c->popup()->isVisible()) {
       this->setSyntaxHighlighter(this->textEdit.document());
-      this->c->setModel(new QStringListModel(this->getKeyWordsList()));
+      // the single owned model is updated in place (issue #66), which also
+      // keeps the completion popup from resetting its selection
+      this->keywordsModel->setStringList(this->getKeyWordsList());
     }
   }  // end of
      // MFrontMajorMode::updateSyntaxHighlighterAndCompleter
