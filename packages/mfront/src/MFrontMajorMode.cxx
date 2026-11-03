@@ -327,7 +327,10 @@ namespace tfel::gui {
             cbb->setMajorMode("C++");
             cbb->format();
             b.attachSecondaryTask(QString::fromStdString(cb), cbb);
-            b.setSecondaryTaskIcon(cbb, QIcon::fromTheme("mfront-icon"));
+            // issue #73: "mfront-icon" is not a freedesktop icon name, so
+            // `fromTheme` could only ever return a null icon; the MFront
+            // icon resource the mode itself registers is the intended one
+            b.setSecondaryTaskIcon(cbb, QIcon(":/mfront/MFrontIcon.png"));
           } catch (std::exception &e) {
             debug(e.what());
           } catch (...) {
