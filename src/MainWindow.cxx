@@ -123,6 +123,19 @@ namespace tfel::gui {
   }  // end of MainWindow::selectFont
 
   void MainWindow::createActions() {
+    // createActions() news all the member actions again, and
+    // clearMenuBar() reclaims the ones which resided in a menu -- but
+    // exactly one of {esca, qsca} is never added to any menu
+    // (updateOptionsMenu only offers the style the user is not in), so
+    // that one stayed alive and connected as an unreachable child of
+    // MainWindow on every rebuild, which runs on every buffer switch
+    // and every mode change.
+    if (this->esca != nullptr) {
+      this->esca->deleteLater();
+    }
+    if (this->qsca != nullptr) {
+      this->qsca->deleteLater();
+    }
     auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
     this->na = new QAction(QObject::tr("N&ew"), this);
     this->na->setStatusTip(QObject::tr("New buffer"));
