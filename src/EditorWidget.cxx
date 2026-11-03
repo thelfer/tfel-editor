@@ -918,6 +918,25 @@ namespace tfel::gui {
     EditorWidget& t;
   };
 
+  struct EditorWidget::SaveBufferAndKill : public YesOrNoUserInput {
+    SaveBufferAndKill(Buffer& b, EditorWidget& p)
+        : YesOrNoUserInput(
+              QObject::tr("buffer '%1' has been modified; kill anyway ?")
+                  .arg(b.getBufferName()),
+              p),
+          t(p),
+          buf(b) {}
+    bool isBlocking() const override { return true; }  // end of isBlocking
+   protected:
+    void treatUserInput() override {
+      if (this->input->text() == "y") {
+        this->t.removeBuffer(&(this->buf));
+      }
+    }  // end of treatUserInput
+    EditorWidget& t;
+    Buffer& buf;
+  };
+
   std::vector<QMenu*> EditorWidget::getCurrentBufferSpecificMenus() {
     // guard the pointer that is dereferenced, not the count: the count is
     // nonzero whenever a non-Buffer widget happens to be current, and the
@@ -975,17 +994,18 @@ namespace tfel::gui {
 
   void EditorWidget::closeBuffer(Buffer& buffer, const bool b) {
     if (b) {
-#pragma message("unimplemented")
-      // if(!buffer.isOkToClose()){
-      // 	this->setUserInput(new
-      // EditorWidget::SaveBufferAndKill(buffer,*this));
-      // } else {
-      this->removeBuffer(&buffer);
-      // }
+      // mirror closeCurrentBuffer(): a buffer which holds unsaved
+      // modifications is only killed once the user confirms, whatever buffer
+      // is current, since this one may well not be.
+      if (!buffer.isOkToClose()) {
+        this->setUserInput(new EditorWidget::SaveBufferAndKill(buffer, *this));
+      } else {
+        this->removeBuffer(&buffer);
+      }
     } else {
       this->removeBuffer(&buffer);
     }
-  }  // end of EditorWidget::closeCurrentBuffer
+  }  // end of EditorWidget::closeBuffer
 
   void EditorWidget::closeCurrentBuffer(const bool b) {
     auto* buffer = qobject_cast<Buffer*>(this->buffers->currentWidget());
