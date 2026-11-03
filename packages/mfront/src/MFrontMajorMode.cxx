@@ -354,7 +354,8 @@ namespace tfel::gui {
     // dropped the previous model without deleting it (the completer's own
     // ownership only covers the model of its container constructor)
     this->keywordsModel = new QStringListModel(this->getKeyWordsList(), this);
-    this->c = new QCompleter(&t);
+    // issue #67: the mode owns the completer, the text edit only its widget
+    this->c = new QCompleter(this);
     this->c->setModel(this->keywordsModel);
     this->c->setWidget(&t);
     this->c->setCaseSensitivity(Qt::CaseInsensitive);

@@ -176,7 +176,8 @@ namespace tfel::gui {
     for (const auto& k : this->getKeyWordsList()) {
       keys << QString::fromStdString(k);
     }
-    this->c = new QCompleter(keys, &t);
+    // issue #67: the mode owns the completer, the text edit only its widget
+    this->c = new QCompleter(keys, this);
     this->c->setWidget(&t);
     this->c->setCaseSensitivity(Qt::CaseInsensitive);
     this->c->setCompletionMode(QCompleter::PopupCompletion);

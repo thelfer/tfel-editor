@@ -268,7 +268,7 @@ namespace tfel::gui {
      */
     virtual bool startCastem();
 
-    //! completer of the keywords; a child of the text edit
+    //! completer of the keywords; a child of the mode (issue #67)
     QCompleter *c;
 
     /*!
