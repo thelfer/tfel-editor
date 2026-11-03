@@ -1176,7 +1176,7 @@ namespace tfel::gui {
       w->installEventFilter(this);
     } else if ((m == Qt::AltModifier) && (k == Qt::Key_X)) {
       this->editor.launchCommand();
-    } else if ((m == Qt::AltModifier) && (k == Qt::Key_Exclam)) {
+    } else if ((m & Qt::AltModifier) && (k == Qt::Key_Exclam)) {
       auto* l =
           new ShellProcessLineEdit("shell command:", "", "", this->editor);
       l->setInputHistorySettingAddress("command/shell/history");
@@ -1236,7 +1236,13 @@ namespace tfel::gui {
       }
     } else if ((m == Qt::AltModifier) && (k == Qt::Key_F)) {
       this->moveCursor(QTextCursor::NextWord, this->moveMode);
-    } else if ((m == Qt::AltModifier) && (k == Qt::Key_Less)) {
+    // '<' is a shifted keysym: the platform plugin puts ShiftModifier
+    // alongside AltModifier in modifiers(), which m == Qt::AltModifier
+    // rejects. The Key_Greater branch below already uses the bitwise
+    // test for this reason; without it, Alt-< missed its binding, the
+    // event fell through to the widget and a '<' was inserted into the
+    // document instead of going to the beginning of the buffer.
+    } else if ((m & Qt::AltModifier) && (k == Qt::Key_Less)) {
       this->moveCursor(QTextCursor::Start, this->moveMode);
     } else if ((m & Qt::AltModifier) && (k == Qt::Key_Greater)) {
       this->moveCursor(QTextCursor::End, this->moveMode);
