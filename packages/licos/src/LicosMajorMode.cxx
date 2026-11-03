@@ -676,56 +676,6 @@ namespace tfel::gui {
     //     if (a == this->msrca) {
     //       this->openMFrontSource(this->msrca->data().toString());
     //     }
-    //     // licos file
-    //     if (a == this->lsil) {
-    //       const QString &w = this->getLicosPath();
-    //       this->search(this->lsil->data().toString(), w, "ple");
-    //     }
-    //     if (a == this->lsim) {
-    //       const QString &w = this->getMFrontMaterialsPath();
-    //       this->search(this->lsim->data().toString(), w, "ple");
-    //     }
-    //     if (a == this->lsis) {
-    //       const QString &w = this->getLicosStudiesPath();
-    //       this->search(this->lsis->data().toString(), w, "ple");
-    //     }
-    //     if (a == this->lsia) {
-    //       const QString &w1 = this->getLicosPath();
-    //       const QString &w2 = this->getMFrontMaterialsPath();
-    //       const QString &w3 = this->getLicosStudiesPath();
-    //       this->search(this->lsia->data().toString(), w1, "ple");
-    //       if (w2 != w1) { this->search(this->lsia->data().toString(),
-    //       w2, "ple"); }
-    //       if (w3 != w1) { this->search(this->lsia->data().toString(),
-    //       w3, "ple"); }
-    //     }
-    //     // mfront files
-    //     if (a == this->msil) {
-    //       const QString &w = this->getLicosPath();
-    //       this->search(this->msil->data().toString(), w, "mfront");
-    //     }
-    //     if (a == this->msim) {
-    //       const QString &w = this->getMFrontMaterialsPath();
-    //       this->search(this->msim->data().toString(), w, "mfront");
-    //     }
-    //     if (a == this->msis) {
-    //       const QString &w = this->getLicosStudiesPath();
-    //       this->search(this->msis->data().toString(), w, "mfront");
-    //     }
-    //     if (a == this->msia) {
-    //       const QString &w1 = this->getLicosPath();
-    //       const QString &w2 = this->getMFrontMaterialsPath();
-    //       const QString &w3 = this->getLicosStudiesPath();
-    //       this->search(this->msia->data().toString(), w1, "mfront");
-    //       if ((!w2.isEmpty()) && (w2 != w1)) {
-    //         this->search(this->msia->data().toString(), w2,
-    //         "mfront");
-    //       }
-    //       if ((!w3.isEmpty()) && (w3 != w1)) {
-    //         this->search(this->msia->data().toString(), w3,
-    //         "mfront");
-    //       }
-    //     }
   }
 
   void LicosMajorMode::openMFrontSource(const QString &f) {
@@ -793,33 +743,6 @@ namespace tfel::gui {
     b.attachSecondaryTask("*mfm results for " + l + "*", po);
   }  // end of LicosMajorMode::analyseUsingMFM
 
-  void LicosMajorMode::search(const QString &s,
-                              const QString &w,
-                              const QString &ext) {
-    if (w.isEmpty()) {
-      return;
-    }
-    const auto shell = ::getenv("SHELL");
-    if (shell == nullptr) {
-      this->editor.displayInformativeMessage(QObject::tr("no shell defined"));
-      // the warning is not enough: falling through starts a QProcess with a
-      // null program, which fails silently and leaves the user staring at an
-      // empty *search for ...* buffer. The sibling analyseUsingMFM() returns
-      // after its warning.
-      return;
-    }
-    auto &b = this->editor.getCurrentBuffer();
-    auto *po = new ProcessOutputFrame(this->editor, b);
-    po->setMajorMode("grep output");
-    auto &p = po->getProcess();
-    p.setWorkingDirectory(w);
-    QStringList args;
-    args << "-c"
-         << "grep -nH -e " + s + " $(find . -name \"*." + ext + "\")";
-    p.start(shell, args);
-    b.attachSecondaryTask("*search for " + s + "*", po);
-  }  // end of LicosMajorMode::search
-
   void LicosMajorMode::createAnalyseUsingMFMAction(const QString & /* l */) {
     //     this->mfma = new QAction(QObject::tr("Analyse using mfm"),
     //     this);
@@ -833,69 +756,6 @@ namespace tfel::gui {
     // using ELM = ExternalLibraryManager;
     // auto bConnect = false; // connect
     MajorModeBase::completeContextMenu(m, tc);
-    //     // looking for a word
-    //     QTextCursor mtc(tc);
-    //     mtc.select(QTextCursor::WordUnderCursor);
-    //     const auto w = mtc.selectedText();
-    //     if (!w.isEmpty()) {
-    //       const auto &cactions = m->actions();
-    //       const auto &lpath = this->getLicosPath();
-    //       const auto &mpath = this->getMFrontMaterialsPath();
-    //       const auto &spath = this->getLicosStudiesPath();
-    //       if (!lpath.isEmpty()) {
-    //         this->createSearchActions();
-    //         this->lsil->setData(w);
-    //         this->msil->setData(w);
-    //         if (((lpath == mpath) && (lpath == spath))
-    //             || ((mpath.isEmpty()) && (spath.isEmpty()))) {
-    //           if (cactions.isEmpty()) {
-    //             m->addAction(this->lsil);
-    //             m->addAction(this->msil);
-    //           } else {
-    //             m->insertAction(*(cactions.begin()), this->lsil);
-    //             m->insertAction(*(cactions.begin()), this->msil);
-    //             m->insertSeparator(*(cactions.begin()));
-    //           }
-    //           bConnect = true;
-    //         } else {
-    //           // search menu for licos files
-    //           auto *lsm = m->addMenu(QObject::tr("Search in Licos
-    //           Input Files"));
-    //           auto *msm = m->addMenu(QObject::tr("Search in MFront
-    //           Input Files"));
-    //           lsm->addAction(this->lsil);
-    //           msm->addAction(this->msil);
-    //           if (!mpath.isEmpty()) {
-    //             this->lsim->setData(w);
-    //             this->msim->setData(w);
-    //             lsm->addAction(this->lsim);
-    //             msm->addAction(this->msim);
-    //           }
-    //           if (!spath.isEmpty()) {
-    //             this->lsis->setData(w);
-    //             this->msis->setData(w);
-    //             lsm->addAction(this->lsis);
-    //             msm->addAction(this->msis);
-    //           }
-    //           this->lsia->setData(w);
-    //           this->msia->setData(w);
-    //           lsm->addAction(this->lsia);
-    //           msm->addAction(this->msia);
-    //           if (cactions.isEmpty()) {
-    //             m->insertMenu(nullptr, lsm);
-    //             m->insertMenu(nullptr, msm);
-    //           } else {
-    //             m->insertMenu(*(cactions.begin()), lsm);
-    //             m->insertMenu(*(cactions.begin()), msm);
-    //             m->insertSeparator(*(cactions.begin()));
-    //           }
-    //           QObject::connect(lsm, &QMenu::triggered, this,
-    //                            &LicosMajorMode::actionTriggered);
-    //           QObject::connect(msm, &QMenu::triggered, this,
-    //                            &LicosMajorMode::actionTriggered);
-    //         }
-    //       }
-    //     }
     //     // special treatment for txt files
     //     QString data;
     //     QStringList exts;
@@ -1549,8 +1409,7 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<LicosMajorMode> proxy(
       "licos",
-      QVector<QRegularExpression>()
-          << QRegularExpression("^" + fileNameRegExp() + "\\.ple"),
+      QVector<QRegularExpression>() << suffixRegExp("ple"),
       ":/LicosIcon.png");
 
 }  // end of namespace tfel::gui

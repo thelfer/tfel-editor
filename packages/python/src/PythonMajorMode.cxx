@@ -10,6 +10,7 @@
 #include <QtGui/QSyntaxHighlighter>
 #include "TFEL/Utilities/CxxTokenizer.hxx"
 #include "TFEL/GUI/Debug.hxx"
+#include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/Buffer.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
@@ -77,6 +78,8 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<PythonMajorMode> proxy(
       "Python",
-      QVector<QRegularExpression>() << QRegularExpression("^[\\w-]+\\.py$"));
+      QVector<QRegularExpression>() << suffixRegExp("py")
+                                    << suffixRegExp("pyi")
+                                    << suffixRegExp("pyx"));
 
 }  // end of namespace tfel::gui

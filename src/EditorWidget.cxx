@@ -246,6 +246,9 @@ namespace tfel::gui {
     this->minibuffer->addWidget(this->um);
     this->minibuffer->addWidget(this->eui);
     this->minibuffer->setContentsMargins(0, 0, 0, 0);
+    this->messageTimer.setSingleShot(true);
+    QObject::connect(&this->messageTimer, &QTimer::timeout, this,
+                     &EditorWidget::resetUserInput);
     QSizePolicy s;
     s.setHorizontalPolicy(QSizePolicy::Minimum);
     s.setVerticalPolicy(QSizePolicy::Maximum);
@@ -436,7 +439,14 @@ namespace tfel::gui {
     }
     const auto i = this->buffers->currentIndex();
     const auto n = i + 1 >= this->buffers->count() ? 0 : i + 1;
-    this->buffers->setCurrentIndex(n);
+    // QStackedWidget::setCurrentIndex changes the page and nothing
+    // else: the menus are rebuilt on currentBufferChanged, the buffer
+    // history (C-x b's default) and the secondary task tabs are updated
+    // in setCurrentBuffer, which also moves the focus.
+    auto* b = qobject_cast<Buffer*>(this->buffers->widget(n));
+    if (b != nullptr) {
+      this->setCurrentBuffer(b);
+    }
   }  // end of EditorWidget::nextBuffer
 
   void EditorWidget::previousBuffer() {
@@ -445,7 +455,10 @@ namespace tfel::gui {
     }
     const auto i = this->buffers->currentIndex();
     const auto n = i == 0 ? this->buffers->count() - 1 : i - 1;
-    this->buffers->setCurrentIndex(n);
+    auto* b = qobject_cast<Buffer*>(this->buffers->widget(n));
+    if (b != nullptr) {
+      this->setCurrentBuffer(b);
+    }
   }  // end of EditorWidget::previousBuffer
 
   void EditorWidget::saveAllBuffers() {
@@ -533,11 +546,10 @@ namespace tfel::gui {
     if (d) {
       std::clog << m.toStdString() << '\n';
     }
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-    QTimer::singleShot(t, this, SLOT(resetUserInput()));
-#else
-    QTimer::singleShot(t, this, &EditorWidget::resetUserInput);
-#endif
+    // one single-shot timer restarted per message: two messages in flight
+    // now keep the label of the most recent one until its own display time,
+    // instead of the earlier timer erasing the later message.
+    this->messageTimer.start(t);
   }  // end of EditorWidget::displayInformativeMessage
 
   void EditorWidget::setUserInput(CommandLine* const l) {
@@ -556,6 +568,11 @@ namespace tfel::gui {
             QObject::tr("command attemted "
                         "to use minibuffer "
                         "while in minibuffer"));
+        // the caller allocated the input and handed the ownership over
+        // (see the setUserInput documentation); CommandLine parents its
+        // line edit and its completer to the editor, so a refused input
+        // would stay a live, invisible child forever
+        l->deleteLater();
         return;
       }
     }
@@ -600,11 +617,16 @@ namespace tfel::gui {
     this->ui.erase(it);
     if (this->ui.empty()) {
       this->minibuffer->setCurrentWidget(this->eui);
+      if (auto* const cw = this->buffers->currentWidget()) {
+        cw->setFocus();
+      }
     } else {
+      // the minibuffer stack is not empty: focus the surviving prompt,
+      // not the document, otherwise the text typed next goes into the
+      // buffer while a prompt is visibly waiting (Emacs' own rule: the
+      // document gets the focus back only when the stack became empty)
       this->minibuffer->setCurrentWidget(this->ui.back().first);
-    }
-    if (auto* const cw = this->buffers->currentWidget()) {
-      cw->setFocus();
+      this->ui.back().first->setFocus();
     }
     p->deleteLater();
   }  // end of EditorWidget::removeUserInput
@@ -918,6 +940,25 @@ namespace tfel::gui {
     EditorWidget& t;
   };
 
+  struct EditorWidget::SaveBufferAndKill : public YesOrNoUserInput {
+    SaveBufferAndKill(Buffer& b, EditorWidget& p)
+        : YesOrNoUserInput(
+              QObject::tr("buffer '%1' has been modified; kill anyway ?")
+                  .arg(b.getBufferName()),
+              p),
+          t(p),
+          buf(b) {}
+    bool isBlocking() const override { return true; }  // end of isBlocking
+   protected:
+    void treatUserInput() override {
+      if (this->input->text() == "y") {
+        this->t.removeBuffer(&(this->buf));
+      }
+    }  // end of treatUserInput
+    EditorWidget& t;
+    Buffer& buf;
+  };
+
   std::vector<QMenu*> EditorWidget::getCurrentBufferSpecificMenus() {
     // guard the pointer that is dereferenced, not the count: the count is
     // nonzero whenever a non-Buffer widget happens to be current, and the
@@ -941,6 +982,7 @@ namespace tfel::gui {
           QObject::tr("command attemted "
                       "to use minibuffer "
                       "while in minibuffer"));
+      return;
     }
     auto* l = new EditorWidget::Command(*this);
     l->setInputHistorySettingAddress("command/history");
@@ -975,19 +1017,31 @@ namespace tfel::gui {
 
   void EditorWidget::closeBuffer(Buffer& buffer, const bool b) {
     if (b) {
-#pragma message("unimplemented")
-      // if(!buffer.isOkToClose()){
-      // 	this->setUserInput(new
-      // EditorWidget::SaveBufferAndKill(buffer,*this));
-      // } else {
-      this->removeBuffer(&buffer);
-      // }
+      // mirror closeCurrentBuffer(): a buffer which holds unsaved
+      // modifications is only killed once the user confirms, whatever buffer
+      // is current, since this one may well not be.
+      if (!buffer.isOkToClose()) {
+        this->setUserInput(new EditorWidget::SaveBufferAndKill(buffer, *this));
+      } else {
+        this->removeBuffer(&buffer);
+      }
     } else {
       this->removeBuffer(&buffer);
     }
-  }  // end of EditorWidget::closeCurrentBuffer
+  }  // end of EditorWidget::closeBuffer
 
   void EditorWidget::closeCurrentBuffer(const bool b) {
+    // A pending minibuffer prompt may hold a reference to the current
+    // buffer (its Buffer& / TextEditBase& members): closing the buffer
+    // while the prompt is displayed leaves a live prompt pointing at a
+    // destroyed buffer, and the next key press in it is a use-after-free.
+    // The legitimate kill flows (SaveCurrentBufferAndKill,
+    // KillOtherBufferAndWriteFile) call removeBuffer()/closeBuffer()
+    // directly from treatUserInput(), so they are not affected.
+    if (!this->ui.empty()) {
+      this->displayInformativeMessage(QObject::tr("minibuffer is busy"));
+      return;
+    }
     auto* buffer = qobject_cast<Buffer*>(this->buffers->currentWidget());
     if (buffer == nullptr) {
       return;
@@ -1033,6 +1087,14 @@ namespace tfel::gui {
 
   EditorWidget::~EditorWidget() {
     this->removeUserInputs();
+    // the SecondaryTaskManager base is destroyed before the QWidget base
+    // (reverse declaration order), so the Buffer::~Buffer unregistration
+    // hook would otherwise run on a destroyed map and abort the shutdown
+    // ("double free or corruption (fasttop)", issue #118). Unregister the
+    // buffers here, while both the manager and the buffers are alive.
+    for (auto* b : this->findChildren<Buffer*>()) {
+      SecondaryTaskManager::removeBuffer(b);
+    }
     this->buffers->deleteLater();
     this->minibuffer->deleteLater();
   }

@@ -11,6 +11,7 @@
 #include <vector>
 #include <utility>
 #include <QtCore/QString>
+#include <QtCore/QTimer>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QHBoxLayout>
@@ -29,6 +30,14 @@ namespace tfel::gui {
   struct CommandLine;
 
   //! \brief a wigdet providing an emacs-inspired editor
+  //
+  // \warning C++ destroys base subobjects in reverse declaration order,
+  // so this \c QWidget-first declaration (which `Q_OBJECT` and `moc`
+  // impose) destroys the `SecondaryTaskManager` sub-object *before*
+  // `~QWidget` deletes the buffer children, whose `~Buffer` calls back
+  // into the manager. `~EditorWidget` therefore unregisters all buffers
+  // from the manager in its body (issue #118); do not move that cleanup
+  // out of the destructor.
   struct TFEL_GUI_VISIBILITY_EXPORT EditorWidget : public QWidget,
                                                    public SecondaryTaskManager {
     /*!
@@ -313,9 +322,11 @@ namespace tfel::gui {
      * \brief close the given buffer
      * \param[in] b : if true, check if the buffer is ok to close
      *
-     * \note the check is not implemented yet: the buffer is closed in any
-     * case, as done by removeBuffer, which creates an empty buffer if this
-     * one was the last one and emits the bufferRemoved signal
+     * \note when the check is required and the buffer holds unsaved
+     * modifications, a blocking SaveBufferAndKill user input asks the user
+     * whether the buffer shall be killed anyway; closing always goes through
+     * removeBuffer, which creates an empty buffer if this one was the last one
+     * and emits the bufferRemoved signal
      */
     virtual void closeBuffer(Buffer &, const bool = true);
 
@@ -432,6 +443,13 @@ namespace tfel::gui {
     struct SaveCurrentBufferAndKill;
 
     /*!
+     * blocking yes or no user input asking whether the given modified buffer
+     * shall be killed, removing that buffer when the user answers positively;
+     * defined in EditorWidget.cxx
+     */
+    struct SaveBufferAndKill;
+
+    /*!
      * \brief handle the closing of this widget: the event is accepted and the
      * closed signal emitted if isOkToClose returns true, ignored otherwise,
      * so that the user can still save its modifications
@@ -493,6 +511,15 @@ namespace tfel::gui {
     std::vector<std::pair<CommandLine *, bool>> ui;
     //! empty line edit
     LineEdit *eui;
+    /*!
+     * \brief single-shot timer which clears the informative message label
+     *
+     * \note a single timer, restarted by every \c displayInformativeMessage
+     * call and connected once to \c resetUserInput: unlike stacked
+     * \c QTimer::singleShot calls, a later message can no longer let an
+     * earlier timer erase it
+     */
+    QTimer messageTimer;
     //! the list of tokens pasted/killed
     QStringList killRing;
     //! id of the next buffer

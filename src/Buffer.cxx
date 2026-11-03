@@ -88,24 +88,10 @@ namespace tfel::gui {
     this->emitNewTreatedFile(this->e->getCompleteFileName());
   }  // end of Buffer
 
-  bool Buffer::eventFilter(QObject *o, QEvent *ev) {
-    if (!this->isVisible()) {
-      return false;
-    }
-    auto *const w = qobject_cast<QWidget *>(o);
-    if (!((w == this->e->widget()) || (this->stw->indexOf(w) != -1))) {
-      return false;
-    }
-    if (ev->type() == QEvent::KeyPress) {
-    }
-    return QObject::eventFilter(o, ev);
-  }  // end of eventFilter
-
   void Buffer::initialize() {
     // setting
     this->e->setMainFrame(true);
     this->e->setFocus();
-    this->e->widget()->installEventFilter(this);
     // without SecondaryTasks, the SecondaryTasks tab widget is
     // hidden
     this->stw->setTabPosition(QTabWidget::South);
@@ -358,11 +344,6 @@ namespace tfel::gui {
     }
     return nullptr;
   }  // end of getCurrentSecondaryTask
-
-  QString Buffer::getCurrentSecondaryTaskTitle() const {
-    const auto tb = this->stw->tabBar();
-    return tb->tabText(this->stw->currentIndex());
-  }  // end of getCurrentSecondaryTaskTitle
 
   bool Buffer::hasSecondaryTasks() const {
     if (this->stw == nullptr) {

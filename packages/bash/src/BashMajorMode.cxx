@@ -20,7 +20,26 @@
 namespace tfel::gui {
 
   BashMajorMode::BashMajorMode(EditorWidget& w, Buffer& b, TextEditBase& t)
-      : ShMajorMode(w, b, t) {}  // end of BashMajorMode::BashMajorMode
+      : ShMajorMode(w, b, t) {
+    // issue #77: the bash mode used to inherit the (empty) sh constructor
+    // and so completed nothing. On top of the POSIX words, add the bash
+    // builtins and reserved words which have no POSIX counterpart; the
+    // list is static because `compgen` from the constructor would block
+    // the GUI thread.
+    auto keys = ShMajorMode::getKeyWordsList();
+    keys << // bash reserved words
+        "coproc"
+        << "select" << "time"
+        << // bash builtins without a POSIX counterpart
+        "bind" << "builtin" << "caller" << "command"
+        << "compgen" << "complete" << "compopt" << "declare"
+        << "dirs" << "disown" << "enable" << "help" << "history"
+        << "let" << "mapfile" << "popd" << "pushd" << "readarray"
+        << "shopt" << "suspend" << "type" << "typeset" << "ulimit"
+        << "hash";
+    keys.removeDuplicates();
+    this->setCompleterList(keys);
+  }  // end of BashMajorMode::BashMajorMode
 
   QString BashMajorMode::getName() const {
     return "bash";
@@ -38,7 +57,6 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<BashMajorMode> proxy(
       "bash",
-      QVector<QRegularExpression>()
-          << QRegularExpression("^" + fileNameRegExp() + "\\.bash$"));
+      QVector<QRegularExpression>() << suffixRegExp("bash"));
 
 }  // end of namespace tfel::gui

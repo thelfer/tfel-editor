@@ -9,6 +9,7 @@
 #define LIB_TFEL_GUI_MFRONTMAJORMODE_HXX
 
 #include <QtCore/QTimer>
+#include <QtCore/QStringListModel>
 #include "TFEL/GUI/CxxMajorMode.hxx"
 
 namespace tfel::gui {
@@ -48,7 +49,9 @@ namespace tfel::gui {
      * \c MajorModeBase::completeCurrentWord ignores a completer whose widget is
      * another text edit
      *
-     * \note the timer \c rt is started here with a 2000 ms interval
+     * \note the timer \c rt is not started here: it is a single-shot debounce
+     * restarted by \c QTextDocument::contentsChange, so the DSL of the buffer
+     * is re-checked after typing pauses only, never by polling
      */
     MFrontMajorMode(EditorWidget &, Buffer &, TextEditBase &);
 
@@ -136,19 +139,15 @@ namespace tfel::gui {
 
    protected slots:
     /*!
-     * \brief method called periodically to refresh the syntax highlighter
-     * and the completer
+     * \brief rebuild the syntax highlighter and the completer model
      *
-     * It is triggered by \c rt, only when the name of the DSL in the buffer
-     * differs from \c current_dsl.
+     * It is triggered by \c rt, the debounce timer, only when the name of the
+     * DSL in the buffer differs from \c current_dsl.
      *
      * \note nothing is refreshed while the completion popup is visible, to
      * avoid disturbing the user while he selects a completion; the highlighter
      * and the model of the completer are otherwise both rebuilt from the
      * keywords of the DSL in use
-     *
-     * \note the timer is restarted with a 1000 ms interval, faster than the
-     * 2000 ms of the constructor
      */
     virtual void updateSyntaxHighlighterAndCompleter();
     /*!
@@ -182,18 +181,29 @@ namespace tfel::gui {
      */
     void runCompilation() override;
     /*!
-     * \brief a timer to refresh syntax highlighting
-     * This is mandatory since the value after `@DSL` can change with
-     * the user inputs.
+     * \brief single-shot debounce timer refreshing the syntax highlighting
+     *
+     * Restarted by \c QTextDocument::contentsChange and never started with a
+     * fixed interval: the value after `@DSL` can change with the user inputs,
+     * and this is checked once per typing pause instead of by polling.
      */
     QTimer *rt = nullptr;
     /*!
      * \brief completer of the keywords of the DSL in use
      *
-     * Created by the constructor, with the text edit as widget; its model is
-     * replaced by updateSyntaxHighlighterAndCompleter() when the DSL changes
+     * Created by the constructor, with the text edit as widget; it completes
+     * on \c keywordsModel, which \c updateSyntaxHighlighterAndCompleter
+     * updates in place when the DSL changes
      */
     QCompleter *c = nullptr;
+    /*!
+     * \brief model of the keyword completions, owned by the mode
+     *
+     * \c QCompleter::setModel borrows the models it is given, so the mode
+     * keeps the only model and refreshes it with \c setStringList instead of
+     * replacing it (issue #66)
+     */
+    QStringListModel *keywordsModel = nullptr;
     /*!
      * \brief name of the DSL the syntax highlighter, the completer and the
      * menus were built for

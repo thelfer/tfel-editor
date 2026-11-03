@@ -8,6 +8,7 @@
 #ifndef LIB_TFEL_GUI_UTILITIES_HXX
 #define LIB_TFEL_GUI_UTILITIES_HXX
 
+#include <QtCore/QRegularExpression>
 #include "TFEL/GUI/Config.hxx"
 
 //! forward declaration
@@ -42,12 +43,11 @@ namespace tfel::gui {
    * \note the returned path is the directory which contains the file, the
    * file name is not part of it
    *
-   * \note when the file is not found in `d`, the path of the parent
-   * directory is returned without checking that the file exists there, as
-   * the loop over the parent directories returns at the first iteration
+   * \note when the file is not found in `d`, each parent directory is
+   * tried and the existence of the file is checked there; an empty string
+   * is returned when no ancestor directory contains it
    *
-   * \note an empty string is returned when `d` does not exist or has no
-   * parent directory
+   * \note an empty string is also returned when `d` does not exist
    */
   TFEL_GUI_VISIBILITY_EXPORT QString
   findFileInDirectoryOrParentDirectory(const QString&, const QString&);
@@ -60,6 +60,18 @@ namespace tfel::gui {
    * associate a file name with a major mode
    */
   TFEL_GUI_VISIBILITY_EXPORT QString fileNameRegExp();
+
+  /*!
+   * \return the regular expression matching a file whose name is made of
+   * allowed file-name characters followed by the dot and the given extension
+   *
+   * \note this is the single convention used to associate file names with
+   * major modes: the match is anchored at both ends and the dot is escaped,
+   * so backup files (`notes.tex~`, `a.mfront.bak`) and near misses
+   * (`a.gpl`, `a.md5`) no longer fall into the wrong mode
+   */
+  TFEL_GUI_VISIBILITY_EXPORT QRegularExpression
+  suffixRegExp(const QString&);
 
   /*!
    * \brief return the word the given cursor is on, completed by the `@` sign

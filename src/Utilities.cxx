@@ -39,7 +39,12 @@ namespace tfel::gui {
     }
     while (dir.cdUp()) {
       fi.setFile(dir.absolutePath() + QDir::separator() + f);
-      return fi.absolutePath();
+      // the return belongs behind the existence test: the first iteration
+      // used to hand back the parent directory whether or not the file was
+      // there, that is a plausible-looking wrong answer
+      if (fi.exists()) {
+        return fi.absolutePath();
+      }
     }
     return "";
   }  // end of findFileInDirectoryOrParentDirectory()
@@ -125,6 +130,10 @@ namespace tfel::gui {
   }
 
   QString fileNameRegExp() { return "[\\w0-9._+-]+"; }  // end of fileNameRegExp
+
+  QRegularExpression suffixRegExp(const QString& ext) {
+    return QRegularExpression("^" + fileNameRegExp() + "\\." + ext + "$");
+  }  // end of suffixRegExp
 
   QString getKeywordUnderCursor(const QTextCursor& tc) {
     auto c = tc;

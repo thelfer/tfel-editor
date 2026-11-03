@@ -308,6 +308,10 @@ namespace tfel::gui {
     }
   }  // end of TextEditBase::setSpellCheckLanguage
 
+  QString TextEditBase::getSpellCheckLanguage() const {
+    return this->spellCheckLanguage;
+  }  // end of TextEditBase::getSpellCheckLanguage
+
   MajorMode* TextEditBase::setMajorMode() {
     auto& fm = MajorModeFactory::getMajorModeFactory();
     auto* m = fm.getMajorModeForFile(QFileInfo(this->getFileName()).fileName(),
@@ -621,14 +625,22 @@ namespace tfel::gui {
   bool TextEditBase::event(QEvent* ev) {
     if (ev->type() == QEvent::KeyPress) {
       auto* kev = static_cast<QKeyEvent*>(ev);
-      if (kev->key() == Qt::Key_Tab) {
+      // Only plain Tab is intercepted, and only when we are not already
+      // processing a key event. Qt::Key_Tab is also the key() of
+      // Ctrl+Tab and Alt+Tab: the underlying widget ignores these, an
+      // ignored key press is propagated back to the parent, which is
+      // this very widget, and the interception below would loop until
+      // the stack overflows. This is the hazard that the keyProcessing
+      // flag of keyPressEvent() guards against.
+      if ((kev->key() == Qt::Key_Tab) &&
+          (kev->modifiers() == Qt::NoModifier) && (!this->keyProcessing)) {
         this->handleKeyPressEvent(kev);
         ev->accept();
         return true;
       }
     }
     return QWidget::event(ev);
-  }
+  }  // end of TextEditBase::event
 
   void TextEditBase::keyPressEvent(QKeyEvent* e) {
     // This method is called by completers (we can not give the
@@ -749,8 +761,15 @@ namespace tfel::gui {
     if ((k == Qt::Key_Shift) || (k == Qt::Key_Control) || (k == Qt::Key_Alt)) {
       return true;
     }
-    if ((this->yank) && ((m == Qt::ControlModifier) && (k != Qt::Key_Y)) &&
-        ((m == Qt::AltModifier) && (k == Qt::Key_Y))) {
+    // the kill-ring `yank` mode ends on any key which is not Ctrl-y or
+    // Alt-y: m is a single value per event, so the old
+    // `(m == Qt::ControlModifier ...) && (m == Qt::AltModifier ...)`
+    // spelling could never hold, yank mode never ended, and a later
+    // Alt-y performed a yank-pop wherever the cursor happened to be
+    const bool ctrl = m == Qt::ControlModifier;
+    const bool alt = m == Qt::AltModifier;
+    if ((this->yank) &&
+        (!(((ctrl) && (k == Qt::Key_Y)) || ((alt) && (k == Qt::Key_Y))))) {
       this->yank = false;
     }
     if (((m == Qt::ControlModifier) && (k == Qt::Key_X)) && (!this->ctrlx) &&
@@ -1013,7 +1032,11 @@ namespace tfel::gui {
     } else if ((m == Qt::ControlModifier) && (k == Qt::Key_Q)) {
       return true;
     } else if ((m == Qt::ControlModifier) && (k == Qt::Key_V)) {
-      QKeyEvent nev(QEvent::None, Qt::Key_PageDown, Qt::NoModifier);
+      // the synthesized event must be built as a KeyPress: a
+      // QEvent::None event is not dispatched by QCoreApplication::notify,
+      // it dies in QObject::event while the real key press is consumed
+      // by the return below (same for the three other sites below)
+      QKeyEvent nev(QEvent::KeyPress, Qt::Key_PageDown, Qt::NoModifier);
       auto* w = this->widget();
       w->removeEventFilter(this);
       QCoreApplication::sendEvent(w, &nev);
@@ -1086,14 +1109,14 @@ namespace tfel::gui {
       c.endEditBlock();
       this->setTextCursor(c);
     } else if ((m == Qt::ControlModifier) && (k == Qt::Key_Down)) {
-      QKeyEvent nev(QEvent::None, Qt::Key_PageDown, Qt::NoModifier);
+      QKeyEvent nev(QEvent::KeyPress, Qt::Key_PageDown, Qt::NoModifier);
       auto* const w = this->widget();
       w->removeEventFilter(this);
       QCoreApplication::sendEvent(w, &nev);
       w->installEventFilter(this);
       return true;
     } else if ((m == Qt::ControlModifier) && (k == Qt::Key_Up)) {
-      QKeyEvent nev(QEvent::None, Qt::Key_PageUp, Qt::NoModifier);
+      QKeyEvent nev(QEvent::KeyPress, Qt::Key_PageUp, Qt::NoModifier);
       auto* const w = this->widget();
       w->removeEventFilter(this);
       QCoreApplication::sendEvent(w, &nev);
@@ -1169,14 +1192,14 @@ namespace tfel::gui {
       tc.endEditBlock();
       this->setTextCursor(tc);
     } else if ((m == Qt::AltModifier) && (k == Qt::Key_V)) {
-      QKeyEvent nev(QEvent::None, Qt::Key_PageUp, Qt::NoModifier);
+      QKeyEvent nev(QEvent::KeyPress, Qt::Key_PageUp, Qt::NoModifier);
       auto* w = this->widget();
       w->removeEventFilter(this);
       QCoreApplication::sendEvent(w, &nev);
       w->installEventFilter(this);
     } else if ((m == Qt::AltModifier) && (k == Qt::Key_X)) {
       this->editor.launchCommand();
-    } else if ((m == Qt::AltModifier) && (k == Qt::Key_Exclam)) {
+    } else if ((m & Qt::AltModifier) && (k == Qt::Key_Exclam)) {
       auto* l =
           new ShellProcessLineEdit("shell command:", "", "", this->editor);
       l->setInputHistorySettingAddress("command/shell/history");
@@ -1236,7 +1259,13 @@ namespace tfel::gui {
       }
     } else if ((m == Qt::AltModifier) && (k == Qt::Key_F)) {
       this->moveCursor(QTextCursor::NextWord, this->moveMode);
-    } else if ((m == Qt::AltModifier) && (k == Qt::Key_Less)) {
+    // '<' is a shifted keysym: the platform plugin puts ShiftModifier
+    // alongside AltModifier in modifiers(), which m == Qt::AltModifier
+    // rejects. The Key_Greater branch below already uses the bitwise
+    // test for this reason; without it, Alt-< missed its binding, the
+    // event fell through to the widget and a '<' was inserted into the
+    // document instead of going to the beginning of the buffer.
+    } else if ((m & Qt::AltModifier) && (k == Qt::Key_Less)) {
       this->moveCursor(QTextCursor::Start, this->moveMode);
     } else if ((m & Qt::AltModifier) && (k == Qt::Key_Greater)) {
       this->moveCursor(QTextCursor::End, this->moveMode);
@@ -1268,7 +1297,18 @@ namespace tfel::gui {
         }
         return true;
       } else {
-        if (this->isReadOnly()) {
+        // navigation keys must reach the widget even in a read-only
+        // buffer: they cannot mutate the document, and *Compilation
+        // Output*, grep output and directory buffers are long, read-only
+        // and must be scrollable. PageUp/PageDown/Home/End have no
+        // explicit binding, so without this they were swallowed by the
+        // read-only message below.
+        const bool navigation =
+            (m == Qt::NoModifier) && ((k == Qt::Key_PageUp) ||
+                                       (k == Qt::Key_PageDown) ||
+                                       (k == Qt::Key_Home) ||
+                                       (k == Qt::Key_End));
+        if (this->isReadOnly() && (!navigation)) {
           this->editor.displayInformativeMessage(
               QObject::tr("read only buffer"));
         } else {

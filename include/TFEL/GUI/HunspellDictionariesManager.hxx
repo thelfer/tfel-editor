@@ -29,12 +29,13 @@ namespace tfel::gui {
     /*!
      * \return the language used for spell checking by default: the value
      * stored in the "hunspell default dictionary" entry of the settings if
-     * it exists, the name of the system locale if a dictionary with that
-     * name has been found, an empty string otherwise, which means that no
-     * language is selected
+     * it exists, else the first of the system locale name, the user
+     * interface languages (`QLocale::uiLanguages`) and their language-only
+     * forms (`fr_FR` -> `fr`) that has a dictionary, else the first
+     * installed dictionary, or an empty string if none is installed
      *
-     * \note no code of the editor writes that entry, which is only read here:
-     * it can be set externally, in the settings file of the application
+     * \note the entry is written by the *Options ▸ Dictionaries* menu, so a
+     * choice made in the interface is now permanent (issue #69)
      */
     QString getDefaultSpellCheckLanguage() const;
 

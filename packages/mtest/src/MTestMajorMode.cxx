@@ -362,7 +362,6 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<MTestMajorMode> proxy(
       "MTest",
-      QVector<QRegularExpression>()
-          << QRegularExpression("^" + fileNameRegExp() + "\\.mtest"));
+      QVector<QRegularExpression>() << suffixRegExp("mtest"));
 
 }  // end of namespace tfel::gui

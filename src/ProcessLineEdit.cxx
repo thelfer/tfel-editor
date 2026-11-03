@@ -6,8 +6,6 @@
  */
 
 #include <QtCore/QDir>
-#include "TFEL/Utilities/CxxTokenizer.hxx"
-#include "TFEL/Utilities/StringAlgorithms.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/Buffer.hxx"
 #include "TFEL/GUI/ProcessOutputFrame.hxx"
@@ -42,7 +40,6 @@ namespace tfel::gui {
   void ProcessLineEdit::run(const QString& on,
                             const QString& c,
                             const QStringList& args) {
-    using namespace tfel::utilities;
     if (c.isEmpty()) {
       this->editor.displayInformativeMessage(QObject::tr("empty command"));
       return;
@@ -56,37 +53,19 @@ namespace tfel::gui {
       }
       return QDir::current().absolutePath();
     }();
+    // issue #72: the substitution below used to be dead code (`nargs` was
+    // never read), and its old per-token form could not work as written:
+    // `std::string(' ', n)` compiled as the fill constructor with swapped
+    // arguments, the tokenizer splits "$(cmd)" and "%cmd%" across several
+    // tokens, and a "." token cannot be told from the "." of "a.py". It
+    // now substitutes whole arguments only, which keeps every shell
+    // command line the subclass passes untouched.
     auto nargs = QStringList{};
-    const auto sdn = dn.toStdString();
+    nargs.reserve(args.size());
     for (const auto& a : args) {
-      CxxTokenizerOptions opt;
-      opt.shallMergeStrings = false;
-      opt.allowStrayHashCharacter = true;
-      opt.allowStrayBackSlash = true;
-      opt.treatPreprocessorDirectives = false;
-      opt.treatNumbers = false;
-      opt.treatCComments = false;
-      opt.treatCxxComments = false;
-      opt.joinCxxTwoCharactersSeparators = false;
-      opt.graveAccentAsSeparator = true;
-      opt.charAsString = true;
-      CxxTokenizer tokenizer(opt);
-      try {
-        tokenizer.parseString(a.toStdString());
-        auto ppos = CxxTokenizer::size_type{};
-        auto narg = std::string{};
-        for (const auto& t : tokenizer) {
-          auto value = t.value;
-          if (t.flag == Token::Standard) {
-            value = replace_all(value, ".", sdn);
-            value = replace_all(value, "$(cmd)", sdn);
-            value = replace_all(value, "%cmd%", sdn);
-          }
-          narg += std::string(' ', t.offset - ppos) + value;
-          ppos = t.offset + value.size();
-        }
-        nargs << QString::fromStdString(narg);
-      } catch (...) {
+      if ((a == ".") || (a == "$(cmd)") || (a == "%cmd%")) {
+        nargs << dn;
+      } else {
         nargs << a;
       }
     }
@@ -98,12 +77,15 @@ namespace tfel::gui {
       if (m != nullptr) {
         m->setDirectory(p.workingDirectory());
         m->setCommand(c);
-        m->setArguments(args);
+        // issue #72: the directory substitution built `nargs` above and
+        // then ignored it, so the documented replacement of ".", "$(cmd)"
+        // and "%cmd%" silently did nothing
+        m->setArguments(nargs);
         m->setMajorMode(this->mode);
       }
     }
-    p.start(c, args);
-    b.attachSecondaryTask("*" + on + "* ouput", po);
+    p.start(c, nargs);
+    b.attachSecondaryTask("*" + on + "* output", po);
     b.setSecondaryTaskIcon(po, QIcon::fromTheme("system-run"));
   }  // end ofrun
 

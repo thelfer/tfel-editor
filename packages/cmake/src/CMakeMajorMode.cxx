@@ -81,20 +81,18 @@ namespace tfel::gui {
   void CMakeMajorMode::format() {}
 
   void CMakeMajorMode::runCompilation() {
-    //     QSettings s;
-    //     const auto ch =
-    //     s.value("cmake/compilation/history").toStringList();
-    //     const auto d = [&ch]() -> QString {
-    //       if (ch.isEmpty()) {
-    //         return "make -k";
-    //       }
-    //       return ch.back();
-    //     }();
-    //     auto* l = new ShellProcessLineEdit(
-    //         "compilation command :", d, "compilation-output",
-    //         this->editor);
-    //     l->setInputHistorySettingAddress("cmake/compilation/history");
-    //     this->editor.setUserInput(l);
+    QSettings s;
+    const auto ch = s.value("cmake/compilation/history").toStringList();
+    const auto d = [&ch]() -> QString {
+      if (ch.isEmpty()) {
+        return "make -k";
+      }
+      return ch.back();
+    }();
+    auto* l = new ShellProcessLineEdit("compilation command :", d,
+                                       "compilation-output", this->editor);
+    l->setInputHistorySettingAddress("cmake/compilation/history");
+    this->editor.setUserInput(l);
   }  // end of CMakeMajorMode::runCompilation
 
   CMakeMajorMode::~CMakeMajorMode() = default;
@@ -102,6 +100,6 @@ namespace tfel::gui {
   static StandardMajorModeProxy<CMakeMajorMode> proxy(
       "CMake",
       QVector<QRegularExpression>() << QRegularExpression("^CMakeLists\\.txt$")
-                                    << QRegularExpression(".*\\.cmake$"));
+                                    << suffixRegExp("cmake"));
 
 }  // end of namespace tfel::gui

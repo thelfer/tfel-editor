@@ -6,7 +6,6 @@
  */
 
 #include <tuple>
-#include <cctype>
 #include <utility>
 #include <cstdlib>
 #include <stdexcept>
@@ -91,10 +90,14 @@ namespace tfel::gui {
       if (t.value.empty()) {
         return;
       }
-      if (std::isalpha(t.value[0]) == 0) {
+      // issue #71: isalpha() on the (signed) char of a UTF-8 byte is
+      // undefined behaviour and, on glibc, silently skips every word
+      // starting with a non-ASCII letter; QChar::isLetter on the decoded
+      // word is the test actually meant here
+      const auto w = QString::fromStdString(t.value);
+      if (w.isEmpty() || !w[0].isLetter()) {
         return;
       }
-      const auto w = QString::fromStdString(t.value);
       if (!sc.spell(w)) {
         QTextCharFormat nf(f);
         nf.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
@@ -163,15 +166,18 @@ namespace tfel::gui {
             break;
           case 2:
             this->setFormat(0, l.size(), this->h2);
-            spell_check_all_tokens(this->h1);
+            // the underline must reuse *this* level's format: passing h1
+            // here restyled the whole heading under the user's cursor
+            // (issue #71)
+            spell_check_all_tokens(this->h2);
             break;
           case 3:
             this->setFormat(0, l.size(), this->h3);
-            spell_check_all_tokens(this->h1);
+            spell_check_all_tokens(this->h3);
             break;
           default:
             this->setFormat(0, l.size(), this->h4);
-            spell_check_all_tokens(this->h1);
+            spell_check_all_tokens(this->h4);
             break;
         }
         set_state(300);

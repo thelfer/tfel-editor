@@ -61,10 +61,22 @@ namespace tfel::gui {
   }  // end of ShSyntaxHighlighter::getCommandsList
 
   void ShSyntaxHighlighter::highlightBlock(const QString& l) {
-    const auto& keys = this->getKeywordsList();
-    const auto& bkeys = this->getBuildInKeywordsList();
-    const auto& fcts = this->getFunctionsList();
-    const auto& cmds = this->getCommandsList();
+    if (!this->lookupsInitialized) {
+      // issue #65: classifying every token of every block by four linear
+      // QStringList::contains() scans costs several ms per keystroke once the
+      // bash mode fills the lists with the machine's command table
+      // (10511 entries measured); the sets mirror the (virtual) lists and are
+      // built once per highlighter, after the derived constructor has run
+      const auto& keys = this->getKeywordsList();
+      const auto& bkeys = this->getBuildInKeywordsList();
+      const auto& fcts = this->getFunctionsList();
+      const auto& cmds = this->getCommandsList();
+      this->keysSet = QSet<QString>(keys.cbegin(), keys.cend());
+      this->bkeysSet = QSet<QString>(bkeys.cbegin(), bkeys.cend());
+      this->fctsSet = QSet<QString>(fcts.cbegin(), fcts.cend());
+      this->cmdsSet = QSet<QString>(cmds.cbegin(), cmds.cend());
+      this->lookupsInitialized = true;
+    }
     auto tl = l.trimmed();
     if (tl.isEmpty()) {
       return;
@@ -87,14 +99,17 @@ namespace tfel::gui {
         this->setFormat(t.offset, t.value.size(), this->stringFormat);
       } else if (t.flag == tfel::utilities::Token::Comment) {
         this->setFormat(t.offset, t.value.size(), this->commentFormat);
-      } else if (keys.contains(QString::fromStdString(t.value))) {
-        this->setFormat(t.offset, t.value.size(), this->keyFormat);
-      } else if (bkeys.contains(QString::fromStdString(t.value))) {
-        this->setFormat(t.offset, t.value.size(), this->bKeyFormat);
-      } else if (fcts.contains(QString::fromStdString(t.value))) {
-        this->setFormat(t.offset, t.value.size(), this->functionFormat);
-      } else if (cmds.contains(QString::fromStdString(t.value))) {
-        this->setFormat(t.offset, t.value.size(), this->commandFormat);
+      } else {
+        const auto w = QString::fromStdString(t.value);
+        if (this->keysSet.contains(w)) {
+          this->setFormat(t.offset, t.value.size(), this->keyFormat);
+        } else if (this->bkeysSet.contains(w)) {
+          this->setFormat(t.offset, t.value.size(), this->bKeyFormat);
+        } else if (this->fctsSet.contains(w)) {
+          this->setFormat(t.offset, t.value.size(), this->functionFormat);
+        } else if (this->cmdsSet.contains(w)) {
+          this->setFormat(t.offset, t.value.size(), this->commandFormat);
+        }
       }
     }
   }  // end of ShSyntaxHighlighter::highlightBlock

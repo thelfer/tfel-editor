@@ -105,11 +105,6 @@ namespace tfel::gui {
     virtual PlainTextEdit &getMainFrame();
     //! \return the current SecondaryTask if any, nullptr otherwise
     virtual QWidget *getCurrentSecondaryTask();
-    /*!
-     * \return the title of the current SecondaryTask if any,
-     * an empty string otherwise
-     */
-    virtual QString getCurrentSecondaryTaskTitle() const;
 
     /*!
      * \return the menus specific to the major mode of the main frame, as
@@ -245,17 +240,6 @@ namespace tfel::gui {
      */
     virtual bool isOkToClose() const;
 
-    /*!
-     * \brief event filter installed on the widget of the main frame
-     * \param[in] o: object receiving the event
-     * \param[in] ev: event
-     *
-     * \note the events are filtered only when this buffer is visible and the
-     * target is the main frame or one of its secondary tasks; key presses
-     * are currently not treated and the base implementation, which does not
-     * filter anything, is always called: this method always returns false
-     */
-    bool eventFilter(QObject *, QEvent *) override;
     //! destructor
     ~Buffer() override;
 

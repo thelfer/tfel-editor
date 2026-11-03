@@ -123,6 +123,19 @@ namespace tfel::gui {
   }  // end of MainWindow::selectFont
 
   void MainWindow::createActions() {
+    // createActions() news all the member actions again, and
+    // clearMenuBar() reclaims the ones which resided in a menu -- but
+    // exactly one of {esca, qsca} is never added to any menu
+    // (updateOptionsMenu only offers the style the user is not in), so
+    // that one stayed alive and connected as an unreachable child of
+    // MainWindow on every rebuild, which runs on every buffer switch
+    // and every mode change.
+    if (this->esca != nullptr) {
+      this->esca->deleteLater();
+    }
+    if (this->qsca != nullptr) {
+      this->qsca->deleteLater();
+    }
     auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
     this->na = new QAction(QObject::tr("N&ew"), this);
     this->na->setStatusTip(QObject::tr("New buffer"));
@@ -145,8 +158,14 @@ namespace tfel::gui {
     this->ka = new QAction(QObject::tr("C&lose current buffer"), this);
     this->ka->setStatusTip(QObject::tr("Close the current buffer"));
     this->ka->setIcon(QIcon::fromTheme("window-close"));
+    // QAction::triggered(bool) passes `checked`, which is false for a
+    // non-checkable action: connecting the function pointer directly
+    // called closeCurrentBuffer(false), the branch which removes the
+    // buffer with no save prompt at all. The keyboard path uses the
+    // C++ default argument and behaved correctly, so only the menu
+    // silently discarded unsaved work.
     QObject::connect(this->ka, &QAction::triggered, e,
-                     &EditorWidget::closeCurrentBuffer);
+                     [e] { e->closeCurrentBuffer(true); });
     this->pra = new QAction(QObject::tr("Print current buffer"), this);
     this->pra->setIcon(QIcon::fromTheme("document-print"));
     this->pra->setIconVisibleInMenu(true);
@@ -226,7 +245,16 @@ namespace tfel::gui {
     using HunspellDictionaries = HunspellDictionariesManager;
 #endif /* TFEL_GUI_HUNSPELL_SUPPORT */
     auto &s = ShortCutStyle::getShortCutStyle();
+    // QMenu::clear() removes the actions but leaves the submenus it
+    // created behind as invisible children -- the Dictionaries submenu
+    // and its per-dictionary actions piled up on every call (twice per
+    // shortcut-style toggle), exactly the trap src/Utilities.cxx
+    // (clearMenu) exists for. This menu must not use clearMenu itself:
+    // fa/esca/qsca are owned here and only removed, not deleted.
+    const auto submenus = this->om->findChildren<QMenu *>();
     this->om->clear();
+    for (auto *sm : submenus)
+      sm->deleteLater();
     // font
     this->om->addAction(this->fa);
 #ifdef TFEL_GUI_HUNSPELL_SUPPORT
@@ -242,8 +270,13 @@ namespace tfel::gui {
         QObject::connect(a, &QAction::triggered, this, [di, this]() {
           auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
           if (e != nullptr) {
-            auto &t = e->getCurrentBuffer().getMainFrame();
-            t.setSpellCheckLanguage(di);
+            // issue #69: the choice must survive the session...
+            QSettings settings;
+            settings.setValue("hunspell default dictionary", di);
+            // ...and apply to every buffer, not only to the current one
+            for (auto *b : e->findChildren<Buffer *>()) {
+              b->getMainFrame().setSpellCheckLanguage(di);
+            }
           }
         });
       }

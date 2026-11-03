@@ -14,6 +14,7 @@
 #include <QtCore/QSettings>
 #include <QtCore/QStringListModel>
 #include <QtGui/QDesktopServices>
+#include <QtGui/QTextDocument>
 #include <QtWidgets/QAbstractItemView>
 #include "TFEL/Utilities/CxxTokenizer.hxx"
 #include "MFront/AbstractDSL.hxx"
@@ -104,6 +105,10 @@ namespace tfel::gui {
     static const MFrontExamples e(buildMFrontExamplesList("MFMHOME"));
     return e;
   }
+
+  // one interval constant for the DSL change debounce (issue #64): the
+  // previous code polled every 2000 ms and re-armed itself at 1000 ms
+  static const int dsl_check_delay = 1000;
 
   static QString getDSLName(EditorWidget &editor, TextEditBase &t) {
     using tfel::utilities::CxxTokenizer;
@@ -327,7 +332,10 @@ namespace tfel::gui {
             cbb->setMajorMode("C++");
             cbb->format();
             b.attachSecondaryTask(QString::fromStdString(cb), cbb);
-            b.setSecondaryTaskIcon(cbb, QIcon::fromTheme("mfront-icon"));
+            // issue #73: "mfront-icon" is not a freedesktop icon name, so
+            // `fromTheme` could only ever return a null icon; the MFront
+            // icon resource the mode itself registers is the intended one
+            b.setSecondaryTaskIcon(cbb, QIcon(":/mfront/MFrontIcon.png"));
           } catch (std::exception &e) {
             debug(e.what());
           } catch (...) {
@@ -340,8 +348,15 @@ namespace tfel::gui {
   MFrontMajorMode::MFrontMajorMode(EditorWidget &w, Buffer &b, TextEditBase &t)
       : CxxMajorMode(w, b, t) {
     MFrontInitializer::init();
+    // issue #66: one keyword model, owned by the mode and reused through
+    // setStringList(): QCompleter::setModel() only borrows models handed to
+    // it, so every `setModel(new QStringListModel(...))` on a DSL change
+    // dropped the previous model without deleting it (the completer's own
+    // ownership only covers the model of its container constructor)
+    this->keywordsModel = new QStringListModel(this->getKeyWordsList(), this);
     // issue #67: the mode owns the completer, the text edit only its widget
-    this->c = new QCompleter(this->getKeyWordsList(), this);
+    this->c = new QCompleter(this);
+    this->c->setModel(this->keywordsModel);
     this->c->setWidget(&t);
     this->c->setCaseSensitivity(Qt::CaseInsensitive);
     this->c->setCompletionMode(QCompleter::PopupCompletion);
@@ -349,8 +364,13 @@ namespace tfel::gui {
                      static_cast<void (QCompleter::*)(const QString &)>(
                          &QCompleter::activated),
                      &t, &TextEditBase::insertCompletion);
-    // timer
+    // DSL change detection (issue #64): no polling. A document edit restarts
+    // a single-shot debounce timer, so the full-document tokenization done by
+    // getDSLName runs at most once per typing pause, and not at all while the
+    // buffer is untouched.
+    this->current_dsl = getDSLName(this->editor, t);
     this->rt = new QTimer(this);
+    this->rt->setSingleShot(true);
     connect(this->rt, &QTimer::timeout, [this] {
       auto dsl = getDSLName(this->editor, this->textEdit);
       if (dsl != this->current_dsl) {
@@ -359,7 +379,8 @@ namespace tfel::gui {
         this->current_dsl = dsl;
       }
     });
-    this->rt->start(2000);
+    QObject::connect(t.document(), &QTextDocument::contentsChange, this,
+                     [this] { this->rt->start(dsl_check_delay); });
   }  // end of MFrontMajorMode::MFrontMajorMode
 
   QString MFrontMajorMode::getName() const {
@@ -528,12 +549,14 @@ namespace tfel::gui {
   }  // end of MFrontMajorMode::setSyntaxHighlighter
 
   void MFrontMajorMode::updateSyntaxHighlighterAndCompleter() {
-    this->rt->stop();
+    // no timer handling anymore: detection is driven by contentsChange and
+    // the debounce timer schedules this call itself (issue #64)
     if (!this->c->popup()->isVisible()) {
       this->setSyntaxHighlighter(this->textEdit.document());
-      this->c->setModel(new QStringListModel(this->getKeyWordsList()));
+      // the single owned model is updated in place (issue #66), which also
+      // keeps the completion popup from resetting its selection
+      this->keywordsModel->setStringList(this->getKeyWordsList());
     }
-    this->rt->start(1000);
   }  // end of
      // MFrontMajorMode::updateSyntaxHighlighterAndCompleter
 
@@ -561,8 +584,9 @@ namespace tfel::gui {
           const auto dsl = getDSLName(this->editor, this->textEdit);
           p.start("mfront", QStringList()
                                 << ("--help-keyword=" + dsl + ":" + k));
-          p.waitForStarted();
-          p.waitForFinished(1000);
+          // no waitForStarted()/waitForFinished(): they spin the GUI thread,
+          // the first without any timeout, and the frame shows the output as
+          // it arrives anyway (ProcessOutputFrame tracks the process).
         }
         nf->moveCursor(QTextCursor::Start, QTextCursor::MoveAnchor);
       });
@@ -629,8 +653,7 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<MFrontMajorMode> proxy(
       "MFront",
-      QVector<QRegularExpression>()
-          << QRegularExpression("^" + fileNameRegExp() + "\\.mfront"),
+      QVector<QRegularExpression>() << suffixRegExp("mfront"),
       ":/mfront/MFrontIcon.png");
 
 }  // end of namespace tfel::gui
