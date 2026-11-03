@@ -8,6 +8,7 @@
 #ifndef LIB_TFEL_GUI_SHSYNTAXHIGHLIGHTER_HXX
 #define LIB_TFEL_GUI_SHSYNTAXHIGHLIGHTER_HXX
 
+#include <QtCore/QSet>
 #include <QtCore/QString>
 #include <QtCore/QVector>
 #include <QtGui/QTextDocument>
@@ -60,6 +61,20 @@ namespace tfel::gui {
     tfel::utilities::CxxTokenizerOptions options;
 
    private:
+    /*!
+     * \brief the four lists viewed as sets, for the per-token lookups of
+     * \c highlightBlock; built on the first call, when the derived
+     * constructor has run and the virtual list getters answer properly
+     */
+    bool lookupsInitialized = false;
+    //! \brief lookup view of \c getKeywordsList
+    QSet<QString> keysSet;
+    //! \brief lookup view of \c getBuildInKeywordsList
+    QSet<QString> bkeysSet;
+    //! \brief lookup view of \c getFunctionsList
+    QSet<QString> fctsSet;
+    //! \brief lookup view of \c getCommandsList
+    QSet<QString> cmdsSet;
     Q_OBJECT
   };  // end of struct CSyntaxHighlighter
 
