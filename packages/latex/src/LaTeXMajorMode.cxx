@@ -754,10 +754,9 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<LaTeXMajorMode> proxy(
       "LaTeX",
-      QVector<QRegularExpression>() << suffixRegExp("tex")
-                                    << suffixRegExp("sty")
-                                    << suffixRegExp("cls")
-                                    << suffixRegExp("dtx"),
+      QVector<QRegularExpression>()
+          << suffixRegExp("tex") << suffixRegExp("sty") << suffixRegExp("cls")
+          << suffixRegExp("dtx"),
       ":/tfel/editor/languages/latex.png");
 
 }  // end of namespace tfel::gui

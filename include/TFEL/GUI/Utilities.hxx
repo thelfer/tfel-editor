@@ -70,8 +70,7 @@ namespace tfel::gui {
    * so backup files (`notes.tex~`, `a.mfront.bak`) and near misses
    * (`a.gpl`, `a.md5`) no longer fall into the wrong mode
    */
-  TFEL_GUI_VISIBILITY_EXPORT QRegularExpression
-  suffixRegExp(const QString&);
+  TFEL_GUI_VISIBILITY_EXPORT QRegularExpression suffixRegExp(const QString&);
 
   /*!
    * \brief return the word the given cursor is on, completed by the `@` sign

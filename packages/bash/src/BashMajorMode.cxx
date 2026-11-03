@@ -27,16 +27,34 @@ namespace tfel::gui {
     // list is static because `compgen` from the constructor would block
     // the GUI thread.
     auto keys = ShMajorMode::getKeyWordsList();
-    keys << // bash reserved words
+    keys <<  // bash reserved words
         "coproc"
-        << "select" << "time"
-        << // bash builtins without a POSIX counterpart
-        "bind" << "builtin" << "caller" << "command"
-        << "compgen" << "complete" << "compopt" << "declare"
-        << "dirs" << "disown" << "enable" << "help" << "history"
-        << "let" << "mapfile" << "popd" << "pushd" << "readarray"
-        << "shopt" << "suspend" << "type" << "typeset" << "ulimit"
-        << "hash";
+         << "select"
+         << "time" <<  // bash builtins without a POSIX counterpart
+        "bind"
+         << "builtin"
+         << "caller"
+         << "command"
+         << "compgen"
+         << "complete"
+         << "compopt"
+         << "declare"
+         << "dirs"
+         << "disown"
+         << "enable"
+         << "help"
+         << "history"
+         << "let"
+         << "mapfile"
+         << "popd"
+         << "pushd"
+         << "readarray"
+         << "shopt"
+         << "suspend"
+         << "type"
+         << "typeset"
+         << "ulimit"
+         << "hash";
     keys.removeDuplicates();
     this->setCompleterList(keys);
   }  // end of BashMajorMode::BashMajorMode
@@ -56,7 +74,6 @@ namespace tfel::gui {
   BashMajorMode::~BashMajorMode() = default;
 
   static StandardMajorModeProxy<BashMajorMode> proxy(
-      "bash",
-      QVector<QRegularExpression>() << suffixRegExp("bash"));
+      "bash", QVector<QRegularExpression>() << suffixRegExp("bash"));
 
 }  // end of namespace tfel::gui

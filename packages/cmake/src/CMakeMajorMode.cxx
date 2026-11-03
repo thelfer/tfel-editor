@@ -99,7 +99,7 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<CMakeMajorMode> proxy(
       "CMake",
-      QVector<QRegularExpression>() << QRegularExpression("^CMakeLists\\.txt$")
-                                    << suffixRegExp("cmake"));
+      QVector<QRegularExpression>()
+          << QRegularExpression("^CMakeLists\\.txt$") << suffixRegExp("cmake"));
 
 }  // end of namespace tfel::gui

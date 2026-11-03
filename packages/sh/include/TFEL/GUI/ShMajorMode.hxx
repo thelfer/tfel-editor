@@ -56,7 +56,7 @@ namespace tfel::gui {
      * \param[in] b : buffer the mode is attached to
      * \param[in] t : text editor widget the mode acts on
      */
-    ShMajorMode(EditorWidget &, Buffer &, TextEditBase &);
+    ShMajorMode(EditorWidget&, Buffer&, TextEditBase&);
 
     //! \return the name of the mode, "sh"
     QString getName() const override;
@@ -82,7 +82,6 @@ namespace tfel::gui {
     QCompleter* c;
 
    public:
-
     //! \return a fixed description of the mode
     QString getDescription() const override;
 
@@ -102,7 +101,7 @@ namespace tfel::gui {
      * \c setHighlighter, which replaces the previous highlighter; the
      * document owns the highlighter it is built with
      */
-    void setSyntaxHighlighter(QTextDocument *const) override;
+    void setSyntaxHighlighter(QTextDocument* const) override;
 
     /*!
      * \return "#", the string which starts a comment line in `sh`

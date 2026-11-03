@@ -61,7 +61,6 @@ namespace tfel::gui {
   PipeTestMajorMode::~PipeTestMajorMode() = default;
 
   static StandardMajorModeProxy<PipeTestMajorMode> proxy(
-      "PipeTest",
-      QVector<QRegularExpression>() << suffixRegExp("ptest"));
+      "PipeTest", QVector<QRegularExpression>() << suffixRegExp("ptest"));
 
 }  // end of namespace tfel::gui

@@ -63,7 +63,6 @@ namespace tfel::gui {
   };  // end of TPlotMajorMode
 
   static StandardMajorModeProxy<TPlotMajorMode> proxy(
-      "TPlot",
-      QVector<QRegularExpression>() << suffixRegExp("tplot"));
+      "TPlot", QVector<QRegularExpression>() << suffixRegExp("tplot"));
 
 }  // end of namespace tfel::gui

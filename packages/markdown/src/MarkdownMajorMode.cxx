@@ -399,9 +399,9 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<MarkdownMajorMode> proxy(
       "Markdown",
-      QVector<QRegularExpression>() << suffixRegExp("md")
-                                    << suffixRegExp("markdown")
-                                    << suffixRegExp("mdown"),
+      QVector<QRegularExpression>()
+          << suffixRegExp("md") << suffixRegExp("markdown")
+          << suffixRegExp("mdown"),
       "x-office-document");
 
 }  // end of namespace tfel::gui

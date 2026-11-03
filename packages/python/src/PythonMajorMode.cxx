@@ -78,8 +78,7 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<PythonMajorMode> proxy(
       "Python",
-      QVector<QRegularExpression>() << suffixRegExp("py")
-                                    << suffixRegExp("pyi")
-                                    << suffixRegExp("pyx"));
+      QVector<QRegularExpression>()
+          << suffixRegExp("py") << suffixRegExp("pyi") << suffixRegExp("pyx"));
 
 }  // end of namespace tfel::gui

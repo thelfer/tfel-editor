@@ -94,7 +94,7 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<GnuplotMajorMode> proxy(
       "Gnuplot",
-      QVector<QRegularExpression>() << suffixRegExp("gp")
-                                    << suffixRegExp("gnuplot"));
+      QVector<QRegularExpression>()
+          << suffixRegExp("gp") << suffixRegExp("gnuplot"));
 
 }  // end of namespace tfel::gui

@@ -253,8 +253,7 @@ namespace tfel::gui {
     // fa/esca/qsca are owned here and only removed, not deleted.
     const auto submenus = this->om->findChildren<QMenu *>();
     this->om->clear();
-    for (auto *sm : submenus)
-      sm->deleteLater();
+    for (auto *sm : submenus) sm->deleteLater();
     // font
     this->om->addAction(this->fa);
 #ifdef TFEL_GUI_HUNSPELL_SUPPORT

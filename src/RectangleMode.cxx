@@ -111,12 +111,10 @@ namespace tfel::gui {
         return;
       }
       const auto k = ev->key();
-      if ((ev->modifiers() == Qt::NoModifier) && ((k == Qt::Key_T) ||
-                                                  (k == Qt::Key_K) ||
-                                                  (k == Qt::Key_Y))) {
-        this->setText(QString(QChar(k == Qt::Key_T
-                                        ? 't'
-                                        : (k == Qt::Key_K ? 'k' : 'y'))));
+      if ((ev->modifiers() == Qt::NoModifier) &&
+          ((k == Qt::Key_T) || (k == Qt::Key_K) || (k == Qt::Key_Y))) {
+        this->setText(QString(
+            QChar(k == Qt::Key_T ? 't' : (k == Qt::Key_K ? 'k' : 'y'))));
         if (qle != nullptr) {
           qle->userEditingFinished();
         }

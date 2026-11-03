@@ -24,16 +24,14 @@ namespace tfel::gui {
   const QStringList& ShMajorMode::getKeyWordsList() {
     static const QStringList keys = {
         // control words
-        "if",    "then",  "else", "elif",    "fi",    "for",    "while",
-        "until", "do",    "done", "case",    "esac",  "function",
+        "if", "then", "else", "elif", "fi", "for", "while", "until", "do",
+        "done", "case", "esac", "function",
         // POSIX builtins
-        "alias", "bg",    "break",    "cd",      "command",
-        "continue",       "eval",   "exec",    "exit",    "export",
-        "false", "fg",    "getopts",  "hash",    "jobs",
-        "kill",  "local", "pwd",      "read",    "readonly",
-        "return", "set",  "shift",    "test",    "times",
-        "trap",  "true",  "umask",    "unalias", "unset",
-        "wait",  "echo",  "printf",   "source"};
+        "alias", "bg", "break", "cd", "command", "continue", "eval", "exec",
+        "exit", "export", "false", "fg", "getopts", "hash", "jobs", "kill",
+        "local", "pwd", "read", "readonly", "return", "set", "shift", "test",
+        "times", "trap", "true", "umask", "unalias", "unset", "wait", "echo",
+        "printf", "source"};
     return keys;
   }  // end of ShMajorMode::getKeyWordsList
 
@@ -85,8 +83,8 @@ namespace tfel::gui {
 
   ShMajorMode::~ShMajorMode() = default;
 
-  static StandardMajorModeProxy<ShMajorMode> proxy(
-      "sh",
-      QVector<QRegularExpression>() << suffixRegExp("sh"));
+  static StandardMajorModeProxy<ShMajorMode> proxy("sh",
+                                                   QVector<QRegularExpression>()
+                                                       << suffixRegExp("sh"));
 
 }  // end of namespace tfel::gui

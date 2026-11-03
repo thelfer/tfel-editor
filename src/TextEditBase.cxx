@@ -632,8 +632,8 @@ namespace tfel::gui {
       // this very widget, and the interception below would loop until
       // the stack overflows. This is the hazard that the keyProcessing
       // flag of keyPressEvent() guards against.
-      if ((kev->key() == Qt::Key_Tab) &&
-          (kev->modifiers() == Qt::NoModifier) && (!this->keyProcessing)) {
+      if ((kev->key() == Qt::Key_Tab) && (kev->modifiers() == Qt::NoModifier) &&
+          (!this->keyProcessing)) {
         this->handleKeyPressEvent(kev);
         ev->accept();
         return true;
@@ -1249,12 +1249,12 @@ namespace tfel::gui {
       }
     } else if ((m == Qt::AltModifier) && (k == Qt::Key_F)) {
       this->moveCursor(QTextCursor::NextWord, this->moveMode);
-    // '<' is a shifted keysym: the platform plugin puts ShiftModifier
-    // alongside AltModifier in modifiers(), which m == Qt::AltModifier
-    // rejects. The Key_Greater branch below already uses the bitwise
-    // test for this reason; without it, Alt-< missed its binding, the
-    // event fell through to the widget and a '<' was inserted into the
-    // document instead of going to the beginning of the buffer.
+      // '<' is a shifted keysym: the platform plugin puts ShiftModifier
+      // alongside AltModifier in modifiers(), which m == Qt::AltModifier
+      // rejects. The Key_Greater branch below already uses the bitwise
+      // test for this reason; without it, Alt-< missed its binding, the
+      // event fell through to the widget and a '<' was inserted into the
+      // document instead of going to the beginning of the buffer.
     } else if ((m & Qt::AltModifier) && (k == Qt::Key_Less)) {
       this->moveCursor(QTextCursor::Start, this->moveMode);
     } else if ((m & Qt::AltModifier) && (k == Qt::Key_Greater)) {
@@ -1294,10 +1294,9 @@ namespace tfel::gui {
         // explicit binding, so without this they were swallowed by the
         // read-only message below.
         const bool navigation =
-            (m == Qt::NoModifier) && ((k == Qt::Key_PageUp) ||
-                                       (k == Qt::Key_PageDown) ||
-                                       (k == Qt::Key_Home) ||
-                                       (k == Qt::Key_End));
+            (m == Qt::NoModifier) &&
+            ((k == Qt::Key_PageUp) || (k == Qt::Key_PageDown) ||
+             (k == Qt::Key_Home) || (k == Qt::Key_End));
         if (this->isReadOnly() && (!navigation)) {
           this->editor.displayInformativeMessage(
               QObject::tr("read only buffer"));

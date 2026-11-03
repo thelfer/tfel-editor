@@ -54,17 +54,10 @@ namespace tfel::gui {
   static StandardMajorModeProxy<CxxMajorMode> proxy(
       "C++",
       QVector<QRegularExpression>()
-          << suffixRegExp("cxx")
-          << suffixRegExp("hxx")
-          << suffixRegExp("ixx")
-          << suffixRegExp("cpp")
-          << suffixRegExp("hpp")
-          << suffixRegExp("ipp")
-          << suffixRegExp("CC")
-          << suffixRegExp("hh")
-          << suffixRegExp("c")
-          << suffixRegExp("h")
-          << suffixRegExp("cu"),
+          << suffixRegExp("cxx") << suffixRegExp("hxx") << suffixRegExp("ixx")
+          << suffixRegExp("cpp") << suffixRegExp("hpp") << suffixRegExp("ipp")
+          << suffixRegExp("CC") << suffixRegExp("hh") << suffixRegExp("c")
+          << suffixRegExp("h") << suffixRegExp("cu"),
       ":/tfel/editor/languages/cxx.png");
 
 }  // end of namespace tfel::gui

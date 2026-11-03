@@ -361,7 +361,6 @@ namespace tfel::gui {
   static StandardFunctionCommandProxy<runPTest> runPTestProxy("run-ptest");
 
   static StandardMajorModeProxy<MTestMajorMode> proxy(
-      "MTest",
-      QVector<QRegularExpression>() << suffixRegExp("mtest"));
+      "MTest", QVector<QRegularExpression>() << suffixRegExp("mtest"));
 
 }  // end of namespace tfel::gui

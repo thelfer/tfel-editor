@@ -138,9 +138,10 @@ namespace tfel::gui {
       QByteArray carry;
       while (!may_be_latin1 && !dictFileReader.atEnd()) {
         QByteArray buffer = carry + dictFileReader.read(65536);
-        QStringDecoder decoder(QStringConverter::Utf8,
-                               QStringConverter::Flag::Default |
-                                   QStringConverter::Flag::ConvertInvalidToNull);
+        QStringDecoder decoder(
+            QStringConverter::Utf8,
+            QStringConverter::Flag::Default |
+                QStringConverter::Flag::ConvertInvalidToNull);
         // invalid sequences become U+0000 in the *decoded* output, which is
         // what must be tested for, not the input bytes
         const QString decoded = decoder(buffer);
@@ -208,7 +209,8 @@ namespace tfel::gui {
     if (w.isEmpty()) {
       return {};
     }
-    int numSuggestions = this->_hunspell->suggest(&suggestWordList, w.constData());
+    int numSuggestions =
+        this->_hunspell->suggest(&suggestWordList, w.constData());
     QStringList suggestions;
     for (int i = 0; i < numSuggestions; ++i) {
       QStringDecoder decoder(this->_encoding);
