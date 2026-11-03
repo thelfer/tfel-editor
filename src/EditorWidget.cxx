@@ -988,6 +988,17 @@ namespace tfel::gui {
   }  // end of EditorWidget::closeCurrentBuffer
 
   void EditorWidget::closeCurrentBuffer(const bool b) {
+    // A pending minibuffer prompt may hold a reference to the current
+    // buffer (its Buffer& / TextEditBase& members): closing the buffer
+    // while the prompt is displayed leaves a live prompt pointing at a
+    // destroyed buffer, and the next key press in it is a use-after-free.
+    // The legitimate kill flows (SaveCurrentBufferAndKill,
+    // KillOtherBufferAndWriteFile) call removeBuffer()/closeBuffer()
+    // directly from treatUserInput(), so they are not affected.
+    if (!this->ui.empty()) {
+      this->displayInformativeMessage(QObject::tr("minibuffer is busy"));
+      return;
+    }
     auto* buffer = qobject_cast<Buffer*>(this->buffers->currentWidget());
     if (buffer == nullptr) {
       return;
