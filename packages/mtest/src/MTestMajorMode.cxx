@@ -265,38 +265,31 @@ namespace tfel::gui {
                                            const QTextCursor& tc) {
     const auto& keys = this->getKeyWordsList();
     MajorModeBase::completeContextMenu(m, tc);
-    QTextCursor b(tc);
-    b.select(QTextCursor::BlockUnderCursor);
-    const auto l = b.selectedText();
-    QRegularExpression r("^(@\\w+)");
-    const auto match = r.match(l);
-    if (match.hasMatch()) {
-      const auto k = match.captured(1);
-      if (std::find(keys.begin(), keys.end(), k.toStdString()) != keys.end()) {
-        auto* const ha = new QAction(QObject::tr("Help on %1").arg(k), m);
-        const auto cactions = m->actions();
-        if (cactions.isEmpty()) {
-          m->addAction(ha);
-        } else {
-          m->insertSeparator(*(cactions.begin()));
-          m->insertAction(*(cactions.begin()), ha);
-        }
-        QObject::connect(ha, &QAction::triggered, this, [k, this] {
-          auto nf = new ProcessOutputFrame(this->editor, this->buffer);
-          this->buffer.attachSecondaryTask(QObject::tr("help on '%1'").arg(k),
-                                           nf);
-          auto& p = nf->getProcess();
-          if (p.state() != QProcess::Running) {
-            p.start("mtest", QStringList() << ("--scheme=" + this->getScheme())
-                                           << ("--help-keyword=" + k));
-            p.waitForStarted();
-            p.waitForFinished(1000);
-          }
-          nf->moveCursor(QTextCursor::Start, QTextCursor::MoveAnchor);
-        });
+    const auto k = getKeywordUnderCursor(tc);
+    if (std::find(keys.begin(), keys.end(), k.toStdString()) != keys.end()) {
+      auto* const ha = new QAction(QObject::tr("Help on %1").arg(k), m);
+      const auto cactions = m->actions();
+      if (cactions.isEmpty()) {
+        m->addAction(ha);
+      } else {
+        m->insertSeparator(*(cactions.begin()));
+        m->insertAction(*(cactions.begin()), ha);
       }
+      QObject::connect(ha, &QAction::triggered, this, [k, this] {
+        auto nf = new ProcessOutputFrame(this->editor, this->buffer);
+        this->buffer.attachSecondaryTask(QObject::tr("help on '%1'").arg(k),
+                                         nf);
+        auto& p = nf->getProcess();
+        if (p.state() != QProcess::Running) {
+          p.start("mtest", QStringList() << ("--scheme=" + this->getScheme())
+                                         << ("--help-keyword=" + k));
+          p.waitForStarted();
+          p.waitForFinished(1000);
+        }
+        nf->moveCursor(QTextCursor::Start, QTextCursor::MoveAnchor);
+      });
     }
-  }
+  }  // end of MTestMajorMode::completeContextMenu
 
   const std::vector<std::string>& MTestMajorMode::getKeyWordsList() const {
     return MTestSyntaxHighlighter::getMTestKeys();

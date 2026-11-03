@@ -7,6 +7,7 @@
 
 #include <QtCore/QDebug>
 #include <QtCore/QSettings>
+#include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/Buffer.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
@@ -43,36 +44,29 @@ namespace tfel::gui {
                                            const QTextCursor& tc) {
     MajorModeBase::completeContextMenu(m, tc);
     const auto cmds = CMakeSyntaxHighlighter::getCMakeCommandsList();
-    QTextCursor b(tc);
-    b.select(QTextCursor::BlockUnderCursor);
-    QString l = b.selectedText();
-    QRegularExpression r("^\\s*(\\w+)");
-    const auto match = r.match(l);
-    if (match.hasMatch()) {
-      QString k = match.captured(1).toLower();
-      if (cmds.indexOf(k) != -1) {
-        auto* const ha = new QAction(QObject::tr("Help on %1").arg(k), m);
-        ha->setIcon(QIcon::fromTheme("dialog-question"));
-        const auto cactions = m->actions();
-        if (cactions.isEmpty()) {
-          m->addAction(ha);
-        } else {
-          m->insertSeparator(*(cactions.begin()));
-          m->insertAction(*(cactions.begin()), ha);
-        }
-        QObject::connect(ha, &QAction::triggered, this, [k, this] {
-          auto nf = new ProcessOutputFrame(this->editor, this->buffer);
-          this->buffer.attachSecondaryTask(QObject::tr("help on '%1'").arg(k),
-                                           nf);
-          auto& p = nf->getProcess();
-          if (p.state() != QProcess::Running) {
-            p.start("cmake", QStringList() << "--help-command" << k);
-            p.waitForStarted();
-            p.waitForFinished(1000);
-          }
-          nf->moveCursor(QTextCursor::Start, QTextCursor::MoveAnchor);
-        });
+    const QString k = getKeywordUnderCursor(tc).toLower();
+    if (cmds.indexOf(k) != -1) {
+      auto* const ha = new QAction(QObject::tr("Help on %1").arg(k), m);
+      ha->setIcon(QIcon::fromTheme("dialog-question"));
+      const auto cactions = m->actions();
+      if (cactions.isEmpty()) {
+        m->addAction(ha);
+      } else {
+        m->insertSeparator(*(cactions.begin()));
+        m->insertAction(*(cactions.begin()), ha);
       }
+      QObject::connect(ha, &QAction::triggered, this, [k, this] {
+        auto nf = new ProcessOutputFrame(this->editor, this->buffer);
+        this->buffer.attachSecondaryTask(QObject::tr("help on '%1'").arg(k),
+                                         nf);
+        auto& p = nf->getProcess();
+        if (p.state() != QProcess::Running) {
+          p.start("cmake", QStringList() << "--help-command" << k);
+          p.waitForStarted();
+          p.waitForFinished(1000);
+        }
+        nf->moveCursor(QTextCursor::Start, QTextCursor::MoveAnchor);
+      });
     }
   }  // end of CMakeMajorMode::completeContextMenu
 

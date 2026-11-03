@@ -5,6 +5,7 @@
  * \date   01/08/2012
  */
 
+#include <algorithm>
 #include <QtCore/QDir>
 #include <QtCore/QSettings>
 #include <QtCore/QFileInfo>
@@ -15,6 +16,7 @@
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QAbstractScrollArea>
+#include <QtGui/QTextCursor>
 #ifdef TFEL_GUI_HAVE_WEBENGINE
 #include <QtWebEngineWidgets/QWebEngineView>
 #endif /* TFEL_GUI_HAVE_WEBENGINE */
@@ -123,6 +125,41 @@ namespace tfel::gui {
   }
 
   QString fileNameRegExp() { return "[\\w0-9._+-]+"; }  // end of fileNameRegExp
+
+  QString getKeywordUnderCursor(const QTextCursor& tc) {
+    auto c = tc;
+    c.select(QTextCursor::WordUnderCursor);
+    // `QTextCursor::WordUnderCursor` selects punctuation as well, as the `;`
+    // which ends an MTest instruction, whereas a keyword always has a letter
+    const auto has_a_letter = [](const QString& s) {
+      return std::any_of(s.begin(), s.end(),
+                         [](const QChar& ch) { return ch.isLetterOrNumber(); });
+    };
+    if (c.selectedText() == QLatin1String("@")) {
+      // the cursor is on the '@' sign itself: the keyword is the word which
+      // follows it
+      auto after = c;
+      after.setPosition(c.selectionEnd(), QTextCursor::MoveAnchor);
+      after.select(QTextCursor::WordUnderCursor);
+      const auto f = after.selectedText();
+      if (!has_a_letter(f)) {
+        return {};
+      }
+      return QLatin1String("@") + f;
+    }
+    const auto w = c.selectedText();
+    if (!has_a_letter(w)) {
+      return {};
+    }
+    auto before = c;
+    before.setPosition(c.selectionStart(), QTextCursor::MoveAnchor);
+    if (before.movePosition(QTextCursor::PreviousCharacter,
+                            QTextCursor::KeepAnchor) &&
+        before.selectedText() == QLatin1String("@")) {
+      return QLatin1String("@") + w;
+    }
+    return w;
+  }  // end of getKeywordUnderCursor
 
   void clearMenu(QMenu* const m) {
     for (auto* a : m->actions()) {

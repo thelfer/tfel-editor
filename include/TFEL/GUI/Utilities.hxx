@@ -22,6 +22,8 @@ class QAbstractScrollArea;
 class QMenu;
 //! forward declaration
 class QMenuBar;
+//! forward declaration
+class QTextCursor;
 
 #ifdef TFEL_GUI_HAVE_WEBENGINE
 //! forward declaration
@@ -58,6 +60,28 @@ namespace tfel::gui {
    * associate a file name with a major mode
    */
   TFEL_GUI_VISIBILITY_EXPORT QString fileNameRegExp();
+
+  /*!
+   * \brief return the word the given cursor is on, completed by the `@` sign
+   * which introduces it, if any
+   * \param[in] tc: cursor at the position of interest
+   * \return the word, or an empty string when the cursor is not on one
+   *
+   * \note since `@` is not a word character, `QTextCursor::WordUnderCursor`
+   * never returns it: `@Strain` yields `Strain` with the sign just before the
+   * selection, whereas a cursor on the sign alone selects `@`. Both cases
+   * return `@Strain` so that the language modes can look the result up in
+   * their keyword list as is
+   *
+   * \note a word which is not introduced by a `@`, as a CMake command, is
+   * returned as it is
+   *
+   * \note a selection without any letter or digit is rejected: `QTextCursor`
+   * treats punctuation as a word, and `;`, which ends an MTest instruction,
+   * is a keyword of the MTest parser although `mtest --help-keyword=';'` has
+   * nothing to say about it
+   */
+  TFEL_GUI_VISIBILITY_EXPORT QString getKeywordUnderCursor(const QTextCursor&);
 
   /*!
    * \brief apply the font of the text editing areas to a widget and remove
