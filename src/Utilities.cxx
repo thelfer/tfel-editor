@@ -39,7 +39,12 @@ namespace tfel::gui {
     }
     while (dir.cdUp()) {
       fi.setFile(dir.absolutePath() + QDir::separator() + f);
-      return fi.absolutePath();
+      // the return belongs behind the existence test: the first iteration
+      // used to hand back the parent directory whether or not the file was
+      // there, that is a plausible-looking wrong answer
+      if (fi.exists()) {
+        return fi.absolutePath();
+      }
     }
     return "";
   }  // end of findFileInDirectoryOrParentDirectory()
