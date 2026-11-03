@@ -600,11 +600,16 @@ namespace tfel::gui {
     this->ui.erase(it);
     if (this->ui.empty()) {
       this->minibuffer->setCurrentWidget(this->eui);
+      if (auto* const cw = this->buffers->currentWidget()) {
+        cw->setFocus();
+      }
     } else {
+      // the minibuffer stack is not empty: focus the surviving prompt,
+      // not the document, otherwise the text typed next goes into the
+      // buffer while a prompt is visibly waiting (Emacs' own rule: the
+      // document gets the focus back only when the stack became empty)
       this->minibuffer->setCurrentWidget(this->ui.back().first);
-    }
-    if (auto* const cw = this->buffers->currentWidget()) {
-      cw->setFocus();
+      this->ui.back().first->setFocus();
     }
     p->deleteLater();
   }  // end of EditorWidget::removeUserInput
