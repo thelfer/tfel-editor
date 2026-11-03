@@ -1013,7 +1013,11 @@ namespace tfel::gui {
     } else if ((m == Qt::ControlModifier) && (k == Qt::Key_Q)) {
       return true;
     } else if ((m == Qt::ControlModifier) && (k == Qt::Key_V)) {
-      QKeyEvent nev(QEvent::None, Qt::Key_PageDown, Qt::NoModifier);
+      // the synthesized event must be built as a KeyPress: a
+      // QEvent::None event is not dispatched by QCoreApplication::notify,
+      // it dies in QObject::event while the real key press is consumed
+      // by the return below (same for the three other sites below)
+      QKeyEvent nev(QEvent::KeyPress, Qt::Key_PageDown, Qt::NoModifier);
       auto* w = this->widget();
       w->removeEventFilter(this);
       QCoreApplication::sendEvent(w, &nev);
@@ -1086,14 +1090,14 @@ namespace tfel::gui {
       c.endEditBlock();
       this->setTextCursor(c);
     } else if ((m == Qt::ControlModifier) && (k == Qt::Key_Down)) {
-      QKeyEvent nev(QEvent::None, Qt::Key_PageDown, Qt::NoModifier);
+      QKeyEvent nev(QEvent::KeyPress, Qt::Key_PageDown, Qt::NoModifier);
       auto* const w = this->widget();
       w->removeEventFilter(this);
       QCoreApplication::sendEvent(w, &nev);
       w->installEventFilter(this);
       return true;
     } else if ((m == Qt::ControlModifier) && (k == Qt::Key_Up)) {
-      QKeyEvent nev(QEvent::None, Qt::Key_PageUp, Qt::NoModifier);
+      QKeyEvent nev(QEvent::KeyPress, Qt::Key_PageUp, Qt::NoModifier);
       auto* const w = this->widget();
       w->removeEventFilter(this);
       QCoreApplication::sendEvent(w, &nev);
@@ -1169,7 +1173,7 @@ namespace tfel::gui {
       tc.endEditBlock();
       this->setTextCursor(tc);
     } else if ((m == Qt::AltModifier) && (k == Qt::Key_V)) {
-      QKeyEvent nev(QEvent::None, Qt::Key_PageUp, Qt::NoModifier);
+      QKeyEvent nev(QEvent::KeyPress, Qt::Key_PageUp, Qt::NoModifier);
       auto* w = this->widget();
       w->removeEventFilter(this);
       QCoreApplication::sendEvent(w, &nev);
