@@ -48,7 +48,9 @@ namespace tfel::gui {
      * \c MajorModeBase::completeCurrentWord ignores a completer whose widget is
      * another text edit
      *
-     * \note the timer \c rt is started here with a 2000 ms interval
+     * \note the timer \c rt is not started here: it is a single-shot debounce
+     * restarted by \c QTextDocument::contentsChange, so the DSL of the buffer
+     * is re-checked after typing pauses only, never by polling
      */
     MFrontMajorMode(EditorWidget &, Buffer &, TextEditBase &);
 
@@ -136,19 +138,15 @@ namespace tfel::gui {
 
    protected slots:
     /*!
-     * \brief method called periodically to refresh the syntax highlighter
-     * and the completer
+     * \brief rebuild the syntax highlighter and the completer model
      *
-     * It is triggered by \c rt, only when the name of the DSL in the buffer
-     * differs from \c current_dsl.
+     * It is triggered by \c rt, the debounce timer, only when the name of the
+     * DSL in the buffer differs from \c current_dsl.
      *
      * \note nothing is refreshed while the completion popup is visible, to
      * avoid disturbing the user while he selects a completion; the highlighter
      * and the model of the completer are otherwise both rebuilt from the
      * keywords of the DSL in use
-     *
-     * \note the timer is restarted with a 1000 ms interval, faster than the
-     * 2000 ms of the constructor
      */
     virtual void updateSyntaxHighlighterAndCompleter();
     /*!
@@ -182,9 +180,11 @@ namespace tfel::gui {
      */
     void runCompilation() override;
     /*!
-     * \brief a timer to refresh syntax highlighting
-     * This is mandatory since the value after `@DSL` can change with
-     * the user inputs.
+     * \brief single-shot debounce timer refreshing the syntax highlighting
+     *
+     * Restarted by \c QTextDocument::contentsChange and never started with a
+     * fixed interval: the value after `@DSL` can change with the user inputs,
+     * and this is checked once per typing pause instead of by polling.
      */
     QTimer *rt = nullptr;
     /*!
