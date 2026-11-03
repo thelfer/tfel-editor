@@ -757,8 +757,15 @@ namespace tfel::gui {
     if ((k == Qt::Key_Shift) || (k == Qt::Key_Control) || (k == Qt::Key_Alt)) {
       return true;
     }
-    if ((this->yank) && ((m == Qt::ControlModifier) && (k != Qt::Key_Y)) &&
-        ((m == Qt::AltModifier) && (k == Qt::Key_Y))) {
+    // the kill-ring `yank` mode ends on any key which is not Ctrl-y or
+    // Alt-y: m is a single value per event, so the old
+    // `(m == Qt::ControlModifier ...) && (m == Qt::AltModifier ...)`
+    // spelling could never hold, yank mode never ended, and a later
+    // Alt-y performed a yank-pop wherever the cursor happened to be
+    const bool ctrl = m == Qt::ControlModifier;
+    const bool alt = m == Qt::AltModifier;
+    if ((this->yank) &&
+        (!(((ctrl) && (k == Qt::Key_Y)) || ((alt) && (k == Qt::Key_Y))))) {
       this->yank = false;
     }
     if (((m == Qt::ControlModifier) && (k == Qt::Key_X)) && (!this->ctrlx) &&
