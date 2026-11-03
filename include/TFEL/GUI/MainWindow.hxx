@@ -149,43 +149,43 @@ namespace tfel::gui {
     virtual void createRecentFilesMenu(QMenu *const, const QStringList &);
 
     //! action creating a new empty buffer
-    QAction *na;
+    QAction *na = nullptr;
     //! action opening a file through a file dialog
-    QAction *oa;
+    QAction *oa = nullptr;
     //! action saving the current buffer
-    QAction *sa;
+    QAction *sa = nullptr;
     //! action saving all the buffers
-    QAction *saa;
+    QAction *saa = nullptr;
     //! action closing the current buffer
-    QAction *ka;
+    QAction *ka = nullptr;
     //! action printing the current buffer
-    QAction *pra;
+    QAction *pra = nullptr;
     //! action exiting the editor
-    QAction *ea;
+    QAction *ea = nullptr;
 
     //! action undoing the last operation
-    QAction *ua;
+    QAction *ua = nullptr;
     //! action redoing the last undone operation
-    QAction *ra;
+    QAction *ra = nullptr;
     //! action cutting the selection
-    QAction *ca;
+    QAction *ca = nullptr;
     //! action copying the selection
-    QAction *ca2;
+    QAction *ca2 = nullptr;
     //! action pasting the clipboard
-    QAction *pa;
+    QAction *pa = nullptr;
     //! action selecting all the text
-    QAction *sea;
+    QAction *sea = nullptr;
 
     //! action selecting the font of the main frames
-    QAction *fa;
+    QAction *fa = nullptr;
     //! action switching to the emacs style short cuts
-    QAction *esca;
+    QAction *esca = nullptr;
     //! action switching to the Qt style short cuts
-    QAction *qsca;
+    QAction *qsca = nullptr;
     //! action showing the about message box
-    QAction *aa;
+    QAction *aa = nullptr;
     //! action showing the Qt about message box
-    QAction *aa2;
+    QAction *aa2 = nullptr;
 
     //! the "File" menu
     QMenu *fm;
