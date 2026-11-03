@@ -359,11 +359,6 @@ namespace tfel::gui {
     return nullptr;
   }  // end of getCurrentSecondaryTask
 
-  QString Buffer::getCurrentSecondaryTaskTitle() const {
-    const auto tb = this->stw->tabBar();
-    return tb->tabText(this->stw->currentIndex());
-  }  // end of getCurrentSecondaryTaskTitle
-
   bool Buffer::hasSecondaryTasks() const {
     if (this->stw == nullptr) {
       return false;
