@@ -270,8 +270,13 @@ namespace tfel::gui {
         QObject::connect(a, &QAction::triggered, this, [di, this]() {
           auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
           if (e != nullptr) {
-            auto &t = e->getCurrentBuffer().getMainFrame();
-            t.setSpellCheckLanguage(di);
+            // issue #69: the choice must survive the session...
+            QSettings settings;
+            settings.setValue("hunspell default dictionary", di);
+            // ...and apply to every buffer, not only to the current one
+            for (auto *b : e->findChildren<Buffer *>()) {
+              b->getMainFrame().setSpellCheckLanguage(di);
+            }
           }
         });
       }

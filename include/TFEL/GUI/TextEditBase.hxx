@@ -440,6 +440,11 @@ namespace tfel::gui {
     virtual void setSpellCheckLanguage(const QString &);
 
     /*!
+     * \return the language used for spell checking of this frame
+     */
+    QString getSpellCheckLanguage() const;
+
+    /*!
      * \return true if the buffer is not a main frame
      */
     virtual bool isSecondaryTask() const;
