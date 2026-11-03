@@ -308,6 +308,10 @@ namespace tfel::gui {
     }
   }  // end of TextEditBase::setSpellCheckLanguage
 
+  QString TextEditBase::getSpellCheckLanguage() const {
+    return this->spellCheckLanguage;
+  }  // end of TextEditBase::getSpellCheckLanguage
+
   MajorMode* TextEditBase::setMajorMode() {
     auto& fm = MajorModeFactory::getMajorModeFactory();
     auto* m = fm.getMajorModeForFile(QFileInfo(this->getFileName()).fileName(),
