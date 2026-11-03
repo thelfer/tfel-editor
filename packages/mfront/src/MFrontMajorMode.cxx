@@ -14,6 +14,7 @@
 #include <QtCore/QSettings>
 #include <QtCore/QStringListModel>
 #include <QtGui/QDesktopServices>
+#include <QtGui/QTextDocument>
 #include <QtWidgets/QAbstractItemView>
 #include "TFEL/Utilities/CxxTokenizer.hxx"
 #include "MFront/AbstractDSL.hxx"
@@ -104,6 +105,10 @@ namespace tfel::gui {
     static const MFrontExamples e(buildMFrontExamplesList("MFMHOME"));
     return e;
   }
+
+  // one interval constant for the DSL change debounce (issue #64): the
+  // previous code polled every 2000 ms and re-armed itself at 1000 ms
+  static const int dsl_check_delay = 1000;
 
   static QString getDSLName(EditorWidget &editor, TextEditBase &t) {
     using tfel::utilities::CxxTokenizer;
@@ -348,8 +353,13 @@ namespace tfel::gui {
                      static_cast<void (QCompleter::*)(const QString &)>(
                          &QCompleter::activated),
                      &t, &TextEditBase::insertCompletion);
-    // timer
+    // DSL change detection (issue #64): no polling. A document edit restarts
+    // a single-shot debounce timer, so the full-document tokenization done by
+    // getDSLName runs at most once per typing pause, and not at all while the
+    // buffer is untouched.
+    this->current_dsl = getDSLName(this->editor, t);
     this->rt = new QTimer(this);
+    this->rt->setSingleShot(true);
     connect(this->rt, &QTimer::timeout, [this] {
       auto dsl = getDSLName(this->editor, this->textEdit);
       if (dsl != this->current_dsl) {
@@ -358,7 +368,8 @@ namespace tfel::gui {
         this->current_dsl = dsl;
       }
     });
-    this->rt->start(2000);
+    QObject::connect(t.document(), &QTextDocument::contentsChange, this,
+                     [this] { this->rt->start(dsl_check_delay); });
   }  // end of MFrontMajorMode::MFrontMajorMode
 
   QString MFrontMajorMode::getName() const {
@@ -527,12 +538,12 @@ namespace tfel::gui {
   }  // end of MFrontMajorMode::setSyntaxHighlighter
 
   void MFrontMajorMode::updateSyntaxHighlighterAndCompleter() {
-    this->rt->stop();
+    // no timer handling anymore: detection is driven by contentsChange and
+    // the debounce timer schedules this call itself (issue #64)
     if (!this->c->popup()->isVisible()) {
       this->setSyntaxHighlighter(this->textEdit.document());
       this->c->setModel(new QStringListModel(this->getKeyWordsList()));
     }
-    this->rt->start(1000);
   }  // end of
      // MFrontMajorMode::updateSyntaxHighlighterAndCompleter
 
