@@ -126,6 +126,10 @@ namespace tfel::gui {
 
   QString fileNameRegExp() { return "[\\w0-9._+-]+"; }  // end of fileNameRegExp
 
+  QRegularExpression suffixRegExp(const QString& ext) {
+    return QRegularExpression("^" + fileNameRegExp() + "\\." + ext + "$");
+  }  // end of suffixRegExp
+
   QString getKeywordUnderCursor(const QTextCursor& tc) {
     auto c = tc;
     c.select(QTextCursor::WordUnderCursor);

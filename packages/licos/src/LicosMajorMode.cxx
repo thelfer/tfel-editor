@@ -1548,8 +1548,7 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<LicosMajorMode> proxy(
       "licos",
-      QVector<QRegularExpression>()
-          << QRegularExpression("^" + fileNameRegExp() + "\\.ple"),
+      QVector<QRegularExpression>() << suffixRegExp("ple"),
       ":/LicosIcon.png");
 
 }  // end of namespace tfel::gui

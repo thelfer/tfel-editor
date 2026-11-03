@@ -943,9 +943,11 @@ namespace tfel::gui {
 
   static StandardMajorModeProxy<CastemMajorMode> proxy(
       "Cast3M",
-      QVector<QRegularExpression>()
-          << QRegularExpression("^" + fileNameRegExp() + ".dgibi")
-          << QRegularExpression("^" + fileNameRegExp() + ".procedur"),
+      QVector<QRegularExpression>() << suffixRegExp("dgibi")
+                                    << suffixRegExp("procedur")
+                                    // Fortran sources, the language of the
+                                    // castem solvers (issue #68)
+                                    << suffixRegExp("f90"),
       ":/Cast3MIcon.png");
 
 }  // end of namespace tfel::gui

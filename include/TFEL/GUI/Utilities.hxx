@@ -8,6 +8,7 @@
 #ifndef LIB_TFEL_GUI_UTILITIES_HXX
 #define LIB_TFEL_GUI_UTILITIES_HXX
 
+#include <QtCore/QRegularExpression>
 #include "TFEL/GUI/Config.hxx"
 
 //! forward declaration
@@ -60,6 +61,18 @@ namespace tfel::gui {
    * associate a file name with a major mode
    */
   TFEL_GUI_VISIBILITY_EXPORT QString fileNameRegExp();
+
+  /*!
+   * \return the regular expression matching a file whose name is made of
+   * allowed file-name characters followed by the dot and the given extension
+   *
+   * \note this is the single convention used to associate file names with
+   * major modes: the match is anchored at both ends and the dot is escaped,
+   * so backup files (`notes.tex~`, `a.mfront.bak`) and near misses
+   * (`a.gpl`, `a.md5`) no longer fall into the wrong mode
+   */
+  TFEL_GUI_VISIBILITY_EXPORT QRegularExpression
+  suffixRegExp(const QString&);
 
   /*!
    * \brief return the word the given cursor is on, completed by the `@` sign

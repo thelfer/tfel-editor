@@ -54,17 +54,17 @@ namespace tfel::gui {
   static StandardMajorModeProxy<CxxMajorMode> proxy(
       "C++",
       QVector<QRegularExpression>()
-          << QRegularExpression(fileNameRegExp() + "\\.cxx$")
-          << QRegularExpression(fileNameRegExp() + "\\.hxx$")
-          << QRegularExpression(fileNameRegExp() + "\\.ixx$")
-          << QRegularExpression(fileNameRegExp() + "\\.cpp$")
-          << QRegularExpression(fileNameRegExp() + "\\.hpp$")
-          << QRegularExpression(fileNameRegExp() + "\\.ipp$")
-          << QRegularExpression(fileNameRegExp() + "\\.CC$")
-          << QRegularExpression(fileNameRegExp() + "\\.hh$")
-          << QRegularExpression(fileNameRegExp() + "\\.c$")
-          << QRegularExpression(fileNameRegExp() + "\\.h$")
-          << QRegularExpression(fileNameRegExp() + "\\.cu$"),
+          << suffixRegExp("cxx")
+          << suffixRegExp("hxx")
+          << suffixRegExp("ixx")
+          << suffixRegExp("cpp")
+          << suffixRegExp("hpp")
+          << suffixRegExp("ipp")
+          << suffixRegExp("CC")
+          << suffixRegExp("hh")
+          << suffixRegExp("c")
+          << suffixRegExp("h")
+          << suffixRegExp("cu"),
       ":/tfel/editor/languages/cxx.png");
 
 }  // end of namespace tfel::gui
