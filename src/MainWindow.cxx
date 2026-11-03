@@ -145,8 +145,14 @@ namespace tfel::gui {
     this->ka = new QAction(QObject::tr("C&lose current buffer"), this);
     this->ka->setStatusTip(QObject::tr("Close the current buffer"));
     this->ka->setIcon(QIcon::fromTheme("window-close"));
+    // QAction::triggered(bool) passes `checked`, which is false for a
+    // non-checkable action: connecting the function pointer directly
+    // called closeCurrentBuffer(false), the branch which removes the
+    // buffer with no save prompt at all. The keyboard path uses the
+    // C++ default argument and behaved correctly, so only the menu
+    // silently discarded unsaved work.
     QObject::connect(this->ka, &QAction::triggered, e,
-                     &EditorWidget::closeCurrentBuffer);
+                     [e] { e->closeCurrentBuffer(true); });
     this->pra = new QAction(QObject::tr("Print current buffer"), this);
     this->pra->setIcon(QIcon::fromTheme("document-print"));
     this->pra->setIconVisibleInMenu(true);
