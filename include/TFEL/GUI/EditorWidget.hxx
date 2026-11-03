@@ -313,9 +313,11 @@ namespace tfel::gui {
      * \brief close the given buffer
      * \param[in] b : if true, check if the buffer is ok to close
      *
-     * \note the check is not implemented yet: the buffer is closed in any
-     * case, as done by removeBuffer, which creates an empty buffer if this
-     * one was the last one and emits the bufferRemoved signal
+     * \note when the check is required and the buffer holds unsaved
+     * modifications, a blocking SaveBufferAndKill user input asks the user
+     * whether the buffer shall be killed anyway; closing always goes through
+     * removeBuffer, which creates an empty buffer if this one was the last one
+     * and emits the bufferRemoved signal
      */
     virtual void closeBuffer(Buffer &, const bool = true);
 
@@ -430,6 +432,13 @@ namespace tfel::gui {
      * created) when the user answers positively; defined in EditorWidget.cxx
      */
     struct SaveCurrentBufferAndKill;
+
+    /*!
+     * blocking yes or no user input asking whether the given modified buffer
+     * shall be killed, removing that buffer when the user answers positively;
+     * defined in EditorWidget.cxx
+     */
+    struct SaveBufferAndKill;
 
     /*!
      * \brief handle the closing of this widget: the event is accepted and the
