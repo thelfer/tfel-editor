@@ -436,7 +436,14 @@ namespace tfel::gui {
     }
     const auto i = this->buffers->currentIndex();
     const auto n = i + 1 >= this->buffers->count() ? 0 : i + 1;
-    this->buffers->setCurrentIndex(n);
+    // QStackedWidget::setCurrentIndex changes the page and nothing
+    // else: the menus are rebuilt on currentBufferChanged, the buffer
+    // history (C-x b's default) and the secondary task tabs are updated
+    // in setCurrentBuffer, which also moves the focus.
+    auto* b = qobject_cast<Buffer*>(this->buffers->widget(n));
+    if (b != nullptr) {
+      this->setCurrentBuffer(b);
+    }
   }  // end of EditorWidget::nextBuffer
 
   void EditorWidget::previousBuffer() {
@@ -445,7 +452,10 @@ namespace tfel::gui {
     }
     const auto i = this->buffers->currentIndex();
     const auto n = i == 0 ? this->buffers->count() - 1 : i - 1;
-    this->buffers->setCurrentIndex(n);
+    auto* b = qobject_cast<Buffer*>(this->buffers->widget(n));
+    if (b != nullptr) {
+      this->setCurrentBuffer(b);
+    }
   }  // end of EditorWidget::previousBuffer
 
   void EditorWidget::saveAllBuffers() {
