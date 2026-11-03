@@ -110,16 +110,24 @@ namespace tfel::gui {
         }
         return;
       }
-      if ((ev->modifiers() == Qt::NoModifier) && (ev->key() == Qt::Key_T)) {
-        this->setText("t");
+      const auto k = ev->key();
+      if ((ev->modifiers() == Qt::NoModifier) && ((k == Qt::Key_T) ||
+                                                  (k == Qt::Key_K) ||
+                                                  (k == Qt::Key_Y))) {
+        this->setText(QString(QChar(k == Qt::Key_T
+                                        ? 't'
+                                        : (k == Qt::Key_K ? 'k' : 'y'))));
+        if (qle != nullptr) {
+          qle->userEditingFinished();
+        }
+        return;
       }
-      if ((ev->modifiers() == Qt::NoModifier) && (ev->key() == Qt::Key_K)) {
-        this->setText("k");
-      }
-      if ((ev->modifiers() == Qt::NoModifier) && (ev->key() == Qt::Key_Y)) {
-        this->setText("y");
-      }
-      qle->userEditingFinished();
+      // every other key is edited as usual (Return, Backspace, the
+      // ↑/↓ history, plain characters ...): the previous code neither
+      // chained to CustomLineEdit::keyPressEvent nor guarded the call
+      // to userEditingFinished(), so any stray key (space, z, an arrow)
+      // ended the C-x r command with empty input
+      CommandLine::CustomLineEdit::keyPressEvent(ev);
     }
 
    protected:
