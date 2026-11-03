@@ -621,14 +621,22 @@ namespace tfel::gui {
   bool TextEditBase::event(QEvent* ev) {
     if (ev->type() == QEvent::KeyPress) {
       auto* kev = static_cast<QKeyEvent*>(ev);
-      if (kev->key() == Qt::Key_Tab) {
+      // Only plain Tab is intercepted, and only when we are not already
+      // processing a key event. Qt::Key_Tab is also the key() of
+      // Ctrl+Tab and Alt+Tab: the underlying widget ignores these, an
+      // ignored key press is propagated back to the parent, which is
+      // this very widget, and the interception below would loop until
+      // the stack overflows. This is the hazard that the keyProcessing
+      // flag of keyPressEvent() guards against.
+      if ((kev->key() == Qt::Key_Tab) &&
+          (kev->modifiers() == Qt::NoModifier) && (!this->keyProcessing)) {
         this->handleKeyPressEvent(kev);
         ev->accept();
         return true;
       }
     }
     return QWidget::event(ev);
-  }
+  }  // end of TextEditBase::event
 
   void TextEditBase::keyPressEvent(QKeyEvent* e) {
     // This method is called by completers (we can not give the
