@@ -581,7 +581,8 @@ namespace tfel::gui {
      * completer of the keywords of the language and of the names of the blocks
      * and their `EndOf` counterpart
      *
-     * \note it is a child of the text edit it completes, which owns it
+     * \note it is a child of the mode, which owns it (issue #67); the text
+     * edit it completes is its widget
      */
     QCompleter *c;
 

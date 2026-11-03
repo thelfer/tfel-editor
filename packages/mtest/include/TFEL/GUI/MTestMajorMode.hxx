@@ -172,8 +172,9 @@ namespace tfel::gui {
     /*!
      * \brief completer of the keywords returned by \c getKeyWordsList
      *
-     * Created by the constructor of the mode, with the text edit as widget; a
-     * derived mode replaces it with a completer built on its own keywords
+     * Created by the constructor of the mode, which owns it (issue #67), with
+     * the text edit as widget; a derived mode replaces it with a completer
+     * built on its own keywords
      */
     QCompleter *c = nullptr;
 

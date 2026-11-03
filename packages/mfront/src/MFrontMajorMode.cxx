@@ -340,7 +340,8 @@ namespace tfel::gui {
   MFrontMajorMode::MFrontMajorMode(EditorWidget &w, Buffer &b, TextEditBase &t)
       : CxxMajorMode(w, b, t) {
     MFrontInitializer::init();
-    this->c = new QCompleter(this->getKeyWordsList(), &t);
+    // issue #67: the mode owns the completer, the text edit only its widget
+    this->c = new QCompleter(this->getKeyWordsList(), this);
     this->c->setWidget(&t);
     this->c->setCaseSensitivity(Qt::CaseInsensitive);
     this->c->setCompletionMode(QCompleter::PopupCompletion);

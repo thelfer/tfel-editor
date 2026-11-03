@@ -44,7 +44,7 @@ namespace tfel::gui {
      * created
      *
      * \note a \c QCompleter is created on the keywords of the DSL in use; the
-     * text edit \c t is both its parent and the widget it completes, as
+     * mode owns it and the text edit \c t is its widget, as
      * \c MajorModeBase::completeCurrentWord ignores a completer whose widget is
      * another text edit
      *

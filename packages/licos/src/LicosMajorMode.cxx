@@ -242,7 +242,8 @@ namespace tfel::gui {
       const auto bln = QString::fromStdString(bl);
       keys << bln << "EndOf" + bln;
     }
-    this->c = new QCompleter(keys, &t);
+    // issue #67: the mode owns the completer, the text edit only its widget
+    this->c = new QCompleter(keys, this);
     this->c->setWidget(&t);
     this->c->setCompletionMode(QCompleter::PopupCompletion);
     QObject::connect(this->c,

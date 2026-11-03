@@ -575,7 +575,9 @@ namespace tfel::gui {
 
   CastemMajorMode::CastemMajorMode(EditorWidget& w, Buffer& b, TextEditBase& t)
       : MajorModeBase(w, b, t, &t), co(nullptr) {
-    this->c = new QCompleter(CastemMajorMode::getKeysList(), &t);
+    // issue #67: the mode, not the text edit, owns the completer: the edit
+    // outlives the mode, which is replaced with deleteLater()
+    this->c = new QCompleter(CastemMajorMode::getKeysList(), this);
     this->c->setWidget(&t);
     this->c->setCaseSensitivity(Qt::CaseInsensitive);
     this->c->setCompletionMode(QCompleter::PopupCompletion);
