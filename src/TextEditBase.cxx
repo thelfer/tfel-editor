@@ -1268,7 +1268,18 @@ namespace tfel::gui {
         }
         return true;
       } else {
-        if (this->isReadOnly()) {
+        // navigation keys must reach the widget even in a read-only
+        // buffer: they cannot mutate the document, and *Compilation
+        // Output*, grep output and directory buffers are long, read-only
+        // and must be scrollable. PageUp/PageDown/Home/End have no
+        // explicit binding, so without this they were swallowed by the
+        // read-only message below.
+        const bool navigation =
+            (m == Qt::NoModifier) && ((k == Qt::Key_PageUp) ||
+                                       (k == Qt::Key_PageDown) ||
+                                       (k == Qt::Key_Home) ||
+                                       (k == Qt::Key_End));
+        if (this->isReadOnly() && (!navigation)) {
           this->editor.displayInformativeMessage(
               QObject::tr("read only buffer"));
         } else {
