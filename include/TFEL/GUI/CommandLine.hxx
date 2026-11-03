@@ -186,15 +186,6 @@ namespace tfel::gui {
      */
     void textChanged(const QString &);
 
-    /*!
-     * \brief emitted when the user changes the text of the line edit himself
-     * \param[in] t : new text
-     *
-     * \note unlike \c textChanged, this signal is not emitted when the text
-     * changes because the program sets it, as a completion does
-     */
-    void textEdited(const QString &);
-
    protected slots:
 
     /*!
@@ -214,14 +205,6 @@ namespace tfel::gui {
      * \note the base implementation only emits \c textChanged
      */
     virtual void inputTextChanged(const QString &);
-
-    /*!
-     * \brief relay an edit the user did in the text of the line edit
-     * \param[in] t : new text
-     *
-     * \note the base implementation only emits \c textEdited
-     */
-    virtual void inputTextEdited(const QString &);
 
    protected:
     /*!

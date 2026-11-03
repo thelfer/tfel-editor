@@ -292,8 +292,6 @@ namespace tfel::gui {
       QObject::disconnect(this->input,
                           &CommandLine::CustomLineEdit::textChanged, this,
                           &CommandLine::inputTextChanged);
-      QObject::disconnect(this->input, &CommandLine::CustomLineEdit::textEdited,
-                          this, &CommandLine::inputTextEdited);
       this->input->deleteLater();
     }
     this->input = i;
@@ -306,8 +304,6 @@ namespace tfel::gui {
                      this, &CommandLine::userEditingFinished);
     QObject::connect(this->input, &CommandLine::CustomLineEdit::textChanged,
                      this, &CommandLine::inputTextChanged);
-    QObject::connect(this->input, &CommandLine::CustomLineEdit::textEdited,
-                     this, &CommandLine::inputTextEdited);
   }
 
   void CommandLine::userEditingFinished() {
@@ -345,8 +341,6 @@ namespace tfel::gui {
   }  // end of CommandLine::setFocus()
 
   void CommandLine::inputTextChanged(const QString& t) { emit textChanged(t); }
-
-  void CommandLine::inputTextEdited(const QString& t) { emit textEdited(t); }
 
   CommandLine::~CommandLine() {
     if ((this->completions != nullptr) && (this->scompletions != nullptr)) {
