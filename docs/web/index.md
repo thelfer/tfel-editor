@@ -15,6 +15,10 @@ the amazing abilities of the [`Qt` library](https://www.qt.io/).
 - Editing and running `Licos` input files (see
   <https://www.sciencedirect.com/science/article/pii/S0029549315003842>).
 - Editing and running `Cast3M` input files <http://www-cast3m.cea.fr>
+- Editing `C` and `C++` files, with the diagnostics, the completion, the
+  go to definition and the hover provided by a
+  [`clangd`](https://clangd.llvm.org) language server. See [the
+  `clangd` support page](clangd-support.html) for details.
 - etc.
 
 See also the [Frequently Asked Questions](faq.html).
