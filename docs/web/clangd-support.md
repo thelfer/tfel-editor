@@ -111,6 +111,8 @@ The database of the plain entry is looked for in this order:
    sub-directory whose name starts with `build` of the top directory
    of the project or of the directory holding the project, which is
    where the directory of an out-of-source `cmake` build usually is;
+   when several such directories coexist, the plain `build` is looked
+   into first, and the others follow in name order;
 3. nothing else: the session is launched without any database option,
    and `clangd` guesses the compilation options the way it does when
    it is run in a terminal.

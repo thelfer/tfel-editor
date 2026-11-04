@@ -67,10 +67,16 @@ namespace tfel::gui {
      * \return empty when no sub-directory named `build*` holds one
      */
     QString databaseInBuildSubDirectory(const QString &directory) {
-      const auto names = QDir(directory).entryList(
-          {"build*"}, QDir::Dirs | QDir::NoDotAndDotDot | QDir::CaseSensitive);
-      // the entry list is alphabetical, which is as good an order as any when
-      // several build directories coexist; `build` is simply tried first
+      auto names = QDir(directory).entryList({"build*"},
+                                             QDir::Dirs | QDir::NoDotAndDotDot);
+      // the order the file system returns is none of the editor's business:
+      // the candidates are sorted by name so that the choice among several
+      // build directories is the same on every machine
+      names.sort();
+      // `build` is the answer to the `cmake` invocations which did not say
+      // otherwise, so it is tried first whatever else is around; the other
+      // `build*` follow in name order, and a directory whose database is
+      // missing simply hands over to the next candidate
       auto candidates = QStringList();
       if (names.contains("build")) {
         candidates << "build";

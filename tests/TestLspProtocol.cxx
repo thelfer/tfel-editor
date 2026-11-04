@@ -443,13 +443,20 @@ void TestLspProtocol::testSearchCompileCommandsFile() {
   QVERIFY(makeFile(par + "/prj/src/cxx.cxx", "int z;\n"));
   QCOMPARE(LspCxxSupport::searchCompileCommandsFile(par + "/prj/src"),
            par + "/build-tfel/compile_commands.json");
-  // `build` wins over the other build directories when several coexist
+  // when several build directories coexist, the one named `build` wins over
+  // the others, whatever its place in the name order; take its database away
+  // and `build` has nothing to offer, the name order of the remaining
+  // candidates takes over
   const auto pri = r + "/pri";
   QVERIFY(makeFile(pri + "/CMakeLists.txt", "project(m)\n"));
-  QVERIFY(makeFile(pri + "/build2/compile_commands.json"));
+  QVERIFY(makeFile(pri + "/build-z/compile_commands.json"));
+  QVERIFY(makeFile(pri + "/build-a/compile_commands.json"));
   QVERIFY(makeFile(pri + "/build/compile_commands.json"));
   QCOMPARE(LspCxxSupport::searchCompileCommandsFile(pri),
            pri + "/build/compile_commands.json");
+  QVERIFY(QFile(pri + "/build/compile_commands.json").remove());
+  QCOMPARE(LspCxxSupport::searchCompileCommandsFile(pri),
+           pri + "/build-a/compile_commands.json");
   // a project with no database at all, wherever it was built
   const auto bare = r + "/bare";
   QVERIFY(makeFile(bare + "/CMakeLists.txt", "project(b)\n"));

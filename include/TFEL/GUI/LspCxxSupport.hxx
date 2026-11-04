@@ -84,7 +84,8 @@ namespace tfel::gui {
      * `compile_commands.json` of a sub-directory whose name starts with `build`
      * of the directory the project lives in, and of the directory which holds
      * that one, as an out-of-source build is often configured next to the
-     * sources it builds.
+     * sources it builds. When several such directories coexist, the plain
+     * `build` is looked into first, the others follow in name order.
      *
      * \note the search is done by the editor, not left to \c clangd, because
      * the option which hands a database to a server is set when the server
