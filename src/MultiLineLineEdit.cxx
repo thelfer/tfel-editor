@@ -169,7 +169,12 @@ namespace tfel::gui {
   void MultiLineLineEdit::setText(const QString& t) {
     this->setPlainText(t);
     auto c = this->textCursor();
-    c.movePosition(QTextCursor::End);
+    // a read only widget shows a text rather than receiving one: the cursor
+    // goes to the start, as the view follows the cursor and an editable
+    // placement at the end would leave the view of a text longer than what
+    // fits showing its tail only — the whole message of the minibuffer being
+    // one line of "clangd" when it is a path wrapped over three
+    c.movePosition(this->isReadOnly() ? QTextCursor::Start : QTextCursor::End);
     this->setTextCursor(c);
   }  // end of MultiLineLineEdit::setText
 

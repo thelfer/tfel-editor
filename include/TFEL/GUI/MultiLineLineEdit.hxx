@@ -59,7 +59,10 @@ namespace tfel::gui {
      * \param[in] t: new text
      *
      * \note as in `QLineEdit`, the validator is not consulted and the cursor
-     * is moved at the end of the new text
+     * is moved at the end of the new text, where the next key will act —
+     * except in a read only widget, which shows a text rather than receiving
+     * one: the cursor goes to the start there, as the view follows the cursor
+     * and a text longer than the widget would otherwise be read by its tail
      */
     void setText(const QString &);
     /*!

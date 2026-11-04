@@ -28,6 +28,7 @@ struct TestMultiLineLineEdit : QObject {
   void singleLineHeightsMatchWithAndWithoutFrame();
   void heightGrowsOneLinePerLine();
   void heightMeasuredInWidgetWidthNotInViewportWidth();
+  void readOnlyTextShowsTheStart();
 
  private:
   void pump(int n = 4);
@@ -168,6 +169,28 @@ void TestMultiLineLineEdit::heightMeasuredInWidgetWidthNotInViewportWidth() {
   QCOMPARE(shown_last.height(), shown_first.height());
 }  // end of
    // TestMultiLineLineEdit::heightMeasuredInWidgetWidthNotInViewportWidth
+
+void TestMultiLineLineEdit::readOnlyTextShowsTheStart() {
+  // a read only widget shows a text rather than receiving one: the cursor
+  // goes to the start, as the view follows the cursor and the end placement
+  // an editable widget wants would leave a text longer than the height of
+  // the message area displaying its tail only — the whole message of the
+  // minibuffer being one line of "clangd" when it is a path wrapped over
+  // three lines
+  const auto message = QStringLiteral(
+      "using /home/user/project/build/compile_commands.json "
+      "to start clangd");
+  tfel::gui::MultiLineLineEdit read_only;
+  read_only.setReadOnly(true);
+  read_only.setText(message);
+  QCOMPARE(read_only.text(), message);
+  QCOMPARE(read_only.textCursor().position(), 0);
+  // an editable widget receives a text to type into: there, as in a
+  // `QLineEdit`, the cursor is where the next key will act, that is the end
+  tfel::gui::MultiLineLineEdit editable;
+  editable.setText(message);
+  QCOMPARE(editable.textCursor().position(), static_cast<int>(message.size()));
+}  // end of TestMultiLineLineEdit::readOnlyTextShowsTheStart
 
 QTEST_MAIN(TestMultiLineLineEdit)
 
