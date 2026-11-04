@@ -403,6 +403,21 @@ namespace tfel::gui {
     // the frame may have been removed since the margin was last computed, by
     // the command line the widget was made the input of
     this->alignDocumentMargin();
+    // the document is laid out in the width the widget has for itself: its own
+    // width, the frame and the margins of the view port taken off, the room a
+    // vertical scroll bar would take left free. Measuring in the view port
+    // instead counts the lines the content makes in a column narrower than the
+    // one it is drawn in, either because the view port of a widget which was
+    // never shown, or which was resized while it was hidden, still has the
+    // width it was built with, or because a bar shown for a content which does
+    // not fit the height of the moment takes room the text would have needed: a
+    // line more is asked for, which asks for a bar more, and so on
+    const auto vm = this->viewportMargins();
+    const auto inner =
+        this->width() - 2 * this->frameWidth() - vm.left() - vm.right();
+    if ((inner > 0) && (qAbs(this->document()->textWidth() - inner) > 0.5)) {
+      this->document()->setTextWidth(inner);
+    }
     const auto min_h = this->singleLineHeight();
     // the document layout is only up to date once its size has been asked for
     const auto h =
