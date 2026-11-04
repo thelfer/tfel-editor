@@ -201,6 +201,42 @@ namespace tfel::gui {
     emit newTreatedFile(f);
   }  // end of emitNewTreatedFile
 
+  void Buffer::changeFont(const QFont &f) {
+    this->e->setFont(f);
+    // the icon of the information line is the only label which is not given the
+    // font of the text edits when the buffer is built: it holds a pixmap, which
+    // Qt draws with the application font anyway
+    for (auto *l : {this->bni, this->rpi, this->api, this->mi, this->ti}) {
+      l->setFont(f);
+    }
+    // the tab bar of the secondary tasks is not a child of the main frame
+    // either, and the font given to it at construction wins over the font of
+    // this widget, so it has to be handled here too
+    this->stw->tabBar()->setFont(f);
+    // a text edit used as a secondary task, such as the list of completions of
+    // a command line, reads the font of the text edits when it is built, which
+    // a command line does the first time it completes. A scroll area attached
+    // as a secondary task reads it when it is attached, and is held by a
+    // wrapper, which is what the tab widget shows
+    for (int i = 0; i != this->stw->count(); ++i) {
+      auto *const w = this->stw->widget(i);
+      if (auto *const t = qobject_cast<TextEditBase *>(w)) {
+        t->setFont(f);
+        continue;
+      }
+      if (auto *const a = qobject_cast<QAbstractScrollArea *>(w)) {
+        a->setFont(f);
+        continue;
+      }
+      if (auto *const r = qobject_cast<QAbstractScrollAreaWrapper *>(w)) {
+        if (auto *const a =
+                qobject_cast<QAbstractScrollArea *>(r->getWrappedObject())) {
+          a->setFont(f);
+        }
+      }
+    }
+  }  // end of changeFont
+
   QString Buffer::getBufferRawName() const {
     const auto f = this->e->getFileName();
     QFileInfo fi(f);

@@ -117,7 +117,7 @@ namespace tfel::gui {
         auto f = fd.selectedFont();
         f.setStyleStrategy(QFont::PreferAntialias);
         s.setValue("font/textedit", f);
-        e->changeMainFramesFont(f);
+        e->changeFont(f);
       }
     }
   }  // end of MainWindow::selectFont

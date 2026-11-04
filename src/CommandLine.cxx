@@ -267,6 +267,30 @@ namespace tfel::gui {
     this->label->setText("<font color=blue> " + l + " </font>");
   }
 
+  void CommandLine::changeFont(const QFont& f) {
+    // the prompt has no font of its own: it is given the one of this widget by
+    // Qt, which resolves the font of a child from its parent as long as the
+    // child was not given an explicit font
+    this->QWidget::setFont(f);
+    if (this->input != nullptr) {
+      // the font of the entry is an explicit one (see setLineEdit), which Qt
+      // does not replace with the font of the parent widget
+      this->input->setFont(f);
+      // the prompt leaves the room the entry draws its first line in free, so
+      // that the two start on the same line; that room is shared between the
+      // frame of the entry and the margin of its document, both of which a
+      // change of the font or of the style may touch
+      this->label->setContentsMargins(0, this->input->firstLineTop(), 0, 0);
+    }
+    if (this->completions != nullptr) {
+      // the list of completions is a text edit which read the font of the text
+      // edits when it was built; it is a secondary task of the buffer only
+      // while it is displayed, so it may be out of the tab widget of the
+      // secondary tasks, which is where Buffer::changeFont looks
+      this->completions->setFont(f);
+    }
+  }  // end of changeFont
+
   void CommandLine::keyPressEvent(QKeyEvent* e) {
     if (this->input == nullptr) {
       return;

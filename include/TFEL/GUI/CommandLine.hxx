@@ -89,6 +89,19 @@ namespace tfel::gui {
     virtual void setLabel(const QString &);
 
     /*!
+     * \brief change the font of the prompt and of the line edit
+     * \param[in] f: new font
+     *
+     * \note the font of the line edit is set explicitly when the input is built
+     * (see \c setLineEdit) and Qt does not replace an explicit font with the
+     * one of the parent widget, so both have to be handled here. The input is a
+     * `MultiLineLineEdit`, which recomputes the height of its lines on a font
+     * change, so the prompt, which is aligned on the first line of the entry,
+     * and the entry stay on the same line.
+     */
+    virtual void changeFont(const QFont &);
+
+    /*!
      * \return true if the user can not move the focus out of this input while
      * it is shown
      *

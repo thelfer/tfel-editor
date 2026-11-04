@@ -201,13 +201,21 @@ namespace tfel::gui {
    public slots:
 
     /*!
-     * change the font used by the main frames
+     * change the font of every widget which uses the font of the text edits
      * \param[in] f : new font
+     *
+     * \note the widgets reading the "font/textedit" setting when they are built
+     * (see `setFontSizeAndContentsMargins`) are not children of each other, so
+     * a font change has to be handed to all of them: the main frames, the
+     * informative message area and the area displaying the last user input, the
+     * command lines which are waiting for an answer, the information line of
+     * every buffer and the tab bar of their secondary tasks. Widgets built
+     * later read the setting themselves.
      *
      * \note this setting is not persistent: MainWindow::selectFont is in
      * charge of storing the font in the settings
      */
-    void changeMainFramesFont(const QFont &);
+    void changeFont(const QFont &);
 
     /*!
      * open a file in a new buffer

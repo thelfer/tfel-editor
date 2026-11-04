@@ -285,16 +285,32 @@ namespace tfel::gui {
     }
   }  // end of EditorWidget::addToRecentFiles
 
-  void EditorWidget::changeMainFramesFont(const QFont& f) {
+  void EditorWidget::changeFont(const QFont& f) {
     for (int i = 0; i != this->buffers->count(); ++i) {
       auto* b = qobject_cast<Buffer*>(this->buffers->widget(i));
       if (b == nullptr) {
         continue;
       }
-      auto& t = b->getMainFrame();
-      t.setFont(f);
+      // the main frame, the labels of the information line and the tab bar of
+      // the secondary tasks all read the font of the text edits when the buffer
+      // is built and are no children of one another, so the whole buffer is
+      // handed to Buffer::changeFont
+      b->changeFont(f);
     }
-  }  // end of EditorWidget::changeMainFrameFont
+    // the informative message area and the area redisplaying the last user
+    // input: both are `MultiLineLineEdit`, which recomputes the height of its
+    // lines and gives the new height to the minibuffer on a font change
+    this->um->setFont(f);
+    this->eui->setFont(f);
+    // the user inputs waiting for an answer: the font of their line edit is set
+    // explicitly, which Qt does not replace by the one of the parent widget,
+    // and their prompt is as tall as the text it holds
+    for (auto& u : this->ui) {
+      if (u.first != nullptr) {
+        u.first->changeFont(f);
+      }
+    }
+  }  // end of EditorWidget::changeFont
 
   Buffer* EditorWidget::getBufferVisitingFile(const QString& f) {
     const auto af = getRealPath(f);
