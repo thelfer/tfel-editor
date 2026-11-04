@@ -169,13 +169,28 @@ namespace tfel::gui {
      */
     void keyPressEvent(QKeyEvent *) override;
     /*!
-     * \brief react to a change of the font or of the palette
+     * \brief react to a change of the font, of the frame or of the palette
      * \param[inout] ev: event
      *
      * \note the height of a line, hence the height of the widget, depends on
-     * the font: the geometry is updated when it changes
+     * the font and on the frame: the geometry is updated when any of them
+     * changes. A command line removes the frame of its input and the font of a
+     * widget is set after its construction, so neither of them is known when
+     * this widget has been built
      */
     void changeEvent(QEvent *) override;
+    /*!
+     * \brief recompute the height of a widget whose font and frame are only
+     * known once it is shown
+     * \param[inout] ev: show event
+     *
+     * \note a widget built before the font of the application was read from the
+     * settings, and kept hidden since, is drawn with another font than the one
+     * its height was computed with. The minibuffer is as tall as the page it
+     * shows: those pixels are taken from the buffers of the editor when such a
+     * page is shown, which is felt as the text edit being resized
+     */
+    void showEvent(QShowEvent *) override;
     /*!
      * \brief recompute the height of the widget, which depends on the width
      * the text is laid out in
@@ -211,6 +226,18 @@ namespace tfel::gui {
      * document, which requires a layout of the document to be up to date
      */
     void updateHeight();
+    /*!
+     * \brief share the vertical padding a line needs between the frame and the
+     * margin of the document
+     *
+     * The frame belongs to the height of the widget, the margin to the height
+     * of its document: a framed input and the frameless input a command line
+     * shows would otherwise not be equally tall for a single line, and the
+     * minibuffer, which is as tall as the page it shows, would be resized each
+     * time the page changes, that is each time a message comes over an input or
+     * an input is given back to the editor.
+     */
+    void alignDocumentMargin();
     /*!
      * \brief activate the layouts the widget takes part in, and those above
      * them, so that they adopt the new height of the content
@@ -292,6 +319,10 @@ namespace tfel::gui {
     int propagationTries_ = 0;
     //! maximum number of lines displayed before a scroll bar takes over
     static constexpr int max_lines = 10;
+    //! height the padding of a single line adds to the height of the font, in
+    //! pixels, shared between the frame of the widget and the margin of its
+    //! document, see \c alignDocumentMargin
+    static constexpr int line_padding = 4;
 
     Q_OBJECT
   };

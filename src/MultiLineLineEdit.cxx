@@ -11,6 +11,7 @@
 #include <QtGui/QFontMetrics>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QResizeEvent>
+#include <QtGui/QShowEvent>
 #include <QtGui/QTextDocument>
 #include <QtGui/QValidator>
 #include <QtWidgets/QAbstractButton>
@@ -107,8 +108,9 @@ namespace tfel::gui {
     // bar is never required
     this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     // the default document margin of `QTextEdit` (4 pixels) would make the
-    // single line input noticeably taller than a `QLineEdit`
-    this->document()->setDocumentMargin(2);
+    // single line input noticeably taller than a `QLineEdit`; the margin and
+    // the frame together give a line its padding, see `alignDocumentMargin`
+    this->alignDocumentMargin();
     QObject::connect(this->document(), &QTextDocument::contentsChange, this,
                      [this](int, int, int) { this->onContentsChange(); });
     this->updateHeight();
@@ -290,12 +292,33 @@ namespace tfel::gui {
 
   void MultiLineLineEdit::changeEvent(QEvent* const ev) {
     QTextEdit::changeEvent(ev);
-    if (ev->type() == QEvent::FontChange) {
-      // the height of a line depends on the font: the widget, which has a
-      // fixed height, must be resized again
-      this->updateHeight();
+    switch (ev->type()) {
+      case QEvent::FontChange:
+      case QEvent::StyleChange:
+      case QEvent::Polish:
+      case QEvent::ContentsRectChange: {
+        // the height of a line depends on the font and on the frame, and both
+        // are set after the construction of the widget: the font comes from the
+        // settings or from the dialog hosting the input, the frame is removed
+        // by a command line. The height of the widget, which is a fixed one, is
+        // computed again, the padding of the line shared again between the
+        // frame and the margin of the document
+        this->updateHeight();
+        break;
+      }
+      default:
+        break;
     }
   }  // end of MultiLineLineEdit::changeEvent
+
+  void MultiLineLineEdit::showEvent(QShowEvent* const ev) {
+    QTextEdit::showEvent(ev);
+    // a widget which was built before the font of the application was read from
+    // the settings, and which was kept hidden since, has a height computed with
+    // the metrics of another font: it is only when it is shown that it gets the
+    // one it is drawn with, and the height of the line it holds with it
+    this->updateHeight();
+  }  // end of MultiLineLineEdit::showEvent
 
   void MultiLineLineEdit::resizeEvent(QResizeEvent* const ev) {
     QTextEdit::resizeEvent(ev);
@@ -364,8 +387,22 @@ namespace tfel::gui {
     return qMax(min_h, qMin(lines_h, w->height() / 4));
   }  // end of maximumContentHeight
 
+  void MultiLineLineEdit::alignDocumentMargin() {
+    // a line is given `line_padding` pixels of padding, whatever the widget
+    // shows it: the frame the widget is drawn with takes its part of them and
+    // the document margin holds the rest, so that a framed input and the
+    // frameless one of a command line are, for a single line, exactly as tall
+    const auto m = qMax(0, (line_padding - 2 * this->frameWidth()) / 2);
+    if (static_cast<int>(this->document()->documentMargin()) != m) {
+      this->document()->setDocumentMargin(m);
+    }
+  }  // end of alignDocumentMargin
+
   void MultiLineLineEdit::updateHeight() {
     this->watchWindow();
+    // the frame may have been removed since the margin was last computed, by
+    // the command line the widget was made the input of
+    this->alignDocumentMargin();
     const auto min_h = this->singleLineHeight();
     // the document layout is only up to date once its size has been asked for
     const auto h =
