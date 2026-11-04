@@ -39,6 +39,22 @@ namespace tfel::gui {
     //! \return the setting `clangd/arguments`, empty when unset
     static QStringList serverArguments();
     /*!
+     * \brief the arguments which hand a compilation database to \c clangd
+     * \param[in] path : the database file or the directory holding it; may be
+     * empty, which means that the server has to look for a database itself
+     * \param[out] error : why the answer can not be used, empty otherwise
+     * \return the arguments to give the server, empty when the search is left
+     * to it
+     *
+     * \note \c clangd is told which \e directory to look in, never which file,
+     * so the file of the answer loses its name and the directory is taken as
+     * it stands; the answer is made absolute, and a leading `~` expanded,
+     * because the server starts in a directory of the editor's, not of the
+     * buffer's, and a relative or abbreviated answer would mean nothing to it
+     */
+    static QStringList compileCommandsArguments(const QString &path,
+                                                QString &error);
+    /*!
      * \return true if the file name is one of the C and C++ extensions the
      * `C++` major mode is registered for
      */

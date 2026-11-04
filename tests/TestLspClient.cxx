@@ -8,6 +8,9 @@
 
 #include <QtTest/QtTest>
 #include <QtCore/QElapsedTimer>
+#include <QtCore/QJsonArray>
+#include <QtCore/QJsonDocument>
+#include <QtCore/QJsonObject>
 #include <QtCore/QFile>
 #include <QtCore/QSettings>
 #include <QtCore/QTemporaryDir>
@@ -20,8 +23,10 @@
 #include <memory>
 
 #include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/CommandLine.hxx"
 #include "TFEL/GUI/CxxMajorMode.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/LineEdit.hxx"
 #include "TFEL/GUI/LspClient.hxx"
 #include "TFEL/GUI/LspCxxSupport.hxx"
 #include "TFEL/GUI/LspProtocol.hxx"
@@ -57,10 +62,13 @@ struct TestLspClient : QObject {
   void testHandshake();
   void testDocumentOpenAndIncrementalSync();
   void testDiagnostics();
+  void testRelaunchReplacesTheSession();
   void testDefinition();
   void testHover();
   void testCompletion();
+  void testModeMenu();
   void testModeIntegration();
+  void testModeLaunchesWithACompilationDatabase();
   void testModeContextMenu();
 
  private:
@@ -68,6 +76,47 @@ struct TestLspClient : QObject {
   void isolateSettings();
   //! write `content` in a temporary file and return its name
   QString writeSource(const QString &name, const QString &content);
+  /*!
+   * \brief launch a session on the client and wait for its handshake, and
+   * fail if either does not work out
+   *
+   * \note the client launches nothing on its own, so every test which talks to
+   * a server has to ask for one, exactly as the user does with the entries of
+   * the "C/C++" menu
+   */
+  void launchClient(const QStringList &arguments = QStringList());
+  //! the "C/C++" menu a buffer of the given editor offers, null if none
+  static QMenu *cxxMenu(tfel::gui::EditorWidget &);
+  //! the file path question the editor waits for an answer to, null if none
+  static tfel::gui::FilePathUserInput *userInput(tfel::gui::EditorWidget &);
+  /*!
+   * \brief the line edit a user input shows
+   *
+   * \note `findChild<LineEdit *>()` alone finds the line edit the constructor
+   * of the input replaced, so the one which is still laid out is looked for
+   */
+  static tfel::gui::LineEdit *lineEditOf(tfel::gui::CommandLine &);
+  /*!
+   * \brief true when a widget is still laid out, that is displayed
+   *
+   * \note dropping a widget of the minibuffer, an input which was answered or
+   * a line edit which was replaced, only takes it out of the layout and asks
+   * for its deletion: the widget stays a child, and a live one, until the event
+   * loop runs that deletion, which `processEvents` does not do promptly. What
+   * the layout still holds is what the editor shows
+   */
+  static bool isLaidOut(QWidget &);
+  /*!
+   * \brief replace the text of the question the editor waits for with
+   * \c text and validate it, which is what typing an answer and pressing
+   * `Return` does
+   *
+   * \note the question is answered through the public slot a line edit's
+   * `Return` triggers, not through the focus: an offscreen window is not an
+   * active one, and \c setFocus on a widget of an inactive window puts the
+   * focus nowhere
+   */
+  static void answerUserInput(tfel::gui::EditorWidget &, const QString &text);
 
   QTemporaryDir directory;
   tfel::gui::LspClient *client = nullptr;
@@ -85,6 +134,68 @@ void TestLspClient::isolateSettings() {
                                 QStringLiteral("--header-insertion=never")});
   settings.sync();
 }  // end of TestLspClient::isolateSettings()
+
+void TestLspClient::launchClient(const QStringList &arguments) {
+  auto error = QString();
+  QVERIFY2(client->launch(arguments, error), error.toUtf8().constData());
+  QVERIFY2(client->waitUntilReady(30000), "the handshake did not complete");
+}  // end of TestLspClient::launchClient
+
+QMenu *TestLspClient::cxxMenu(tfel::gui::EditorWidget &editor) {
+  for (auto *const menu : editor.getCurrentBufferSpecificMenus()) {
+    if (menu->title() == QStringLiteral("C/C++")) {
+      return menu;
+    }
+  }
+  return nullptr;
+}  // end of TestLspClient::cxxMenu
+
+bool TestLspClient::isLaidOut(QWidget &w) {
+  auto *const parent = w.parentWidget();
+  auto *const layout = (parent != nullptr) ? parent->layout() : nullptr;
+  return (layout != nullptr) && (layout->indexOf(&w) >= 0);
+}  // end of TestLspClient::isLaidOut
+
+tfel::gui::FilePathUserInput *TestLspClient::userInput(
+    tfel::gui::EditorWidget &editor) {
+  // an input which was answered lingers as a child of the editor until the
+  // event loop deletes it, so the question which is displayed is the one the
+  // minibuffer still lays out
+  for (auto *const input :
+       editor.findChildren<tfel::gui::FilePathUserInput *>()) {
+    if (isLaidOut(*input)) {
+      return input;
+    }
+  }
+  return nullptr;
+}  // end of TestLspClient::userInput
+
+tfel::gui::LineEdit *TestLspClient::lineEditOf(tfel::gui::CommandLine &input) {
+  tfel::gui::LineEdit *found = nullptr;
+  for (auto *const line : input.findChildren<tfel::gui::LineEdit *>()) {
+    // of the line edits the input has, the one it lays out is the one its
+    // constructor left in place
+    if (isLaidOut(*line)) {
+      return line;
+    }
+    // the newest of the ones which are not laid out is the next best guess
+    found = line;
+  }
+  return found;
+}  // end of TestLspClient::lineEditOf
+
+void TestLspClient::answerUserInput(tfel::gui::EditorWidget &editor,
+                                    const QString &text) {
+  auto *const input = userInput(editor);
+  QVERIFY2(input != nullptr, "the editor asks for no file path");
+  auto *const line = lineEditOf(*input);
+  QVERIFY2(line != nullptr, "the question holds no line edit to type in");
+  // the answer is the whole text of the input: the guess it is pre-filled with
+  // is replaced, not completed
+  line->setText(text);
+  QVERIFY(line->text() == text);
+  input->userEditingFinished();
+}  // end of TestLspClient::answerUserInput
 
 QString TestLspClient::writeSource(const QString &name,
                                    const QString &content) {
@@ -119,8 +230,16 @@ void TestLspClient::cleanupTestCase() {
 }  // end of TestLspClient::cleanupTestCase
 
 void TestLspClient::testHandshake() {
-  QVERIFY(client->waitUntilReady(20000));
+  // the client never launches a server of its own accord: what a session runs
+  // with, the compilation database above all, is not the editor's to guess
+  QVERIFY(client->isIdle());
+  // waiting for a handshake which was never asked for returns at once instead
+  // of holding whoever waits for nothing
+  QVERIFY(!client->waitUntilReady(100));
+  QVERIFY(client->isIdle());
+  launchClient();
   QVERIFY(client->isReady());
+  QVERIFY(!client->isIdle());
   // a second call does not start a second server nor a second handshake
   QVERIFY(client->waitUntilReady(1000));
 }  // end of TestLspClient::testHandshake
@@ -190,6 +309,44 @@ void TestLspClient::testDiagnostics() {
   QVERIFY(
       client->diagnosticsFor(QStringLiteral("/does/not/exist.cxx")).isEmpty());
 }  // end of TestLspClient::testDiagnostics
+
+void TestLspClient::testRelaunchReplacesTheSession() {
+  // the options of a session are fixed when the server starts, so launching
+  // again with another compilation database replaces the running session
+  // instead of asking it to change its mind
+  QVERIFY(client->isReady());
+  const auto source = QStringLiteral(
+      "int main() {\n  int x = \"not an int\";\n  return x;\n}\n");
+  const auto file = writeSource(QStringLiteral("restart.cxx"), source);
+  QVERIFY(!file.isEmpty());
+  auto edit = QPlainTextEdit();
+  edit.setPlainText(source);
+  auto *const doc = edit.document();
+  client->openDocument(file, doc);
+  QVERIFY(
+      waitFor([&] { return !client->diagnosticsFor(file).isEmpty(); }, 30000));
+  // the underlines of a server which is about to stop knowing the buffers must
+  // not outlive it: watch for the file being published empty while the new
+  // session is launched, which is a thing `launch` does before it returns
+  auto cleared = false;
+  const auto on_update = QObject::connect(
+      client, &tfel::gui::LspClient::diagnosticsUpdated, [&](const QString &f) {
+        if ((f == file) && (client->diagnosticsFor(f).isEmpty())) {
+          cleared = true;
+        }
+      });
+  launchClient(QStringList() << (QStringLiteral("--compile-commands-dir=") +
+                                 directory.path()));
+  QVERIFY(cleared);
+  QObject::disconnect(on_update);
+  // the session is over and a new one answered: the documents the editor holds
+  // have been opened on it again, which the diagnostics coming back proves, as
+  // this second set can only come from a server which saw the text itself
+  QVERIFY(client->isReady());
+  QVERIFY(
+      waitFor([&] { return !client->diagnosticsFor(file).isEmpty(); }, 30000));
+  client->closeDocument(file, doc);
+}  // end of TestLspClient::testRelaunchReplacesTheSession
 
 void TestLspClient::testDefinition() {
   const auto source = QStringLiteral(
@@ -317,6 +474,67 @@ void TestLspClient::testCompletion() {
   client->closeDocument(file, doc);
 }  // end of TestLspClient::testCompletion
 
+void TestLspClient::testModeMenu() {
+  // the entries the mode puts in the menu bar, which are the only way a session
+  // starts: what they launch, and when they launch it
+  const auto source = QStringLiteral("int main() { return 0; }\n");
+  const auto file = writeSource(QStringLiteral("menu-entries.cxx"), source);
+  QVERIFY(!file.isEmpty());
+  auto editor = std::make_unique<tfel::gui::EditorWidget>();
+  editor->show();
+  editor->openFile(file);
+  auto &lsp = tfel::gui::LspClient::get(*editor);
+  QVERIFY(lsp.isIdle());
+  auto *const menu = cxxMenu(*editor);
+  QVERIFY(menu != nullptr);
+  const auto actions = menu->actions();
+  QCOMPARE(static_cast<int>(actions.size()), 2);
+  QVERIFY(actions.at(0)->text().contains(QStringLiteral("Launch clangd")));
+  QVERIFY(
+      actions.at(1)->text().contains(QStringLiteral("compile_commands.json")));
+  // the plain entry launches at once, with no question asked first
+  actions.at(0)->trigger();
+  QVERIFY(!editor->hasUserInput());
+  QVERIFY(waitFor([&] { return lsp.isReady(); }, 30000));
+  // the other entry asks first: the session which is running has to be
+  // replaced by the one the answer names, not by a guess, and a session
+  // started before the answer would have to be replaced before it was of any
+  // use
+  actions.at(1)->trigger();
+  QVERIFY(editor->hasUserInput());
+  // the question is a file path, with completion, and it starts where a
+  // database is likely to be found: the directory of the file which is open
+  auto *const question = userInput(*editor);
+  QVERIFY(question != nullptr);
+  auto *const line = lineEditOf(*question);
+  QVERIFY(line != nullptr);
+  QCOMPARE(line->text(), directory.path() + '/');
+  // an answer which names nothing is an answer: the plain session again
+  answerUserInput(*editor, QStringLiteral("/does/not/exist.json"));
+  QVERIFY(!editor->hasUserInput());
+  // a refusal leaves the running session alone
+  QVERIFY(lsp.isReady());
+  actions.at(1)->trigger();
+  answerUserInput(*editor, QStringLiteral(""));
+  QVERIFY(waitFor([&] { return lsp.isReady(); }, 30000));
+  QVERIFY(!editor->hasUserInput());
+  // the same through the commands, which are what a `Meta-X` offers and what
+  // a key binding is written against
+  editor->launchCommand(QStringLiteral("launch-clangd"));
+  QVERIFY(!editor->hasUserInput());
+  QVERIFY2(lsp.waitUntilReady(30000),
+           "the 'launch-clangd' command launched no session");
+  editor->launchCommand(QStringLiteral("launch-clangd-with-compile-commands"));
+  QVERIFY(editor->hasUserInput());
+  QVERIFY(userInput(*editor) != nullptr);
+  answerUserInput(*editor, QStringLiteral(""));
+  QVERIFY(!editor->hasUserInput());
+  QVERIFY2(lsp.waitUntilReady(30000),
+           "the answer of 'launch-clangd-with-compile-commands' launched no "
+           "session");
+  editor.reset();
+}  // end of TestLspClient::testModeMenu
+
 void TestLspClient::testModeIntegration() {
   // the whole chain at once: a buffer opened in the editor takes the C++
   // mode, the mode opens the document on the client of its editor widget,
@@ -332,6 +550,15 @@ void TestLspClient::testModeIntegration() {
   auto &frame = editor->getCurrentBuffer().getMainFrame();
   QVERIFY(dynamic_cast<const tfel::gui::CxxMajorMode *>(
               &frame.getMajorMode()) != nullptr);
+  // opening the file registered the document on the client of the editor
+  // widget and launched no server; the session is what the user asks for, and
+  // the whole chain below only runs once that happened
+  auto &lsp = tfel::gui::LspClient::get(*editor);
+  QVERIFY(lsp.isIdle());
+  // opening the file registered the document on the client all the same, so
+  // the session which is launched next has the buffer to send it
+  QVERIFY(lsp.isDocumentOpen(file));
+  cxxMenu(*editor)->actions().at(0)->trigger();
   // an underlined diagnostic is the visible half of the chain: the current
   // line highlight shares the document with it, see
   // `TextEditBase::setExtraSelections(const QString &, ...)`; the style is
@@ -358,6 +585,55 @@ void TestLspClient::testModeIntegration() {
   editor.reset();
 }  // end of TestLspClient::testModeIntegration
 
+void TestLspClient::testModeLaunchesWithACompilationDatabase() {
+  // the second entry of the "C/C++" menu: the database is asked for in the
+  // minibuffer, and the session which is launched reads the buffers as that
+  // database says they are compiled
+  const auto source = QStringLiteral(
+      "int main() {\n  int x = \"not an int\";\n  return x;\n}\n");
+  const auto file = writeSource(QStringLiteral("database.cxx"), source);
+  QVERIFY(!file.isEmpty());
+  // a database of one entry: the file and how it is compiled. Whether the
+  // server reads the answer as a file or as the directory of that file is what
+  // `LspCxxSupport::compileCommandsArguments` is tested for, see
+  // `test-lsp-protocol`; what is tested here is that the answer reaches the
+  // server it is meant for, which the diagnostics it publishes say
+  const auto build = QDir(directory.path()).filePath("build");
+  QVERIFY(QDir(directory.path()).mkpath(QStringLiteral("build")));
+  const auto database = QDir(build).filePath("compile_commands.json");
+  const auto entry = QJsonObject{{"directory", directory.path()},
+                                 {"file", file},
+                                 {"command", QStringLiteral("c++ -std=c++11 "
+                                                            "-fsyntax-only "
+                                                            "%1")
+                                                 .arg(file)}};
+  {
+    auto handle = QFile(database);
+    QVERIFY(handle.open(QIODevice::WriteOnly));
+    handle.write(QJsonDocument(QJsonArray{entry}).toJson());
+    handle.close();
+  }
+  auto editor = std::make_unique<tfel::gui::EditorWidget>();
+  editor->show();
+  editor->openFile(file);
+  auto &lsp = tfel::gui::LspClient::get(*editor);
+  QVERIFY(lsp.isIdle());
+  const auto actions = cxxMenu(*editor)->actions();
+  actions.at(1)->trigger();
+  QVERIFY(editor->hasUserInput());
+  // the file of the database, not its directory: the server is told which
+  // directory to look in, so the name of the file is dropped on the way
+  answerUserInput(*editor, database);
+  QVERIFY(!editor->hasUserInput());
+  QVERIFY2(waitFor([&] { return lsp.isReady(); }, 30000),
+           "the session asked for through the menu did not answer");
+  // and the buffer of the editor reaches that session: the error the file is
+  // written for is published for it
+  QVERIFY2(waitFor([&] { return !lsp.diagnosticsFor(file).isEmpty(); }, 30000),
+           "the session launched with a database published nothing");
+  editor.reset();
+}  // end of TestLspClient::testModeLaunchesWithACompilationDatabase
+
 void TestLspClient::testModeContextMenu() {
   // the right click entry of the mode: the menu is completed with a "Go to
   // definition" entry only where the server has a definition to offer, and the
@@ -375,6 +651,12 @@ void TestLspClient::testModeContextMenu() {
   editor->show();
   editor->openFile(file);
   auto &frame = editor->getCurrentBuffer().getMainFrame();
+  // the mode answers a right click only from a running session, so one is
+  // launched the way the user launches it
+  auto &lsp = tfel::gui::LspClient::get(*editor);
+  QVERIFY(lsp.isIdle());
+  cxxMenu(*editor)->actions().at(0)->trigger();
+  QVERIFY2(lsp.waitUntilReady(30000), "the session did not answer");
   // `getMajorMode` only hands the mode out as a constant, and completing a
   // context menu is a non-const operation; the menu the mode is about to fill
   // is a local of this scope, nothing else survives the call

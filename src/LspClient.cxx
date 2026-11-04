@@ -21,9 +21,14 @@ namespace tfel::gui {
                      &LspClient::handleNotification);
     QObject::connect(connection, &LspConnection::stopped, this, [this] {
       const auto was_ready = (state == State::Ready);
-      state = State::Dead;
-      if (was_ready) {
-        showInformativeMessage(QStringLiteral("clangd exited"));
+      // a session the client ended of its own accord, to launch another one
+      // or to die with the editor, did not exit: it was dismissed, and there
+      // is nothing to report about it
+      if (!ending_session) {
+        state = State::Dead;
+        if (was_ready) {
+          showInformativeMessage(QStringLiteral("clangd exited"));
+        }
       }
       emit stopped();
     });
@@ -35,16 +40,23 @@ namespace tfel::gui {
     // told must not talk to the widget this client dies with, which is being
     // destroyed around us
     this->shutting_down = true;
-    if (connection->isRunning()) {
-      // the ritual: the server is asked to shut down, told that the client is
-      // leaving, and only then does the process lose the argument; a server
-      // which lingers past the grace period is killed by the transport
-      connection->request(QStringLiteral("shutdown"), QJsonObject(),
-                          [](const QJsonValue &, const QString &) {});
-      connection->notify(QStringLiteral("exit"));
-      transport->terminate();
+    this->endSession();
+  }  // end of ~LspClient
+
+  void LspClient::endSession() {
+    if (!connection->isRunning()) {
+      return;
     }
-  }  // end of LspClient::~LspClient
+    // the ritual: the server is asked to shut down, told that the client is
+    // leaving, and only then does the process lose the argument; a server
+    // which lingers past the grace period is killed by the transport
+    this->ending_session = true;
+    connection->request(QStringLiteral("shutdown"), QJsonObject(),
+                        [](const QJsonValue &, const QString &) {});
+    connection->notify(QStringLiteral("exit"));
+    transport->terminate();
+    this->ending_session = false;
+  }  // end of endSession
 
   LspClient &LspClient::get(EditorWidget &w) {
     if (auto *const c = w.findChild<LspClient *>()) {
@@ -57,14 +69,24 @@ namespace tfel::gui {
     return state == State::Ready;
   }  // end of LspClient::isReady
 
-  bool LspClient::ensureStarted(QString &error) {
-    if (state != State::Idle) {
-      if (state == State::Dead) {
-        error = QStringLiteral("the language server exited");
-        return false;
-      }
-      return true;
+  bool LspClient::isIdle() const {
+    return state == State::Idle;
+  }  // end of isIdle
+
+  bool LspClient::launch(const QStringList &extra_arguments, QString &error) {
+    // the options of a session, the compilation database above all, are fixed
+    // when the server starts, so a session which is running is dismissed and
+    // replaced rather than asked to change its mind
+    this->endSession();
+    // whatever the old server published describes buffers it read under other
+    // options, and the new one has seen none of them at all: both are to be
+    // redone from scratch, and the underlines of the old session must not
+    // outlive it
+    for (auto &document : documents) {
+      document.version = 0;
     }
+    this->clearDiagnostics();
+    state = State::Idle;
     const auto program = LspCxxSupport::serverExecutable();
     if (program.isEmpty()) {
       error = QStringLiteral(
@@ -72,12 +94,13 @@ namespace tfel::gui {
           "option");
       return false;
     }
-    state = State::Starting;
-    if (!transport->start(program, LspCxxSupport::serverArguments())) {
-      state = State::Idle;
+    auto arguments = LspCxxSupport::serverArguments();
+    arguments += extra_arguments;
+    if (!transport->start(program, arguments)) {
       error = QStringLiteral("'%1' could not be started").arg(program);
       return false;
     }
+    state = State::Starting;
     // the capabilities this editor actually implements, see the issue
     auto completion_item = QJsonObject{
         {"snippetSupport", false},
@@ -114,7 +137,7 @@ namespace tfel::gui {
           handleInitializeAnswer(result, error_message);
         });
     return true;
-  }  // end of LspClient::ensureStarted
+  }  // end of LspClient::launch
 
   void LspClient::handleInitializeAnswer(const QJsonValue &,
                                          const QString &error_message) {
@@ -131,9 +154,9 @@ namespace tfel::gui {
   }  // end of LspClient::handleInitializeAnswer
 
   bool LspClient::waitUntilReady(const int timeout_ms) {
-    auto error = QString();
-    if (!ensureStarted(error)) {
-      showInformativeMessage(error);
+    if ((state == State::Idle) || (state == State::Dead)) {
+      // no handshake was ever asked for, or the server which answered is
+      // gone: waiting would only stall whoever waits for nothing
       return false;
     }
     if (isReady()) {
@@ -421,6 +444,19 @@ namespace tfel::gui {
     const auto it = diagnostics.find(file);
     return (it == diagnostics.end()) ? QVector<LspDiagnostic>() : *it;
   }  // end of LspClient::diagnosticsFor
+
+  void LspClient::clearDiagnostics() {
+    if (diagnostics.isEmpty()) {
+      return;
+    }
+    const auto files = diagnostics.keys();
+    diagnostics.clear();
+    // each file which had an underline has to learn it has none, see
+    // `CxxMajorMode::updateDiagnostics`
+    for (const auto &file : files) {
+      emit diagnosticsUpdated(file);
+    }
+  }  // end of clearDiagnostics
 
   void LspClient::handleNotification(const QString &method,
                                      const QJsonValue &params) {

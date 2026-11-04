@@ -66,17 +66,31 @@ namespace tfel::gui {
     //! \return true once the handshake with the server is complete
     bool isReady() const;
     /*!
-     * \brief start the server and run the handshake, if that has not been
-     * done yet; returns as soon as the server is started, the \c ready signal
-     * says when the handshake is over
-     * \param[out] error : why the server could not be started
-     * \return false when the server can not be started at all
+     * \return true when no server has been launched: nothing asked for one.
+     * The client never launches a server on its own: launching is a decision
+     * of the user, see \c launch, because the options a session runs with, in
+     * particular the compilation database, are not the editor's to guess
      */
-    bool ensureStarted(QString &error);
+    bool isIdle() const;
     /*!
-     * \brief start the server if needed and wait, at most \c timeout_ms, for
-     * the handshake to complete
-     * \return true when the client is ready
+     * \brief launch the server and run the handshake, shutting the session
+     * which is still running down first, if any; returns as soon as the server
+     * is started, the \c ready signal says when the handshake is over
+     * \param[in] extra_arguments : arguments appended to those of the settings
+     * \param[out] error : why the server could not be launched
+     * \return false when the server can not be launched at all
+     *
+     * \note the documents the editor holds are re-opened on the new session
+     * once its handshake is over, and the diagnostics of the previous one are
+     * forgotten: they describe a server which has seen the text of the buffers
+     * under other options, or not at all
+     */
+    bool launch(const QStringList &extra_arguments, QString &error);
+    /*!
+     * \brief wait, at most \c timeout_ms, for the handshake of a server
+     * launched with \c launch to complete
+     * \return true when the client is ready, false when no server was launched
+     * or when none is answering
      */
     bool waitUntilReady(int timeout_ms);
     /*!
@@ -169,6 +183,14 @@ namespace tfel::gui {
     void handleInitializeAnswer(const QJsonValue &, const QString &);
     void publishDiagnostics(const QJsonValue &);
     void showInformativeMessage(const QString &);
+    /*!
+     * \brief ask the running server, if any, to shut down and give it the
+     * grace period of the transport to do so; used when a session is replaced
+     * and when the client dies
+     */
+    void endSession();
+    //! forget the diagnostics published by the session which is ending
+    void clearDiagnostics();
     //! send the whole text of every document which is not yet opened
     void flushDocuments();
     //! turn what the document holds now into a change of the snapshot
@@ -178,6 +200,11 @@ namespace tfel::gui {
     //! true once the destructor runs: the editor may be dying with us, and
     //! nothing may be displayed on it anymore
     bool shutting_down = false;
+    /*!
+     * \brief true while the client ends a session of its own accord, at which
+     * point the exit of the process is neither an error nor news
+     */
+    bool ending_session = false;
     //! the server process
     LspTransport *transport;
     //! the conversation with it

@@ -34,6 +34,13 @@ namespace tfel::gui {
    * \c Alt-Tab, \c Alt-. and \c Alt-? keys ask it for completions,
    * definitions and hover information, and its context menu offers to jump
    * to the definition of the symbol it was opened on (issue #125)
+   *
+   * \note the server is never started by the mode: a session is launched by
+   * the user, from the "C/C++" menu of the mode or the \c launch-clangd
+   * commands, with or without a compilation database, and a session which is
+   * running is replaced by the one which is asked for. The documents of the
+   * buffers are held by the client in the meantime and sent to the session
+   * once it is up
    */
   struct TFEL_GUI_VISIBILITY_EXPORT CxxMajorMode : public CMajorModeBase {
     /*!
@@ -87,6 +94,16 @@ namespace tfel::gui {
      * appends: a C++ completion often ends in `(` or `::`
      */
     void completeCurrentWord(TextEditBase &, const QString &) override;
+
+    /*!
+     * \return the "C/C++" menu of the mode, with the two entries which launch
+     * a \c clangd session
+     *
+     * \note as any specific menu of a major mode, the caller owns the returned
+     * menu, which is why its actions refer to the mode, not to the widget the
+     * menu is displayed in
+     */
+    QMenu *getSpecificMenu() override;
 
     /*!
      * \brief add a "Go to definition" entry to the context menu when the

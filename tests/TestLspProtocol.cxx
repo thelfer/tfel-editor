@@ -1,24 +1,29 @@
 /*!
  * \file   tests/TestLspProtocol.cxx
  * \brief  tests of the pure helpers of the Language Server Protocol client:
- *         framing, URIs, positions, the incremental diff, the bounded wait.
+ *         framing, URIs, positions, the incremental diff, the bounded wait,
+ *         the answer to the question for a compilation database.
  * \author Thomas Helfer
  * \date   04/11/2026
  */
 
 #include <QtTest/QtTest>
+#include <QtCore/QDir>
 #include <QtCore/QElapsedTimer>
+#include <QtCore/QFile>
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonDocument>
+#include <QtCore/QTemporaryDir>
 #include <QtCore/QTimer>
 #include <QtGui/QTextCursor>
 #include <QtGui/QTextDocument>
 #include <chrono>
 
+#include "TFEL/GUI/LspCxxSupport.hxx"
 #include "TFEL/GUI/LspProtocol.hxx"
 
-// everything `LspProtocol` is made of is pure: no server, no process, no
-// window system, only a `QTextDocument` of `QtGui`
+// everything tested here is pure: no server, no process, no window system,
+// only a `QTextDocument` of `QtGui` and a temporary directory of files
 struct TestLspProtocol : QObject {
   Q_OBJECT
 
@@ -37,6 +42,7 @@ struct TestLspProtocol : QObject {
   void testRangeInText();
   void testDiffAgainst();
   void testBoundedWait();
+  void testCompileCommandsArguments();
 };
 
 void TestLspProtocol::initTestCase() {
@@ -298,6 +304,55 @@ void TestLspProtocol::testBoundedWait() {
   late();
   late = nullptr;
 }  // end of TestLspProtocol::testBoundedWait
+
+void TestLspProtocol::testCompileCommandsArguments() {
+  // `clangd` is told which directory to look a compilation database in, which
+  // is the whole trick of turning the answer of a file picker into an option
+  auto directory = QTemporaryDir();
+  QVERIFY(directory.isValid());
+  const auto database =
+      QDir(directory.path()).filePath("compile_commands.json");
+  {
+    auto handle = QFile(database);
+    QVERIFY(handle.open(QIODevice::WriteOnly));
+    handle.write("[]");
+    handle.close();
+  }
+  auto error = QString();
+  // a directory is taken as it stands
+  QCOMPARE(tfel::gui::LspCxxSupport::compileCommandsArguments(directory.path(),
+                                                              error),
+           QStringList{QStringLiteral("--compile-commands-dir=") +
+                       directory.path()});
+  QVERIFY(error.isEmpty());
+  // a file is only the directory it lives in
+  QCOMPARE(tfel::gui::LspCxxSupport::compileCommandsArguments(database, error),
+           QStringList{QStringLiteral("--compile-commands-dir=") +
+                       directory.path()});
+  QVERIFY(error.isEmpty());
+  // an empty answer is the plain session: the server searches as it likes
+  QVERIFY(tfel::gui::LspCxxSupport::compileCommandsArguments(QStringLiteral(""),
+                                                             error)
+              .isEmpty());
+  QVERIFY(error.isEmpty());
+  QVERIFY(tfel::gui::LspCxxSupport::compileCommandsArguments("   ", error)
+              .isEmpty());
+  QVERIFY(error.isEmpty());
+  // an answer which points nowhere is refused, and says so: a session which
+  // is launched with a database the user does not have would leave them
+  // looking for why the answers are wrong
+  QVERIFY(tfel::gui::LspCxxSupport::compileCommandsArguments(
+              QStringLiteral("/does/not/exist/compile_commands.json"), error)
+              .isEmpty());
+  QVERIFY(!error.isEmpty());
+  // the answer is made absolute: the server does not start in the directory of
+  // the buffer, and a relative answer would mean nothing to it
+  const auto relative = QDir(QDir::currentPath()).relativeFilePath(database);
+  QCOMPARE(tfel::gui::LspCxxSupport::compileCommandsArguments(relative, error),
+           QStringList{QStringLiteral("--compile-commands-dir=") +
+                       directory.path()});
+  QVERIFY(error.isEmpty());
+}  // end of TestLspProtocol::testCompileCommandsArguments
 
 QTEST_GUILESS_MAIN(TestLspProtocol)
 

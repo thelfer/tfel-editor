@@ -5,6 +5,7 @@
  * \date   03/07/2012
  */
 
+#include <QtCore/QDir>
 #include <QtCore/QFileInfo>
 #include <QtCore/QRegularExpression>
 #include <QtGui/QTextDocument>
@@ -15,6 +16,8 @@
 #include <QtCore/QStringListModel>
 #include <memory>
 
+#include "TFEL/GUI/CommandLine.hxx"
+#include "TFEL/GUI/StandardFunctionCommand.hxx"
 #include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/Buffer.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
@@ -45,23 +48,136 @@ namespace tfel::gui {
       }
     }  // end of diagnosticColor()
 
-    // run the client, start it if the buffer asks for it the first time, and
-    // wait for the handshake; true when requests can be sent
-    bool serverIsReachable(LspClient &c, TextEditBase &t) {
-      auto error = QString();
-      if (!c.ensureStarted(error)) {
-        t.getEditorWidget().displayInformativeMessage(error);
+    // true when requests can be sent: a server is running and its handshake
+    // is over, or is expected to be over shortly. No request path launches a
+    // server: what a session is launched with, in particular the compilation
+    // database, is a decision of the user, see the "C/C++" menu and the
+    // `launch-clangd` commands
+    bool serverIsReachable(LspClient &c, EditorWidget &w) {
+      if (c.isIdle()) {
+        w.displayInformativeMessage(QStringLiteral(
+            "clangd is not launched: use the 'C/C++' menu or the "
+            "'launch-clangd' command"));
         return false;
       }
       if (c.isReady()) {
         return true;
       }
-      t.getEditorWidget().displayInformativeMessage(
-          QStringLiteral("contacting clangd..."));
+      w.displayInformativeMessage(QStringLiteral("contacting clangd..."));
       return c.waitUntilReady(5000);
     }  // end of serverIsReachable()
 
+    // launch a clangd session on the client of the given editor widget;
+    // `arguments` are the extra arguments of the server and `description`
+    // completes the message which tells the user about the new session
+    //
+    // a session which is still running is replaced: what it was started with,
+    // the compilation database above all, can not be changed under a running
+    // server, so it can not be changed by asking it either
+    void startClangd(EditorWidget &w,
+                     const QStringList &arguments,
+                     const QString &description) {
+      auto &client = LspClient::get(w);
+      const auto restarting = (!client.isIdle());
+      auto error = QString();
+      if (!client.launch(arguments, error)) {
+        w.displayInformativeMessage(error);
+        return;
+      }
+      auto message = QStringLiteral("clangd %1")
+                         .arg(restarting ? QStringLiteral("restarted")
+                                         : QStringLiteral("launched"));
+      if (!description.isEmpty()) {
+        message += QStringLiteral(": %1").arg(description);
+      }
+      w.displayInformativeMessage(message);
+    }  // end of startClangd()
+
+    // the minibuffer question for the compilation database to use
+    //
+    // the answer is a path: either the database file, whose directory clangd
+    // is told to look in, or a directory holding it, which it is told to look
+    // in as it stands; an empty answer launches a plain session, leaving the
+    // search to the server
+    struct CompileCommandsInput : public FilePathUserInput {
+      CompileCommandsInput(EditorWidget &w, const QString &path)
+          : FilePathUserInput(QObject::tr("compile commands :"), w) {
+        this->input->setText(path);
+        this->setInputHistorySettingAddress(
+            QStringLiteral("clangd/compile-commands/history"));
+      }  // end of CompileCommandsInput
+
+      ~CompileCommandsInput() override = default;
+
+     protected:
+      void treatUserInput() override {
+        const auto asked = this->input->text().trimmed();
+        auto error = QString();
+        const auto arguments =
+            LspCxxSupport::compileCommandsArguments(asked, error);
+        if (!error.isEmpty()) {
+          this->editor.displayInformativeMessage(error);
+          return;
+        }
+        // the answer is echoed back as it was given: the user knows what they
+        // typed, the directory the option holds is the resolved version of it
+        const auto description =
+            arguments.isEmpty()
+                ? QStringLiteral("without a compilation database")
+                : QStringLiteral("with the compilation database of %1")
+                      .arg(asked);
+        startClangd(this->editor, arguments, description);
+      }  // end of treatUserInput
+    };   // end of struct CompileCommandsInput
+
+    // the directory the file of the current buffer lives in, which is where
+    // the question for a compilation database starts; empty when the buffer
+    // visits no file yet
+    QString currentFileDirectory(EditorWidget &w) {
+      const auto file =
+          w.getCurrentBuffer().getMainFrame().getCompleteFileName();
+      if (file.isEmpty()) {
+        return QString();
+      }
+      return QFileInfo(file).absolutePath() + QDir::separator();
+    }  // end of currentFileDirectory()
+
+    // refuse, and say where it is refused, when the setting turns the whole
+    // clangd support off
+    bool supportIsEnabled(EditorWidget &w) {
+      if (LspCxxSupport::isEnabled()) {
+        return true;
+      }
+      w.displayInformativeMessage(QStringLiteral(
+          "'clangd/enable' is false: the clangd support is off"));
+      return false;
+    }  // end of supportIsEnabled()
+
   }  // end of namespace
+
+  // the command `launch-clangd`: a session of clangd with no other option
+  // than those of the settings, which leaves clangd to find a compilation
+  // database by itself, as it does when it is run in a terminal
+  void launchClangd(EditorWidget &editor) {
+    if (!supportIsEnabled(editor)) {
+      return;
+    }
+    startClangd(editor, QStringList(),
+                QStringLiteral("without a compilation database"));
+  }  // end of launchClangd
+
+  // the command `launch-clangd-with-compile-commands`: the same, after the
+  // compilation database to use has been asked for in the minibuffer
+  void launchClangdWithCompileCommands(EditorWidget &editor) {
+    if (!supportIsEnabled(editor)) {
+      return;
+    }
+    // the question is asked before the client is touched: an answer may name a
+    // database, or none at all, and a session started in the meantime would
+    // have to be replaced before it was even used
+    const auto directory = currentFileDirectory(editor);
+    editor.setUserInput(new CompileCommandsInput(editor, directory));
+  }  // end of launchClangdWithCompileCommands
 
   CxxMajorMode::CxxMajorMode(EditorWidget &w, Buffer &b, TextEditBase &t)
       : CMajorModeBase(w, b, t) {
@@ -94,6 +210,29 @@ namespace tfel::gui {
   QIcon CxxMajorMode::getIcon() const {
     return QIcon(":/tfel/editor/languages/cxx.png");
   }  // end of CxxMajorMode::getIcon
+
+  QMenu *CxxMajorMode::getSpecificMenu() {
+    auto *const t = qobject_cast<QWidget *>(this->parent());
+    if (t == nullptr) {
+      return nullptr;
+    }
+    auto *const m = new QMenu(QObject::tr("C/C++"), t);
+    m->setIcon(this->getIcon());
+    auto *const lc = m->addAction(QObject::tr("Launch clangd"));
+    lc->setToolTip(
+        QObject::tr("Start clangd and let it look for a compilation database "
+                    "itself; a session which is running is restarted"));
+    QObject::connect(lc, &QAction::triggered, this,
+                     [this] { launchClangd(this->editor); });
+    auto *const cd =
+        m->addAction(QObject::tr("Launch clangd with a compile_commands.json"));
+    cd->setToolTip(QObject::tr(
+        "Ask for a compilation database and start clangd with it; a "
+        "session which is running is restarted"));
+    QObject::connect(cd, &QAction::triggered, this,
+                     [this] { launchClangdWithCompileCommands(this->editor); });
+    return m;
+  }  // end of getSpecificMenu
 
   bool CxxMajorMode::keyPressEvent(QKeyEvent *const e) {
     const int k = e->key();
@@ -185,14 +324,10 @@ namespace tfel::gui {
     }
     this->documentFile = f;
     this->document = this->textEdit.document();
+    // the document is registered on the client, ready to be sent, whether a
+    // server runs or not: opening a file is not asking for a session, which
+    // the user launches from the "C++" menu or the `launch-clangd` command
     this->client->openDocument(f, this->document);
-    // the server is started with the first C++ buffer: the diagnostics are
-    // the reason one opens a C++ file in this editor, and waiting for a key
-    // press to start asking for them would show none until then
-    auto error = QString();
-    if (!this->client->ensureStarted(error)) {
-      this->editor.displayInformativeMessage(error);
-    }
   }  // end of openOrRenameDocument
 
   void CxxMajorMode::updateDiagnostics(const QString &f) {
@@ -241,7 +376,7 @@ namespace tfel::gui {
     if (this->client == nullptr) {
       return;
     }
-    if (!serverIsReachable(*this->client, this->textEdit)) {
+    if (!serverIsReachable(*this->client, this->editor)) {
       this->report("clangd is not answering");
       return;
     }
@@ -312,7 +447,7 @@ namespace tfel::gui {
     if (this->client == nullptr) {
       return;
     }
-    if (!serverIsReachable(*this->client, this->textEdit)) {
+    if (!serverIsReachable(*this->client, this->editor)) {
       this->report("clangd is not answering");
       return;
     }
@@ -368,7 +503,7 @@ namespace tfel::gui {
     if (this->client == nullptr) {
       return;
     }
-    if (!serverIsReachable(*this->client, this->textEdit)) {
+    if (!serverIsReachable(*this->client, this->editor)) {
       this->report("clangd is not answering");
       return;
     }
@@ -415,12 +550,10 @@ namespace tfel::gui {
         (this->document == nullptr) || (tc.document() != this->document)) {
       return;
     }
-    auto &c = *this->client;
-    auto error = QString();
-    // a right click neither starts the server nor waits for the handshake: the
-    // menu would show up a second late, or two, and no question has been
-    // asked of the server yet for that to be paid for
-    if ((!c.ensureStarted(error)) || (!c.isReady())) {
+    // a right click neither launches a server nor waits for a handshake: the
+    // menu would show up late, and no question has been asked of the server
+    // yet for that to be paid for
+    if ((!this->client->isReady())) {
       return;
     }
     // asking is the only way to know whether there is something to offer, and
@@ -488,6 +621,13 @@ namespace tfel::gui {
       this->client->closeDocument(this->documentFile, this->document.data());
     }
   }  // end of ~CxxMajorMode
+
+  static StandardFunctionCommandProxy<launchClangd> launchClangdProxy(
+      "launch-clangd");
+
+  static StandardFunctionCommandProxy<launchClangdWithCompileCommands>
+      launchClangdWithCompileCommandsProxy(
+          "launch-clangd-with-compile-commands");
 
   static StandardMajorModeProxy<CxxMajorMode> proxy(
       "C++",

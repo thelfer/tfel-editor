@@ -3,10 +3,15 @@ based on a [`clangd`](https://clangd.llvm.org) language server.
 
 When a `C` or `C++` file is opened, `tfel-editor` acts as a
 [`Language Server Protocol`](https://microsoft.github.io/language-server-protocol/)
-client: it starts `clangd`, keeps it in sync with the buffers that are
-edited, and turns what the server sends back into editor behaviour.
-The editor itself embeds no `C++` parser: everything smart about `C`
-and `C++` files comes from `clangd`.
+client: it keeps the buffer in sync with a `clangd` session and turns what
+the server sends back into editor behaviour. The editor itself embeds no
+`C++` parser: everything smart about `C` and `C++` files comes from
+`clangd`.
+
+The session is not started on its own account, but when it is asked for,
+either from the `C/C++` menu of the mode or with one of the
+`launch-clangd` commands, and with the compilation database that was
+chosen, if any. See [Launching `clangd`](#launching-clangd).
 
 # Main features
 
@@ -55,8 +60,8 @@ sudo dnf install clang-tools-extra
 and by most `conda` toolchains.
 
 If `clangd` is in the `PATH`, nothing has to be configured: `tfel-editor`
-starts it when the first `C`/`C++` file of a window is opened and keeps
-it alive for the rest of the session. The search, in this order:
+finds it when a session is launched and keeps it alive until the window
+is closed or another session is launched. The search, in this order:
 
 - the `clangd/executable` option, if it is set;
 - `clangd` in the `PATH`;
@@ -65,14 +70,53 @@ it alive for the rest of the session. The search, in this order:
 - the highest versioned `/usr/lib/llvm-NN/bin/clangd` of the `LLVM`
   installations, which is where the `Debian` packages put the binary.
 
-If `clangd` cannot be found, the support stays silent about it: the
-`C`/`C++` buffers work as before, without the diagnostics and the
-completion, and the reason is displayed in the minibuffer the first
-time a request is made.
+If `clangd` cannot be found, the support stays silent about it until a
+session is asked for: the `C`/`C++` buffers work as before, without the
+diagnostics and the completion, and the minibuffer says that the binary
+could not be found when the session fails to start.
 
 The mode covers the extensions the `C++` major mode is registered for:
 `.cxx`, `.hxx`, `.ixx`, `.cpp`, `.hpp`, `.ipp`, `.CC`, `.hh`, `.c`, `.h`
 and `.cu`.
+
+# Launching `clangd`
+
+Nothing talks to a server until one is launched, because what a session
+is launched *with* — the compilation database above all — is not
+something the editor can guess and cannot be changed afterwards. Two
+entries of the `C/C++` menu of the mode, shown in the menu bar while a
+`C`/`C++` buffer is current, do it:
+
+- `Launch clangd` starts a session with the options of the settings only,
+  which leaves `clangd` to look for a compilation database by itself, as
+  it does when it is run in a terminal. The command is `launch-clangd`.
+- `Launch clangd with a compile_commands.json` asks for a compilation
+  database in the minibuffer first: the input completes paths, starting
+  in the directory of the file which is open, and the answer is either
+  the database file itself or the directory holding it. The session is
+  then started with `--compile-commands-dir`, which is what `clangd`
+  reads: the directory, not the file. The command is
+  `launch-clangd-with-compile-commands`.
+
+An empty answer to the question, and the first entry, are the same thing:
+a session which searches a database by itself. An answer which points
+nowhere is refused, and the running session is left alone.
+
+Launching a session while one is running *replaces* it: a server cannot
+change the options it was started with, so the old session is shut down
+and a new one answers. The buffers are not lost on the way: each of them
+is opened again on the new session as soon as its handshake is over, and
+the underlines the old session had published are forgotten, as they
+describe files a server read with other options, or not at all.
+
+Requests never launch a session: `Alt+Tab`, `Alt+.`, `Alt+?` and the
+context menu report that `clangd` is not launched and where to launch it
+instead of starting one they were not asked for. The documents of the
+buffers are registered on the client as their files are opened, whether a
+session runs or not, and are sent to the next one.
+
+One session serves all the `C`/`C++` buffers of a window, and a new
+window uses a new session.
 
 # Shortcuts
 
@@ -116,9 +160,10 @@ shortcuts above become inactive, like the other mode specific ones.
 # Options
 
 The options live in the `QSettings` of `tfel-editor`, which is
-`~/.config/CEA/tfel-editor.conf` on `GNU/Linux`, and are read when the
-server is started: restarting the editor is enough for a change to be
-taken into account.
+`~/.config/CEA/tfel-editor.conf` on `GNU/Linux`, and are read each time a
+session is launched: launching a new session from the `C/C++` menu is
+enough for a change to be taken into account, the editor does not have to
+be restarted.
 
 | Key                 | Default    | Description                                        |
 |---------------------|------------|----------------------------------------------------|
@@ -180,19 +225,34 @@ what can be compiled with guessed options: files of a `TFEL` based
 project report spurious "file not found" errors for headers that are
 only reachable through the include directories of the real build.
 
+Rather than linking the database into the project, it can be handed to
+the session that is launched for it: the `Launch clangd with a
+compile_commands.json` entry asks for its path, and the session starts
+with `--compile-commands-dir` pointing at the directory of that file.
+That option makes the search above moot: `clangd` only looks in the
+directory it is told about, so a session launched that way is bound to
+the build directory it was given, whatever the buffers it is fed. The
+answers to the question are kept in the `clangd/compile-commands/history`
+setting, so a project whose database lives in a directory of its own is
+answered with `Ctrl-P`, or the up arrow, from the next session on.
+
 # Remarks
 
-- The server is started when the first `C`/`C++` file of a window is
-  opened, not at the startup of `tfel-editor`. One `clangd` instance
-  serves all the `C`/`C++` buffers of a window, and a new window uses a
-  new instance.
+- The session is launched by the user, from the `C/C++` menu or one of the
+  `launch-clangd` commands, not at the startup of `tfel-editor` and not
+  when the first `C`/`C++` file is opened: the options a session runs
+  with can not be changed while it runs, so they are asked for when it is
+  started. One `clangd` instance serves all the `C`/`C++` buffers of a
+  window, and a new window uses a new instance.
 - On the first opening, `clangd` parses the whole translation unit,
   which can take a moment on a large project: the minibuffer says
-  `contacting clangd...` while the editor waits for the handshake.
+  `contacting clangd...` while the editor waits for the handshake, and
+  says `clangd launched` or `clangd restarted` when a session is started.
 - Closing the window shuts the server down with the `shutdown` request
-  and the `exit` notification of the protocol; closing a `C`/`C++`
-  buffer only closes the document, so the remaining buffers keep the
-  server they are served by.
+  and the `exit` notification of the protocol; the same ritual shuts down
+  a session which is replaced by a newly launched one. Closing a
+  `C`/`C++` buffer only closes the document, so the remaining buffers keep
+  the server they are served by.
 - Diagnostics arrive asynchronously: after the file is opened or
   modified, the underlines appear once the server has reparsed it,
   which takes a fraction of a second for a buffer and can take longer

@@ -98,6 +98,35 @@ namespace tfel::gui {
     return QSettings().value("clangd/arguments").toStringList();
   }  // end of LspCxxSupport::serverArguments()
 
+  QStringList LspCxxSupport::compileCommandsArguments(const QString &path,
+                                                      QString &error) {
+    error = QString();
+    const auto trimmed = path.trimmed();
+    if (trimmed.isEmpty()) {
+      // an empty answer is an answer: the plain session, in which clangd
+      // searches a database the way it does when run in a terminal
+      return QStringList();
+    }
+    auto expanded = trimmed;
+    if (expanded.startsWith("~/")) {
+      // the line edit of a file path expands a leading '~' when it completes
+      // an answer, not when the answer is given
+      expanded =
+          QDir::home().absolutePath() + QDir::separator() + expanded.mid(2);
+    }
+    const auto info = QFileInfo(expanded);
+    if (!info.exists()) {
+      error = QStringLiteral("no compilation database at '%1'").arg(expanded);
+      return QStringList();
+    }
+    // a file is only interesting for the directory it lives in, which is where
+    // clangd expects to find the `compile_commands.json` it reads
+    const auto directory =
+        info.isDir() ? info.absoluteFilePath() : info.absolutePath();
+    return QStringList() << (QStringLiteral("--compile-commands-dir=") +
+                             directory);
+  }  // end of compileCommandsArguments()
+
   bool LspCxxSupport::isCxxSourceFile(const QString &file_name) {
     if (file_name.isEmpty()) {
       return false;
