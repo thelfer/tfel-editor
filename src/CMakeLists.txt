@@ -40,6 +40,9 @@ qt_sources(TFEL_EDITOR_SOURCES
   ProcessOutputMajorModeBase
   QAbstractScrollAreaWrapper
   ProcessInteractionFrame
+  LspTransport
+  LspConnection
+  LspClient
   DirectoryMajorMode)
 
 if(WebEngine_FOUND AND WebEngineWidgets_FOUND)
@@ -53,6 +56,8 @@ tfel_editor_library(TFELEditor
   VerboseLevel.cxx
   SecondaryTask.cxx
   SecondaryTaskManager.cxx
+  LspProtocol.cxx
+  LspCxxSupport.cxx
   Utilities.cxx
   SpellChecker.cxx
   StandardFunctionCommand.cxx

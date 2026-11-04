@@ -1,0 +1,50 @@
+/*!
+ * \file  LspCxxSupport.hxx
+ * \brief the C and C++ side of the Language Server Protocol: finding
+ *        `clangd`, and deciding what a C++ file is.
+ * \author Thomas Helfer
+ * \date   04/11/2026
+ */
+
+#ifndef LIB_TFEL_GUI_LSPCXXSUPPORT_HXX
+#define LIB_TFEL_GUI_LSPCXXSUPPORT_HXX
+
+#include <QtCore/QString>
+#include <QtCore/QStringList>
+#include "TFEL/GUI/Config.hxx"
+
+namespace tfel::gui {
+
+  /*!
+   * \brief where `clangd` is and whether the C++ mode should ask it anything
+   *
+   * \note the settings live in `QSettings`, as the rest of the editor:
+   * `clangd/enable` (true by default), `clangd/executable` (an absolute path,
+   * tried first), `clangd/arguments` (a string list appended to what the
+   * client needs)
+   */
+  struct TFEL_GUI_VISIBILITY_EXPORT LspCxxSupport {
+    //! \return the setting `clangd/enable`, true when unset
+    static bool isEnabled();
+    /*!
+     * \return the executable of `clangd`: the setting `clangd/executable`,
+     * else `clangd` in the path, else the highest `clangd-NN` of the usual
+     * binary directories, else the highest `/usr/lib/llvm-NN/bin/clangd`; an
+     * empty string when there is none
+     *
+     * \note the versioned names matter: distributions package `clangd` as
+     * `clangd-15` and the unversioned name is not always there
+     */
+    static QString serverExecutable();
+    //! \return the setting `clangd/arguments`, empty when unset
+    static QStringList serverArguments();
+    /*!
+     * \return true if the file name is one of the C and C++ extensions the
+     * `C++` major mode is registered for
+     */
+    static bool isCxxSourceFile(const QString &file_name);
+  };  // end of struct LspCxxSupport
+
+}  // end of namespace tfel::gui
+
+#endif /* LIB_TFEL_GUI_LSPCXXSUPPORT_HXX */
