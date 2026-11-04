@@ -65,3 +65,6 @@ add_subdirectory(include)
 add_subdirectory(src)
 add_subdirectory(utils)
 add_subdirectory(packages)
+# the unit tests: compiled by the `build-tests` target, run by `check`, see
+# tests/CMakeLists.txt and issue #123
+add_subdirectory(tests)

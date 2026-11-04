@@ -17,8 +17,11 @@ namespace tfel::gui {
   /*!
    * \brief main window of the editor: holds an EditorWidget as central
    * widget and builds the menu bar on top of it
+   *
+   * \note exported so the unit tests can drive the real application shape
+   * instead of a hand-made `QMainWindow` stand-in, see issue #123
    */
-  struct MainWindow : public QMainWindow {
+  struct TFEL_GUI_VISIBILITY_EXPORT MainWindow : public QMainWindow {
     /*!
      * \brief constructor
      * \param[in] f : names of the files to open, each one in its own buffer;

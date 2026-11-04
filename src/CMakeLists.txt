@@ -12,6 +12,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/BuildInformation.cxx.in"
 qt_sources(TFEL_EDITOR_SOURCES
   "${PROJECT_SOURCE_DIR}/include/TFEL/GUI"
   EditorWidget
+  MainWindow
   LineEdit
   MultiLineLineEdit
   FileDownloader
@@ -102,13 +103,11 @@ else(HUNSPELL_FOUND)
     ${QT_LIBRARIES})
 endif(HUNSPELL_FOUND)
 
-qt_sources(tfel-editor_SOURCES
-  "${PROJECT_SOURCE_DIR}/include/TFEL/GUI"
-  MainWindow)
-
+# `MainWindow` is part of the library, not of the executable: it is exported
+# (`TFEL_GUI_VISIBILITY_EXPORT`) so the unit tests, like any other user of the
+# shared library, can construct it, see issue #123
 tfel_editor_executable(tfel-editor
-  tfel-editor.cxx
-  ${tfel-editor_SOURCES})
+  tfel-editor.cxx)
 
 target_link_libraries(tfel-editor
   TFELEditor
