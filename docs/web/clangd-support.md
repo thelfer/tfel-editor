@@ -115,13 +115,23 @@ The database of the plain entry is looked for in this order:
    and `clangd` guesses the compilation options the way it does when
    it is run in a terminal.
 
-The minibuffer says which database a session was started with. A
-`--compile-commands-file` naming a file which does not exist is
-reported and does not void the launch: the search of the project takes
-over. The editor searches rather than leaving it to `clangd` because
-the option which hands a database to the server, `--compile-commands-dir`,
-is set when the session starts: knowing the database the session runs
-with means choosing it before the launch, and saying so.
+What a plain launch ends up doing is what its minibuffer message says,
+once, rather than one report per step:
+
+| database used                     | message                                        |
+|-----------------------------------|------------------------------------------------|
+| found, no default given           | `using <path> to start clangd`                 |
+| none found, no default given      | `no compile_commands.json found, clangd is restricted to current C++ file` |
+| found, default given but missing  | `using <path> to start clangd (default file <path> not found)` |
+| none found, default given but missing | `no compile_commands.json found and default file <path> is not found, clangd is restricted to current C++ file` |
+
+A `--compile-commands-file` naming a file which does not exist is
+therefore never a failed launch: the search of the project takes over
+and the final message mentions the default that was left out. The
+editor searches rather than leaving it to `clangd` because the option
+which hands a database to the server, `--compile-commands-dir`, is set
+when the session starts: knowing the database the session runs with
+means choosing it before the launch, and saying so.
 
 An empty answer to the question of the second entry is an answer too:
 it launches the plain session, the one which looks for nothing and
@@ -288,8 +298,8 @@ one launches the other entry and answers the question differently.
   which can take a moment on a large project: the minibuffer says
   `contacting clangd...` while the editor waits for the handshake, and
   says `clangd launched` or `clangd restarted` when a session is
-  started, followed by the compilation database it was started with, or
-  that it was started without one.
+  started — the plain entry reports `using <path> to start clangd` or
+  `no compile_commands.json found...` instead, as described above.
 - Closing the window shuts the server down with the `shutdown` request
   and the `exit` notification of the protocol; the same ritual shuts down
   a session which is replaced by a newly launched one. Closing a

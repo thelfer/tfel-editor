@@ -683,6 +683,17 @@ namespace {
     return makeFile(path, QJsonDocument(QJsonArray{entry}).toJson());
   }  // end of makeDatabase()
 
+  // an editor widget which remembers what the minibuffer was told: which
+  // database a launch ended up using is part of the behaviour under test, and
+  // overriding this public virtual is the only door to the messages
+  struct RecordingEditor : tfel::gui::EditorWidget {
+    QStringList messages;
+    void displayInformativeMessage(const QString &m) override {
+      messages << m;
+      tfel::gui::EditorWidget::displayInformativeMessage(m);
+    }
+  };  // end of struct RecordingEditor
+
 }  // end of namespace
 
 void TestLspClient::testModePlainLaunchFindsTheDatabase() {
@@ -699,24 +710,31 @@ void TestLspClient::testModePlainLaunchFindsTheDatabase() {
                    "#endif\n"
                    "int main() { return 0; }\n"));
   const auto database = project + "/build/compile_commands.json";
-  auto editor = std::make_unique<tfel::gui::EditorWidget>();
+  auto editor = std::make_unique<RecordingEditor>();
   editor->show();
   editor->openFile(file);
   auto &lsp = tfel::gui::LspClient::get(*editor);
   QVERIFY(lsp.isIdle());
   // the first session is a plain one: the project has no database yet, and
-  // clangd finds the file harmless without one
-  cxxMenu(*editor)->actions().at(0)->trigger();
-  QVERIFY2(lsp.waitUntilReady(30000),
-           "the plain session of a project with no database did not answer");
+  // clangd finds the file harmless without one; the message says so, as the
+  // end result, not as a search which came up empty
+  auto answered = [&lsp, &editor](const QString &expected) {
+    const auto before = editor->messages.size();
+    cxxMenu(*editor)->actions().at(0)->trigger();
+    QVERIFY2(lsp.waitUntilReady(30000),
+             "the session asked for through the plain entry did not answer");
+    QVERIFY(before < editor->messages.size());
+    QCOMPARE(editor->messages.back(), expected);
+  };
+  answered(QStringLiteral(
+      "no compile_commands.json found, clangd is restricted to current "
+      "C++ file"));
   // the database appears where the search looks for an out-of-source build,
   // and a relaunch of the same entry is supposed to find it: the editor
   // searches so that it can tell what the session was started with, and a
   // session which reads the database says what the database says
   QVERIFY(makeDatabase(database, file, "-DTFEL_TEST_DATABASE"));
-  cxxMenu(*editor)->actions().at(0)->trigger();
-  QVERIFY2(lsp.waitUntilReady(30000),
-           "the plain session of a project with a database did not answer");
+  answered(QStringLiteral("using %1 to start clangd").arg(database));
   QVERIFY2(waitFor([&] { return !lsp.diagnosticsFor(file).isEmpty(); }, 30000),
            "the database found by the search did not reach the server");
   editor.reset();
@@ -738,18 +756,25 @@ void TestLspClient::testModePlainLaunchUsesTheDefaultDatabase() {
   // a session to it, the search of the project would never look there
   QVERIFY(makeDatabase(database, file, "-DTFEL_TEST_DEFAULT"));
   tfel::gui::LspCxxSupport::setDefaultCompileCommandsFile(database);
-  auto editor = std::make_unique<tfel::gui::EditorWidget>();
+  auto editor = std::make_unique<RecordingEditor>();
   editor->show();
   editor->openFile(file);
   auto &lsp = tfel::gui::LspClient::get(*editor);
+  const auto before = editor->messages.size();
   cxxMenu(*editor)->actions().at(0)->trigger();
   QVERIFY2(lsp.waitUntilReady(30000),
            "the session started with the default database did not answer");
+  QVERIFY(before < editor->messages.size());
+  QCOMPARE(editor->messages.back(),
+           QStringLiteral("using %1 to start clangd").arg(database));
   QVERIFY2(waitFor([&] { return !lsp.diagnosticsFor(file).isEmpty(); }, 30000),
            "the default database did not reach the server");
   editor.reset();
-  // a default which points nowhere is reported and the search takes over: the
-  // mistake of a stale command line does not void the launch
+  // a default which points nowhere does not fail the launch and is not
+  // reported as a miss of its own: the search takes over, and the message
+  // says what was used, with the default that played no part in brackets
+  const auto missing_default =
+      QStringLiteral("/does/not/exist/compile_commands.json");
   const auto project = QDir(directory.path()).filePath("fallback-project");
   const auto fallback_file = QDir(project).filePath("src/fallback.cxx");
   QVERIFY(makeFile(project + "/CMakeLists.txt", "project(f)\n"));
@@ -758,17 +783,38 @@ void TestLspClient::testModePlainLaunchUsesTheDefaultDatabase() {
                    "int x = \"not an int\";\n"
                    "#endif\n"
                    "int main() { return 0; }\n"));
-  QVERIFY(makeDatabase(project + "/build/compile_commands.json", fallback_file,
-                       "-DTFEL_TEST_FALLBACK"));
-  tfel::gui::LspCxxSupport::setDefaultCompileCommandsFile(
-      QStringLiteral("/does/not/exist/compile_commands.json"));
-  auto fallback = std::make_unique<tfel::gui::EditorWidget>();
+  const auto fallback_database = project + "/build/compile_commands.json";
+  tfel::gui::LspCxxSupport::setDefaultCompileCommandsFile(missing_default);
+  auto fallback = std::make_unique<RecordingEditor>();
   fallback->show();
   fallback->openFile(fallback_file);
   auto &fallback_lsp = tfel::gui::LspClient::get(*fallback);
+  // the project has no database yet either: the message holds neither a
+  // `using` nor a path, and names the default it could not use either
+  auto fallback_before = fallback->messages.size();
   cxxMenu(*fallback)->actions().at(0)->trigger();
   QVERIFY2(fallback_lsp.waitUntilReady(30000),
            "a default which does not exist voided the launch");
+  QVERIFY(fallback_before < fallback->messages.size());
+  QCOMPARE(fallback->messages.back(),
+           QStringLiteral("no compile_commands.json found and default file "
+                          "%1 is not found, clangd is restricted to current "
+                          "C++ file")
+               .arg(missing_default));
+  // the database appears where the search looks, and the next launch says
+  // that it used it, with the default it did not use on the side
+  QVERIFY(
+      makeDatabase(fallback_database, fallback_file, "-DTFEL_TEST_FALLBACK"));
+  fallback_before = fallback->messages.size();
+  cxxMenu(*fallback)->actions().at(0)->trigger();
+  QVERIFY2(fallback_lsp.waitUntilReady(30000),
+           "the session of a project with a database and no usable default "
+           "did not answer");
+  QVERIFY(fallback_before < fallback->messages.size());
+  QCOMPARE(
+      fallback->messages.back(),
+      QStringLiteral("using %1 to start clangd (default file %2 not found)")
+          .arg(fallback_database, missing_default));
   QVERIFY2(
       waitFor(
           [&] { return !fallback_lsp.diagnosticsFor(fallback_file).isEmpty(); },

@@ -71,17 +71,26 @@ namespace tfel::gui {
     // `arguments` are the extra arguments of the server and `description`
     // completes the message which tells the user about the new session
     //
+    // a `report` which is not empty replaces that message whole: a caller
+    // which knows what it ended up doing tells the user that instead of
+    // letting them piece it together from the fact that a session runs now
+    //
     // a session which is still running is replaced: what it was started with,
     // the compilation database above all, can not be changed under a running
     // server, so it can not be changed by asking it either
     void startClangd(EditorWidget &w,
                      const QStringList &arguments,
-                     const QString &description) {
+                     const QString &description,
+                     const QString &report = QString()) {
       auto &client = LspClient::get(w);
       const auto restarting = (!client.isIdle());
       auto error = QString();
       if (!client.launch(arguments, error)) {
         w.displayInformativeMessage(error);
+        return;
+      }
+      if (!report.isEmpty()) {
+        w.displayInformativeMessage(report);
         return;
       }
       auto message = QStringLiteral("clangd %1")
@@ -153,11 +162,11 @@ namespace tfel::gui {
       return false;
     }  // end of supportIsEnabled()
 
-    // the extra arguments of a session and what to say about them in the
-    // minibuffer once it is up
+    // the extra arguments of a session and the message which tells the user
+    // what the session was started with, in the end
     struct ImplicitCompileCommands {
       QStringList arguments;
-      QString description;
+      QString message;
     };  // end of struct ImplicitCompileCommands
 
     // the database a session launched without an explicit one uses: the file
@@ -165,37 +174,58 @@ namespace tfel::gui {
     // which exists, else the one of the project of the current buffer, else
     // none, which is a plain session leaving the search to the server
     //
+    // the miss of a default file is not reported as it happens: the message
+    // says what the session ended up using, and mentions the default only
+    // when it played no part in that
+    //
     // the editor performs the search itself, rather than leaving it to the
     // server, because the option which hands a database to clangd is set when
     // the session starts and the user is told which database it was started
     // with, which requires knowing it before launching
     ImplicitCompileCommands implicitCompileCommands(EditorWidget &w) {
+      const auto restricted_to_current_file = QStringLiteral(
+          "no compile_commands.json found, clangd is restricted to current "
+          "C++ file");
+      auto missing_default = QString();
       const auto file = LspCxxSupport::defaultCompileCommandsFile();
       if (!file.isEmpty()) {
+        const auto path = QFileInfo(file).absoluteFilePath();
         auto error = QString();
         const auto arguments =
             LspCxxSupport::compileCommandsArguments(file, error);
         if (error.isEmpty()) {
-          return {arguments, QStringLiteral("with the compilation database "
-                                            "tfel-editor was started with: %1")
-                                 .arg(file)};
+          return {arguments,
+                  QStringLiteral("using %1 to start clangd").arg(path)};
         }
         // a default which does not exist is a mistake the user made once, at
         // the command line; it does not void the launch, the project is asked
-        // instead and the mistake is only reported on the way
-        w.displayInformativeMessage(
-            QStringLiteral("%1: searching the project instead").arg(error));
+        // instead and the mistake surfaces in the final message only
+        missing_default = path;
       }
       const auto directory = currentFileDirectory(w);
       const auto found = LspCxxSupport::searchCompileCommandsFile(
           directory.isEmpty() ? QDir::currentPath() : directory);
       if (found.isEmpty()) {
-        return {{}, QStringLiteral("without a compilation database")};
+        if (missing_default.isEmpty()) {
+          return {{}, restricted_to_current_file};
+        }
+        return {{},
+                QStringLiteral("no compile_commands.json found and default "
+                               "file %1 is not found, clangd is restricted to "
+                               "current C++ file")
+                    .arg(missing_default)};
       }
       auto error = QString();
-      return {LspCxxSupport::compileCommandsArguments(found, error),
-              QStringLiteral("with the compilation database of the project: %1")
-                  .arg(found)};
+      const auto arguments =
+          LspCxxSupport::compileCommandsArguments(found, error);
+      if (missing_default.isEmpty()) {
+        return {arguments,
+                QStringLiteral("using %1 to start clangd").arg(found)};
+      }
+      return {arguments,
+              QStringLiteral("using %1 to start clangd (default file %2 "
+                             "not found)")
+                  .arg(found, missing_default)};
     }  // end of implicitCompileCommands()
 
   }  // end of namespace
@@ -210,7 +240,7 @@ namespace tfel::gui {
       return;
     }
     const auto choice = implicitCompileCommands(editor);
-    startClangd(editor, choice.arguments, choice.description);
+    startClangd(editor, choice.arguments, QString(), choice.message);
   }  // end of launchClangd
 
   // the command `launch-clangd-with-compile-commands`: the same, after the
