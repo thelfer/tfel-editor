@@ -146,6 +146,17 @@ namespace tfel::gui {
      * scroll area, which would make the minibuffer and the dialogs enormous
      */
     QSize sizeHint() const override;
+    /*!
+     * \return the room between the top edge of the widget and the first line
+     * drawn in it
+     *
+     * The frame, the margins of the view port and the margin of the document
+     * are taken off the top of the widget before the first line of the content
+     * is drawn. A label set next to this widget, which is what the prompt of a
+     * command line is, has to leave the same room free for the two to start on
+     * the same line, whatever the height the content makes.
+     */
+    int firstLineTop() const;
 
    signals:
     /*!

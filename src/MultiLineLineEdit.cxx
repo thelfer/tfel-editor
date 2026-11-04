@@ -370,6 +370,14 @@ namespace tfel::gui {
            2 * this->frameWidth();
   }  // end of singleLineHeight
 
+  int MultiLineLineEdit::firstLineTop() const {
+    // the view port is set inside the frame, below the margins of the view
+    // port, and the document is drawn inside the view port, at the margin of
+    // the document from its edges
+    const auto vp = (this->viewport() != nullptr) ? this->viewport()->y() : 0;
+    return vp + static_cast<int>(this->document()->documentMargin());
+  }  // end of firstLineTop
+
   QWidget* MultiLineLineEdit::boundedWindow() const {
     auto* const w = this->window();
     if ((w == nullptr) || (w == this) || (!w->isWindow()) ||

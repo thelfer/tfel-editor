@@ -172,13 +172,15 @@ namespace tfel::gui {
     s.setHorizontalPolicy(QSizePolicy::Fixed);
     s.setVerticalPolicy(QSizePolicy::Fixed);
     this->label->setSizePolicy(s);
-    this->label->setAlignment(Qt::AlignHCenter);
     this->label->setFocusPolicy(Qt::NoFocus);
     this->label->setContentsMargins(0, 0, 0, 0);
     this->label->setLineWidth(0);
     // the label is top aligned: when the input grows because the text typed
-    // requires several lines, the label stays on the first line, as it did
-    // when the input could not be taller than the label
+    // requires several lines, the label stays on the first line, as it did when
+    // the input could not be taller than the label. The alignment of the label
+    // itself is not enough: a label which is Fixed in the vertical direction is
+    // given the height of its own content and the layout centres that height in
+    // the row the input takes
     this->label->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
     this->setLabel(l);
     //    this->hl->setMargin(0);
@@ -186,7 +188,7 @@ namespace tfel::gui {
     this->hl->setContentsMargins(0, 0, 0, 0);
     // this->setStyleSheet("background: rgba(255,255,255,100%)");
     // this->label->setStyleSheet("background: rgba(255,255,255,100%)");
-    this->hl->addWidget(this->label);
+    this->hl->addWidget(this->label, 0, Qt::AlignTop);
     // this->vl->setMargin(0);
     // this->vl->setSpacing(0);
     // this->vl->setContentsMargins(0,0,0,0);
@@ -290,6 +292,13 @@ namespace tfel::gui {
     this->input->setContentsMargins(0, 0, 0, 0);
     this->input->setFont(this->label->font());
     this->input->setFrameShape(QFrame::NoFrame);
+    // the prompt and the text of the entry start on the same line: the entry
+    // draws the first line of its content below its own top edge, by the frame,
+    // the margins of the view port and the margin of the document, and the
+    // label leaves the same room free, else the prompt of an entry taking
+    // several lines is drawn on the top edge of the row, above the line being
+    // typed
+    this->label->setContentsMargins(0, this->input->firstLineTop(), 0, 0);
     // this->input->setStyleSheet("background: rgba(255,255,255,100%)");
     this->hl->addWidget(this->input);
     QObject::connect(this->input, &CommandLine::CustomLineEdit::returnPressed,
