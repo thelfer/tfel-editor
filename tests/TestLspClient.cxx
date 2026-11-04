@@ -14,6 +14,7 @@
 #include <QtGui/QTextCharFormat>
 #include <QtGui/QTextCursor>
 #include <QtGui/QTextDocument>
+#include <QtWidgets/QMenu>
 #include <QtWidgets/QPlainTextEdit>
 #include <functional>
 #include <memory>
@@ -24,6 +25,7 @@
 #include "TFEL/GUI/LspClient.hxx"
 #include "TFEL/GUI/LspCxxSupport.hxx"
 #include "TFEL/GUI/LspProtocol.hxx"
+#include "TFEL/GUI/MajorMode.hxx"
 #include "TFEL/GUI/PlainTextEdit.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
 
@@ -59,6 +61,7 @@ struct TestLspClient : QObject {
   void testHover();
   void testCompletion();
   void testModeIntegration();
+  void testModeContextMenu();
 
  private:
   //! the settings of the editor are none of this test's business
@@ -354,6 +357,88 @@ void TestLspClient::testModeIntegration() {
   QVERIFY(highlighted);
   editor.reset();
 }  // end of TestLspClient::testModeIntegration
+
+void TestLspClient::testModeContextMenu() {
+  // the right click entry of the mode: the menu is completed with a "Go to
+  // definition" entry only where the server has a definition to offer, and the
+  // answer the mode asked for is what the entry jumps to, without a second
+  // request
+  const auto source = QStringLiteral(
+      "int counter = 0;\n"
+      "\n"
+      "int main() {\n"
+      "  return counter;\n"
+      "}\n");
+  const auto file = writeSource(QStringLiteral("menu.cxx"), source);
+  QVERIFY(!file.isEmpty());
+  auto editor = std::make_unique<tfel::gui::EditorWidget>();
+  editor->show();
+  editor->openFile(file);
+  auto &frame = editor->getCurrentBuffer().getMainFrame();
+  // `getMajorMode` only hands the mode out as a constant, and completing a
+  // context menu is a non-const operation; the menu the mode is about to fill
+  // is a local of this scope, nothing else survives the call
+  auto &mode = const_cast<tfel::gui::MajorMode &>(frame.getMajorMode());
+  struct Answer {
+    //! the entries the mode added
+    int entries = 0;
+    //! true when one of them comes before the entries of the text edit
+    bool on_top = false;
+    //! where the first entry puts the cursor once triggered, -1 if none
+    int position = -1;
+  };
+  // the menu is a local, as it is in `TextEditBase::event`, and it owns the
+  // entries the mode created: they can not leave this scope alive, which is why
+  // the answer is carried as numbers and the jump is done here
+  auto ask = [&frame, &mode](const int position) {
+    auto answer = Answer();
+    auto menu = QMenu();
+    auto cursor = QTextCursor(frame.document());
+    cursor.setPosition(position);
+    mode.completeContextMenu(&menu, cursor);
+    const auto actions = menu.actions();
+    for (auto *const a : actions) {
+      if (!a->text().startsWith(QStringLiteral("Go to definition"))) {
+        continue;
+      }
+      ++answer.entries;
+      answer.on_top = answer.on_top || (a == actions.first());
+      if (answer.position < 0) {
+        a->trigger();
+        answer.position = frame.textCursor().position();
+      }
+    }
+    return answer;
+  };
+  // the preamble of even a tiny file is not built in an instant, and the mode
+  // waits for the server a moment only: the request is asked again until the
+  // menu holds the entry
+  const auto use =
+      static_cast<int>(source.lastIndexOf(QStringLiteral("counter")));
+  auto answer = Answer();
+  auto asked = QElapsedTimer();
+  asked.start();
+  while ((answer.entries == 0) && (asked.elapsed() < 60000)) {
+    answer = ask(use);
+    if (answer.entries == 0) {
+      QTest::qWait(500);
+    }
+  }
+  QCOMPARE(answer.entries, 1);
+  // the entry is at the top of the menu, before the undo and copy entries the
+  // text edit puts in it
+  QVERIFY(answer.on_top);
+  // the definition of `counter` is its declaration on the first line, on the
+  // name itself
+  QCOMPARE(answer.position,
+           static_cast<int>(source.indexOf(QStringLiteral("counter"))));
+  // no symbol where the menu was opened, no entry: the mode asked the server
+  // and got nothing, so the plain menu is shown undelayed
+  const auto blank =
+      static_cast<int>(source.indexOf(QStringLiteral("\n\n"))) + 1;
+  QCOMPARE(ask(blank).entries, 0);
+  editor.reset();
+}  // end of TestLspClient::testModeContextMenu
 
 QTEST_MAIN(TestLspClient)
 

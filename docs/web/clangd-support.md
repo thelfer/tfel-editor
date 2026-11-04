@@ -94,6 +94,16 @@ the [usual `emacs` shortcuts](emacs-shortcuts.html) of the editor:
 - `Alt+?`: display the declaration of the symbol under the cursor and
   its documentation as a tooltip.
 
+The context menu, reached with a right click, holds a `Go to definition`
+entry whenever `clangd` has a definition for the symbol the menu was
+opened on, which is where the cursor is placed. The question is asked as
+the menu is built, since that is the only way to know whether the entry
+has something to offer, and the answer is waited for a second only: a
+server which is not up yet, or which is busy parsing the file, leaves the
+plain menu instead of delaying it. When a symbol has several definitions, as
+a virtual override has, one entry each is offered, labelled with the file
+and the line they point to.
+
 `Alt+Tab` may be captured by the window manager, which often uses it to
 switch windows: if it does nothing in the editor, look for that binding
 in the settings of the window manager. The shortcuts of the editor are

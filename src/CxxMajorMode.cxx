@@ -9,6 +9,7 @@
 #include <QtCore/QRegularExpression>
 #include <QtGui/QTextDocument>
 #include <QtWidgets/QListView>
+#include <QtWidgets/QMenu>
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QToolTip>
 #include <QtCore/QStringListModel>
@@ -336,6 +337,10 @@ namespace tfel::gui {
       return;
     }
     const auto &location = answer->at(0);
+    this->jumpTo(location);
+  }  // end of jumpToDefinition
+
+  void CxxMajorMode::jumpTo(const LspLocation &location) {
     if (QFileInfo(location.file) == QFileInfo(this->documentFile)) {
       auto c = QTextCursor(this->textEdit.document());
       c.setPosition(LspProtocol::positionOf(*this->textEdit.document(),
@@ -357,7 +362,7 @@ namespace tfel::gui {
                                           location.character));
     frame.setTextCursor(c);
     this->report(QStringLiteral("%1").arg(QFileInfo(location.file).fileName()));
-  }  // end of jumpToDefinition
+  }  // end of jumpTo
 
   void CxxMajorMode::showHover() {
     if (this->client == nullptr) {
@@ -402,6 +407,70 @@ namespace tfel::gui {
         this->textEdit.mapToGlobal(this->textEdit.cursorRect().bottomLeft()),
         doc.toHtml(), &this->textEdit);
   }  // end of showHover
+
+  void CxxMajorMode::completeContextMenu(QMenu *const m,
+                                         const QTextCursor &tc) {
+    MajorModeBase::completeContextMenu(m, tc);
+    if ((this->client == nullptr) || (this->documentFile.isEmpty()) ||
+        (this->document == nullptr) || (tc.document() != this->document)) {
+      return;
+    }
+    auto &c = *this->client;
+    auto error = QString();
+    // a right click neither starts the server nor waits for the handshake: the
+    // menu would show up a second late, or two, and no question has been
+    // asked of the server yet for that to be paid for
+    if ((!c.ensureStarted(error)) || (!c.isReady())) {
+      return;
+    }
+    // asking is the only way to know whether there is something to offer, and
+    // the answer is waited for a moment only: clangd may be building the
+    // preamble of the file, and a plain menu is better than a delayed one. The
+    // answer is kept, so triggering the entry jumps without asking again
+    auto locations = std::make_shared<QVector<LspLocation>>();
+    const auto in_time = LspProtocol::boundedWait(
+        [this, &tc, locations](const std::function<void()> &stop) {
+          this->client->requestDefinition(
+              this->documentFile, *this->document, tc.position(),
+              [locations, stop](const QVector<LspLocation> &l) {
+                *locations = l;
+                stop();
+              });
+        },
+        1000);
+    if ((!in_time) || (locations->isEmpty())) {
+      return;
+    }
+    // a symbol defined in several places, a virtual override for instance,
+    // gets one entry each: the file and the line, in the numbering a buffer
+    // shows, are what tells them apart. Five is where a menu which goes on
+    // listing them stops being a menu
+    const auto entries = qMin(locations->size(), 5);
+    const auto old = m->actions();
+    for (auto i = entries - 1; i >= 0; --i) {
+      const auto location = locations->at(i);
+      auto text = QObject::tr("Go to definition");
+      if (entries > 1) {
+        text = QObject::tr("Go to definition (%1:%2)")
+                   .arg(QFileInfo(location.file).fileName())
+                   .arg(location.line + 1);
+      }
+      auto *const a = new QAction(text, m);
+      a->setIcon(QIcon::fromTheme("go-jump"));
+      a->setIconVisibleInMenu(true);
+      a->setStatusTip(QObject::tr("Jump to the definition of the symbol"));
+      QObject::connect(a, &QAction::triggered, this,
+                       [this, location] { this->jumpTo(location); });
+      if (old.isEmpty()) {
+        m->addAction(a);
+      } else {
+        m->insertAction(*(old.begin()), a);
+      }
+    }
+    if (!old.isEmpty()) {
+      m->insertSeparator(*(old.begin()));
+    }
+  }  // end of completeContextMenu
 
   void CxxMajorMode::setSyntaxHighlighter(QTextDocument *const d) {
     this->setHighlighter(new CxxSyntaxHighlighter(d));

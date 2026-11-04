@@ -17,6 +17,8 @@ namespace tfel::gui {
   struct TextEditBase;
   // forward declaration
   struct LspClient;
+  // forward declaration
+  struct LspLocation;
 
   /*!
    * \brief major mode dedicated to the C++ language
@@ -28,9 +30,10 @@ namespace tfel::gui {
    *
    * \note when the setting `clangd/enable` allows it, the mode talks to a
    * language server, \c clangd, through the \c LspClient shared by the editor
-   * widget: the diagnostics of the server are drawn under the text, and
-   * \c Alt-Tab, \c Alt-. and \c Alt-? ask it for completions, definitions and
-   * hover information (issue #125)
+   * widget: the diagnostics of the server are drawn under the text, the
+   * \c Alt-Tab, \c Alt-. and \c Alt-? keys ask it for completions,
+   * definitions and hover information, and its context menu offers to jump
+   * to the definition of the symbol it was opened on (issue #125)
    */
   struct TFEL_GUI_VISIBILITY_EXPORT CxxMajorMode : public CMajorModeBase {
     /*!
@@ -86,6 +89,24 @@ namespace tfel::gui {
     void completeCurrentWord(TextEditBase &, const QString &) override;
 
     /*!
+     * \brief add a "Go to definition" entry to the context menu when the
+     * language server has a definition for the symbol the menu was opened on
+     * \param[in] m : menu to complete
+     * \param[in] tc : text cursor at the position where the menu appears
+     *
+     * \note the entry is inserted at the top of the menu, before the entries
+     * of the text edit and separated from them, and jumps where the server
+     * says the symbol is defined, the file which holds it being opened if it
+     * is not visited yet
+     *
+     * \note the definition is asked for here, as it is the only way to know
+     * whether to offer the entry, and the answer is waited for a moment only:
+     * a server which is not up, or which is busy parsing, leaves the menu
+     * untouched rather than delaying it
+     */
+    void completeContextMenu(QMenu *const, const QTextCursor &) override;
+
+    /*!
      * \brief install the highlighter of the C++ language on the given document
      * \param[in] d : document to highlight
      *
@@ -126,6 +147,11 @@ namespace tfel::gui {
     void completeWithClangd();
     //! ask the server where the symbol under the cursor is defined
     void jumpToDefinition();
+    /*!
+     * \brief place the cursor on the given definition, opening the file which
+     * holds it when that file is not the one of this buffer
+     */
+    void jumpTo(const LspLocation &);
     //! ask the server what the symbol under the cursor is
     void showHover();
     //! the client of the editor widget, null when `clangd/enable` is false
