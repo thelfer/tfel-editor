@@ -240,6 +240,22 @@ namespace tfel::gui {
      */
     virtual bool isOkToClose() const;
 
+    /*!
+     * \brief change the font of the main frame, of the labels of the
+     * information line and of the tab bar of the secondary tasks
+     * \param[in] f: new font
+     *
+     * \note those widgets are given the font of the text edits when the buffer
+     * is built (see `setQLabelFontSizeAndMargins`) and are no children of one
+     * another, so they do not follow a font change by themselves. Since the
+     * information line is a plain horizontal layout, a label which keeps its
+     * old font also keeps the height that font gives it, and the line, which
+     * the vertical layout gives the height its labels ask for, grows to fit it:
+     * a mode line whose font is not the one of the text edits is a mode line
+     * taking the height of two.
+     */
+    virtual void changeFont(const QFont &);
+
     //! destructor
     ~Buffer() override;
 

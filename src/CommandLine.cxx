@@ -26,32 +26,20 @@ namespace tfel::gui {
       : LineEdit(q, &p), lineEdit(p) {}  // end of CustomLineEdit
 
   CommandLine::CustomLineEdit::~CustomLineEdit() {
-    if (!this->completerHandledByQLineEdit) {
-      delete this->c_;
-    }
+    delete this->c_;
   }  // end of ~CustomLineEdit()
 
   void CommandLine::CustomLineEdit::setCompleter(QCompleter* const c,
-                                                 const bool b) {
+                                                 const bool) {
     if (c == nullptr) {
       return;
     }
-    if (this->completerHandledByQLineEdit) {
-      // the previous completer is owned by the base class, which must forget
-      // it as it shall not insert any completion any more
-      QLineEdit::setCompleter(nullptr);
-    } else {
-      delete this->c_;
-    }
+    delete this->c_;
     this->c_ = c;
-    this->completerHandledByQLineEdit = b;
-    // the completer is not installed on the line edit when it is not handled
-    // by it: a line edit owning a completer inserts, and selects, the first
-    // completion matching its text as soon as the user types, whereas the
-    // completion is performed by complete() in the other case
-    if (b) {
-      QLineEdit::setCompleter(c);
-    }
+    // the completer is never installed on the widget: a line edit owning a
+    // completer inserts, and selects, the first completion matching its text
+    // as soon as the user types, whereas the completion is performed by
+    // complete() in the other case
   }  // end of setCompleter
 
   QCompleter* CommandLine::CustomLineEdit::completer() const {
@@ -184,17 +172,23 @@ namespace tfel::gui {
     s.setHorizontalPolicy(QSizePolicy::Fixed);
     s.setVerticalPolicy(QSizePolicy::Fixed);
     this->label->setSizePolicy(s);
-    this->label->setAlignment(Qt::AlignHCenter);
     this->label->setFocusPolicy(Qt::NoFocus);
     this->label->setContentsMargins(0, 0, 0, 0);
     this->label->setLineWidth(0);
+    // the label is top aligned: when the input grows because the text typed
+    // requires several lines, the label stays on the first line, as it did when
+    // the input could not be taller than the label. The alignment of the label
+    // itself is not enough: a label which is Fixed in the vertical direction is
+    // given the height of its own content and the layout centres that height in
+    // the row the input takes
+    this->label->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
     this->setLabel(l);
     //    this->hl->setMargin(0);
     this->hl->setSpacing(0);
     this->hl->setContentsMargins(0, 0, 0, 0);
     // this->setStyleSheet("background: rgba(255,255,255,100%)");
     // this->label->setStyleSheet("background: rgba(255,255,255,100%)");
-    this->hl->addWidget(this->label);
+    this->hl->addWidget(this->label, 0, Qt::AlignTop);
     // this->vl->setMargin(0);
     // this->vl->setSpacing(0);
     // this->vl->setContentsMargins(0,0,0,0);
@@ -273,6 +267,30 @@ namespace tfel::gui {
     this->label->setText("<font color=blue> " + l + " </font>");
   }
 
+  void CommandLine::changeFont(const QFont& f) {
+    // the prompt has no font of its own: it is given the one of this widget by
+    // Qt, which resolves the font of a child from its parent as long as the
+    // child was not given an explicit font
+    this->QWidget::setFont(f);
+    if (this->input != nullptr) {
+      // the font of the entry is an explicit one (see setLineEdit), which Qt
+      // does not replace with the font of the parent widget
+      this->input->setFont(f);
+      // the prompt leaves the room the entry draws its first line in free, so
+      // that the two start on the same line; that room is shared between the
+      // frame of the entry and the margin of its document, both of which a
+      // change of the font or of the style may touch
+      this->label->setContentsMargins(0, this->input->firstLineTop(), 0, 0);
+    }
+    if (this->completions != nullptr) {
+      // the list of completions is a text edit which read the font of the text
+      // edits when it was built; it is a secondary task of the buffer only
+      // while it is displayed, so it may be out of the tab widget of the
+      // secondary tasks, which is where Buffer::changeFont looks
+      this->completions->setFont(f);
+    }
+  }  // end of changeFont
+
   void CommandLine::keyPressEvent(QKeyEvent* e) {
     if (this->input == nullptr) {
       return;
@@ -297,7 +315,14 @@ namespace tfel::gui {
     this->input = i;
     this->input->setContentsMargins(0, 0, 0, 0);
     this->input->setFont(this->label->font());
-    this->input->setFrame(false);
+    this->input->setFrameShape(QFrame::NoFrame);
+    // the prompt and the text of the entry start on the same line: the entry
+    // draws the first line of its content below its own top edge, by the frame,
+    // the margins of the view port and the margin of the document, and the
+    // label leaves the same room free, else the prompt of an entry taking
+    // several lines is drawn on the top edge of the row, above the line being
+    // typed
+    this->label->setContentsMargins(0, this->input->firstLineTop(), 0, 0);
     // this->input->setStyleSheet("background: rgba(255,255,255,100%)");
     this->hl->addWidget(this->input);
     QObject::connect(this->input, &CommandLine::CustomLineEdit::returnPressed,
@@ -407,7 +432,7 @@ namespace tfel::gui {
           homePath += QDir::separator();
         }
         t.replace(0, 2, homePath);
-        QLineEdit::setText(t);
+        this->setText(t);
       }
       CommandLine::CustomLineEdit::complete();
     }  // end of complete
@@ -422,10 +447,10 @@ namespace tfel::gui {
       // as it can not be completed any further and the separator makes the
       // next completion start within this directory
       if ((b) && (QFileInfo(c).isDir()) && (!c.endsWith(QDir::separator()))) {
-        QLineEdit::setText(c + QDir::separator());
+        this->setText(c + QDir::separator());
         return;
       }
-      QLineEdit::setText(c);
+      this->setText(c);
     }  // end of insertCompletion
 
     QString extractBaseForCompletion(const QString& c) override {

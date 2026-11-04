@@ -15,6 +15,7 @@
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QStackedWidget>
 #include <QtGui/QAction>
 #include "TFEL/GUI/Config.hxx"
@@ -200,13 +201,21 @@ namespace tfel::gui {
    public slots:
 
     /*!
-     * change the font used by the main frames
+     * change the font of every widget which uses the font of the text edits
      * \param[in] f : new font
+     *
+     * \note the widgets reading the "font/textedit" setting when they are built
+     * (see `setFontSizeAndContentsMargins`) are not children of each other, so
+     * a font change has to be handed to all of them: the main frames, the
+     * informative message area and the area displaying the last user input, the
+     * command lines which are waiting for an answer, the information line of
+     * every buffer and the tab bar of their secondary tasks. Widgets built
+     * later read the setting themselves.
      *
      * \note this setting is not persistent: MainWindow::selectFont is in
      * charge of storing the font in the settings
      */
-    void changeMainFramesFont(const QFont &);
+    void changeFont(const QFont &);
 
     /*!
      * open a file in a new buffer
@@ -494,12 +503,32 @@ namespace tfel::gui {
      */
     virtual void removeBuffer(Buffer *const) override;
 
+    /*!
+     * \brief display the given minibuffer page and hide the other ones
+     * \param[in] w : page to display
+     *
+     * \note nothing happens if \c w is null; all the pages held by the
+     * minibuffer are hidden but \c w, which is shown even when it is not one of
+     * them
+     */
+    virtual void setMinibufferPage(QWidget *const);
+
     //! buffers
     QStackedWidget *buffers;
     //! buffer history
     QStringList bHistory;
-    //! the minibuffer
-    QStackedWidget *minibuffer;
+    /*!
+     * \brief the minibuffer: a container holding the informative message area,
+     * the empty area and the user inputs, of which only one is shown at a time
+     *
+     * \note this is a plain container and not a `QStackedWidget` because a
+     * stacked widget is as tall as the tallest page it holds, never shorter:
+     * the height of the minibuffer must follow the page on display, which grows
+     * and shrinks with its content (see \c MultiLineLineEdit)
+     */
+    QWidget *minibuffer;
+    //! layout the minibuffer pages are added to, see \c setMinibufferPage
+    QVBoxLayout *minibufferLayout;
     //! user message
     LineEdit *um;
     //! user input: the command line and whether it was blocking when it was

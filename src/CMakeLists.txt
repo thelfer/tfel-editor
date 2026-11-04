@@ -13,6 +13,7 @@ qt_sources(TFEL_EDITOR_SOURCES
   "${PROJECT_SOURCE_DIR}/include/TFEL/GUI"
   EditorWidget
   LineEdit
+  MultiLineLineEdit
   FileDownloader
   ShortCutStyle
   Command

@@ -8,7 +8,7 @@
 #ifndef LIB_TFEL_GUI_LINEEDIT_HXX
 #define LIB_TFEL_GUI_LINEEDIT_HXX
 
-#include <QtWidgets/QLineEdit>
+#include <TFEL/GUI/MultiLineLineEdit.hxx>
 #include <TFEL/GUI/Config.hxx>
 
 namespace tfel::gui {
@@ -19,15 +19,18 @@ namespace tfel::gui {
   /*!
    * \brief a line edit used by the minibuffer of the editor
    *
+   * This widget is a `MultiLineLineEdit`: one line tall by default, growing
+   * and shrinking with its content, which supports multi-line editing.
+   *
    * When the short cut style is not Qt's (see `ShortCutStyle`), this line
    * edit handles emacs style short cuts: history navigation (`Ctrl-p`,
    * `Ctrl-n`, up and down arrows), kill ring yanking (`Ctrl-y`, `Alt-y`),
    * `Ctrl-h` for select all, `Ctrl-Space` to clear the selection,
    * `Ctrl-a/e/b/f` and `Alt-b/f` to move the cursor, and the
    * `Ctrl-k1 Mod-k2` sequences dispatched to handleShortCut(). Events
-   * handled this way are not passed to the base `QLineEdit`.
+   * handled this way are not passed to the base `MultiLineLineEdit`.
    */
-  struct TFEL_GUI_VISIBILITY_EXPORT LineEdit : QLineEdit {
+  struct TFEL_GUI_VISIBILITY_EXPORT LineEdit : MultiLineLineEdit {
     /*!
      * \brief constructor
      * \param[in] q: editor emacs widget
