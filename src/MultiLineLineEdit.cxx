@@ -18,6 +18,7 @@
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QLayout>
 #include <QtWidgets/QPushButton>
+#include <QtWidgets/QSplitter>
 #include "TFEL/GUI/MultiLineLineEdit.hxx"
 
 namespace tfel::gui {
@@ -57,6 +58,37 @@ namespace tfel::gui {
     }  // end of findDefaultButton
 
     /*!
+     * \brief true when the height of a widget is what its own content decides
+     * \param[in] w: the widget
+     * \param[in] l: the layout of that widget
+     * \param[in] slack: the height a single line of the input takes, which the
+     * widget is allowed to be taller than its content by, the growth of the
+     * content being what the propagation is about
+     *
+     * A widget is only handed the height its layout asks for while it has no
+     * reason to be taller than that: a widget which is, the editor of the
+     * application among them, has been given room by the layout which encloses
+     * it, the room the widgets it shares that space with live on. Giving such a
+     * widget the height of its own layout hint shrinks it to a fraction of the
+     * window, leaves the room it was given empty and pushes its own content to
+     * the bottom of what is left. A widget which asks to expand, or to which
+     * the layout above hands a share of the room, is not sized by its contents
+     * either.
+     */
+    bool sizesToItsContents(const QWidget& w,
+                            const QLayout& l,
+                            const int slack) {
+      const auto policy = w.sizePolicy();
+      const auto v = policy.verticalPolicy();
+      if ((v == QSizePolicy::Expanding) ||
+          (v == QSizePolicy::MinimumExpanding) ||
+          (policy.verticalStretch() > 0)) {
+        return false;
+      }
+      return w.height() <= l.totalSizeHint().height() + slack;
+    }  // end of sizesToItsContents
+
+    /*!
      * \brief give a dialog the height its content asks for, when the content
      * shrank back
      * \param[in] w: the dialog
@@ -79,6 +111,7 @@ namespace tfel::gui {
      * somebody resized the dialog in the meantime, in which case that geometry
      * is the one to respect.
      */
+
     void fitDialog(QWidget* const w,
                    const bool one_line,
                    int& resting,
@@ -491,6 +524,12 @@ namespace tfel::gui {
     // window had when it was opened, which is what a dialog is given back
     const auto one_line = this->height() <= this->singleLineHeight();
     auto currentHeight = this->height();
+    // the height is handed from a widget to the one which encloses it as long
+    // as each of them is no taller than its own content asks: from the moment
+    // one of them has room of its own, that room is nothing the input has to
+    // say a word about and the layouts above are only activated, so that the
+    // widgets sharing the space are given what is left of it
+    auto hand_height_up = true;
     auto* top = static_cast<QWidget*>(nullptr);
     for (auto* w = static_cast<QWidget*>(this->parentWidget()); w != nullptr;
          w = w->parentWidget()) {
@@ -509,12 +548,17 @@ namespace tfel::gui {
                   this->propagatedDialogHeight_);
         return;
       }
+      if ((hand_height_up) &&
+          ((qobject_cast<QSplitter*>(pw) != nullptr) ||
+           (!sizesToItsContents(*w, *l, this->singleLineHeight())))) {
+        hand_height_up = false;
+      }
       // the widget is never given more room than its parent has: a page given
       // the height of a window taller than it would reach beyond the window,
       // and the line being typed, at the bottom of the page, would be drawn
       // outside of the screen
-      const auto h = qMin(l->sizeHint().height(), qMax(1, pw->height()));
-      if (h != currentHeight) {
+      const auto h = qMin(l->totalSizeHint().height(), qMax(1, pw->height()));
+      if ((hand_height_up) && (h != currentHeight)) {
         auto g = w->geometry();
         // a widget stuck to the bottom of its parent, which is the case of the
         // minibuffer, keeps that edge when it grows, the other ones keep their
