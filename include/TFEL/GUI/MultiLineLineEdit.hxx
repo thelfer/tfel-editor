@@ -10,6 +10,7 @@
 #ifndef LIB_TFEL_GUI_MULTILINEEDIT_HXX
 #define LIB_TFEL_GUI_MULTILINEEDIT_HXX
 
+#include <QtCore/QPointer>
 #include <QtWidgets/QTextEdit>
 #include <TFEL/GUI/Config.hxx>
 
@@ -182,6 +183,18 @@ namespace tfel::gui {
      */
     void resizeEvent(QResizeEvent *) override;
     /*!
+     * \brief watch the size of the window, which bounds the height of the
+     * widget
+     *
+     * \param[in] o: the object the event is sent to
+     * \param[inout] ev: event
+     *
+     * \note the window is watched because the height the content is allowed to
+     * take depends on it: the scroll bar has to take over when the window
+     * shrinks and the content has to grow back when it grows again
+     */
+    bool eventFilter(QObject *, QEvent *) override;
+    /*!
      * \brief handle the request to propagate the height of the content to the
      * enclosing layouts
      * \param[inout] ev: event
@@ -223,11 +236,34 @@ namespace tfel::gui {
      * is the smallest height it can take
      */
     int singleLineHeight() const;
+    /*!
+     * \return the window whose size bounds the height of this widget, null when
+     * there is none
+     *
+     * A widget without a parent, and a widget which is itself the window, have
+     * no window to measure themselves against. A dialog is left out too: it is
+     * sized by its content, so a fraction of it is a fraction of what the
+     * content asks for, which bounds nothing.
+     */
+    QWidget *boundedWindow() const;
+    /*!
+     * \return the greatest height the content of the widget may take: never
+     * more than \c max_lines lines, nor more than a quarter of the window the
+     * widget belongs to, never less than a single line
+     */
+    int maximumContentHeight() const;
+    /*!
+     * \brief watch the size of the window this widget bounds itself to, instead
+     * of the one watched until now
+     */
+    void watchWindow();
 
     //! validator constraining the text, not owned
     const QValidator *v_ = nullptr;
     //! height reported by `sizeHint`, the fixed height of the content
     int contentHeight_ = -1;
+    //! window whose size bounds the height of the widget, see \c boundedWindow
+    QPointer<QWidget> window_ = nullptr;
     /*!
      * \brief ask the event loop to propagate the height of the content to the
      * enclosing layouts, unless it was already asked for

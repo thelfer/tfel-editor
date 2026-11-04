@@ -114,7 +114,13 @@ namespace tfel::gui {
     this->updateHeight();
   }  // end of MultiLineLineEdit::MultiLineLineEdit
 
-  MultiLineLineEdit::~MultiLineLineEdit() = default;
+  MultiLineLineEdit::~MultiLineLineEdit() {
+    // the window is not filtered any more: it may outlive this widget, which is
+    // the case of the editor window and of every user input of the minibuffer
+    if (!this->window_.isNull()) {
+      this->window_->removeEventFilter(this);
+    }
+  }  // end of ~MultiLineLineEdit()
 
   QString MultiLineLineEdit::text() const {
     // `toPlainText` separates the blocks with the paragraph separator
@@ -308,15 +314,64 @@ namespace tfel::gui {
            2 * this->frameWidth();
   }  // end of singleLineHeight
 
-  void MultiLineLineEdit::updateHeight() {
+  QWidget* MultiLineLineEdit::boundedWindow() const {
+    auto* const w = this->window();
+    if ((w == nullptr) || (w == this) || (!w->isWindow()) ||
+        (qobject_cast<QDialog*>(w) != nullptr)) {
+      return nullptr;
+    }
+    return w;
+  }  // end of boundedWindow
+
+  void MultiLineLineEdit::watchWindow() {
+    auto* const w = this->boundedWindow();
+    if (w == this->window_) {
+      return;
+    }
+    if (!this->window_.isNull()) {
+      this->window_->removeEventFilter(this);
+    }
+    this->window_ = w;
+    if (w != nullptr) {
+      w->installEventFilter(this);
+    }
+  }  // end of watchWindow
+
+  bool MultiLineLineEdit::eventFilter(QObject* const o, QEvent* const ev) {
+    if ((o == this->window_) && (ev->type() == QEvent::Resize)) {
+      // the window the height of the content is bounded by changed size: the
+      // scroll bar may have to take over, or the content to grow back
+      this->updateHeight();
+    }
+    return QTextEdit::eventFilter(o, ev);
+  }  // end of eventFilter
+
+  int MultiLineLineEdit::maximumContentHeight() const {
+    // the content is never allowed to take more than max_lines lines, nor more
+    // than a quarter of the window the widget belongs to: an input taking half
+    // of the editor window would leave too little room to the documents the
+    // user is editing. A quarter of a dialog bounds nothing, as a dialog is
+    // sized by its content, so the number of lines is the only cap there.
     const auto line = this->fontMetrics().height();
-    const int min_h = this->singleLineHeight();
-    const int max_h = min_h + (max_lines - 1) * line;
+    const auto min_h = this->singleLineHeight();
+    const auto lines_h = min_h + (max_lines - 1) * line;
+    auto* const w = this->boundedWindow();
+    if (w == nullptr) {
+      return lines_h;
+    }
+    // a single line is always allowed, however small the window is: the text
+    // being edited must remain visible
+    return qMax(min_h, qMin(lines_h, w->height() / 4));
+  }  // end of maximumContentHeight
+
+  void MultiLineLineEdit::updateHeight() {
+    this->watchWindow();
+    const auto min_h = this->singleLineHeight();
     // the document layout is only up to date once its size has been asked for
     const auto h =
         qCeil(this->document()->documentLayout()->documentSize().height()) +
         2 * this->frameWidth();
-    const int target = qMax(min_h, qMin(h, max_h));
+    const int target = qMax(min_h, qMin(h, this->maximumContentHeight()));
     if (this->contentHeight_ != target) {
       this->contentHeight_ = target;
       this->setFixedHeight(target);
@@ -402,7 +457,11 @@ namespace tfel::gui {
                   this->propagatedDialogHeight_);
         return;
       }
-      const auto h = l->sizeHint().height();
+      // the widget is never given more room than its parent has: a page given
+      // the height of a window taller than it would reach beyond the window,
+      // and the line being typed, at the bottom of the page, would be drawn
+      // outside of the screen
+      const auto h = qMin(l->sizeHint().height(), qMax(1, pw->height()));
       if (h != currentHeight) {
         auto g = w->geometry();
         // a widget stuck to the bottom of its parent, which is the case of the
