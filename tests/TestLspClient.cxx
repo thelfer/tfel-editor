@@ -7,7 +7,9 @@
  */
 
 #include <QtTest/QtTest>
+#include <QtCore/QDir>
 #include <QtCore/QElapsedTimer>
+#include <QtCore/QFileInfo>
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
@@ -69,6 +71,8 @@ struct TestLspClient : QObject {
   void testModeMenu();
   void testModeIntegration();
   void testModeLaunchesWithACompilationDatabase();
+  void testModePlainLaunchFindsTheDatabase();
+  void testModePlainLaunchUsesTheDefaultDatabase();
   void testModeContextMenu();
 
  private:
@@ -591,17 +595,28 @@ void TestLspClient::testModeLaunchesWithACompilationDatabase() {
   // database says they are compiled
   const auto source = QStringLiteral(
       "int main() {\n  int x = \"not an int\";\n  return x;\n}\n");
-  const auto file = writeSource(QStringLiteral("database.cxx"), source);
+  // the file and its database live in a subtree of the temporary directory: a
+  // database at its root would be found by the plain launches of the tests
+  // which run after this one, which launch the sessions they do not ask for
+  const auto project = QDir(directory.path()).filePath("db-project");
+  QVERIFY(QDir().mkpath(project));
+  const auto file = QDir(project).filePath("database.cxx");
+  {
+    auto handle = QFile(file);
+    QVERIFY(handle.open(QIODevice::WriteOnly));
+    handle.write(source.toUtf8());
+    handle.close();
+  }
   QVERIFY(!file.isEmpty());
   // a database of one entry: the file and how it is compiled. Whether the
   // server reads the answer as a file or as the directory of that file is what
   // `LspCxxSupport::compileCommandsArguments` is tested for, see
   // `test-lsp-protocol`; what is tested here is that the answer reaches the
   // server it is meant for, which the diagnostics it publishes say
-  const auto build = QDir(directory.path()).filePath("build");
-  QVERIFY(QDir(directory.path()).mkpath(QStringLiteral("build")));
+  const auto build = QDir(project).filePath("build");
+  QVERIFY(QDir(project).mkpath(QStringLiteral("build")));
   const auto database = QDir(build).filePath("compile_commands.json");
-  const auto entry = QJsonObject{{"directory", directory.path()},
+  const auto entry = QJsonObject{{"directory", project},
                                  {"file", file},
                                  {"command", QStringLiteral("c++ -std=c++11 "
                                                             "-fsyntax-only "
@@ -633,6 +648,137 @@ void TestLspClient::testModeLaunchesWithACompilationDatabase() {
            "the session launched with a database published nothing");
   editor.reset();
 }  // end of TestLspClient::testModeLaunchesWithACompilationDatabase
+
+namespace {
+
+  // create a file and the directories which hold it; the mode tests build
+  // little project trees in the temporary directory of the class so that the
+  // search of a plain launch has something to find, or something to miss
+  bool makeFile(const QString &path, const QByteArray &content) {
+    const auto info = QFileInfo(path);
+    if (!QDir().mkpath(info.absolutePath())) {
+      return false;
+    }
+    auto handle = QFile(path);
+    if (!handle.open(QIODevice::WriteOnly)) {
+      return false;
+    }
+    const auto written = handle.write(content) == content.size();
+    handle.close();
+    return written;
+  }  // end of makeFile()
+
+  // a compilation database of one entry: the given file compiled with the
+  // given flags, which is all a test needs to make the server say something
+  // it would not say without the database
+  bool makeDatabase(const QString &path,
+                    const QString &file,
+                    const QString &flags) {
+    const auto entry = QJsonObject{
+        {QStringLiteral("directory"), QFileInfo(file).absolutePath()},
+        {QStringLiteral("file"), file},
+        {QStringLiteral("command"),
+         QStringLiteral("c++ -std=c++11 -fsyntax-only %1 %2")
+             .arg(flags, file)}};
+    return makeFile(path, QJsonDocument(QJsonArray{entry}).toJson());
+  }  // end of makeDatabase()
+
+}  // end of namespace
+
+void TestLspClient::testModePlainLaunchFindsTheDatabase() {
+  // the plain entry of the "C/C++" menu, and the `launch-clangd` command,
+  // take the database of the project when there is one: the file below is
+  // clean as long as no database defines `TFEL_TEST_DATABASE` for it, and
+  // holds an error once a session reads the database which does
+  const auto project = QDir(directory.path()).filePath("search-project");
+  const auto file = QDir(project).filePath("src/searched.cxx");
+  QVERIFY(makeFile(project + "/CMakeLists.txt", "project(s)\n"));
+  QVERIFY(makeFile(file,
+                   "#ifdef TFEL_TEST_DATABASE\n"
+                   "int x = \"not an int\";\n"
+                   "#endif\n"
+                   "int main() { return 0; }\n"));
+  const auto database = project + "/build/compile_commands.json";
+  auto editor = std::make_unique<tfel::gui::EditorWidget>();
+  editor->show();
+  editor->openFile(file);
+  auto &lsp = tfel::gui::LspClient::get(*editor);
+  QVERIFY(lsp.isIdle());
+  // the first session is a plain one: the project has no database yet, and
+  // clangd finds the file harmless without one
+  cxxMenu(*editor)->actions().at(0)->trigger();
+  QVERIFY2(lsp.waitUntilReady(30000),
+           "the plain session of a project with no database did not answer");
+  // the database appears where the search looks for an out-of-source build,
+  // and a relaunch of the same entry is supposed to find it: the editor
+  // searches so that it can tell what the session was started with, and a
+  // session which reads the database says what the database says
+  QVERIFY(makeDatabase(database, file, "-DTFEL_TEST_DATABASE"));
+  cxxMenu(*editor)->actions().at(0)->trigger();
+  QVERIFY2(lsp.waitUntilReady(30000),
+           "the plain session of a project with a database did not answer");
+  QVERIFY2(waitFor([&] { return !lsp.diagnosticsFor(file).isEmpty(); }, 30000),
+           "the database found by the search did not reach the server");
+  editor.reset();
+}  // end of TestLspClient::testModePlainLaunchFindsTheDatabase
+
+void TestLspClient::testModePlainLaunchUsesTheDefaultDatabase() {
+  // the `--compile-commands-file` the command line can hand over: a plain
+  // launch prefers it over any search, and falls back to the search when it
+  // names a file which does not exist
+  const auto db_directory = QDir(directory.path()).filePath("default-db");
+  const auto database = QDir(db_directory).filePath("compile_commands.json");
+  const auto file = QDir(directory.path()).filePath("default-used.cxx");
+  QVERIFY(makeFile(file,
+                   "#ifdef TFEL_TEST_DEFAULT\n"
+                   "int x = \"not an int\";\n"
+                   "#endif\n"
+                   "int main() { return 0; }\n"));
+  // the database is deliberately not named `build`: only the option can bring
+  // a session to it, the search of the project would never look there
+  QVERIFY(makeDatabase(database, file, "-DTFEL_TEST_DEFAULT"));
+  tfel::gui::LspCxxSupport::setDefaultCompileCommandsFile(database);
+  auto editor = std::make_unique<tfel::gui::EditorWidget>();
+  editor->show();
+  editor->openFile(file);
+  auto &lsp = tfel::gui::LspClient::get(*editor);
+  cxxMenu(*editor)->actions().at(0)->trigger();
+  QVERIFY2(lsp.waitUntilReady(30000),
+           "the session started with the default database did not answer");
+  QVERIFY2(waitFor([&] { return !lsp.diagnosticsFor(file).isEmpty(); }, 30000),
+           "the default database did not reach the server");
+  editor.reset();
+  // a default which points nowhere is reported and the search takes over: the
+  // mistake of a stale command line does not void the launch
+  const auto project = QDir(directory.path()).filePath("fallback-project");
+  const auto fallback_file = QDir(project).filePath("src/fallback.cxx");
+  QVERIFY(makeFile(project + "/CMakeLists.txt", "project(f)\n"));
+  QVERIFY(makeFile(fallback_file,
+                   "#ifdef TFEL_TEST_FALLBACK\n"
+                   "int x = \"not an int\";\n"
+                   "#endif\n"
+                   "int main() { return 0; }\n"));
+  QVERIFY(makeDatabase(project + "/build/compile_commands.json", fallback_file,
+                       "-DTFEL_TEST_FALLBACK"));
+  tfel::gui::LspCxxSupport::setDefaultCompileCommandsFile(
+      QStringLiteral("/does/not/exist/compile_commands.json"));
+  auto fallback = std::make_unique<tfel::gui::EditorWidget>();
+  fallback->show();
+  fallback->openFile(fallback_file);
+  auto &fallback_lsp = tfel::gui::LspClient::get(*fallback);
+  cxxMenu(*fallback)->actions().at(0)->trigger();
+  QVERIFY2(fallback_lsp.waitUntilReady(30000),
+           "a default which does not exist voided the launch");
+  QVERIFY2(
+      waitFor(
+          [&] { return !fallback_lsp.diagnosticsFor(fallback_file).isEmpty(); },
+          30000),
+      "the search did not take over after a default which points nowhere");
+  fallback.reset();
+  // the static of the editor is none of the tests' business afterwards, and
+  // it outlives this one
+  tfel::gui::LspCxxSupport::setDefaultCompileCommandsFile(QString());
+}  // end of TestLspClient::testModePlainLaunchUsesTheDefaultDatabase
 
 void TestLspClient::testModeContextMenu() {
   // the right click entry of the mode: the menu is completed with a "Go to

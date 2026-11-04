@@ -153,17 +153,64 @@ namespace tfel::gui {
       return false;
     }  // end of supportIsEnabled()
 
+    // the extra arguments of a session and what to say about them in the
+    // minibuffer once it is up
+    struct ImplicitCompileCommands {
+      QStringList arguments;
+      QString description;
+    };  // end of struct ImplicitCompileCommands
+
+    // the database a session launched without an explicit one uses: the file
+    // `tfel-editor` was started with, when `--compile-commands-file` named one
+    // which exists, else the one of the project of the current buffer, else
+    // none, which is a plain session leaving the search to the server
+    //
+    // the editor performs the search itself, rather than leaving it to the
+    // server, because the option which hands a database to clangd is set when
+    // the session starts and the user is told which database it was started
+    // with, which requires knowing it before launching
+    ImplicitCompileCommands implicitCompileCommands(EditorWidget &w) {
+      const auto file = LspCxxSupport::defaultCompileCommandsFile();
+      if (!file.isEmpty()) {
+        auto error = QString();
+        const auto arguments =
+            LspCxxSupport::compileCommandsArguments(file, error);
+        if (error.isEmpty()) {
+          return {arguments, QStringLiteral("with the compilation database "
+                                            "tfel-editor was started with: %1")
+                                 .arg(file)};
+        }
+        // a default which does not exist is a mistake the user made once, at
+        // the command line; it does not void the launch, the project is asked
+        // instead and the mistake is only reported on the way
+        w.displayInformativeMessage(
+            QStringLiteral("%1: searching the project instead").arg(error));
+      }
+      const auto directory = currentFileDirectory(w);
+      const auto found = LspCxxSupport::searchCompileCommandsFile(
+          directory.isEmpty() ? QDir::currentPath() : directory);
+      if (found.isEmpty()) {
+        return {{}, QStringLiteral("without a compilation database")};
+      }
+      auto error = QString();
+      return {LspCxxSupport::compileCommandsArguments(found, error),
+              QStringLiteral("with the compilation database of the project: %1")
+                  .arg(found)};
+    }  // end of implicitCompileCommands()
+
   }  // end of namespace
 
   // the command `launch-clangd`: a session of clangd with no other option
-  // than those of the settings, which leaves clangd to find a compilation
-  // database by itself, as it does when it is run in a terminal
+  // than those of the settings, using the compilation database the editor
+  // was started with, or the one of the project of the current buffer, or
+  // none, in which case clangd searches a database by itself, as it does
+  // when it is run in a terminal
   void launchClangd(EditorWidget &editor) {
     if (!supportIsEnabled(editor)) {
       return;
     }
-    startClangd(editor, QStringList(),
-                QStringLiteral("without a compilation database"));
+    const auto choice = implicitCompileCommands(editor);
+    startClangd(editor, choice.arguments, choice.description);
   }  // end of launchClangd
 
   // the command `launch-clangd-with-compile-commands`: the same, after the
@@ -220,8 +267,9 @@ namespace tfel::gui {
     m->setIcon(this->getIcon());
     auto *const lc = m->addAction(QObject::tr("Launch clangd"));
     lc->setToolTip(
-        QObject::tr("Start clangd and let it look for a compilation database "
-                    "itself; a session which is running is restarted"));
+        QObject::tr("Start clangd with the compilation database of the "
+                    "project, or the one tfel-editor was started with; a "
+                    "session which is running is restarted"));
     QObject::connect(lc, &QAction::triggered, this,
                      [this] { launchClangd(this->editor); });
     auto *const cd =

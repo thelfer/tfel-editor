@@ -87,9 +87,10 @@ something the editor can guess and cannot be changed afterwards. Two
 entries of the `C/C++` menu of the mode, shown in the menu bar while a
 `C`/`C++` buffer is current, do it:
 
-- `Launch clangd` starts a session with the options of the settings only,
-  which leaves `clangd` to look for a compilation database by itself, as
-  it does when it is run in a terminal. The command is `launch-clangd`.
+- `Launch clangd` starts a session with the options of the settings only:
+  the editor looks for a compilation database itself, as described below,
+  and starts the session with the one it found, or without one. The
+  command is `launch-clangd`.
 - `Launch clangd with a compile_commands.json` asks for a compilation
   database in the minibuffer first: the input completes paths, starting
   in the directory of the file which is open, and the answer is either
@@ -98,9 +99,35 @@ entries of the `C/C++` menu of the mode, shown in the menu bar while a
   reads: the directory, not the file. The command is
   `launch-clangd-with-compile-commands`.
 
-An empty answer to the question, and the first entry, are the same thing:
-a session which searches a database by itself. An answer which points
-nowhere is refused, and the running session is left alone.
+The database of the plain entry is looked for in this order:
+
+1. the file named by the `--compile-commands-file=<path>` option of
+   `tfel-editor`, when the editor was started with it and the file
+   exists;
+2. a `compile_commands.json` of the project of the file which is open:
+   its directory, then the parent directories for as long as they are
+   still part of the project — a parent holding a `CMakeLists.txt`
+   is —, and, once the boundary of the project is reached, a
+   sub-directory whose name starts with `build` of the top directory
+   of the project or of the directory holding the project, which is
+   where the directory of an out-of-source `cmake` build usually is;
+3. nothing else: the session is launched without any database option,
+   and `clangd` guesses the compilation options the way it does when
+   it is run in a terminal.
+
+The minibuffer says which database a session was started with. A
+`--compile-commands-file` naming a file which does not exist is
+reported and does not void the launch: the search of the project takes
+over. The editor searches rather than leaving it to `clangd` because
+the option which hands a database to the server, `--compile-commands-dir`,
+is set when the session starts: knowing the database the session runs
+with means choosing it before the launch, and saying so.
+
+An empty answer to the question of the second entry is an answer too:
+it launches the plain session, the one which looks for nothing and
+guesses everything, even where a default or a project database was
+waiting to be found. An answer which points nowhere is refused, and the
+running session is left alone.
 
 Launching a session while one is running *replaces* it: a server cannot
 change the options it was started with, so the old session is shut down
@@ -226,15 +253,28 @@ project report spurious "file not found" errors for headers that are
 only reachable through the include directories of the real build.
 
 Rather than linking the database into the project, it can be handed to
-the session that is launched for it: the `Launch clangd with a
-compile_commands.json` entry asks for its path, and the session starts
-with `--compile-commands-dir` pointing at the directory of that file.
-That option makes the search above moot: `clangd` only looks in the
+the session that is launched for it: the plain entry finds a
+`build` directory of the project by itself, as described above, and
+launches the session with it; the `Launch clangd with a
+compile_commands.json` entry asks for its path when the database lives
+where no search looks, and the session starts with
+`--compile-commands-dir` pointing at the directory of that file. That
+option makes the search above moot: `clangd` only looks in the
 directory it is told about, so a session launched that way is bound to
 the build directory it was given, whatever the buffers it is fed. The
 answers to the question are kept in the `clangd/compile-commands/history`
 setting, so a project whose database lives in a directory of its own is
 answered with `Ctrl-P`, or the up arrow, from the next session on.
+
+A whole editor session can be started with a database too, which spares
+the question for the projects whose database is always the same one:
+
+~~~~{.bash}
+tfel-editor --compile-commands-file=build/compile_commands.json
+~~~~
+
+The plain entries then start every session with that database, unless
+one launches the other entry and answers the question differently.
 
 # Remarks
 
@@ -247,7 +287,9 @@ answered with `Ctrl-P`, or the up arrow, from the next session on.
 - On the first opening, `clangd` parses the whole translation unit,
   which can take a moment on a large project: the minibuffer says
   `contacting clangd...` while the editor waits for the handshake, and
-  says `clangd launched` or `clangd restarted` when a session is started.
+  says `clangd launched` or `clangd restarted` when a session is
+  started, followed by the compilation database it was started with, or
+  that it was started without one.
 - Closing the window shuts the server down with the `shutdown` request
   and the `exit` notification of the protocol; the same ritual shuts down
   a session which is replaced by a newly launched one. Closing a

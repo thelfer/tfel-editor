@@ -59,6 +59,38 @@ namespace tfel::gui {
      * `C++` major mode is registered for
      */
     static bool isCxxSourceFile(const QString &file_name);
+    /*!
+     * \brief remember the compilation database the editor was started with
+     * \param[in] file : the value of the `--compile-commands-file` option
+     *
+     * \note an empty value, which is what the editor holds when the option was
+     * not given, hands the choice of the database to
+     * \c searchCompileCommandsFile, and a relative value is read as the
+     * editor works, that is from the directory `tfel-editor` was started in
+     */
+    static void setDefaultCompileCommandsFile(const QString &file);
+    //! \return the value of the `--compile-commands-file` option,
+    //! empty when the editor was started without it
+    static QString defaultCompileCommandsFile();
+    /*!
+     * \brief look a compilation database up in the project of a directory
+     * \param[in] directory : where the search starts
+     * \return the database file, empty when the project has none
+     *
+     * The search follows how a `CMake` project is laid out: a
+     * `compile_commands.json` next to \c directory or next to any of the parent
+     * directories which are still part of the project, that is whose parent
+     * holds a `CMakeLists.txt`; then, the project having ended, the
+     * `compile_commands.json` of a sub-directory whose name starts with `build`
+     * of the directory the project lives in, and of the directory which holds
+     * that one, as an out-of-source build is often configured next to the
+     * sources it builds.
+     *
+     * \note the search is done by the editor, not left to \c clangd, because
+     * the option which hands a database to a server is set when the server
+     * starts and the editor has to know which one it picked to tell the user
+     */
+    static QString searchCompileCommandsFile(const QString &directory);
   };  // end of struct LspCxxSupport
 
 }  // end of namespace tfel::gui

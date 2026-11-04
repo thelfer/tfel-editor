@@ -11,6 +11,7 @@
 #include <QtCore/QDir>
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QFile>
+#include <QtCore/QFileInfo>
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QTemporaryDir>
@@ -43,6 +44,8 @@ struct TestLspProtocol : QObject {
   void testDiffAgainst();
   void testBoundedWait();
   void testCompileCommandsArguments();
+  void testDefaultCompileCommandsFile();
+  void testSearchCompileCommandsFile();
 };
 
 void TestLspProtocol::initTestCase() {
@@ -353,6 +356,112 @@ void TestLspProtocol::testCompileCommandsArguments() {
                        directory.path()});
   QVERIFY(error.isEmpty());
 }  // end of TestLspProtocol::testCompileCommandsArguments
+
+namespace {
+
+  // create a file, and the directories which hold it; `content` is small and
+  // meaningless, the tests only care that the file exists
+  bool makeFile(const QString &path, const QByteArray &content = "[]") {
+    const auto info = QFileInfo(path);
+    if (!QDir().mkpath(info.absolutePath())) {
+      return false;
+    }
+    auto handle = QFile(path);
+    if (!handle.open(QIODevice::WriteOnly)) {
+      return false;
+    }
+    handle.write(content);
+    handle.close();
+    return true;
+  }  // end of makeFile()
+
+}  // end of namespace
+
+void TestLspProtocol::testDefaultCompileCommandsFile() {
+  using tfel::gui::LspCxxSupport;
+  // what the editor holds before `--compile-commands-file` is parsed, or when
+  // it is absent: nothing, which hands the choice of the database to the search
+  LspCxxSupport::setDefaultCompileCommandsFile(QString());
+  QVERIFY(LspCxxSupport::defaultCompileCommandsFile().isEmpty());
+  // the value of the option, blank around it removed the way the command line
+  // has no business carrying it in the first place
+  LspCxxSupport::setDefaultCompileCommandsFile(
+      "  /somewhere/compile_commands.json  ");
+  QCOMPARE(LspCxxSupport::defaultCompileCommandsFile(),
+           QStringLiteral("/somewhere/compile_commands.json"));
+  LspCxxSupport::setDefaultCompileCommandsFile(QString());
+  QVERIFY(LspCxxSupport::defaultCompileCommandsFile().isEmpty());
+}  // end of TestLspProtocol::testDefaultCompileCommandsFile
+
+void TestLspProtocol::testSearchCompileCommandsFile() {
+  using tfel::gui::LspCxxSupport;
+  auto root = QTemporaryDir();
+  QVERIFY(root.isValid());
+  const auto r = QDir::cleanPath(root.path());
+  auto error = QString();
+  // an empty place to start from is no place to search
+  QVERIFY(LspCxxSupport::searchCompileCommandsFile(QString()).isEmpty());
+  QVERIFY(LspCxxSupport::searchCompileCommandsFile("  ").isEmpty());
+  QVERIFY(
+      LspCxxSupport::searchCompileCommandsFile("/does/not/exist").isEmpty());
+  // the database of the directory itself, and of the project the directory
+  // lives in: `src` has no `CMakeLists.txt` of its own but its parent does, so
+  // the parent is still part of the project and holds the database
+  const auto proj = r + "/proj";
+  QVERIFY(makeFile(proj + "/CMakeLists.txt", "project(p)\n"));
+  QVERIFY(makeFile(proj + "/compile_commands.json"));
+  const auto deep = proj + "/src/engine";
+  QVERIFY(makeFile(proj + "/src/CMakeLists.txt", "add_subdirectory(engine)\n"));
+  QVERIFY(makeFile(deep + "/cxx.cxx", "int main(){}\n"));
+  QCOMPARE(LspCxxSupport::searchCompileCommandsFile(proj),
+           proj + "/compile_commands.json");
+  // several project directories up: the ascent follows the `CMakeLists.txt` of
+  // `src` and `proj`, `engine` having none of its own
+  QCOMPARE(LspCxxSupport::searchCompileCommandsFile(deep),
+           proj + "/compile_commands.json");
+  // the boundary of the project: without a `CMakeLists.txt` above, a database
+  // one level up belongs to no project and is not the editor's business
+  const auto iso = r + "/iso/one/two";
+  QVERIFY(makeFile(r + "/iso/one/compile_commands.json"));
+  QVERIFY(makeFile(iso + "/cxx.cxx", "int x;\n"));
+  QVERIFY(LspCxxSupport::searchCompileCommandsFile(iso).isEmpty());
+  // an in-source project with its build directory inside: the project ends at
+  // the top `CMakeLists.txt`, and the `build` sub-directory of the last
+  // project directory is searched before the search gives up
+  const auto inner = r + "/inner";
+  QVERIFY(makeFile(inner + "/CMakeLists.txt", "project(i)\n"));
+  QVERIFY(makeFile(inner + "/build/compile_commands.json"));
+  QVERIFY(makeFile(inner + "/src/cxx.cxx", "int y;\n"));
+  QCOMPARE(LspCxxSupport::searchCompileCommandsFile(inner + "/src"),
+           inner + "/build/compile_commands.json");
+  // an out-of-source build next to the project: the parent of the project has
+  // no `CMakeLists.txt`, is no more part of the source tree, and its own
+  // `build*` sub-directories are the last place looked into
+  const auto par = r + "/par";
+  QVERIFY(makeFile(par + "/prj/CMakeLists.txt", "project(o)\n"));
+  QVERIFY(makeFile(par + "/build-tfel/compile_commands.json"));
+  QVERIFY(makeFile(par + "/prj/src/cxx.cxx", "int z;\n"));
+  QCOMPARE(LspCxxSupport::searchCompileCommandsFile(par + "/prj/src"),
+           par + "/build-tfel/compile_commands.json");
+  // `build` wins over the other build directories when several coexist
+  const auto pri = r + "/pri";
+  QVERIFY(makeFile(pri + "/CMakeLists.txt", "project(m)\n"));
+  QVERIFY(makeFile(pri + "/build2/compile_commands.json"));
+  QVERIFY(makeFile(pri + "/build/compile_commands.json"));
+  QCOMPARE(LspCxxSupport::searchCompileCommandsFile(pri),
+           pri + "/build/compile_commands.json");
+  // a project with no database at all, wherever it was built
+  const auto bare = r + "/bare";
+  QVERIFY(makeFile(bare + "/CMakeLists.txt", "project(b)\n"));
+  QVERIFY(makeFile(bare + "/src/cxx.cxx", "int w;\n"));
+  QVERIFY(LspCxxSupport::searchCompileCommandsFile(bare + "/src").isEmpty());
+  // and whatever the answer is, the same option as an explicit answer names
+  const auto found = LspCxxSupport::searchCompileCommandsFile(deep);
+  QVERIFY(!found.isEmpty());
+  QCOMPARE(LspCxxSupport::compileCommandsArguments(found, error),
+           QStringList{QStringLiteral("--compile-commands-dir=") + proj});
+  QVERIFY(error.isEmpty());
+}  // end of TestLspProtocol::testSearchCompileCommandsFile
 
 QTEST_GUILESS_MAIN(TestLspProtocol)
 

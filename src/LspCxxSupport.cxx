@@ -47,6 +47,48 @@ namespace tfel::gui {
       return name;
     }  // end of highestVersioned()
 
+    // the name CMake writes the compilation database under, and the prefix of
+    // the directories an out-of-source build is usually configured in
+    const char *const compilation_database = "compile_commands.json";
+
+    //! the value of `--compile-commands-file`, see the accessor's documentation
+    QString &default_compile_commands_file() {
+      static QString value;
+      return value;
+    }  // end of default_compile_commands_file()
+
+    //! whether a directory holds a `CMakeLists.txt`, the marker of the project
+    bool holdsCMakeListsFile(const QString &directory) {
+      return QFileInfo::exists(directory + '/' + "CMakeLists.txt");
+    }  // end of holdsCMakeListsFile()
+
+    /*!\brief the database of a `build*` sub-directory of a directory
+     * \param[in] directory : the directory to look into
+     * \return empty when no sub-directory named `build*` holds one
+     */
+    QString databaseInBuildSubDirectory(const QString &directory) {
+      const auto names = QDir(directory).entryList(
+          {"build*"}, QDir::Dirs | QDir::NoDotAndDotDot | QDir::CaseSensitive);
+      // the entry list is alphabetical, which is as good an order as any when
+      // several build directories coexist; `build` is simply tried first
+      auto candidates = QStringList();
+      if (names.contains("build")) {
+        candidates << "build";
+      }
+      for (const auto &name : names) {
+        if (name != "build") {
+          candidates << name;
+        }
+      }
+      for (const auto &name : candidates) {
+        const auto file = directory + '/' + name + '/' + compilation_database;
+        if (QFileInfo::exists(file)) {
+          return QFileInfo(file).absoluteFilePath();
+        }
+      }
+      return QString();
+    }  // end of databaseInBuildSubDirectory()
+
   }  // end of namespace
 
   bool LspCxxSupport::isEnabled() {
@@ -126,6 +168,54 @@ namespace tfel::gui {
     return QStringList() << (QStringLiteral("--compile-commands-dir=") +
                              directory);
   }  // end of compileCommandsArguments()
+
+  void LspCxxSupport::setDefaultCompileCommandsFile(const QString &file) {
+    default_compile_commands_file() = file.trimmed();
+  }  // end of setDefaultCompileCommandsFile()
+
+  QString LspCxxSupport::defaultCompileCommandsFile() {
+    return default_compile_commands_file();
+  }  // end of defaultCompileCommandsFile()
+
+  QString LspCxxSupport::searchCompileCommandsFile(const QString &directory) {
+    if (directory.trimmed().isEmpty()) {
+      return QString();
+    }
+    // the starting directory is read as it is given, with or without a
+    // trailing separator; a file is searched as if the search started from the
+    // directory it lives in
+    const auto info = QFileInfo(directory);
+    const auto start =
+        info.isFile() ? info.absolutePath() : QDir(directory).absolutePath();
+    if (start.isEmpty()) {
+      return QString();
+    }
+    // first pass: the directory itself, then the parents which are still part
+    // of the project, that is whose own parent holds a `CMakeLists.txt`
+    auto current = start;
+    while (!current.isEmpty()) {
+      const auto file = current + '/' + compilation_database;
+      if (QFileInfo::exists(file)) {
+        return QFileInfo(file).absoluteFilePath();
+      }
+      const auto parent = QFileInfo(current).absolutePath();
+      if (parent == current || !holdsCMakeListsFile(parent)) {
+        break;
+      }
+      current = parent;
+    }
+    // second pass: the project has ended, `current` is the last directory
+    // which was part of it and `parent` is outside of it; look for a `build*`
+    // sub-directory of either, which is where an out-of-source build lives
+    const auto parent = QFileInfo(current).absolutePath();
+    for (const auto &dir : {current, parent}) {
+      const auto found = databaseInBuildSubDirectory(dir);
+      if (!found.isEmpty()) {
+        return found;
+      }
+    }
+    return QString();
+  }  // end of searchCompileCommandsFile()
 
   bool LspCxxSupport::isCxxSourceFile(const QString &file_name) {
     if (file_name.isEmpty()) {

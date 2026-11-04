@@ -38,7 +38,10 @@ namespace tfel::gui {
    * \note the server is never started by the mode: a session is launched by
    * the user, from the "C/C++" menu of the mode or the \c launch-clangd
    * commands, with or without a compilation database, and a session which is
-   * running is replaced by the one which is asked for. The documents of the
+   * running is replaced by the one which is asked for. The session launched
+   * without an explicit database uses the file given to \c tfel-editor as
+   * \c --compile-commands-file, or the database \c searchCompileCommandsFile
+   * finds in the project of the current buffer, or none. The documents of the
    * buffers are held by the client in the meantime and sent to the session
    * once it is up
    */
