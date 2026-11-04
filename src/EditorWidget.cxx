@@ -230,7 +230,8 @@ namespace tfel::gui {
   EditorWidget::EditorWidget(QWidget* const p)
       : QWidget(p),
         buffers(new QStackedWidget),
-        minibuffer(new QStackedWidget),
+        minibuffer(new QWidget),
+        minibufferLayout(new QVBoxLayout),
         um(new LineEdit(*this)),
         ui(0),
         eui(new LineEdit(*this)),
@@ -243,9 +244,16 @@ namespace tfel::gui {
     this->eui->setReadOnly(true);
     setQLineEditFont(this->um);
     setQLineEditFont(this->eui);
-    this->minibuffer->addWidget(this->um);
-    this->minibuffer->addWidget(this->eui);
+    this->minibufferLayout->setContentsMargins(0, 0, 0, 0);
+    this->minibufferLayout->setSpacing(0);
+    this->minibufferLayout->addWidget(this->um);
+    this->minibufferLayout->addWidget(this->eui);
+    this->minibuffer->setLayout(this->minibufferLayout);
     this->minibuffer->setContentsMargins(0, 0, 0, 0);
+    // the informative message area, which is empty at that point, is the page
+    // on display until the first message or user input comes: one page is shown
+    // at a time, see setMinibufferPage
+    this->eui->hide();
     this->messageTimer.setSingleShot(true);
     QObject::connect(&this->messageTimer, &QTimer::timeout, this,
                      &EditorWidget::resetUserInput);
@@ -538,9 +546,26 @@ namespace tfel::gui {
     }
   }  // end of EditorWidget::close
 
+  void EditorWidget::setMinibufferPage(QWidget* const w) {
+    if (w == nullptr) {
+      return;
+    }
+    // the pages are hidden and shown by hand rather than stacked in a
+    // `QStackedWidget`: a stacked widget is as tall as the tallest page it
+    // holds and never shorter, whereas the minibuffer shall be as tall as the
+    // page it displays, which grows and shrinks with its content (see
+    // `MultiLineLineEdit`)
+    for (int i = 0; i != this->minibufferLayout->count(); ++i) {
+      if (auto* const p = this->minibufferLayout->itemAt(i)->widget()) {
+        p->setVisible(p == w);
+      }
+    }
+    w->setVisible(true);
+  }  // end of EditorWidget::setMinibufferPage
+
   void EditorWidget::displayInformativeMessage(const QString& m) {
     this->um->setText(m);
-    this->minibuffer->setCurrentWidget(this->um);
+    this->setMinibufferPage(this->um);
     const auto d = getVerboseMode() >= VERBOSE_DEBUG;
     const auto t = d ? 10000 : 2000;
     if (d) {
@@ -583,8 +608,8 @@ namespace tfel::gui {
     const auto blocking = l->isBlocking();
     this->ui.push_back({l, blocking});
     setCommandLineFont(this->ui.back().first);
-    this->minibuffer->addWidget(this->ui.back().first);
-    this->minibuffer->setCurrentWidget(this->ui.back().first);
+    this->minibufferLayout->addWidget(this->ui.back().first);
+    this->setMinibufferPage(this->ui.back().first);
     this->ui.back().first->setFocus();
     if (blocking) {
       this->buffers->setEnabled(false);
@@ -613,19 +638,19 @@ namespace tfel::gui {
       Q_ASSERT(it->first == this->ui.back().first);
       this->buffers->setEnabled(true);
     }
-    this->minibuffer->removeWidget(p);
+    this->minibufferLayout->removeWidget(p);
     this->ui.erase(it);
     if (this->ui.empty()) {
-      this->minibuffer->setCurrentWidget(this->eui);
+      this->setMinibufferPage(this->eui);
       if (auto* const cw = this->buffers->currentWidget()) {
         cw->setFocus();
       }
     } else {
-      // the minibuffer stack is not empty: focus the surviving prompt,
+      // the minibuffer is not empty: focus the surviving prompt,
       // not the document, otherwise the text typed next goes into the
       // buffer while a prompt is visibly waiting (Emacs' own rule: the
       // document gets the focus back only when the stack became empty)
-      this->minibuffer->setCurrentWidget(this->ui.back().first);
+      this->setMinibufferPage(this->ui.back().first);
       this->ui.back().first->setFocus();
     }
     p->deleteLater();
@@ -656,12 +681,12 @@ namespace tfel::gui {
 
   void EditorWidget::resetUserInput() {
     if (!this->ui.empty()) {
-      this->minibuffer->setCurrentWidget(this->ui.back().first);
+      this->setMinibufferPage(this->ui.back().first);
     } else {
-      this->minibuffer->setCurrentWidget(this->eui);
+      this->setMinibufferPage(this->eui);
     }
     this->um->clear();
-  }  // end of EditorWidget::resetPreviousUserInput
+  }  // end of EditorWidget::resetUserInput
 
   const QStringList& EditorWidget::getKillRing() const {
     return this->killRing;

@@ -26,32 +26,20 @@ namespace tfel::gui {
       : LineEdit(q, &p), lineEdit(p) {}  // end of CustomLineEdit
 
   CommandLine::CustomLineEdit::~CustomLineEdit() {
-    if (!this->completerHandledByQLineEdit) {
-      delete this->c_;
-    }
+    delete this->c_;
   }  // end of ~CustomLineEdit()
 
   void CommandLine::CustomLineEdit::setCompleter(QCompleter* const c,
-                                                 const bool b) {
+                                                 const bool) {
     if (c == nullptr) {
       return;
     }
-    if (this->completerHandledByQLineEdit) {
-      // the previous completer is owned by the base class, which must forget
-      // it as it shall not insert any completion any more
-      QLineEdit::setCompleter(nullptr);
-    } else {
-      delete this->c_;
-    }
+    delete this->c_;
     this->c_ = c;
-    this->completerHandledByQLineEdit = b;
-    // the completer is not installed on the line edit when it is not handled
-    // by it: a line edit owning a completer inserts, and selects, the first
-    // completion matching its text as soon as the user types, whereas the
-    // completion is performed by complete() in the other case
-    if (b) {
-      QLineEdit::setCompleter(c);
-    }
+    // the completer is never installed on the widget: a line edit owning a
+    // completer inserts, and selects, the first completion matching its text
+    // as soon as the user types, whereas the completion is performed by
+    // complete() in the other case
   }  // end of setCompleter
 
   QCompleter* CommandLine::CustomLineEdit::completer() const {
@@ -188,6 +176,10 @@ namespace tfel::gui {
     this->label->setFocusPolicy(Qt::NoFocus);
     this->label->setContentsMargins(0, 0, 0, 0);
     this->label->setLineWidth(0);
+    // the label is top aligned: when the input grows because the text typed
+    // requires several lines, the label stays on the first line, as it did
+    // when the input could not be taller than the label
+    this->label->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
     this->setLabel(l);
     //    this->hl->setMargin(0);
     this->hl->setSpacing(0);
@@ -297,7 +289,7 @@ namespace tfel::gui {
     this->input = i;
     this->input->setContentsMargins(0, 0, 0, 0);
     this->input->setFont(this->label->font());
-    this->input->setFrame(false);
+    this->input->setFrameShape(QFrame::NoFrame);
     // this->input->setStyleSheet("background: rgba(255,255,255,100%)");
     this->hl->addWidget(this->input);
     QObject::connect(this->input, &CommandLine::CustomLineEdit::returnPressed,
@@ -407,7 +399,7 @@ namespace tfel::gui {
           homePath += QDir::separator();
         }
         t.replace(0, 2, homePath);
-        QLineEdit::setText(t);
+        this->setText(t);
       }
       CommandLine::CustomLineEdit::complete();
     }  // end of complete
@@ -422,10 +414,10 @@ namespace tfel::gui {
       // as it can not be completed any further and the separator makes the
       // next completion start within this directory
       if ((b) && (QFileInfo(c).isDir()) && (!c.endsWith(QDir::separator()))) {
-        QLineEdit::setText(c + QDir::separator());
+        this->setText(c + QDir::separator());
         return;
       }
-      QLineEdit::setText(c);
+      this->setText(c);
     }  // end of insertCompletion
 
     QString extractBaseForCompletion(const QString& c) override {

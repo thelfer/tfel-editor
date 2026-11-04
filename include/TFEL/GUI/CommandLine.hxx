@@ -11,7 +11,7 @@
 #include <QtCore/QPointer>
 #include <QtCore/QStringList>
 #include <QtWidgets/QLabel>
-#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QCompleter>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
 #include "TFEL/GUI/Config.hxx"
@@ -221,7 +221,7 @@ namespace tfel::gui {
       CustomLineEdit(EditorWidget &, CommandLine &);
 
       /*!
-       * \brief intercept the key events before they reach \c QLineEdit
+       * \brief intercept the key events before they reach the line edit
        * \param[in] ev : event
        * \return true if the event was handled, that is when it is the
        * \c Tab key, which triggers the completion and is not passed to the base
@@ -240,28 +240,28 @@ namespace tfel::gui {
       void keyPressEvent(QKeyEvent *) override;
       /*!
        * \param[in] c : completer
-       * \param[in] b : if true, the completer is handled by the base
-       * `QLineEdit`, which inserts the first completion matching the text as
-       * soon as the user types. If false, the completer is only used as a
-       * source of completions: nothing is inserted while typing and the
-       * completion is performed by the complete() method, triggered by the
-       * tabulation key, which inserts the common part of all the completions
-       * and displays the completions in a secondary task when they are
-       * several.
+       * \param[in] b : ignored, kept for source compatibility: the completer
+       * used to be optionally installed on the base `QLineEdit`, which
+       * inserted the first completion matching the text as soon as the user
+       * typed. This is not possible any more and never was used: the
+       * completer is only a source of completions, the completion being
+       * performed by the complete() method, triggered by the tabulation key,
+       * which inserts the common part of all the completions and displays the
+       * completions in a secondary task when they are several.
        */
       virtual void setCompleter(QCompleter *const, const bool);
 
       /*!
-       * \return the completer used as a source of completions, which is not
-       * necessarily installed on the base `QLineEdit` (see setCompleter)
+       * \return the completer used as a source of completions, null when the
+       * line edit has none
        */
       virtual QCompleter *completer() const;
 
       /*!
        * \brief destructor
        *
-       * \note the completer is destroyed here unless \c QLineEdit owns it, that
-       * is unless it is handled by the line edit (see \c setCompleter)
+       * \note the completer is destroyed here, as it is owned by this line
+       * edit (see \c setCompleter)
        */
       ~CustomLineEdit() override;
 
@@ -349,17 +349,9 @@ namespace tfel::gui {
        * \brief completer used as a source of completions, null when the line
        * edit has none
        *
-       * \note owned by the base \c QLineEdit when it is handled by it, by this
-       * line edit otherwise (see \c setCompleter)
+       * \note owned by this line edit (see \c setCompleter)
        */
       QCompleter *c_ = nullptr;
-      /*!
-       * \brief true if the completer is installed on the base \c QLineEdit,
-       * which then owns it and completes the text as the user types it
-       *
-       * \note set by \c setCompleter, read by the destructor
-       */
-      bool completerHandledByQLineEdit = false;
       //! names under which the completions found by the last call to
       //! findCompletion shall be displayed, if they are several
       QStringList completionList;
@@ -407,7 +399,7 @@ namespace tfel::gui {
      * with \c setLineEdit
      *
      * \note derived classes read what the user typed through this member in
-     * \c treatUserInput. Looking for a \c QLineEdit child of the command line
+     * \c treatUserInput. Looking for a line edit child of the command line
      * would find the default one the constructor replaced instead, as it is
      * destroyed later only
      */

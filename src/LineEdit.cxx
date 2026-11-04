@@ -13,11 +13,11 @@
 namespace tfel::gui {
 
   LineEdit::LineEdit(EditorWidget& q, QWidget* const p)
-      : QLineEdit(p), editor(q) {}  // end ofLineEdit::LineEdit
+      : MultiLineLineEdit(p), editor(q) {}  // end ofLineEdit::LineEdit
 
   void LineEdit::keyPressEvent(QKeyEvent* ev) {
     if (ShortCutStyle::getShortCutStyle().getStyle() == ShortCutStyle::QT) {
-      QLineEdit::keyPressEvent(ev);
+      MultiLineLineEdit::keyPressEvent(ev);
       return;
     }
     const auto k = ev->key();
@@ -153,7 +153,7 @@ namespace tfel::gui {
       this->cursorWordForward(this->selectionStart() != -1);
       return;
     }
-    QLineEdit::keyPressEvent(ev);
+    MultiLineLineEdit::keyPressEvent(ev);
   }  // end of keyPressEvent
 
   void LineEdit::handleShortCut(const int,
