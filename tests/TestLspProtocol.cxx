@@ -2,7 +2,8 @@
  * \file   tests/TestLspProtocol.cxx
  * \brief  tests of the pure helpers of the Language Server Protocol client:
  *         framing, URIs, positions, the incremental diff, the bounded wait,
- *         the answer to the question for a compilation database.
+ *         the answer to the question for a compilation database, the overview
+ *         of a file, the legend and the answer of the semantic tokens.
  * \author Thomas Helfer
  * \date   04/11/2026
  */
@@ -46,6 +47,9 @@ struct TestLspProtocol : QObject {
   void testCompileCommandsArguments();
   void testDefaultCompileCommandsFile();
   void testSearchCompileCommandsFile();
+  void testDocumentSymbolsOf();
+  void testSemanticLegendOf();
+  void testSemanticTokensOf();
 };
 
 void TestLspProtocol::initTestCase() {
@@ -469,6 +473,201 @@ void TestLspProtocol::testSearchCompileCommandsFile() {
            QStringList{QStringLiteral("--compile-commands-dir=") + proj});
   QVERIFY(error.isEmpty());
 }  // end of TestLspProtocol::testSearchCompileCommandsFile
+
+void TestLspProtocol::testDocumentSymbolsOf() {
+  // the two shapes a `textDocument/documentSymbol` answer takes, and the one
+  // overview both are turned into: the symbols in the order the file spells
+  // them, each named by the scopes it lives in
+  const auto range = [](const int line, const int character) {
+    return QJsonObject{
+        {"start", QJsonObject{{"line", line}, {"character", character}}},
+        {"end", QJsonObject{{"line", line}, {"character", character + 1}}}};
+  };
+  const auto tree = QJsonArray{
+      QJsonObject{{"name", QStringLiteral("Widget")},
+                  {"detail", QStringLiteral("struct")},
+                  {"kind", 5},
+                  {"range", range(0, 0)},
+                  {"selectionRange", range(0, 7)},
+                  {"children", QJsonArray{QJsonObject{
+                                   {"name", QStringLiteral("paint")},
+                                   {"detail", QStringLiteral("void (int)")},
+                                   {"kind", 6},
+                                   {"range", range(1, 2)},
+                                   {"selectionRange", range(1, 7)}}}}},
+      QJsonObject{{"name", QStringLiteral("Widget::paint")},
+                  {"detail", QStringLiteral("void (int)")},
+                  {"kind", 6},
+                  {"range", range(4, 0)},
+                  {"selectionRange", range(4, 13)}}};
+  const auto symbols = tfel::gui::documentSymbolsOf(tree);
+  QCOMPARE(symbols.size(), 3);
+  // the depth-first walk of the tree: a child is named after the scope it is
+  // written in, and the definition out of that scope keeps the name the file
+  // spells it with, which is the same one, twice and in the right order
+  QCOMPARE(symbols.at(0).name, QStringLiteral("Widget"));
+  QCOMPARE(symbols.at(0).detail, QStringLiteral("struct"));
+  QCOMPARE(symbols.at(0).line, 0);
+  QCOMPARE(symbols.at(0).character, 7);
+  QCOMPARE(symbols.at(1).name, QStringLiteral("Widget::paint"));
+  QCOMPARE(symbols.at(1).kind, 6);
+  QCOMPARE(symbols.at(2).name, QStringLiteral("Widget::paint"));
+  QCOMPARE(symbols.at(2).line, 4);
+  QCOMPARE(symbols.at(2).character, 13);
+  // the same file for a server which was not asked to answer with a tree: the
+  // entries are flat, the container is named instead of nesting, and nothing
+  // at all is said beside the name
+  const auto flat = QJsonArray{
+      QJsonObject{
+          {"name", QStringLiteral("Widget")},
+          {"kind", 5},
+          {"containerName", QStringLiteral("")},
+          {"location", QJsonObject{{"uri", QStringLiteral("file:///w.cxx")},
+                                   {"range", range(0, 0)}}}},
+      QJsonObject{
+          {"name", QStringLiteral("paint")},
+          {"kind", 6},
+          {"containerName", QStringLiteral("Widget")},
+          {"location", QJsonObject{{"uri", QStringLiteral("file:///w.cxx")},
+                                   {"range", range(1, 2)}}}}};
+  const auto flattened = tfel::gui::documentSymbolsOf(flat);
+  QCOMPARE(flattened.size(), 2);
+  QCOMPARE(flattened.at(0).name, QStringLiteral("Widget"));
+  QVERIFY(flattened.at(0).detail.isEmpty());
+  QCOMPARE(flattened.at(1).name, QStringLiteral("Widget::paint"));
+  // the name of a symbol is where its name is written, not where its definition
+  // begins: the selection range of a class starts at its `class` keyword
+  QCOMPARE(flattened.at(1).line, 1);
+  QCOMPARE(flattened.at(1).character, 2);
+  // an answer which is nothing at all, and an answer which holds entries with
+  // no name, are an overview with no entry
+  QVERIFY(tfel::gui::documentSymbolsOf(QJsonValue()).isEmpty());
+  QVERIFY(tfel::gui::documentSymbolsOf(QJsonArray{QJsonObject{{"kind", 6}}})
+              .isEmpty());
+  // the kinds the overview names a symbol by, in the numbering the servers of
+  // today send: a `class` answers 5, not the 4 of the version of the protocol
+  // which had no `module` before it
+  QCOMPARE(tfel::gui::symbolKindName(3), QStringLiteral("namespace"));
+  QCOMPARE(tfel::gui::symbolKindName(5), QStringLiteral("class"));
+  QCOMPARE(tfel::gui::symbolKindName(6), QStringLiteral("method"));
+  QCOMPARE(tfel::gui::symbolKindName(12), QStringLiteral("function"));
+  QCOMPARE(tfel::gui::symbolKindName(13), QStringLiteral("variable"));
+  QVERIFY(tfel::gui::symbolKindName(0).isEmpty());
+}  // end of TestLspProtocol::testDocumentSymbolsOf
+
+void TestLspProtocol::testSemanticLegendOf() {
+  // the legend is what the numbers of an answer are read against, so a server
+  // which announces none is a server which offers no semantic tokens at all
+  const auto capabilities = QJsonObject{
+      {"semanticTokensProvider",
+       QJsonObject{
+           {"full", QJsonObject{{"delta", true}}},
+           {"range", false},
+           {"legend",
+            QJsonObject{
+                {"tokenTypes",
+                 QJsonArray{QStringLiteral("variable"),
+                            QStringLiteral("variable"), QStringLiteral("class"),
+                            QStringLiteral("function"),
+                            QStringLiteral("macro")}},
+                {"tokenModifiers", QJsonArray{QStringLiteral("declaration"),
+                                              QStringLiteral("deprecated"),
+                                              QStringLiteral("deduced"),
+                                              QStringLiteral("readonly")}}}}}}};
+  const auto legend = tfel::gui::semanticLegendOf(capabilities);
+  QVERIFY(legend.isValid());
+  // the names of the server, in its own order, duplicates and all: `variable`
+  // is the name of two kinds of its legend, which is why reading a token goes
+  // by the number, never by the name
+  QCOMPARE(legend.types.size(), 5);
+  QCOMPARE(legend.types.at(0), QStringLiteral("variable"));
+  QCOMPARE(legend.types.at(1), QStringLiteral("variable"));
+  QCOMPARE(legend.types.at(4), QStringLiteral("macro"));
+  QCOMPARE(
+      legend.modifiers,
+      (QStringList{QStringLiteral("declaration"), QStringLiteral("deprecated"),
+                   QStringLiteral("deduced"), QStringLiteral("readonly")}));
+  // what servers which offer nothing answer: no capabilities at all, a provider
+  // which is a plain `true`, or a provider with no legend; all three are the
+  // absence of the question, since an answer of numbers without a legend to
+  // read them by says nothing
+  QVERIFY(!tfel::gui::semanticLegendOf(QJsonObject{}).isValid());
+  QVERIFY(!tfel::gui::semanticLegendOf(
+               QJsonObject{{"semanticTokensProvider", QJsonValue(true)}})
+               .isValid());
+  QVERIFY(
+      !tfel::gui::semanticLegendOf(
+           QJsonObject{{"semanticTokensProvider",
+                        QJsonObject{{"full", QJsonObject{{"delta", false}}}}}})
+           .isValid());
+}  // end of TestLspProtocol::testSemanticLegendOf
+
+void TestLspProtocol::testSemanticTokensOf() {
+  const auto legend = [this] {
+    auto l = tfel::gui::LspSemanticLegend();
+    l.types = QStringList{QStringLiteral("variable"),
+                          QStringLiteral("variable"), QStringLiteral("class"),
+                          QStringLiteral("function"), QStringLiteral("macro")};
+    l.modifiers =
+        QStringList{QStringLiteral("declaration"), QStringLiteral("deprecated"),
+                    QStringLiteral("deduced"), QStringLiteral("readonly")};
+    return l;
+  }();
+  // `clangd` answers five numbers per token, the line and the place of the name
+  // written as what they differ from those of the previous token: two tokens on
+  // the first line and one on the third, the last of them deprecated and
+  // readonly, which are the bits 1 and 3 of its mask. On a new line the place
+  // is not a difference but the place itself, which is why the first token of a
+  // line is answered with a place of 0
+  const auto data = QJsonArray{0, 4, 3, 0, 0,    // line 0, character 4
+                               0, 6, 4, 3, 0,    // line 0, character 10
+                               2, 0, 5, 4, 10};  // line 2, character 0
+  const auto tokens =
+      tfel::gui::semanticTokensOf(QJsonObject{{"data", data}}, legend);
+  QCOMPARE(tokens.size(), 3);
+  QCOMPARE(tokens.at(0).line, 0);
+  QCOMPARE(tokens.at(0).character, 4);
+  QCOMPARE(tokens.at(0).length, 3);
+  QCOMPARE(tokens.at(0).type, QStringLiteral("variable"));
+  QVERIFY(tokens.at(0).modifiers.isEmpty());
+  // the place of the second token is counted from the place of the first, since
+  // both are on the same line; the line number of the third starts over from
+  // nothing, which is why a negative difference is not one
+  QCOMPARE(tokens.at(1).character, 10);
+  QCOMPARE(tokens.at(1).type, QStringLiteral("function"));
+  QCOMPARE(tokens.at(2).line, 2);
+  QCOMPARE(tokens.at(2).character, 0);
+  QCOMPARE(tokens.at(2).type, QStringLiteral("macro"));
+  QCOMPARE(tokens.at(2).modifiers, (QStringList{QStringLiteral("deprecated"),
+                                                QStringLiteral("readonly")}));
+  // the two names of the legend which are both `variable` read as the same
+  // word: the distinction is lost on purpose, the face a name gets is keyed on
+  // the word the server says, not on which of its kinds it was
+  QCOMPARE(tokens.at(0).type, legend.types.at(1));
+  // a kind number the legend does not name, and a modifier bit past the list of
+  // the modifiers: neither invents a name the server never announced
+  const auto beyond = QJsonArray{0, 0, 2, 99, 1 << 20};
+  const auto unnamed =
+      tfel::gui::semanticTokensOf(QJsonObject{{"data", beyond}}, legend);
+  QCOMPARE(unnamed.size(), 1);
+  QVERIFY(unnamed.at(0).type.isEmpty());
+  QVERIFY(unnamed.at(0).modifiers.isEmpty());
+  // a truncated answer — the protocol says five numbers per token, and a server
+  // which sent 18 of them said nothing about the last token — and an answer
+  // which names no data or is `null`: both are no tokens
+  const auto truncated = tfel::gui::semanticTokensOf(
+      QJsonObject{{"data", QJsonArray{0, 0, 1, 0, 0, 0, 0, 1, 0}}}, legend);
+  QCOMPARE(truncated.size(), 1);
+  QCOMPARE(tfel::gui::semanticTokensOf(QJsonObject{}, legend).size(), 0);
+  QCOMPARE(tfel::gui::semanticTokensOf(QJsonValue(), legend).size(), 0);
+  // and an answer of numbers without the legend to read them by is an answer
+  // which says nothing: reading it anyway would name kinds the server never
+  // offered
+  QCOMPARE(tfel::gui::semanticTokensOf(QJsonObject{{"data", data}},
+                                       tfel::gui::LspSemanticLegend())
+               .size(),
+           0);
+}  // end of TestLspProtocol::testSemanticTokensOf
 
 QTEST_GUILESS_MAIN(TestLspProtocol)
 

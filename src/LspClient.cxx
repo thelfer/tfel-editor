@@ -119,7 +119,87 @@ namespace tfel::gui {
                                           QStringLiteral("plaintext")}}}},
         {"completion", QJsonObject{{"completionItem", completion_item}}},
         {"publishDiagnostics", QJsonObject{{"relatedInformation", false}}},
-        {"definition", QJsonObject{{"linkSupport", true}}}};
+        {"definition", QJsonObject{{"linkSupport", true}}},
+        // the mode asks declarations as well: the prototype of a function
+        // whose body lives in another file is a declaration, and a symbol
+        // which is only declared is worth an underline and a jump icon too
+        {"declaration", QJsonObject{}},
+        {"references", QJsonObject{}},
+        // the mode can rename: the answer is a workspace edit the editor
+        // applies to its own buffers, no server-side file writing involved
+        {"rename", QJsonObject{{"prepareSupport", false}}},
+        // the overview of a file is asked as a tree: a server which is not
+        // told the client can read one answers a flat list, where a symbol
+        // which belongs to a class loses the signature the tree holds in its
+        // `detail` and keeps only the name of its container
+        {"documentSymbol",
+         QJsonObject{
+             {"hierarchicalDocumentSymbolSupport", true},
+             {"symbolKind",
+              QJsonObject{
+                  {"valueSet", QJsonArray{1,  2,  3,  4,  5,  6,  7,  8,  9,
+                                          10, 11, 12, 13, 14, 15, 16, 17, 18,
+                                          19, 20, 21, 22, 23, 24, 25, 26}}}}}},
+        // the context menu offers the quick fixes of the diagnostics the
+        // server published, which wants the actions as data the editor can
+        // apply, not as commands the server would have to be told to run
+        {"codeAction",
+         QJsonObject{
+             {"codeActionLiteralSupport",
+              QJsonObject{
+                  {"codeActionKind",
+                   QJsonObject{
+                       {"valueSet", QJsonArray{QStringLiteral("quickfix"),
+                                               QStringLiteral("refactor")}}}}}},
+             {"isPreferredSupport", true}}},
+        // the mode shows the parameter list of the call the cursor is inside
+        // of, which wants the offsets of each parameter in the label of its
+        // signature: without them a parameter cannot be picked out of the
+        // label, and the list says no more than the text already on screen
+        {"signatureHelp",
+         QJsonObject{
+             {"signatureInformation",
+              QJsonObject{{"documentationFormat",
+                           QJsonArray{QStringLiteral("markdown"),
+                                      QStringLiteral("plaintext")}},
+                          {"parameterInformation",
+                           QJsonObject{{"labelOffsetSupport", true}}}}}}},
+        // the mode colors the identifiers the server knows what they are:
+        // the question is asked for the whole file, since `clangd` answers no
+        // range at all — its legend says `range: false` —, and the legend the
+        // numbers of an answer are read against comes back with the
+        // capabilities of this very handshake, which is where
+        // `requestSemanticTokens` takes them from
+        {"semanticTokens",
+         QJsonObject{
+             {"requests", QJsonObject{{"range", false}, {"full", true}}},
+             // the kinds and modifiers of the protocol, spelled as the
+             // protocol spells them: what a server answers is its own legend,
+             // which may name fewer of these and names none by these numbers
+             {"tokenTypes",
+              QJsonArray{
+                  QStringLiteral("namespace"),     QStringLiteral("type"),
+                  QStringLiteral("class"),         QStringLiteral("enum"),
+                  QStringLiteral("interface"),     QStringLiteral("struct"),
+                  QStringLiteral("typeParameter"), QStringLiteral("parameter"),
+                  QStringLiteral("variable"),      QStringLiteral("property"),
+                  QStringLiteral("enumMember"),    QStringLiteral("event"),
+                  QStringLiteral("function"),      QStringLiteral("method"),
+                  QStringLiteral("macro"),         QStringLiteral("keyword"),
+                  QStringLiteral("modifier"),      QStringLiteral("comment"),
+                  QStringLiteral("string"),        QStringLiteral("number"),
+                  QStringLiteral("regexp"),        QStringLiteral("operator"),
+                  QStringLiteral("decorator")}},
+             {"tokenModifiers",
+              QJsonArray{
+                  QStringLiteral("declaration"), QStringLiteral("definition"),
+                  QStringLiteral("readonly"), QStringLiteral("static"),
+                  QStringLiteral("deprecated"), QStringLiteral("abstract"),
+                  QStringLiteral("virtual"), QStringLiteral("async"),
+                  QStringLiteral("modification"),
+                  QStringLiteral("documentation"),
+                  QStringLiteral("defaultLibrary")}},
+             {"formats", QJsonArray{QStringLiteral("relative")}}}}};
     const auto params = QJsonObject{
         {"capabilities",
          QJsonObject{{"textDocument", text_document},
@@ -139,7 +219,31 @@ namespace tfel::gui {
     return true;
   }  // end of LspClient::launch
 
-  void LspClient::handleInitializeAnswer(const QJsonValue &,
+  bool LspClient::stop() {
+    // a server which exited of its own accord has nothing left to dismiss, but
+    // the client still holds the text and the underlines of a session which is
+    // gone: stopping cleans that up either way, and the answer says whether a
+    // server was actually running
+    const auto running = connection->isRunning();
+    if (running) {
+      this->endSession();
+    }
+    // the same dismissal of the session's legacy as when `launch` replaces a
+    // session: the documents are marked as never sent, so the next session
+    // gets their whole text anew, and the underlines go away with the session
+    for (auto &document : documents) {
+      document.version = 0;
+    }
+    this->clearDiagnostics();
+    // the legend the ended session announced names numbers a next one may
+    // answer differently, and an answer of a server which is gone is not
+    // coming: what the next session announces, if anything, replaces it
+    this->semantic_legend = LspSemanticLegend();
+    state = State::Idle;
+    return running;
+  }  // end of LspClient::stop
+
+  void LspClient::handleInitializeAnswer(const QJsonValue &result,
                                          const QString &error_message) {
     if (!error_message.isEmpty()) {
       state = State::Dead;
@@ -147,6 +251,28 @@ namespace tfel::gui {
                                  .arg(error_message));
       return;
     }
+    // what the server says a call is typed around: the mode asks its
+    // signature question on those characters, and only on those, since a
+    // server which lists `{` means it and would otherwise be asked on every
+    // brace of every body
+    const auto capabilities =
+        result.toObject().value("capabilities").toObject();
+    auto triggers = QVector<QChar>();
+    const auto provider =
+        capabilities.value("signatureHelpProvider").toObject();
+    for (const auto &v : provider.value("triggerCharacters").toArray()) {
+      const auto character = v.toString();
+      if (!character.isEmpty()) {
+        triggers.append(character.at(0));
+      }
+    }
+    if (!triggers.isEmpty()) {
+      this->signature_triggers = triggers;
+    }
+    // the names the numbers of a semantic tokens answer are read against: the
+    // answer itself carries numbers only, so a session which announced no
+    // legend can not be asked the question at all
+    this->semantic_legend = semanticLegendOf(QJsonValue(capabilities));
     state = State::Ready;
     connection->notify(QStringLiteral("initialized"), QJsonObject());
     flushDocuments();
@@ -350,17 +476,244 @@ namespace tfel::gui {
                                     const QTextDocument &doc,
                                     const int position,
                                     const DefinitionReply &reply) {
+    requestLocations(QStringLiteral("textDocument/definition"), file, doc,
+                     position, reply);
+  }  // end of LspClient::requestDefinition
+
+  void LspClient::requestDeclaration(const QString &file,
+                                     const QTextDocument &doc,
+                                     const int position,
+                                     const DefinitionReply &reply) {
+    requestLocations(QStringLiteral("textDocument/declaration"), file, doc,
+                     position, reply);
+  }  // end of LspClient::requestDeclaration
+
+  void LspClient::requestReferences(const QString &file,
+                                    const QTextDocument &doc,
+                                    const int position,
+                                    const DefinitionReply &reply) {
+    // the protocol wants a context telling whether the declaration of the
+    // symbol counts as a reference; the mode shows the whole life of the
+    // symbol, so it counts
+    requestLocations(
+        QStringLiteral("textDocument/references"), file, doc, position, reply,
+        QJsonObject{{"context", QJsonObject{{"includeDeclaration", true}}}});
+  }  // end of LspClient::requestReferences
+
+  void LspClient::requestRename(const QString &file,
+                                const QTextDocument &doc,
+                                const int position,
+                                const QString &newName,
+                                const RenameReply &reply) {
+    syncDocument(file);
+    if (!isReady() || (!documents.contains(file))) {
+      reply(QMap<QString, QVector<LspTextEdit>>(),
+            QStringLiteral("clangd is not answering"));
+      return;
+    }
+    connection->request(
+        QStringLiteral("textDocument/rename"),
+        QJsonObject{
+            {"textDocument", QJsonObject{{"uri", LspProtocol::uriOf(file)}}},
+            {"position", LspProtocol::positionOf(doc, position)},
+            {"newName", newName}},
+        [reply](const QJsonValue &result, const QString &error) {
+          // the answer is a `WorkspaceEdit`, in one of its two shapes, or null
+          // when the server refused the name, which `error` then tells
+          reply(LspProtocol::editsOf(result), error);
+        });
+  }  // end of LspClient::requestRename
+
+  void LspClient::requestCodeActions(const QString &file,
+                                     const QTextDocument &doc,
+                                     const int position,
+                                     const int end,
+                                     const CodeActionsReply &reply) {
+    syncDocument(file);
+    if (!isReady() || (!documents.contains(file))) {
+      reply(QVector<LspCodeAction>());
+      return;
+    }
+    // the range asked about is a zero-width one at the position, which is
+    // where the cursor is: `clangd` returns the fixes of the diagnostics it is
+    // handed whatever the range they live in, so it is the diagnostics, not
+    // the range, which decide what comes back
+    auto context =
+        QJsonObject{{"triggerKind", 1}, {"diagnostics", QJsonArray()}};
+    auto published = QJsonArray();
+    const auto it = diagnostics.constFind(file);
+    if (it != diagnostics.constEnd()) {
+      for (const auto &d : *it) {
+        published.append(LspProtocol::jsonOf(d));
+      }
+    }
+    context.insert(QStringLiteral("diagnostics"), published);
+    const auto start = LspProtocol::positionOf(doc, position);
+    const auto stop = LspProtocol::positionOf(doc, end);
+    connection->request(
+        QStringLiteral("textDocument/codeAction"),
+        QJsonObject{
+            {"textDocument", QJsonObject{{"uri", LspProtocol::uriOf(file)}}},
+            {"range", LspProtocol::rangeOf(start.value("line").toInt(),
+                                           start.value("character").toInt(),
+                                           stop.value("line").toInt(),
+                                           stop.value("character").toInt())},
+            {"context", context}},
+        [reply](const QJsonValue &result, const QString &) {
+          auto actions = QVector<LspCodeAction>();
+          for (const auto &v : result.toArray()) {
+            const auto o = v.toObject();
+            auto action = LspCodeAction();
+            action.title = o.value("title").toString();
+            action.kind = o.value("kind").toString();
+            action.is_preferred = o.value("isPreferred").toBool();
+            action.edits = LspProtocol::editsOf(o.value("edit"));
+            // the identity of a server-side action is the command it comes
+            // with; its title is what the user would read, and both are kept
+            // under one name since the mode only uses it to say "not mine"
+            const auto command = o.value("command").toObject();
+            action.command = command.value("title").toString();
+            if (action.command.isEmpty()) {
+              action.command = command.value("command").toString();
+            }
+            const auto fixed = o.value("diagnostics").toArray();
+            if (!fixed.isEmpty()) {
+              action.diagnostic =
+                  fixed.at(0).toObject().value("message").toString();
+            }
+            if (!action.title.isEmpty()) {
+              actions.append(action);
+            }
+          }
+          reply(actions);
+        });
+  }  // end of LspClient::requestCodeActions
+
+  void LspClient::requestDocumentSymbols(const QString &file,
+                                         const DocumentSymbolsReply &reply) {
+    syncDocument(file);
+    if (!isReady() || (!documents.contains(file))) {
+      reply(QVector<LspDocumentSymbol>());
+      return;
+    }
+    // the question names no position: the answer is the whole file, and the
+    // shape of it is decided by what the client advertised at the handshake
+    connection->request(
+        QStringLiteral("textDocument/documentSymbol"),
+        QJsonObject{
+            {"textDocument", QJsonObject{{"uri", LspProtocol::uriOf(file)}}}},
+        [reply](const QJsonValue &result, const QString &) {
+          reply(documentSymbolsOf(result));
+        });
+  }  // end of LspClient::requestDocumentSymbols
+
+  void LspClient::requestSemanticTokens(const QString &file,
+                                        const SemanticTokensReply &reply) {
+    syncDocument(file);
+    if (!isReady() || (!documents.contains(file)) ||
+        (!this->semantic_legend.isValid())) {
+      // the question has no shape without the legend the server announced with
+      // its capabilities: the answer would be numbers naming nothing
+      reply(QVector<LspSemanticToken>());
+      return;
+    }
+    const auto legend = this->semantic_legend;
+    connection->request(
+        QStringLiteral("textDocument/semanticTokens/full"),
+        QJsonObject{
+            {"textDocument", QJsonObject{{"uri", LspProtocol::uriOf(file)}}}},
+        [reply, legend](const QJsonValue &result, const QString &) {
+          reply(semanticTokensOf(result, legend));
+        });
+  }  // end of LspClient::requestSemanticTokens
+
+  bool LspClient::hasSemanticTokens() const {
+    return this->semantic_legend.isValid();
+  }  // end of LspClient::hasSemanticTokens
+
+  QStringList LspClient::semanticTokenKinds() const {
+    return this->semantic_legend.types;
+  }  // end of LspClient::semanticTokenKinds
+
+  QVector<QChar> LspClient::signatureHelpTriggers() const {
+    return this->signature_triggers;
+  }  // end of LspClient::signatureHelpTriggers
+
+  void LspClient::requestSignatureHelp(const QString &file,
+                                       const QTextDocument &doc,
+                                       const int position,
+                                       const SignatureHelpReply &reply) {
+    syncDocument(file);
+    if (!isReady() || (!documents.contains(file))) {
+      reply(QVector<LspSignature>(), 0, 0);
+      return;
+    }
+    connection->request(
+        QStringLiteral("textDocument/signatureHelp"),
+        QJsonObject{
+            {"textDocument", QJsonObject{{"uri", LspProtocol::uriOf(file)}}},
+            {"position", LspProtocol::positionOf(doc, position)},
+            // the protocol wants a context; this client is asked by a
+            // key or by a typed character either way, and clangd
+            // computes the same answer from either kind
+            {"context",
+             QJsonObject{{"triggerKind", 1}, {"isRetrigger", false}}}},
+        [reply](const QJsonValue &result, const QString &) {
+          auto signatures = QVector<LspSignature>();
+          const auto help = result.toObject();
+          for (const auto &v : help.value("signatures").toArray()) {
+            const auto s = v.toObject();
+            auto signature = LspSignature();
+            signature.label = s.value("label").toString();
+            for (const auto &p : s.value("parameters").toArray()) {
+              const auto parameter = p.toObject();
+              auto info = LspParameterInfo();
+              const auto label = parameter.value("label");
+              if (label.isArray()) {
+                // the offsets into the label of the signature, which is what
+                // this client advertised and what makes a parameter findable
+                // in a label it shares with the others
+                const auto offsets = label.toArray();
+                info.start = offsets.at(0).toInt();
+                info.end = offsets.at(1).toInt();
+                const auto text =
+                    signature.label.mid(info.start, info.end - info.start);
+                info.text = text;
+              } else {
+                // the label of the parameter on its own: its place in the
+                // signature is whatever the server left to find there
+                info.text = label.toString();
+              }
+              signature.parameters.append(info);
+            }
+            if (!signature.label.isEmpty()) {
+              signatures.append(signature);
+            }
+          }
+          reply(signatures, help.value("activeSignature").toInt(),
+                help.value("activeParameter").toInt());
+        });
+  }  // end of LspClient::requestSignatureHelp
+
+  void LspClient::requestLocations(const QString &method,
+                                   const QString &file,
+                                   const QTextDocument &doc,
+                                   const int position,
+                                   const DefinitionReply &reply,
+                                   const QJsonObject &extra) {
     syncDocument(file);
     if (!isReady() || (!documents.contains(file))) {
       reply(QVector<LspLocation>());
       return;
     }
+    auto params = QJsonObject{
+        {"textDocument", QJsonObject{{"uri", LspProtocol::uriOf(file)}}},
+        {"position", LspProtocol::positionOf(doc, position)}};
+    for (auto it = extra.begin(); it != extra.end(); ++it) {
+      params.insert(it.key(), it.value());
+    }
     connection->request(
-        QStringLiteral("textDocument/definition"),
-        QJsonObject{
-            {"textDocument", QJsonObject{{"uri", LspProtocol::uriOf(file)}}},
-            {"position", LspProtocol::positionOf(doc, position)}},
-        [reply](const QJsonValue &result, const QString &) {
+        method, params, [reply](const QJsonValue &result, const QString &) {
           auto locations = QVector<LspLocation>();
           auto one = [&locations](const QJsonObject &o) {
             auto location = LspLocation();
@@ -392,7 +745,7 @@ namespace tfel::gui {
           }
           reply(locations);
         });
-  }  // end of LspClient::requestDefinition
+  }  // end of LspClient::requestLocations
 
   void LspClient::requestHover(const QString &file,
                                const QTextDocument &doc,

@@ -21,11 +21,22 @@ namespace tfel::gui {
    * \note the settings live in `QSettings`, as the rest of the editor:
    * `clangd/enable` (true by default), `clangd/executable` (an absolute path,
    * tried first), `clangd/arguments` (a string list appended to what the
-   * client needs)
+   * client needs), `clangd/semantic-tokens` (true by default: the identifiers
+   * the server says what they are take the face of what they are)
    */
   struct TFEL_GUI_VISIBILITY_EXPORT LspCxxSupport {
     //! \return the setting `clangd/enable`, true when unset
     static bool isEnabled();
+    /*!
+     * \return the setting `clangd/semantic-tokens`, true when unset: whether
+     * the colors of the identifiers come from the server
+     *
+     * \note this one is read on every question, not once at the construction of
+     * a mode, since the colors of a buffer are the kind of thing a person
+     * turns off the first time they dislike them and expects to see the text
+     * change back under their hands
+     */
+    static bool semanticTokensEnabled();
     /*!
      * \return the executable of `clangd`: the setting `clangd/executable`,
      * else `clangd` in the path, else the highest `clangd-NN` of the usual

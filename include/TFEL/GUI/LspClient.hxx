@@ -1,7 +1,9 @@
 /*!
  * \file  LspClient.hxx
  * \brief client of a language server: the handshake, the documents, the
- *        diagnostics, completion, definition and hover.
+ *        diagnostics, completion, definition, declaration, references,
+ *        rename, code actions, signature help, hover and the semantic tokens
+ *        of a file.
  * \author Thomas Helfer
  * \date   04/11/2026
  */
@@ -16,6 +18,7 @@
 #include <QtCore/QString>
 #include <QtCore/QStringList>
 #include <QtCore/QVector>
+#include <QtCore/QChar>
 #include <functional>
 #include "TFEL/GUI/Config.hxx"
 #include "TFEL/GUI/LspProtocol.hxx"
@@ -87,6 +90,21 @@ namespace tfel::gui {
      */
     bool launch(const QStringList &extra_arguments, QString &error);
     /*!
+     * \brief end the session which is running, if any: the server is asked to
+     * shut down and loses the argument if it lingers
+     * \return false when no session was running
+     *
+     * \note the client goes back to the state of a session which was never
+     * launched: the diagnostics of the ended session are forgotten and the
+     * documents the editor holds are marked as never sent, so a later \c launch
+     * re-sends their whole text, as it does when it replaces a session
+     *
+     * \note a session which exited of its own accord has nothing left to
+     * dismiss: stopping it cleans the client up as well, but is reported as
+     * not running
+     */
+    bool stop();
+    /*!
      * \brief wait, at most \c timeout_ms, for the handshake of a server
      * launched with \c launch to complete
      * \return true when the client is ready, false when no server was launched
@@ -144,6 +162,141 @@ namespace tfel::gui {
                            int position,
                            const DefinitionReply &);
     /*!
+     * \brief ask for the declarations of the symbol at a position: \c clangd
+     * answers the prototype, which is not the definition of a function whose
+     * body lives elsewhere
+     */
+    void requestDeclaration(const QString &file,
+                            const QTextDocument &,
+                            int position,
+                            const DefinitionReply &);
+    /*!
+     * \brief ask for every use of the symbol at a position, its declaration
+     * included; the answer can be long, which is what a list to choose from
+     * is made of
+     */
+    void requestReferences(const QString &file,
+                           const QTextDocument &,
+                           int position,
+                           const DefinitionReply &);
+    /*!
+     * \brief the files a rename changes and the edits of each; an empty map
+     * says nothing changed, \c error then tells whether the server refused
+     * the name or simply had nothing to do
+     */
+    using RenameReply =
+        std::function<void(const QMap<QString, QVector<LspTextEdit>> &edits,
+                           const QString &error)>;
+    /*!
+     * \brief ask to rename the symbol at a position; the answer is a whole
+     * workspace edit, since a symbol is used in files the cursor is not on
+     */
+    void requestRename(const QString &file,
+                       const QTextDocument &,
+                       int position,
+                       const QString &newName,
+                       const RenameReply &);
+    /*!
+     * \brief the signatures a call at a position can be, the one the server
+     * thinks the user means, and which of its arguments is being typed; all
+     * three are empty or zero when the server sees no call there
+     */
+    using SignatureHelpReply =
+        std::function<void(const QVector<LspSignature> &signatures,
+                           int active_signature,
+                           int active_parameter)>;
+    /*!
+     * \brief ask what call the cursor is inside of, which is what typing an
+     * argument deserves to be told
+     */
+    void requestSignatureHelp(const QString &file,
+                              const QTextDocument &,
+                              int position,
+                              const SignatureHelpReply &);
+    /*!
+     * \return the characters the server declares a call is being typed
+     * around, which is where the mode asks \c requestSignatureHelp without
+     * being asked for it
+     *
+     * \note the answer of the handshake, or `(` and `,` when the server
+     * declares no list at all: a server which declares nothing still answers
+     * the question, it just leaves the client to choose its moments
+     */
+    QVector<QChar> signatureHelpTriggers() const;
+    /*!
+     * \brief the actions a server offers on a range: the quick fixes of the
+     * diagnostics published there, the refactors of the code there
+     */
+    using CodeActionsReply =
+        std::function<void(const QVector<LspCodeAction> &)>;
+    /*!
+     * \brief ask what can be done about the code at a range
+     * \param[in] file: the file the range is in
+     * \param[in] doc: the document the range is in, to turn the offsets into
+     * positions of the protocol
+     * \param[in] position: first offset of the range
+     * \param[in] end: past the last offset of the range; the same as
+     * \c position when the question is about the cursor, not about a selection
+     *
+     * \note the diagnostics the client holds for the file are handed to the
+     * question: `clangd` answers the fixes of the diagnostics it is *given*,
+     * not those it happens to have computed, and returns nothing at all when
+     * the context is empty
+     */
+    void requestCodeActions(const QString &file,
+                            const QTextDocument &,
+                            int position,
+                            int end,
+                            const CodeActionsReply &);
+    /*!
+     * \brief the overview of a file: the symbols it holds, in the order the
+     * file spells them
+     */
+    using DocumentSymbolsReply =
+        std::function<void(const QVector<LspDocumentSymbol> &)>;
+    /*!\brief ask for the overview of a file
+     * \param[in] file: the file to look at
+     * \param[in] reply: what to do with the answer
+     *
+     * \note this is the one question of this client which takes no position:
+     * the answer is the whole file, and the mode asks it once and keeps the
+     * list while the document stays unchanged
+     */
+    void requestDocumentSymbols(const QString &file,
+                                const DocumentSymbolsReply &);
+    /*!
+     * \brief the identifiers of a file and what the server says they are: the
+     * semantic tokens of the protocol, which is what colors a name a regular
+     * expression can only guess at
+     */
+    using SemanticTokensReply =
+        std::function<void(const QVector<LspSemanticToken> &)>;
+    /*!\brief ask what the identifiers of a file are, to the server's knowledge
+     * \param[in] file: the file to look at
+     * \param[in] reply: what to do with the answer
+     *
+     * \note the whole file, since a server which supports the question at all
+     * is `clangd`, and `clangd` supports no range of it: what comes back is
+     * every identifier it resolved, in the order of the file
+     *
+     * \note the numbers of the answer are named by the legend the server sent
+     * with its capabilities, so the reply holds names, not numbers, and an
+     * empty one says either that the server announced no legend, or that it
+     * resolved nothing
+     */
+    void requestSemanticTokens(const QString &file,
+                               const SemanticTokensReply &);
+    /*!
+     * \return true when the server announced semantic tokens with a legend to
+     * read them by, which is what \c requestSemanticTokens needs
+     */
+    bool hasSemanticTokens() const;
+    /*!
+     * \return the names the legend of the server gives the kinds of tokens it
+     * answers, empty when it announced none
+     */
+    QStringList semanticTokenKinds() const;
+    /*!
      * \brief the text behind a position, rendered as plain text or as
      * markdown, empty when there is nothing to show
      */
@@ -181,6 +334,17 @@ namespace tfel::gui {
       int refs = 0;
     };
     void handleInitializeAnswer(const QJsonValue &, const QString &);
+    /*!
+     * \brief the body of \c requestDefinition, \c requestDeclaration and
+     * \c requestReferences, which differ by the method they call and by the
+     * few parameters the method needs beyond position and document
+     */
+    void requestLocations(const QString &method,
+                          const QString &file,
+                          const QTextDocument &,
+                          int position,
+                          const DefinitionReply &,
+                          const QJsonObject &extra = QJsonObject());
     void publishDiagnostics(const QJsonValue &);
     void showInformativeMessage(const QString &);
     /*!
@@ -217,6 +381,17 @@ namespace tfel::gui {
     QMap<QString, Document> documents;
     //! the last diagnostics published, by file name
     QMap<QString, QVector<LspDiagnostic>> diagnostics;
+    /*!
+     * \brief the characters the server says a call is typed around, from the
+     * handshake; `(` and `,` while no handshake has been answered
+     */
+    QVector<QChar> signature_triggers{QLatin1Char('('), QLatin1Char(',')};
+    /*!
+     * \brief the legend the server announced with its capabilities: the names
+     * the numbers of a semantic tokens answer are read against, invalid when
+     * none was announced
+     */
+    LspSemanticLegend semantic_legend;
   };  // end of struct LspClient
 
 }  // end of namespace tfel::gui

@@ -18,14 +18,64 @@ chosen, if any. See [Launching `clangd`](#launching-clangd).
 - **Diagnostics**: errors, warnings, notes and hints reported by
   `clangd` are underlined in the text, with a color set by their
   severity: red for an error, orange for a warning, blue for a note and
-  gray for a hint. The text of the message is not displayed yet: an
-  underline says where a problem is and its color how serious it is.
+  gray for a hint. The message goes with the place: the minibuffer
+  echoes it once the cursor rests on an underlined range, and resting
+  the mouse on one shows the same text as a tooltip.
 - **Completion**: completion of names, members, keywords and macros,
   computed by `clangd` on the text as it is being edited.
 - **Go to definition**: jump to the line where the symbol under the
   cursor is defined, opening the file which holds it if needed.
+- **Find references**: the uses of the symbol under the cursor, its
+  definition included, are listed as `file:line` entries in a menu
+  which jumps to the chosen one.
+- **Rename**: the symbol under the cursor is renamed everywhere
+  `clangd` knows it uses the name: the new name is asked in the
+  minibuffer, and the workspace edit the server answers is applied to
+  every buffer visiting the files it names, opening the files which are
+  not visited yet and coming back to the buffer one started from. The
+  buffers are rewritten, not saved: saving stays `Ctrl-X Ctrl-S`.
+- **Signature help**: the parameter list of the call the cursor stands
+  in, echoed in the minibuffer with the argument being typed picked out
+  of it between `<` and `>`, and the number of overloads the call could
+  still be when it could be more than one. `Alt-S` asks for it, and so
+  does the editor itself as the characters `clangd` says a call is
+  typed around reach the buffer: `(`, `,`, `<` and the like. Nothing is
+  said where there is no call, so typing braces stays quiet.
+- **Quick fixes**: the context menu offers what `clangd` can repair on
+  the line it was opened on — insert a missing `;`, add a dereference,
+  fix a spelling — and triggering an entry writes the text the server
+  sent. The buffers are rewritten, not saved, as for a rename.
+- **Document symbols**: the overview of the file as `clangd` reads it,
+  and a jump to whichever entry of it is chosen. The names are the
+  qualified ones — `Widget::paint`, `tools::Helper::twice` —, each with
+  what the server says beside it: the signature of a function, the kind
+  of a class. A definition written out of the class it belongs to is an
+  entry of its own, under the name it is spelled with.
 - **Hover**: a tooltip showing the declaration of the symbol under the
   cursor and its documentation, if any.
+- **Navigation hints**: the word the cursor sits on is underlined when
+  `clangd` knows where the symbol is defined or declared, and the mouse
+  pointer turns into the icon of that jump — `go-jump-definition` or
+  `go-jump-declaration` of the Freedesktop Icon Naming Specification,
+  the generic `go-jump` icon or a pointing hand where the theme has
+  neither — while it rests on such a word. The jump itself is `Alt+.`,
+  as before.
+- **Semantic colors**: while a session runs, the identifiers of the file
+  are colored with what `clangd` says they are, not with what a regular
+  expression guesses from their spelling: the names of types — a class,
+  a struct, an enumeration, an alias, a template parameter — in a dark
+  blue, the names of functions and methods in a dark cyan, the names of
+  macros in a dark magenta, and a name the server says is deprecated
+  struck through. Everything else keeps the face it has without a
+  session: the keywords, strings, numbers and comments belong to the
+  built-in highlighter, which `clangd` is asked nothing about, and the
+  locals, parameters and members it does name are deliberately left
+  alone, so a file reads as it did and only what was unknowable stands
+  out. `Color identifiers` in the `C/C++` menu turns the colors off and
+  on again. The question is asked of the whole file — `clangd` answers no
+  smaller part of it — when a session starts, when the file has been
+  parsed, and when the text settles after an edit; a file which is not
+  visited by a session keeps the highlighter's faces.
 
 Completion, navigation and hover wait at most three seconds for the
 server: a server which does not answer is reported in the minibuffer
@@ -85,7 +135,7 @@ Nothing talks to a server until one is launched, because what a session
 is launched *with* — the compilation database above all — is not
 something the editor can guess and cannot be changed afterwards. Two
 entries of the `C/C++` menu of the mode, shown in the menu bar while a
-`C`/`C++` buffer is current, do it:
+`C`/`C++` buffer is current, do it, and a third ends the session again:
 
 - `Launch clangd` starts a session with the options of the settings only:
   the editor looks for a compilation database itself, as described below,
@@ -98,6 +148,12 @@ entries of the `C/C++` menu of the mode, shown in the menu bar while a
   then started with `--compile-commands-dir`, which is what `clangd`
   reads: the directory, not the file. The command is
   `launch-clangd-with-compile-commands`.
+- `Stop clangd` ends the session which is running: the server is asked
+  to shut down and loses the argument if it lingers. The diagnostics it
+  published go away with it, and the text of the buffers is kept, marked
+  as never sent, so a session launched afterwards receives it anew. The
+  minibuffer reports `clangd stopped`, or `clangd is not launched` when
+  no session was running. The command is `stop-clangd`.
 
 The database of the plain entry is looked for in this order:
 
@@ -148,11 +204,12 @@ is opened again on the new session as soon as its handshake is over, and
 the underlines the old session had published are forgotten, as they
 describe files a server read with other options, or not at all.
 
-Requests never launch a session: `Alt+Tab`, `Alt+.`, `Alt+?` and the
-context menu report that `clangd` is not launched and where to launch it
-instead of starting one they were not asked for. The documents of the
-buffers are registered on the client as their files are opened, whether a
-session runs or not, and are sent to the next one.
+Requests never launch a session: `Alt+Tab`, `Alt+.`, `Alt+,`, `Alt+R`,
+`Alt+S`, `Alt+O`, `Alt+?` and the context menu report that `clangd` is not
+launched and where to launch it instead of starting one they were not asked
+for. The documents of the buffers are registered on the client as their
+files are opened, whether a session runs or not, and are sent to the next
+one.
 
 One session serves all the `C`/`C++` buffers of a window, and a new
 window uses a new session.
@@ -174,6 +231,32 @@ the [usual `emacs` shortcuts](emacs-shortcuts.html) of the editor:
   already, and the cursor is placed on the defining line. There is no
   jump back: use `Ctrl-X+B` (change buffer) to go back to the buffer one
   left, as always in the editor.
+- `Alt+,`: list the references to the symbol under the cursor, the
+  definition counted in. The answer of the server becomes a menu of
+  entries at the cursor, each naming its file and line — and the line's
+  text for the references in this buffer — and jumps where chosen.
+  `Escape` dismisses the menu.
+- `Alt+R`: rename the symbol under the cursor. The new name is asked in
+  the minibuffer, an empty answer cancels, and the edits the server
+  returns are applied to the buffers visiting the files they name. The
+  minibuffer then reports how many places changed in how many files; the
+  buffers are modified but not saved.
+- `Alt+S`: display the parameter list of the call the cursor stands in,
+  the argument being typed marked between `<` and `>`. The same happens
+  on its own whenever a character `clangd` lists as a place a call is
+  typed around is written, which covers typing an argument list
+  character by character. Where the cursor is not inside a call, the key
+  says so and a typed character says nothing.
+- `Alt+O`: go to one of the symbols of the file. The overview the server
+  gives is displayed as a list of completions — each entry the qualified
+  name of a symbol and, beside it, the signature of a function or the
+  kind of a class — and typing narrows that list to the names it visits:
+  `paint` is what one types for `Widget::paint`. `Tab` completes the part
+  the remaining names share. The answer puts the cursor on the name of the
+  symbol and the minibuffer says which one and on what line; a name the
+  file does not hold is refused and the cursor stays where it was. An
+  empty answer asks for nothing. The same question is the `Go to symbol...`
+  entry of the `C/C++` menu.
 - `Alt+?`: display the declaration of the symbol under the cursor and
   its documentation as a tooltip.
 
@@ -183,9 +266,30 @@ opened on, which is where the cursor is placed. The question is asked as
 the menu is built, since that is the only way to know whether the entry
 has something to offer, and the answer is waited for a second only: a
 server which is not up yet, or which is busy parsing the file, leaves the
-plain menu instead of delaying it. When a symbol has several definitions, as
+plain menu instead of delaying it. A symbol without a body, a function
+declared and never defined for instance, is no special case: `clangd`
+answers the definition question of such a symbol with its declaration, and
+the entry jumps to the prototype. When a symbol has several definitions, as
 a virtual override has, one entry each is offered, labelled with the file
 and the line they point to.
+
+The same question round brings back the `Fix:` entries: what the server can
+repair among the diagnostics of that line. An entry is named after the
+change it writes — `Fix: insert ';'` — and its status tip is the message of
+the diagnostic it answers to, since that is the whole reason the entry is
+there. Triggering it applies the text the server sent to every file that
+text names, opening the files which are not visited yet exactly as a rename
+does, and the minibuffer reports what was applied; the buffers are
+rewritten, not saved. Actions which carry no text are not offered: the AST
+tweaks of `clangd`, generating a definition or extracting a variable, come
+as a command the server would have to be asked a second question to apply,
+and an entry which does nothing is worse than no entry.
+
+The navigation hints ask the server neither on every keystroke nor on
+every pixel of a mouse move: one settling timer of the mode is shared by
+the cursor and the mouse, and what was answered about a word is
+remembered until the text changes or the session is stopped, at which
+point the underlines and the mouse cursor go away with it.
 
 `Alt+Tab` may be captured by the window manager, which often uses it to
 switch windows: if it does nothing in the editor, look for that binding
@@ -193,7 +297,7 @@ in the settings of the window manager. The shortcuts of the editor are
 not configurable: they are defined in `src/TextEditBase.cxx` and, for
 the mode specific ones, in the major mode itself. They belong to
 the `emacs` style, the default one: the `Options` menu can switch to the
-`Qt` style, in which a major mode sees no key event at all, so the three
+`Qt` style, in which a major mode sees no key event at all, so the
 shortcuts above become inactive, like the other mode specific ones.
 
 # Options
@@ -204,11 +308,12 @@ session is launched: launching a new session from the `C/C++` menu is
 enough for a change to be taken into account, the editor does not have to
 be restarted.
 
-| Key                 | Default    | Description                                        |
-|---------------------|------------|----------------------------------------------------|
-| `clangd/enable`     | `true`     | turn the `clangd` support off (`false`) or on      |
-| `clangd/executable` | empty      | path of the `clangd` binary; empty means: search   |
-| `clangd/arguments`  | empty      | extra command line arguments, separated by commas  |
+| Key                        | Default    | Description                                        |
+|----------------------------|------------|----------------------------------------------------|
+| `clangd/enable`            | `true`     | turn the `clangd` support off (`false`) or on      |
+| `clangd/executable`        | empty      | path of the `clangd` binary; empty means: search   |
+| `clangd/arguments`         | empty      | extra command line arguments, separated by commas  |
+| `clangd/semantic-tokens`   | `true`     | color the identifiers with what the server says    |
 
 For example, adding these lines to the configuration file:
 
@@ -229,6 +334,13 @@ everything off:
 clangd/executable=/usr/lib/llvm-15/bin/clangd
 clangd/enable=false
 ~~~~
+
+The colors of the identifiers are the one option read again on every
+question rather than once at a launch, so `clangd/semantic-tokens=false`
+shows on the buffer of a running session without restarting it — as does
+the `Color identifiers` entry of the `C/C++` menu, which writes that same
+setting and repaints the file on screen. The buffers of the other files
+follow as they settle.
 
 # Projects
 
@@ -325,6 +437,9 @@ one launches the other entry and answers the question differently.
 
 - The implementation of the client is described in
   [issue #125](https://github.com/thelfer/tfel-editor/issues/125).
+- What `clangd` offers and the editor does not use yet is listed, with
+  the order in which the gaps are worth closing, on the
+  [integration roadmap](clangd-integration.html) page.
 - [clangd documentation](https://clangd.llvm.org/guides), in particular
   the [design](https://clangd.llvm.org/design) page, which explains
   where the compilation options come from.
