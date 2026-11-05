@@ -11,6 +11,7 @@
 
 #include <QtCore/QJsonObject>
 #include <QtCore/QObject>
+#include <QtCore/QJsonValue>
 #include <QtCore/QString>
 #include <functional>
 #include "TFEL/GUI/Config.hxx"
@@ -26,8 +27,10 @@ namespace tfel::gui {
    * \note the requests the server sends to the client are answered here and
    * never reach the client: a client which leaves them unanswered stalls the
    * server, and none of them is anything the editor has an opinion about yet
-   * (`workspace/configuration` gets an array of nulls, that is the default
-   * settings for every item asked for; `client/registerCapability` and
+   * (`workspace/configuration` gets an array of one value per item asked for
+   * — the settings the client set with \c setConfigurationAnswer, or nulls,
+   * that is the default settings of the server, while none were set;
+   * `client/registerCapability` and
    * `window/workDoneProgress/create` get a null result, that is accepted
    * without anything being registered or tracked)
    */
@@ -62,6 +65,18 @@ namespace tfel::gui {
                  const Reply &);
     //! send a notification, which expects no answer
     void notify(const QString &method, const QJsonObject &params = {});
+    /*!
+     * \brief set the value sent back for every item of a
+     * `workspace/configuration` request
+     * \param[in] answer : what to answer; null, which is the state of a
+     * connection which was never given one, is the default settings of the
+     * server for every scope it asks about
+     *
+     * \note `harper-ls` asks this on every document change, and reads the
+     * dialect and the other options from the answer; `clangd` never asks, so
+     * a clangd connection stays in the null state
+     */
+    void setConfigurationAnswer(const QJsonValue &answer);
    signals:
     //! a notification the server sent and the connection does not handle
     void notification(const QString &method, const QJsonValue &params);
@@ -80,6 +95,11 @@ namespace tfel::gui {
     int next_id;
     //! the replies waiting for their answer, by request id
     QMap<int, Reply> replies;
+    /*!
+     * \brief what a `workspace/configuration` request gets for every item,
+     * undefined (a null in the JSON of the answer) while nobody has set one
+     */
+    QJsonValue configuration_answer;
   };  // end of struct LspConnection
 
 }  // end of namespace tfel::gui

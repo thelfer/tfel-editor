@@ -52,6 +52,10 @@ namespace tfel::gui {
         {"jsonrpc", "2.0"}, {"method", method}, {"params", params}});
   }  // end of LspConnection::notify
 
+  void LspConnection::setConfigurationAnswer(const QJsonValue &answer) {
+    this->configuration_answer = answer;
+  }  // end of LspConnection::setConfigurationAnswer
+
   void LspConnection::handleMessage(const QJsonObject &m) {
     const auto id = m.value("id");
     if (m.contains("method")) {
@@ -60,13 +64,14 @@ namespace tfel::gui {
       const auto method = m.value("method").toString();
       if (!id.isUndefined()) {
         if (method == QLatin1String("workspace/configuration")) {
-          // an array of nulls, one per item asked for: every document gets
-          // the default settings of the server
+          // one copy of what the client has to say per item asked for: while
+          // nobody set an answer, that is an array of nulls, the default
+          // settings of the server for every scope
           auto items = QJsonArray();
           const auto requested =
               m.value("params").toObject().value("items").toArray();
           for (const auto &i : requested) {
-            items.append(QJsonValue());
+            items.append(this->configuration_answer);
           }
           respond(id, items);
         } else if ((method == QLatin1String("client/registerCapability")) ||

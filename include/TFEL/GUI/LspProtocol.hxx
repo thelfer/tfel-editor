@@ -163,6 +163,14 @@ namespace tfel::gui {
     QString message;
     //! name of the checker, `clang` or `clangd`, empty if none was given
     QString source;
+    /*!
+     * \brief what the checker calls the rule it applied, `SpellCheck` or
+     * `-Wunused-variable`, empty if none was given
+     *
+     * \note the protocol allows a number for it; a number is kept as the string
+     * of it, since whoever reads it is reading a name to look up
+     */
+    QString code;
     int startLine = 0;
     int startCharacter = 0;
     int endLine = 0;

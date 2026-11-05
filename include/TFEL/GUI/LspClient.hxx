@@ -12,6 +12,7 @@
 #define LIB_TFEL_GUI_LSPCLIENT_HXX
 
 #include <QtCore/QJsonObject>
+#include <QtCore/QJsonValue>
 #include <QtCore/QObject>
 #include <QtCore/QMap>
 #include <QtCore/QPointer>
@@ -40,10 +41,23 @@ namespace tfel::gui {
    * index expects. The client is a child of the editor widget it serves and
    * dies with it
    *
+   * \note the client speaks for \c clangd by default, which is what \c get
+   * returns and what the C++ mode drives; a client used for another server
+   * says so with \c setServerName — the name the minibuffer messages speak
+   * of, and the object name which keeps the two kinds of clients of one
+   * editor apart — and answers the questions of the handshake with its own
+   * \c setLanguageId and \c setConfiguration
+   *
    * \note the documents are synchronized incrementally: the client keeps the
    * text it last sent for each of them and turns every change into the range
    * of that snapshot the change replaces. A server which is not ready yet
    * gets the whole text of a document once the handshake completes
+   *
+   * \note a server which says it synchronizes its documents with the whole
+   * text of each — `textDocumentSync: 1`, which is what `harper-ls` answers
+   * — is sent the whole text on every change, whatever the diff: the range of
+   * a change means nothing to a server which reads the text it is given as
+   * the text of the document
    */
   struct TFEL_GUI_VISIBILITY_EXPORT LspClient : QObject {
     Q_OBJECT
@@ -62,10 +76,69 @@ namespace tfel::gui {
      */
     ~LspClient() override;
     /*!
-     * \return the client of the given editor widget, creating it as a child of
-     * that widget on the first call
+     * \return the client of \c clangd held by the given editor widget,
+     * creating it as a child of that widget on the first call
+     *
+     * \note a client of another server is not the answer of this function,
+     * even when it is a child of the same widget: it names itself with
+     * \c setServerName, and the search here is by that name. The clients of
+     * the grammar checkers are held by their \c GrammarCheckSession and
+     * reached through it
      */
     static LspClient &get(EditorWidget &);
+    /*!
+     * \brief say what server this client speaks with: the name the
+     * minibuffer messages of the conversation name, and the object name the
+     * widget finds it by
+     * \param[in] name : `clangd`, which a client of \c get speaks with, while
+     * nobody says otherwise
+     */
+    void setServerName(const QString &name);
+    /*!
+     * \brief say what the files handed to the server are, in the sense of the
+     * `languageId` of the protocol, which is what decides how a server parses
+     * them: `cpp`, which is what a C++ mode sends, while nobody says
+     * otherwise
+     */
+    void setLanguageId(const QString &id);
+    /*!
+     * \brief answer the settings the server asks for with \c settings
+     * \param[in] settings : what a `workspace/configuration` question gets
+     * for every scope it names; the settings of the server itself, in the
+     * shape it reads them — `harper-ls` wants an object whose one key is its
+     * own name
+     *
+     * \note a server which asks gets these settings on every analysis it
+     * makes, so changing them is enough for the next change of a document to
+     * be read under the new ones; \c recheckDocuments is what makes a server
+     * look at the documents it already holds again, and a server which is not
+     * up to answer yet reads them at the handshake
+     */
+    void setConfiguration(const QJsonValue &settings);
+    /*!
+     * \brief send the whole text of the documents on every change, whatever
+     * the diff
+     * \param[in] on : true for a server which reads the text it is given as the
+     * text of the document and understands no range; false, the default, for a
+     * server which applies the ranges of the changes it is handed
+     *
+     * \note the handshake says this by itself — `textDocumentSync: 1` —, and a
+     * server which says so needs nothing here; it is for a server which is
+     * silent about it, `harper-ls` answering no `textDocumentSync` at all, and
+     * it stays set across the sessions of one client
+     */
+    void setFullTextSync(bool on);
+    /*!
+     * \brief tell the server that its settings changed and send it the whole
+     * text of every document it holds again, so that what it says of them
+     * says what it holds now
+     *
+     * \note the way to apply a change of the \c configuration under a running
+     * session: the documents do not change of their own accord, and a server
+     * which analyzes on changes alone would keep saying what it said under
+     * the settings of the text
+     */
+    void recheckDocuments();
     //! \return true once the handshake with the server is complete
     bool isReady() const;
     /*!
@@ -89,6 +162,23 @@ namespace tfel::gui {
      * under other options, or not at all
      */
     bool launch(const QStringList &extra_arguments, QString &error);
+    /*!
+     * \brief launch a given program with the given arguments and run the
+     * handshake, for a client which speaks with a server other than `clangd`
+     * \param[in] program : the program to run, never looked for by this client
+     * \param[in] arguments : the arguments to run it with, as the caller spells
+     * them: a server of the editor takes them from the settings, see
+     * \c LspHarperSupport::serverArguments
+     * \param[out] error : why the program could not be launched
+     * \return false when it can not be started at all
+     *
+     * \note what this client does with the session is the same either way: the
+     * documents are re-opened once the handshake is over, and the diagnostics
+     * of the previous session are forgotten
+     */
+    bool launch(const QString &program,
+                const QStringList &arguments,
+                QString &error);
     /*!
      * \brief end the session which is running, if any: the server is asked to
      * shut down and loses the argument if it lingers
@@ -392,6 +482,26 @@ namespace tfel::gui {
      * none was announced
      */
     LspSemanticLegend semantic_legend;
+    /*!
+     * \brief what server this client speaks with: the name the messages of the
+     * conversation give it, and the object name \c get searches by
+     */
+    QString server_name{QLatin1String("clangd")};
+    /*!
+     * \brief the `languageId` the documents are opened under, which is what
+     * decides how the server parses them
+     */
+    QString language_id{QLatin1String("cpp")};
+    /*!
+     * \brief what a `workspace/configuration` question is answered with, as the
+     * server reads it; undefined for a server which is asked no settings
+     */
+    QJsonValue configuration;
+    /*!
+     * \brief true when the server says it synchronizes its documents with their
+     * whole text, which is what is sent on every change then
+     */
+    bool full_text_sync = false;
   };  // end of struct LspClient
 
 }  // end of namespace tfel::gui
