@@ -108,6 +108,14 @@ namespace tfel::gui {
     virtual void selectFont();
 
     /*!
+     * \brief open the dialog of the configuration, which lists the entries the
+     * editor and its major modes declared they use, gathered by theme, and
+     * writes what the user changes; this is the `Options` menu entry
+     * "Configuration..." and the \c configure-tfel-editor command
+     */
+    virtual void openConfigurationDialog();
+
+    /*!
      * \brief switch to the emacs style short cuts, storing this choice in the
      * `ShortCutStyle` singleton and refreshing the options menu
      */
@@ -181,6 +189,8 @@ namespace tfel::gui {
 
     //! action selecting the font of the main frames
     QAction *fa = nullptr;
+    //! action opening the dialog of the configuration
+    QAction *cfa = nullptr;
     //! action switching to the emacs style short cuts
     QAction *esca = nullptr;
     //! action switching to the Qt style short cuts

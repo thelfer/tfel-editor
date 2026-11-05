@@ -25,6 +25,7 @@
 #include "TFEL/GUI/Buffer.hxx"
 #include "TFEL/GUI/PlainTextEdit.hxx"
 #include "TFEL/GUI/MajorModeFactory.hxx"
+#include "TFEL/GUI/ConfigurationDialog.hxx"
 #include "TFEL/GUI/MainWindow.hxx"
 
 namespace tfel::gui {
@@ -222,6 +223,14 @@ namespace tfel::gui {
     }
   }  // end of MainWindow::selectFont
 
+  void MainWindow::openConfigurationDialog() {
+    auto *const e = qobject_cast<EditorWidget *>(this->centralWidget());
+    if (e == nullptr) {
+      return;
+    }
+    configureTfelEditor(*e);
+  }  // end of MainWindow::openConfigurationDialog
+
   void MainWindow::createActions() {
     // createActions() news all the member actions again, and
     // clearMenuBar() reclaims the ones which resided in a menu -- but
@@ -317,6 +326,15 @@ namespace tfel::gui {
     this->fa->setStatusTip(QObject::tr("Select Font"));
     QObject::connect(this->fa, &QAction::triggered, this,
                      &MainWindow::selectFont);
+    // configuration action. It is added to the options menu on every rebuild,
+    // which is what reclaims it: the trap the short cut style actions fell into
+    // above is theirs because exactly one of them never is
+    this->cfa = new QAction(QObject::tr("C&onfiguration"), this);
+    this->cfa->setIcon(QIcon::fromTheme("preferences-system"));
+    this->cfa->setStatusTip(
+        QObject::tr("Configure the entries the editor and its modes use"));
+    QObject::connect(this->cfa, &QAction::triggered, this,
+                     &MainWindow::openConfigurationDialog);
     this->esca =
         new QAction(QObject::tr("Change to emacs's style shortcuts"), this);
     this->esca->setStatusTip(QObject::tr("Use emacs's style shortcuts"));
@@ -354,6 +372,8 @@ namespace tfel::gui {
     const auto submenus = this->om->findChildren<QMenu *>();
     this->om->clear();
     for (auto *sm : submenus) sm->deleteLater();
+    // configuration
+    this->om->addAction(this->cfa);
     // font
     this->om->addAction(this->fa);
 #ifdef TFEL_GUI_HUNSPELL_SUPPORT

@@ -15,6 +15,7 @@
 #include <QtGui/QIcon>
 #include "TFEL/GUI/Config.hxx"
 #include "TFEL/GUI/MajorMode.hxx"
+#include "TFEL/GUI/SettingsKey.hxx"
 
 namespace tfel::gui {
 
@@ -43,6 +44,21 @@ namespace tfel::gui {
     virtual MajorMode* getMajorMode(EditorWidget&,
                                     Buffer&,
                                     TextEditBase&) const = 0;
+    /*!
+     * \return the themes of the configuration the mode uses, with the entries
+     * of the configuration it reads and writes
+     *
+     * The proxy answers this, not the mode, because the entries of the
+     * configuration a mode uses have to be known before any buffer is edited in
+     * that mode: the configuration dialog lists them for the editor as a whole.
+     * \c StandardMajorModeProxy answers it with what the mode class it builds
+     * declares through its own static \c declareSettings method, so a mode
+     * declares what it uses once, in its own source file, and a mode which uses
+     * no entry of the configuration declares nothing and is left untouched.
+     *
+     * \note the default implementation declares nothing
+     */
+    virtual QVector<SettingsGroup> getSettingsGroups() const;
     //! destructor
     virtual ~MajorModeProxy();
   };  // end of struct MajorModeProxy
@@ -50,6 +66,12 @@ namespace tfel::gui {
   /*!
    * \brief a standard implementation of a proxy
    * \tparam T: major mode
+   *
+   * \note when \c T declares a static \c declareSettings method returning a
+   * \c QVector<SettingsGroup>, the proxy reports the entries of the
+   * configuration the mode uses, filled with the name, the description and the
+   * icon of the mode for the themes which name none of their own. That method
+   * is what makes a major mode export the settings it uses.
    */
   template <typename T>
   struct StandardMajorModeProxy : public MajorModeProxy {
@@ -92,6 +114,12 @@ namespace tfel::gui {
     MajorMode* getMajorMode(EditorWidget&,
                             Buffer&,
                             TextEditBase&) const override;
+    /*!
+     * \return the themes and the entries of the configuration \c T declares
+     * through its static \c declareSettings method, nothing when it declares
+     * none
+     */
+    QVector<SettingsGroup> getSettingsGroups() const override;
     //! destructor
     ~StandardMajorModeProxy() override;
 
@@ -199,6 +227,16 @@ namespace tfel::gui {
      * \note a default constructed icon when no mode of that name is registered
      */
     QIcon getMajorModeIcon(const QString&) const;
+
+    /*!
+     * \return the themes of the configuration and the entries of the
+     * configuration the mode of the given name exports
+     * \param[in] n: major mode name
+     *
+     * \note an empty list when no mode of that name is registered or when it
+     * uses no entry of the configuration
+     */
+    QVector<SettingsGroup> getMajorModeSettingsGroups(const QString&) const;
 
     /*!
      * \return true if a mode of the given name is registered

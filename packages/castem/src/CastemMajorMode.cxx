@@ -8,6 +8,7 @@
 #include <QtCore/QDir>
 #include <QtCore/QUrl>
 #include <QtCore/QFileInfo>
+#include <QtCore/QSettings>
 #include <QtCore/QTemporaryFile>
 #include <QtGui/QSyntaxHighlighter>
 #include <QtGui/QDesktopServices>
@@ -25,6 +26,45 @@
 #include "TFEL/GUI/MajorModeFactory.hxx"
 
 namespace tfel::gui {
+
+  namespace {
+
+    // the address of the entry which names the program the mode launches. What
+    // is read there is what is launched, which is why nothing is cached: the
+    // release a person uses is the kind of thing which changes between two
+    // sessions of the same editor
+    const QString castem_executable_address =
+        QStringLiteral("castem/executable");
+
+    //! \return the release the mode runs when the address holds nothing
+    QString defaultCastemExecutable() {
+#ifdef _WIN32
+      return QStringLiteral("castem17.bat");
+#else
+      return QStringLiteral("castem2018_PLEIADES");
+#endif
+    }  // end of defaultCastemExecutable
+
+    /*!
+     * \return the program to launch, named either by the entry of the
+     * configuration or by \c defaultCastemExecutable when the address holds
+     * nothing
+     *
+     * \note the name is used as it is written: a program of the `PATH` is found
+     * by the process the way it would be in a terminal, a release outside of it
+     * is named by its full path, and a name which matches nothing is reported
+     * by the mode when the process refuses to start
+     */
+    QString castemExecutable() {
+      const auto configured =
+          QSettings().value(castem_executable_address).toString().trimmed();
+      if (!configured.isEmpty()) {
+        return configured;
+      }
+      return defaultCastemExecutable();
+    }  // end of castemExecutable
+
+  }  // end of anonymous namespace
 
   static QString getCastemName(const std::string& n) {
     using tfel::glossary::Glossary;
@@ -661,19 +701,20 @@ namespace tfel::gui {
       }
       // report and clean up start failures through the signal, as LicosStudy
       // does: waitForStarted() would freeze the GUI thread instead (QT-22).
-      QObject::connect(&p, &QProcess::errorOccurred, this,
-                       [this, cleanup](QProcess::ProcessError e) {
-                         if (e == QProcess::FailedToStart) {
-                           this->editor.displayInformativeMessage(
-                               QObject::tr("castem could not be started"));
-                           cleanup();
-                         }
-                       });
-#ifdef _WIN32
-      p.start("castem17.bat", QStringList());
-#else
-      p.start("castem2018_PLEIADES", QStringList());
-#endif
+      // The message names the program which did not start since which one that
+      // is is now the user's choice, and a wrong entry of the configuration is
+      // the likeliest reason for not starting.
+      const auto program = castemExecutable();
+      QObject::connect(
+          &p, &QProcess::errorOccurred, this,
+          [this, cleanup, program](QProcess::ProcessError e) {
+            if (e == QProcess::FailedToStart) {
+              this->editor.displayInformativeMessage(
+                  QObject::tr("%1 could not be started").arg(program));
+              cleanup();
+            }
+          });
+      p.start(program, QStringList());
       this->buffer.attachSecondaryTask("* castem *", this->co);
       // without the wait, a program that is not there is already NotRunning
       // (or becomes it through errorOccurred): Starting is fine, it is the
@@ -701,6 +742,40 @@ namespace tfel::gui {
     return "major mode dedicated to the "
            "castem finite element solver";
   }
+
+  QVector<SettingsGroup> CastemMajorMode::declareSettings() {
+    // the one entry the mode reads is gathered in a theme named after the
+    // program it launches, as the C++ mode does for `clangd`: it is the entry a
+    // person looks for when the release they work with is not the one the mode
+    // would run, and a theme called `castem` says it without spelling the mode
+    // out. The icon of the theme is the one of the mode, which is what the
+    // proxy of the mode adds
+    auto castem = SettingsGroup{};
+    castem.name = QStringLiteral("castem");
+    castem.description = QObject::tr(
+        "The program the mode launches, both for the session the "
+        "sending commands of `Ctrl-C` run and for the notices "
+        "`Ctrl-X H` asks");
+    castem.keys = QVector<SettingsKey>()
+                  << SettingsKey::text(castem_executable_address,
+                                       QObject::tr("Program of the "
+                                                   "castem solver"),
+                                       QObject::tr("The program the "
+                                                   "mode starts, both "
+                                                   "for the session the "
+                                                   "sending commands of "
+                                                   "`Ctrl-C` run and for "
+                                                   "the notices. A bare "
+                                                   "name is the one a "
+                                                   "terminal would find "
+                                                   "in the places the "
+                                                   "session searches; a "
+                                                   "release which is not "
+                                                   "there is named by "
+                                                   "its full path"),
+                                       defaultCastemExecutable());
+    return QVector<SettingsGroup>() << castem;
+  }  // end of CastemMajorMode::declareSettings
 
   QIcon CastemMajorMode::getIcon() const {
     static QIcon i(":/Cast3MIcon.png");
@@ -846,7 +921,11 @@ namespace tfel::gui {
       auto& p = nf->getProcess();
       p.setWorkingDirectory(dir.absolutePath());
       if (p.state() != QProcess::Running) {
-        p.start("castem2018_PLEIADES", QStringList());
+        // the same program as the one the session of `startCastem` runs: an
+        // entry of the configuration which names a release has to answer the
+        // notices too, or the help would come from another installation than
+        // the keywords of the buffer
+        p.start(castemExecutable(), QStringList());
         p.waitForStarted();
         p.write(QString("INFO '%1';\n").arg(w2).toLatin1());
         p.write("FIN;\n");

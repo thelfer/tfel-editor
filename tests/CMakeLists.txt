@@ -54,3 +54,14 @@ add_tfel_editor_test(test-editor-widget TestEditorWidget.cxx)
 add_tfel_editor_test(test-main-window TestMainWindow.cxx)
 add_tfel_editor_test(test-lsp-protocol TestLspProtocol.cxx)
 add_tfel_editor_test(test-lsp-client TestLspClient.cxx)
+add_tfel_editor_test(test-settings TestSettings.cxx)
+
+# One case of `test-settings` loads a packaged major mode as the editor does, as
+# a plugin, and asks the registry what that mode declared: the case needs the
+# built library and has to know where it is. Loading it needs no help from the
+# environment either, since a plugin of the build tree carries the absolute path
+# of every library it needs in its own run path.
+add_dependencies(test-settings TFELEditorCastemMode)
+target_compile_definitions(
+  test-settings PRIVATE
+  TFEL_EDITOR_CASTEM_MODE="$<TARGET_FILE:TFELEditorCastemMode>")
