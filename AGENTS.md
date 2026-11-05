@@ -667,6 +667,78 @@ Three things worth remembering:
   `clangd/semantic-tokens` from the test settings and the test restores it to true at the
   end: a run which ended early would leave the colors off for every later test.
 
+### A regenerated `compile_commands.json` reaches the parse, not the index (issue #125)
+
+Nothing in the editor watches the database, and nothing needs to for the file
+being edited: `clangd` 15 answers `initialize` with
+`"compilationDatabase":{"automaticReload":true}` and re-reads the file itself.
+Verified against a live session, all of it in `/tmp/opencode/cdb`:
+
+- The reload goes **with a parse, not with the clock**: `Reloaded compilation
+  database from <path>` appears in the `--log=verbose` output 2–5 s after the
+  rewrite and only when the server next needs a command line. Thirty seconds of
+  idle time produce no reload at all (`probe14.py`), and a parse 0.1, 0.3, 0.5,
+  0.8, 1.2 or 2.0 s after the rewrite still used the old command while the one at
+  3.0 s used the new (`probe7.py`). Nothing is ever reparsed on its own either, so
+  the underlines of a buffer say what the old options made of it until something
+  is typed there.
+- Both directions work: a `-DEXTRA_FLAG` added to the command of an open file
+  makes its published error go away, taken away again it comes back
+  (`probe2.py`).
+- `workspace/didChangeWatchedFiles` naming the database changes nothing — no
+  reload, no reparse — and advertising `didChangeWatchedFiles` with
+  `dynamicRegistration` in the handshake brings no `client/registerCapability`
+  asking to register it. There is nothing on the client side to implement here.
+- Neither the cwd of the process nor the layout matters: the reload works with
+  the database beside the sources, with the process started in the project, and
+  with the database in a `build` directory named by `--compile-commands-dir` while
+  the sources sit one level above and the process runs in a third directory
+  (`probe16.py`, `probe17.py`) — the last of which is what a real session looks
+  like, since `LspTransport::start` never calls `setWorkingDirectory`.
+- **The index does not follow.** On a reload the server logs `Enqueueing N
+  commands for indexing` and then rebuilds only what it has not indexed in that
+  session: a file whose new flag unveils a symbol stayed out of
+  `workspace/symbol` for 42 s with unchanged contents (`probe5.py`) and for 60 s of
+  polling when it was rewritten on disk as well (`probe14.py`). A file *newly
+  added* to the database is the exception — indexed 2 ms after the reload, and
+  `textDocument/definition` answered inside it 7 s after the regeneration
+  (`probe13.py`).
+- A **relaunch** does not clear the index either, because a persisted shard is
+  keyed on the *contents* of the file, not on the command which compiled it: one
+  file, compiled once with `-DEXTRA_FLAG` and once without, is written to the same
+  `a.cc.D88B3FE2F6FD8463.idx`, and the session started on the new database never
+  logs `Indexed a.cc` (`probe15.py`). When the contents differ from the shard, or
+  when the cache is gone, it indexes within seconds (`probe12.py`, `probe11.py`).
+  The shards live under the directory `--compile-commands-dir` names —
+  `build/.cache/clangd/index` for the layout of `probe17.py`, and never under the
+  cwd of the process.
+
+Three traps, all paid for:
+
+- A probe must remove the cache where clangd wrote it, which is next to the
+  database, not under the cwd of the process. Removing only the probe's work
+  directory leaves the shards in place and the case then reads as "relaunching
+  does not help either": `probe12.py`'s `clean` case is wrong for exactly this
+  reason, `probe11.py`'s `3b`, which removes both, is the control.
+- Short-lived sessions are no evidence about the index. Since the reload waits for
+  a parse and a parse soon after the rewrite still reads the old command, a session
+  which rewrites the database, types once and then only polls `workspace/symbol`
+  shows no `Reloaded` line at all and says nothing. Claims about the index belong to
+  runs whose log names the reload.
+- `workspace/symbol` is what shows what the index knows about a file nobody opened.
+  `textDocument/definition` is not: on a call to a function whose body is unknown it
+  answers the *declaration* in the current file, a jump which looks like a success.
+  Assert on the file the answer names.
+
+So the sentence the docs carry — the database a session reads is chosen when it
+launches — is about the directory and about the index. The options a file is
+compiled with are not frozen for the session, which is why no `QFileSystemWatcher`
+restarting clangd was added: it would buy the index of unchanged files nothing (the
+shards survive the restart) and would throw away a session whose parse is already
+current. `docs/web/clangd-integration.md` keeps the same conclusion, and the one
+part of the idea that would still pay — watching the file to *report* a stale
+index, not to fix it.
+
 ## Architecture
 
 - `include/TFEL/GUI/` — public headers of the core library. `.hxx` are

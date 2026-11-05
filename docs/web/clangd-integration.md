@@ -108,8 +108,36 @@ Refused in the `initialize` handshake, so the server will not use them:
   faces of the semantic tokens are a foreground color and a strike-out,
   which that Qt does ink.
 - One `clangd` per editor **window**, launched by the user; the
-  compilation database is fixed at launch and changing it means
-  restarting the session.
+  compilation database is read from the directory fixed at launch.
+  Regenerating that file in place changes the options the next parse of
+  a file uses — `clangd` re-reads it by itself — but not what the server
+  knows about the files it has already indexed: see
+  [When the database changes](clangd-support.html#when-the-database-changes).
+
+## Why the database is not watched
+
+A `QFileSystemWatcher` on `compile_commands.json`, restarting the session
+when the file is rewritten, was the first idea: the editor already watches
+directories for `DirectoryMajorMode`, and a regenerated database is the
+common case. It is left alone because what it would buy is small and what
+it would cost is a working session:
+
+- the half a user feels most, the options a file is compiled with, needs
+  no help: `clangd` re-reads the database itself and the next edit of the
+  buffer uses the new command line;
+- the half a restart would reach, the index of the rest of the project, is
+  not fixed by the restart either: what `clangd` persists of a file is
+  keyed on its contents, so a session launched on the new database keeps
+  trusting the shard it wrote for contents it has already seen, and an
+  unchanged file stays as unknown as it was until `.cache/clangd` goes;
+- a restart ends the diagnostics, the completion state and the parsed
+  preamble of every buffer of the window, on a file write which is often
+  nothing of the sort: a build touching a build directory the session was
+  pointed at is enough to fire it.
+
+Watching the file to *say* something in the minibuffer — the database
+changed, the index of the project is stale — is the part of the idea that
+would still pay for itself, and is unbuilt.
 
 # Roadmap
 

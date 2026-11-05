@@ -133,7 +133,10 @@ and `.cu`.
 
 Nothing talks to a server until one is launched, because what a session
 is launched *with* — the compilation database above all — is not
-something the editor can guess and cannot be changed afterwards. Two
+something the editor can guess, and the directory that database is read
+from is fixed by the launch. What happens when the file itself is
+regenerated under a running session is a different matter, and is what
+[When the database changes](#when-the-database-changes) is about. Two
 entries of the `C/C++` menu of the mode, shown in the menu bar while a
 `C`/`C++` buffer is current, do it, and a third ends the session again:
 
@@ -400,13 +403,70 @@ tfel-editor --compile-commands-file=build/compile_commands.json
 The plain entries then start every session with that database, unless
 one launches the other entry and answers the question differently.
 
+# When the database changes
+
+A build regenerates `compile_commands.json` all the time: a source is
+added to the project, an include directory moves, a definition joins the
+options. What a running session makes of it depends on which of its two
+kinds of knowledge is asked about, and the two answer differently.
+
+The **file being parsed** follows the database on its own. `clangd` says
+so in its handshake, and re-reads the file when it next needs a command
+line: a source which compiles only with a `-D` the regenerated database
+has just gained loses its error on the next edit — and gets it back when
+the definition is taken away again. Two details of that are worth
+knowing:
+
+- the reload goes with a parse, not with the clock: a session left idle
+  reads nothing, and a parse within about two seconds of the
+  regeneration still uses the old command line;
+- an open buffer is never reparsed on its own account, so the underlines
+  one is looking at say what the *old* options made of the text until
+  something is typed in that buffer.
+
+What the server **knows about the rest of the project** — the body of a
+function defined in another file, the uses `Alt+,` lists, a file nobody
+has opened — does not follow. On a reload `clangd` queues the files of
+the new database again and then rebuilds only the ones it has not read
+yet in that session: a file whose new option unveils a symbol stays as
+it was indexed, whether or not it changed on disk in the meantime. A
+file the regenerated database *adds* is the exception: it is indexed as
+soon as the reload happens, and a definition question reaches it seconds
+later.
+
+Relaunching the session reads the new database, and indexes the files
+whose contents differ from what it wrote on disk the last time it ran.
+*Wrote on disk* is the catch: what `clangd` keeps of a file is filed
+under the contents of that file, not under the command line which
+compiled it, so changing the options of a file which reads the same
+leaves what the server knows about it — and about the names it defines —
+as it was. What it keeps lives in a `.cache/clangd` directory next to the
+database the session was pointed at, which for a session reading it from
+a build directory means:
+
+~~~~{.bash}
+rm -rf build/.cache
+~~~~
+
+Deleting that and launching the session again is what makes `clangd` read
+the project as it is really compiled again. A change which only *adds
+files* needs no such precaution, and neither does the buffer one is
+editing: it uses the new options as soon as it is parsed again.
+
+So a database which moved, or a session launched without one, stays what
+the two entries of the menu are for: launching again, which replaces the
+session. A database regenerated where the session already reads it is
+the easier case — the file on screen follows it, and only the cross-file
+answers above need the relaunch.
+
 # Remarks
 
 - The session is launched by the user, from the `C/C++` menu or one of the
   `launch-clangd` commands, not at the startup of `tfel-editor` and not
-  when the first `C`/`C++` file is opened: the options a session runs
-  with can not be changed while it runs, so they are asked for when it is
-  started. One `clangd` instance serves all the `C`/`C++` buffers of a
+  when the first `C`/`C++` file is opened: the directory the compilation
+  database is read from and the arguments the server runs with can not be
+  changed while it runs, so they are asked for when it is started. One
+  `clangd` instance serves all the `C`/`C++` buffers of a
   window, and a new window uses a new instance.
 - On the first opening, `clangd` parses the whole translation unit,
   which can take a moment on a large project: the minibuffer says
