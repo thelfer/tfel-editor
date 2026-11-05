@@ -472,8 +472,29 @@ namespace tfel::gui {
     selection.cursor = textCursor();
     selection.cursor.clearSelection();
     e.append(selection);
-    this->setExtraSelections(e);
+    // the keyed assignment, not the plain one: this method runs on every
+    // cursor movement, and the whole list it used to hand over is what other
+    // sources, the diagnostics of the language server among them, had drawn
+    this->setExtraSelections("current-line", e);
   }
+
+  void TextEditBase::setExtraSelections(
+      const QString& key, const QList<QTextEdit::ExtraSelection>& selections) {
+    if (selections.isEmpty()) {
+      this->extraSelectionsByKey.remove(key);
+    } else {
+      this->extraSelectionsByKey[key] = selections;
+    }
+    auto all = QList<QTextEdit::ExtraSelection>();
+    for (const auto& contributions :
+         std::as_const(this->extraSelectionsByKey)) {
+      all += contributions;
+    }
+    // the unqualified call dispatches to the derived class, which hands the
+    // union to the Qt widget; a qualified `TextEditBase::` call would target
+    // the pure virtual, which has no body to call
+    this->setExtraSelections(all);
+  }  // end of TextEditBase::setExtraSelections
 
   std::vector<QMenu*> TextEditBase::getSpecificMenus() {
     std::vector<QMenu*> m;

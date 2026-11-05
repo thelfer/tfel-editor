@@ -9,6 +9,7 @@
 #define LIB_TFEL_GUI_TEXTEDITBASE_HXX
 
 #include <functional>
+#include <QtCore/QMap>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
 #include <QtGui/QTextCursor>
@@ -618,9 +619,31 @@ namespace tfel::gui {
      *
      * \note the base class uses the extra selections to highlight the
      * current line (see `highlightCurrentLine`)
+     *
+     * \note prefer the keyed overload below: the underlying Qt widget
+     * holds one list for everybody, so a writer of this one replaces
+     * what another source drew
      */
     virtual void setExtraSelections(
         const QList<QTextEdit::ExtraSelection> &) = 0;
+
+    /*!
+     * \brief replace the extra selections of one source, keeping those
+     * of all the other sources
+     * \param[in] key : name of the source, `current-line` for the
+     * current line, `clangd` for the diagnostics of the language
+     * server, ...
+     * \param[in] selections : what that source contributes; an empty
+     * list removes its contribution altogether
+     *
+     * The document's extra selections are the concatenation of the
+     * contributions, each source overwriting only its own. Without
+     * this, the current line highlight, which is redone on every
+     * cursor movement, would wipe out whatever else was drawn (issue
+     * #125)
+     */
+    void setExtraSelections(const QString &,
+                            const QList<QTextEdit::ExtraSelection> &);
 
     /*!
      * \return the current list of extra selections of the underlying
@@ -869,6 +892,13 @@ namespace tfel::gui {
      * default language of the `HunspellDictionariesManager`
      */
     QString spellCheckLanguage;
+
+    /*!
+     * \brief the extra selections, by contributing source; the list of the
+     * underlying widget is their concatenation, see
+     * `setExtraSelections(const QString &, ...)`
+     */
+    QMap<QString, QList<QTextEdit::ExtraSelection>> extraSelectionsByKey;
 
     //! undo action of the context menu
     QAction *ua = nullptr;

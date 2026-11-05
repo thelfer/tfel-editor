@@ -8,11 +8,14 @@
 #include <QtCore/QDebug>
 #include <QtCore/QSettings>
 #include <QtGui/QAction>
+#include <QtGui/QPainter>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QFontDialog>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QProxyStyle>
+#include <QtWidgets/QStyleOptionMenuItem>
 #include <QtGui/QCloseEvent>
 #include "TFEL/GUI/Debug.hxx"
 #include "TFEL/GUI/Utilities.hxx"
@@ -26,12 +29,109 @@
 
 namespace tfel::gui {
 
+  namespace {
+    // Qt 6 menu bars show either the icon or the title of a menu, never both:
+    // QMenuBarPrivate::calcActionRects does not measure the text of an action
+    // which has an icon ("If an icon is set, only the icon is visible") and
+    // QCommonStyle::drawControl(CE_MenuBarItem) draws the icon and skips the
+    // text when there is one. Qt 5 drew both, which is what the mode specific
+    // menus (and their icons) were written for. This style measures and draws
+    // the icon and the title side by side, centered in the item, and is
+    // installed on the menu bar of MainWindow only: everything else — the menu
+    // popups included — keeps the application style and its behavior.
+    struct MenuBarIconAndTextProxyStyle : public QProxyStyle {
+      using QProxyStyle::QProxyStyle;
+
+      QSize sizeFromContents(const ContentsType ct,
+                             const QStyleOption *const opt,
+                             const QSize &contentsSize,
+                             const QWidget *const widget) const override {
+        auto s = QProxyStyle::sizeFromContents(ct, opt, contentsSize, widget);
+        if (ct == CT_MenuBarItem) {
+          if (auto *const mi =
+                  qstyleoption_cast<const QStyleOptionMenuItem *>(opt)) {
+            if (!mi->icon.isNull() && !mi->text.isEmpty()) {
+              s.setWidth(s.width() + textWidth(*mi) + icon_text_spacing);
+            }
+          }
+        }
+        return s;
+      }  // end of sizeFromContents
+
+      void drawControl(const ControlElement element,
+                       const QStyleOption *const opt,
+                       QPainter *const p,
+                       const QWidget *const widget) const override {
+        if (element == CE_MenuBarItem) {
+          if (auto *const mi =
+                  qstyleoption_cast<const QStyleOptionMenuItem *>(opt)) {
+            if (!mi->icon.isNull() && !mi->text.isEmpty()) {
+              // the base style draws the background and the selection frame of
+              // an item with no content, which is a no-op for the content it
+              // would have drawn itself (the icon or the text alone)
+              auto item = *mi;
+              item.icon = QIcon();
+              item.text = QString();
+              QProxyStyle::drawControl(element, &item, p, widget);
+              drawIconAndText(*mi, p, widget);
+              return;
+            }
+          }
+        }
+        QProxyStyle::drawControl(element, opt, p, widget);
+      }  // end of drawControl
+
+     private:
+      static constexpr int icon_text_spacing = 4;
+
+      static int textWidth(const QStyleOptionMenuItem &mi) {
+        // measured as QMenuBarPrivate::calcActionRects measures a title
+        return mi.fontMetrics.size(Qt::TextShowMnemonic, mi.text).width();
+      }  // end of textWidth
+
+      void drawIconAndText(const QStyleOptionMenuItem &mi,
+                           QPainter *const p,
+                           const QWidget *const widget) const {
+        const int icon_extent =
+            proxy()->pixelMetric(QStyle::PM_SmallIconSize, &mi, widget);
+        const auto mode =
+            (mi.state & State_Enabled) ? QIcon::Normal : QIcon::Disabled;
+        const auto pix = mi.icon.pixmap(QSize(icon_extent, icon_extent),
+                                        p->device()->devicePixelRatio(), mode);
+        const auto text_w = textWidth(mi);
+        // the icon and the title are drawn as a single group, centered in the
+        // item, as Qt 5 drew the content of a menu bar item
+        const auto total_w = icon_extent + icon_text_spacing + text_w;
+        auto x = mi.rect.left() + (mi.rect.width() - total_w) / 2;
+        proxy()->drawItemPixmap(p,
+                                QRect(x, mi.rect.center().y() - icon_extent / 2,
+                                      icon_extent, icon_extent),
+                                Qt::AlignCenter, pix);
+        x += icon_extent + icon_text_spacing;
+        auto alignment = Qt::AlignLeft | Qt::AlignVCenter |
+                         Qt::TextShowMnemonic | Qt::TextDontClip |
+                         Qt::TextSingleLine;
+        if (!proxy()->styleHint(SH_UnderlineShortcut, &mi, widget)) {
+          alignment |= Qt::TextHideMnemonic;
+        }
+        const auto selected =
+            (mi.state & State_Selected) && (mi.state & State_Sunken);
+        proxy()->drawItemText(
+            p, QRect(x, mi.rect.top(), text_w, mi.rect.height()), alignment,
+            mi.palette, mi.state & State_Enabled, mi.text,
+            selected ? QPalette::HighlightedText : QPalette::ButtonText);
+      }  // end of drawIconAndText
+    };
+  }  // end of anonymous namespace
+
   MainWindow::MainWindow(const QStringList &f, QWidget *const p)
       : QMainWindow(p) {
     auto &s = ShortCutStyle::getShortCutStyle();
     // this->setAttribute(Qt::WA_TranslucentBackground);
     auto *e = new EditorWidget(this);
     this->setCentralWidget(e);
+    // the menu bar is created here, and the style is owned by it afterwards
+    this->menuBar()->setStyle(new MenuBarIconAndTextProxyStyle);
     this->createMainMenu();
     QObject::connect(&s, &ShortCutStyle::shortCutStyleChanged, this,
                      &MainWindow::updateOptionsMenu);

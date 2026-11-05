@@ -16,6 +16,7 @@
 #include "TFEL/System/ExternalLibraryManager.hxx"
 #include "TFEL/GUI/VerboseLevel.hxx"
 #include "TFEL/GUI/BuildInformation.hxx"
+#include "TFEL/GUI/LspCxxSupport.hxx"
 #include "TFEL/GUI/MainWindow.hxx"
 
 static void loadExternalPackages() {
@@ -72,6 +73,12 @@ int main(int argc, char** const argv) {
       files.append(argv[i]);
     } else if (strcmp(argv[i], "--debug") == 0) {
       tfel::gui::setVerboseMode(tfel::gui::VERBOSE_DEBUG);
+    } else if (strncmp(argv[i], "--compile-commands-file=", 24) == 0) {
+      // the compilation database a `clangd` session started without an
+      // explicit one uses; see `LspCxxSupport::searchCompileCommandsFile`
+      // for what happens when this option is absent
+      tfel::gui::LspCxxSupport::setDefaultCompileCommandsFile(
+          QString::fromUtf8(argv[i] + 24));
     }
   }
   // setting the current locale to "C"
