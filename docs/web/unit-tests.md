@@ -26,6 +26,9 @@ What is covered:
 | `test-multi-line-line-edit` | the height of a multi line entry (one fixed height per line, the padding shared between the frame and the document margin, the measurement width) |
 | `test-editor-widget`      | the pages of the minibuffer, the prompt of an entry, the height propagation, `changeFont` |
 | `test-main-window`        | the real application shape: a main window with its menu bar and its central editor |
+| `test-lsp-protocol`       | the shapes of the Language Server Protocol the client reads: framing, positions as UTF-16 code units, file uris, the answers of semantic tokens, document symbols and workspace edits |
+| `test-lsp-client`         | a real `clangd` session: the launch and the handshake, the menu of the `C++` mode, the diagnostics, the jumps, the rename, the signature help, the quick fixes, the compilation database the session is started with |
+| `test-grammar-check`      | a real `harper-ls` session: the settings and the varieties of English, the menus which offer the checker, the lints and the face they are drawn in, what a mode which is gone leaves behind, hunspell taken off a text the checker reads |
 | `test-settings`           | the entries of the configuration: what is declared, what the dialog shows, how it keeps the themes of the major modes apart, what writing it stores and what it applies live, what a packaged mode loaded as a plugin exports |
 
 These encode the invariants fixed by
