@@ -23,6 +23,7 @@
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/PlainTextEdit.hxx"
 #include "TFEL/GUI/SettingsRegistry.hxx"
+#include "TFEL/GUI/LspHarperSupport.hxx"
 #include "TFEL/GUI/ShortCutStyle.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
 
@@ -31,6 +32,7 @@ namespace {
   using tfel::gui::CommandFactory;
   using tfel::gui::ConfigurationDialog;
   using tfel::gui::EditorWidget;
+  using tfel::gui::LspHarperSupport;
   using tfel::gui::SettingsKey;
   using tfel::gui::SettingsRegistry;
   using tfel::gui::ShortCutStyle;
@@ -253,9 +255,45 @@ void TestSettings::theMajorModesExportTheEntriesTheyUse() {
   QVERIFY2(clangd[0].default_value.toBool(),
            "the clangd support is not asked for by default");
   QCOMPARE(clangd[2].type, SettingsKey::STRING_LIST);
+  // the grammar checker is a program of its own, and the C++ mode declares the
+  // three addresses its sessions read: whether a buffer takes one with it, which
+  // program such a session runs, and which English it reads a text as. The
+  // `LaTeX` and `Markdown` modes offer the same two choices under their own
+  // menus and declare nothing of their own: which buffers are checked is one
+  // decision for the whole editor, so the three addresses are shown once
+  QVERIFY2(
+      themes.contains(QStringLiteral("harper")),
+      qPrintable("the theme of the grammar checker is missing. Themes: " +
+                 themes.join(", ")));
+  const auto harper = r.getSettingsKeysOfGroup(QStringLiteral("harper"));
+  QCOMPARE(addressesOf(harper),
+           QStringList() << "harper/launch-by-default" << "harper/executable"
+                        << "harper/dialect");
+  QCOMPARE(harper[0].type, SettingsKey::BOOLEAN);
+  QVERIFY2(!harper[0].default_value.toBool(),
+           "a buffer is asked to start a grammar session on its own");
+  QCOMPARE(harper[1].type, SettingsKey::STRING);
+  // the varieties the checker reads a text as are the names the server reads in
+  // its settings, in the order they are offered, and the first of them is the
+  // default of the server itself. The entry of the dialog and the submenu of a
+  // menu both come from \c LspHarperSupport, which is what a session is answered
+  // with, so the three can not disagree about which varieties there are
+  QCOMPARE(harper[2].type, SettingsKey::CHOICE);
+  QCOMPARE(harper[2].default_value.toString(), QStringLiteral("American"));
+  auto varieties = QStringList{};
+  for (const auto& c : harper[2].choices) {
+    varieties << c.value.toString();
+    QVERIFY2(c.label.startsWith(c.value.toString()),
+             qPrintable("the variety '" + c.value.toString() +
+                        "' is offered under a name which does not name it"));
+  }
+  QCOMPARE(varieties, LspHarperSupport::dialects());
+  QCOMPARE(r.getSettingsKey("harper/dialect")->group,
+           QStringLiteral("harper"));
   // a mode which uses no entry of the configuration has no theme of its own:
-  // the mode `C++` asks `clangd` the four entries above and nothing else, the
-  // grep output is registered in this library and exports nothing
+  // the mode `C++` asks `clangd` the four entries above, the checker the three
+  // of it, and nothing else, the grep output is registered in this library and
+  // exports nothing
   const auto silent = QStringList() << "C++"
                                     << "grep-output"
                                     << "compilation-output";
@@ -267,10 +305,15 @@ void TestSettings::theMajorModesExportTheEntriesTheyUse() {
   // an entry which belongs to a theme of its own is shown there and nowhere
   // else
   QCOMPARE(r.getSettingsKey("clangd/enable")->group, QStringLiteral("clangd"));
-  // and the theme says which mode exported it: a theme named after a program
+  // and a theme says which mode exported it: a theme named after a program
   // would otherwise look like a theme of the editor to the dialog
   for (const auto& g : r.getGroups()) {
-    if (g.name == QStringLiteral("clangd")) {
+    if ((g.name == QStringLiteral("clangd")) ||
+        (g.name == QStringLiteral("harper"))) {
+      // the two themes the C++ mode declares are named after the programs they
+      // are about, and both are read from that mode: what a checker says of a
+      // C++ buffer says nothing of clangd, and the entry of the menu which turns
+      // it on sits in that mode's menu
       QCOMPARE(g.mode, QStringLiteral("C++"));
     } else {
       QVERIFY2(g.mode.isEmpty(), qPrintable("the theme '" + g.name +
