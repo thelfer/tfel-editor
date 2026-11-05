@@ -16,6 +16,8 @@ namespace tfel::gui {
 
   // forward declaration
   struct TextEditBase;
+  // forward declaration
+  struct GrammarCheckSession;
 
   //! \brief major mode for editing Markdown documents
   struct MarkdownMajorMode : public CompiledLanguageMajorModeBase {
@@ -40,6 +42,10 @@ namespace tfel::gui {
      *
      * \note the document is rehighlighted so that the words are underlined
      * in the new language; an unknown language disables the spell checking
+     *
+     * \note while the grammar checker of the buffer runs, the spell checker is
+     * given no language at all: the two underline a word in different colors,
+     * and a buffer is read one way at a time
      */
     void setSpellCheckLanguage(const QString &) override;
 
@@ -53,10 +59,12 @@ namespace tfel::gui {
     void setSyntaxHighlighter(QTextDocument *const) override;
 
     /*!
-     * \return a menu specific to this mode
+     * \return a menu specific to this mode: the grammar checker of the buffer,
+     * and the varieties of English it reads the text as
      *
-     * \note a null pointer: the mode adds no menu of its own to the menu
-     * bar
+     * \note a null pointer when no grammar checker is to be found: the mode
+     * binds its other commands to keys, and an entry which could only report
+     * that the program is missing is no entry
      */
     QMenu *getSpecificMenu() override;
 
@@ -197,6 +205,15 @@ namespace tfel::gui {
      * misspelled words of the document; it is the checker \c getSpellChecker
      * returns and the dictionary of which \c setSpellCheckLanguage sets
      */
+    /*!\brief the grammar checker of this buffer, and the entries of the menu
+     * which steer it
+     *
+     * \note a buffer of Markdown is prose, which is what the checker reads;
+     * while it runs, \c spellChecker is given no language at all: the two say
+     * what is wrong with a word in the same place, in different colors, and the
+     * checker is the one a person asked for
+     */
+    GrammarCheckSession *grammar = nullptr;
     SpellChecker spellChecker;
 
    private:

@@ -11,6 +11,7 @@
 #include <QtCore/QStringListModel>
 #include <QtCore/QTimer>
 #include <QtWidgets/QAbstractItemView>
+#include <QtWidgets/QMenu>
 #include "TFEL/Utilities/CxxTokenizer.hxx"
 #include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/MarkdownSyntaxHighlighter.hxx"
@@ -20,6 +21,8 @@
 #include "TFEL/GUI/Buffer.hxx"
 #include "TFEL/GUI/MajorModeFactory.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
+#include "TFEL/GUI/GrammarCheckSession.hxx"
+#include "TFEL/GUI/LspHarperSupport.hxx"
 #include "TFEL/GUI/MarkdownMajorMode.hxx"
 
 namespace tfel::gui {
@@ -27,7 +30,28 @@ namespace tfel::gui {
   MarkdownMajorMode::MarkdownMajorMode(EditorWidget &w,
                                        Buffer &b,
                                        TextEditBase &t)
-      : CompiledLanguageMajorModeBase(w, b, t) {}  // end of MarkdownMajorMode
+      : CompiledLanguageMajorModeBase(w, b, t) {
+    // a buffer of Markdown is prose, which is what the grammar checker reads;
+    // hunspell is taken off the text while the checker runs, since the two
+    // underline one word in two colors at once
+    this->grammar =
+        new GrammarCheckSession(w, t, QStringLiteral("markdown"), this);
+    QObject::connect(
+        this->grammar, &GrammarCheckSession::stateChanged, this, [this] {
+          // the language of the frame is what the frame was asked to
+          // check with: giving it back to the mode is what puts the
+          // spell checker back on the text when the checker is gone,
+          // and an empty one what takes it off
+          this->setSpellCheckLanguage(this->textEdit.getSpellCheckLanguage());
+        });
+    if (GrammarCheckSession::isAvailable() &&
+        LspHarperSupport::launchByDefault()) {
+      // the session follows the setting: it writes nothing back, and the entry
+      // of the menu says what the buffer does whatever brought the session
+      // about
+      this->grammar->setActive(true, false, false);
+    }
+  }  // end of MarkdownMajorMode
 
   QString MarkdownMajorMode::getName() const {
     return "Markdown";
@@ -38,7 +62,15 @@ namespace tfel::gui {
   }  // end of getDescription
 
   void MarkdownMajorMode::setSpellCheckLanguage(const QString &l) {
-    this->spellChecker.setSpellCheckLanguage(l);
+    // a buffer the grammar checker reads is not read by hunspell at the same
+    // time: the two underline one word in two colors, and the person who turned
+    // the checker on is not asking to read both. The language the frame was
+    // given lives on the frame itself, see
+    // \c TextEditBase::setSpellCheckLanguage, which is where the mode takes it
+    // back from when the checker starts or stops
+    this->spellChecker.setSpellCheckLanguage(
+        ((this->grammar != nullptr) && (this->grammar->isActive())) ? QString()
+                                                                    : l);
     if (!this->highlighter.isNull()) {
       this->highlighter->rehighlight();
     }
@@ -47,15 +79,26 @@ namespace tfel::gui {
   void MarkdownMajorMode::format() {}  // end of format()
 
   QMenu *MarkdownMajorMode::getSpecificMenu() {
-    auto *t = qobject_cast<QWidget *>(this->parent());
+    auto *const t = qobject_cast<QWidget *>(this->parent());
     if (t == nullptr) {
       return nullptr;
     }
-    //     QMenu *m(new QMenu(QObject::tr("Markdown"), t));
-    //     this->rm = new QAction(QObject::tr("Run pandoc"), this);
-    //     m->addAction(this->rm);
-    return nullptr;
-  }  // end of
+    // the menu of the mode is the grammar checker's, and nothing else: what the
+    // mode does otherwise — cutting a paragraph, running pandoc — is bound to
+    // keys, and a menu which would be empty on a machine which has no checker
+    // to launch is a menu nobody should see
+    if (!this->grammar->isAvailable()) {
+      return nullptr;
+    }
+    auto *const m = new QMenu(QObject::tr("Markdown"), t);
+    m->setIcon(this->getIcon());
+    // the note spells what the entry does not: the checker knows no word of
+    // French, and a buffer of French is underlined by hunspell and by nothing
+    // else
+    this->grammar->addToMenu(*m,
+                             QObject::tr("Grammar checking (English only)"));
+    return m;
+  }  // end of getSpecificMenu
 
   QCompleter *MarkdownMajorMode::getCompleter() {
     return nullptr;

@@ -18,6 +18,8 @@ namespace tfel::gui {
   //! forward declaration
   struct TextEditBase;
   //! forward declaration
+  struct GrammarCheckSession;
+  //! forward declaration
   struct ProcessOutputFrame;
   //! forward declaration
   struct LaTeXSyntaxHighlighter;
@@ -347,6 +349,15 @@ namespace tfel::gui {
     //! matches a line which closes an environment, whatever its indentation
     QRegularExpression re2;
 
+    /*!\brief the grammar checker of this buffer, and the entries of the menu
+     * which steer it
+     *
+     * \note the whole text of a LaTeX buffer, but the commands, is English, and
+     * the checker reads that; while it runs, \c spellChecker is given no
+     * language at all: the two say what is wrong with a word in the same place,
+     * in different colors, and the checker is the one a person asked for
+     */
+    GrammarCheckSession *grammar = nullptr;
     /*!
      * \brief the spell checker which underlines the misspelled words of the
      * plain text of the document and proposes the suggestions of the context
