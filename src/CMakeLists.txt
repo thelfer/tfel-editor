@@ -44,6 +44,7 @@ qt_sources(TFEL_EDITOR_SOURCES
   LspTransport
   LspConnection
   LspClient
+  GrammarCheckSession
   DirectoryMajorMode)
 
 if(WebEngine_FOUND AND WebEngineWidgets_FOUND)
@@ -59,6 +60,7 @@ tfel_editor_library(TFELEditor
   SecondaryTaskManager.cxx
   LspProtocol.cxx
   LspCxxSupport.cxx
+  LspHarperSupport.cxx
   Utilities.cxx
   SpellChecker.cxx
   StandardFunctionCommand.cxx

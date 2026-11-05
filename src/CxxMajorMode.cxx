@@ -34,6 +34,8 @@
 #include "TFEL/GUI/TextEditBase.hxx"
 #include "TFEL/GUI/LspClient.hxx"
 #include "TFEL/GUI/LspCxxSupport.hxx"
+#include "TFEL/GUI/LspHarperSupport.hxx"
+#include "TFEL/GUI/GrammarCheckSession.hxx"
 #include "TFEL/GUI/MajorModeFactory.hxx"
 #include "TFEL/GUI/CxxSyntaxHighlighter.hxx"
 #include "TFEL/GUI/CxxMajorMode.hxx"
@@ -72,6 +74,21 @@ namespace tfel::gui {
           return QStringLiteral("hint");
       }
     }  // end of diagnosticLabel()
+
+    // the varieties of English the grammar checker is asked to read a text as,
+    // spelled as the entries of the configuration want them: the value stored
+    // is the name the server reads in its settings, the label the one a person
+    // chooses under. Both come from \c LspHarperSupport, which is what the
+    // client answers and what the submenus of the modes show, so the three
+    // cannot disagree about which varieties there are
+    QVector<SettingsKey::Choice> dialectChoices() {
+      auto choices = QVector<SettingsKey::Choice>();
+      for (const auto &name : LspHarperSupport::dialects()) {
+        choices << SettingsKey::Choice(name,
+                                       LspHarperSupport::dialectLabel(name));
+      }
+      return choices;
+    }  // end of dialectChoices()
 
     // the face a run of text the server says what it is is drawn with: a
     // restrained set, which colors what a regular expression can not tell
@@ -569,8 +586,10 @@ namespace tfel::gui {
   // report through the minibuffer what became of it
   void stopClangd(EditorWidget &editor) {
     // `findChild` and not `LspClient::get`: asking for the client of an editor
-    // which never launched one would build it, which is nothing a stop wants
-    auto *const client = editor.findChild<LspClient *>();
+    // which never launched one would build it, which is nothing a stop wants.
+    // And by name: the editor widget holds the clients of the grammar checkers
+    // too, and one of those is not a session of clangd to stop
+    auto *const client = editor.findChild<LspClient *>(QLatin1String("clangd"));
     if ((client == nullptr) || (!client->stop())) {
       editor.displayInformativeMessage(
           QStringLiteral("clangd is not launched"));
@@ -581,6 +600,18 @@ namespace tfel::gui {
 
   CxxMajorMode::CxxMajorMode(EditorWidget &w, Buffer &b, TextEditBase &t)
       : CMajorModeBase(w, b, t) {
+    // what the comments of a C++ file say in English is a question of grammar
+    // and none of `clangd`'s: the session of the checker therefore stands on
+    // this side of the gate below, and a buffer whose C++ support is off is
+    // checked like any other buffer of the editor
+    this->grammar = new GrammarCheckSession(w, t, QStringLiteral("cpp"), this);
+    if (GrammarCheckSession::isAvailable() &&
+        LspHarperSupport::launchByDefault()) {
+      // the session follows the setting, which is what the entry of the menu
+      // already says by being checked: it announces nothing, and it writes
+      // nothing back — the setting is what it is
+      this->grammar->setActive(true, false, false);
+    }
     if (!LspCxxSupport::isEnabled()) {
       return;
     }
@@ -713,6 +744,14 @@ namespace tfel::gui {
         this->clearSemanticTokens();
       }
     });
+    // the grammar checker is a program of its own, and the entries which steer
+    // it are none of `clangd`'s business; they are in this menu because this is
+    // the mode which holds the setting to launch it by default, and they are
+    // offered only when the program is there to be launched
+    if (this->grammar->isAvailable()) {
+      m->addSeparator();
+      this->grammar->addToMenu(*m, QObject::tr("Grammar checking"));
+    }
     m->addSeparator();
     auto *const sc = m->addAction(QObject::tr("Stop clangd"));
     sc->setToolTip(
@@ -2029,10 +2068,55 @@ namespace tfel::gui {
                            "`C/C++` menu writes this same address, and "
                            "the buffer on screen follows it at once"),
                true);
+    // the grammar checker is a program of its own, and the C++ mode is the one
+    // which holds the setting to launch it by default; the theme is named after
+    // the program, as the theme above is, and the `LaTeX` and `Markdown` modes
+    // offer the same two choices under their own menus, since a checker is one
+    // decision for the whole editor and not one per mode
+    auto harper = SettingsGroup{};
+    harper.name = QStringLiteral("harper");
+    harper.description = QObject::tr(
+        "The English grammar checker the buffers of the editor can be read "
+        "with: what it reads is underlined, and the entry of a menu which "
+        "names it turns it on and off. The checker knows no word of French, "
+        "and it reads a C++ file as prose, which is to say its comments");
+    harper.keys =
+        QVector<SettingsKey>()
+        << SettingsKey::boolean(
+               "harper/launch-by-default",
+               QObject::tr("Launch the grammar checker by default"),
+               QObject::tr("When this is on, a buffer takes a grammar session "
+                           "with it as it is opened, and underlines what the "
+                           "checker finds: a wrong agreement, an article which "
+                           "does not fit the word it introduces, a spelling of "
+                           "another variety of English. The buffers already "
+                           "open keep what they were built with, and the "
+                           "`Grammar checking` entry of a menu writes this "
+                           "same address. While a buffer is checked, the spell "
+                           "checker of hunspell is taken off it: the two say "
+                           "what is wrong with a word in the same place"),
+               false)
+        << SettingsKey::text(
+               "harper/executable",
+               QObject::tr("Program of the grammar checker"),
+               QObject::tr("The `harper-ls` to start. Left empty, the editor "
+                           "looks for `harper-ls` in the directories of the "
+                           "session; when there is none, no menu offers a "
+                           "grammar session at all"))
+        << SettingsKey::choice(
+               "harper/dialect", QObject::tr("Variety of English to read as"),
+               QObject::tr("Which English the text is read as: which spellings "
+                           "are held to be their own — `colour` and `color` do "
+                           "not both fit one variety — and which inflections "
+                           "are accepted. The `English variant` submenu of a "
+                           "menu writes this same address, and a session which "
+                           "runs reads its buffers again under the new "
+                           "answer"),
+               dialectChoices(), QStringLiteral("American"));
     // nothing else: what the mode remembers of the commands it was asked to run
     // is a history, and a history is not an entry of the configuration, see
     // `CoreSettings.cxx`
-    return QVector<SettingsGroup>() << clangd;
+    return QVector<SettingsGroup>() << clangd << harper;
   }  // end of CxxMajorMode::declareSettings
 
   static StandardFunctionCommandProxy<launchClangd> launchClangdProxy(

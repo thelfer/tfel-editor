@@ -55,6 +55,20 @@ Gotchas, all verified:
   list in `cmake/modules/common-compiler-flags.cmake`) but there is
   **no `-Werror`**; a successful build is not the same as a warning-free one,
   and the existing tree already emits many warnings.
+- **A sanitizer which reaches only the test executable proves nothing.**
+  `compiler.cmake` sets `CMAKE_CXX_FLAGS` from `${COMPILER_WARNINGS} $ENV{CXXFLAGS}`
+  when `-DUSE_EXTERNAL_COMPILER_FLAGS=ON` is given and from its own lists otherwise, so
+  a `-DCMAKE_CXX_FLAGS=-fsanitize=address` on the command line is **discarded**: the
+  "ASAN" library is an ordinary build and only the test executable links `libasan`,
+  which makes every clean run worthless. What instruments the library is
+  `export CXXFLAGS="-fsanitize=address -g -O1 -fno-omit-frame-pointer"` with that option
+  on, and what verifies it is
+  `grep -m1 CXX_FLAGS src/CMakeFiles/TFELEditor.dir/flags.make | grep fsanitize`, before
+  believing a report. (What this cost: an intermittent `malloc(): unsorted double linked
+  list corrupted` in `test-grammar-check`, read as a use-after-free in the session
+  teardown; a genuinely instrumented tree named it on the first run as a dangling
+  `QStringList() << a << b` temporary in the test's own range-`for`, which is a
+  use-after-scope ASAN reports by name.)
 - Useful options: `-Denable-tfel-plot=ON` (adds the `tplot` package, needs
   `tfel-plot`), `-Denable-developer-warnings=ON`, `-DUSE_EXTERNAL_COMPILER_FLAGS=ON`
   (for conda-style builds).
@@ -760,9 +774,12 @@ taken, so such a field shows a stale list and is overwritten by the next prompt 
 its own account. A test asserts those addresses are not declared
 (`theRegistryDeclaresTheEntriesOfTheEditor`), which is what keeps the next person
 from putting them back. The themes that remain are `General` and `Spell checking`
-from the core, `clangd` from the C++ mode and `castem` from the Cast3M mode; no
-other packaged mode exports anything today, because the only entry of the
-configuration those modes read is a history.
+from the core, `clangd` and `harper` from the C++ mode and `castem` from the
+Cast3M mode; no other packaged mode exports anything today, because the only entry
+of the configuration those modes read is a history. The `harper` theme is declared
+by `CxxMajorMode::declareSettings` as the `clangd` theme is, which is why the
+grammar entries reach `MTest` and `PipeTest` too, and why the theme is attributed to
+the `C++` mode in the dialog although it is named after a program.
 
 How a mode exports its entries, since that is the part another mode has to imitate:
 
@@ -940,6 +957,86 @@ on its own side of the titles, a title changes no page, a caption names the mode
 only mode pages have one), and `theDialogShowsWhatIsDeclared` reads the themes as the
 **selectable** rows — `getGroupsNames()` and `pages->count()` both disagree with
 `themes->count()` now.
+
+### The grammar checker is a language server of its own (`harper-ls`)
+
+`harper-ls` checks the **English prose** of a buffer — the comments of a source
+file, the whole of a `LaTeX` or `Markdown` text. `LspClient` is no longer the clangd
+client: it gained `setServerName`/`setLanguageId`/`setConfiguration`/`setFullTextSync`
+and `launch(program, args, error)`, and **`get()` and `CxxMajorMode::stopClangd` look
+clangd's client up by `objectName() == "clangd"`** because a `C++` buffer now holds
+two clients at once. `LspHarperSupport` (static: settings, discovery, the
+`workspace/configuration` answer) and `GrammarCheckSession` (per mode instance, owns a
+child `LspClient` named "harper-ls", draws the lints) are core classes; the three
+hosting modes each keep one member.
+
+The menu of the feature is `GrammarCheckSession::addToMenu(menu, toggle)`: a checkable
+entry plus the `English variant` submenu. The toggle writes the **one global setting**
+(`harper/launch-by-default`), which is why a buffer opened afterwards follows it; the
+ctor's auto-launch passes `remembered = false, announced = false`. `LaTeX` and
+`Markdown` name their entry `Grammar checking (English only)` — a person choosing it
+must know the checker knows no word of French.
+
+Hunspell exclusion is the modes' business, not the session's: `setSpellCheckLanguage(l)`
+hands `SpellChecker` an **empty** language while `grammar->isActive()`, and the
+session's `stateChanged` re-applies `textEdit.getSpellCheckLanguage()`. The frame never
+loses its dictionary; only the mode's use of it is suspended. `CxxMajorMode` needs no
+such rule: it runs no spell checker.
+
+Protocol facts, all read off `harper-ls` 3.0.0 (`/tmp/opencode/harper/probe8.py` drives
+it by hand, which is how each of these was found):
+
+- started with `--stdio`; answers only `capabilities` and `serverInfo` — **no
+  `textDocumentSync`**, hence `setFullTextSync(true)`: whole text on every change.
+- asks `workspace/configuration`; the answer must be `{"harper-ls": {"dialect": …}}`
+  (a `QJsonObject` without that key is refused by the server), and it asks again before
+  every analysis, so the dialect is not frozen at the handshake.
+- every lint answers severity **Hint (4)**: one face for all of them is the honest
+  drawing. Codes seen: `AnA`, `SpellCheck`, `InflectedVerbAfterTo`,
+  `PronounVerbAgreement`.
+- `American` flags `an tests`, `to eats`, `don't` and `colour`; `British` the first
+  three only — which is what `aVarietyOfEnglishChangesWhatIsFound` asserts with.
+- **`publishDiagnostics` arrives in pieces**: an early answer is not the last word, and
+  a test which reads the screen of the first answer asserts on a state the checker had
+  not reached. `TestGrammarCheck::settledWords` samples the words until they stop
+  changing (3 × 100 ms), which is what the negative assertions ("a clean word is left
+  alone") lean on.
+
+Three traps, all paid for:
+
+- **`~GrammarCheckSession` must hand the `"harper"` key an EMPTY list**
+  (`text_edit->setExtraSelections("harper", {})`), never `applyDiagnostics()`: the
+  client is a *child* of the session, so it is still alive in the destructor body and
+  still holds the answer it published — redrawing republishes a dead session's
+  underlines on the text edit the next mode inherits. Verified by reverting the line:
+  `stoppingTheModeTakesTheUnderlinesAway` fails.
+- A `Q_OBJECT` struct needs an explicit `public:` **after the macro**: `Q_OBJECT` opens a
+  section of its own and leaves the access at `private`, so the members which follow it
+  are private whatever the keyword which introduced the class. A minimal case, verified:
+  `struct A : QObject { Q_OBJECT A(int) {} };` fails with
+  `'A::A(int)' is private within this context`, raised inside the generated `.moc` — some
+  way from anything which looks like the cause.
+- A test which aims the mouse at an underlined run to get its tooltip must aim at the
+  **middle position** of the run, not at `cursorRect(selection_cursor)`: the rectangle of
+  a cursor which holds a selection is the whole run and its right edge is the character
+  the lint stops *before*, so `rect.x() + 3` of such a rectangle can be a clean spot and
+  the filter answers nothing. The tip itself is the message and the rule in brackets —
+  `Did you mean to spell `colour` this way? [SpellCheck]` — which is what
+  `theLintsOfABufferStandUnderTheWordsTheyAreAbout` asserts on.
+
+Three levels of evidence, and the third one is what says a face is *inked*: the tests
+read the keyed selections (`TextEditBase::extraSelections()`), and
+`/tmp/opencode/harper/pixel.cxx` counts the pixels of the lint color in a real window —
+372 → 510 on `DISPLAY=:99`, 239 → 368 offscreen, back to the exact baseline when the
+session is stopped. A lint's red is `QColor(200, 0, 0)`, chosen because clangd's error
+red is `(170, 0, 0)` and the two can sit beside each other on one buffer.
+
+Finally, the case which loads the `Markdown` plugin must stay **last** in the list of
+slots: loading registers the mode for the rest of the run (`TestSettings` carries the
+same rule for `castem`), and `underlinedWords` is what a text mode's lints look like to
+a test — the `Markdown` mode's `completeContextMenu` returns early, so the hunspell
+exclusion is asserted on the `LaTeX` mode, the one packaged text mode whose context
+menu asks the spell checker anything.
 
 ## Architecture
 

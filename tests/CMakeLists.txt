@@ -54,7 +54,26 @@ add_tfel_editor_test(test-editor-widget TestEditorWidget.cxx)
 add_tfel_editor_test(test-main-window TestMainWindow.cxx)
 add_tfel_editor_test(test-lsp-protocol TestLspProtocol.cxx)
 add_tfel_editor_test(test-lsp-client TestLspClient.cxx)
+add_tfel_editor_test(test-grammar-check TestGrammarCheck.cxx)
 add_tfel_editor_test(test-settings TestSettings.cxx)
+
+# The grammar checker is a program of its own, and the cases which ask it anything
+# are skipped when it is not installed. The library of the `LaTeX` mode is needed
+# by the last cases, which load those modes as plugins: the context menu of a text
+# mode is the one public face of hunspell a test can see, and the packaged modes
+# are what the editor loads, not what it links
+add_dependencies(test-grammar-check TFELEditorLaTeXMode)
+target_compile_definitions(
+  test-grammar-check PRIVATE
+  TFEL_EDITOR_LATEX_MODE="$<TARGET_FILE:TFELEditorLaTeXMode>")
+
+# The very last case looks at the menu of the `Markdown` mode, the other text mode
+# which was asked to offer the checker. Loading it registers the mode for the rest
+# of the run, which is why no case may follow it.
+add_dependencies(test-grammar-check TFELEditorMarkdownMode)
+target_compile_definitions(
+  test-grammar-check PRIVATE
+  TFEL_EDITOR_MARKDOWN_MODE="$<TARGET_FILE:TFELEditorMarkdownMode>")
 
 # One case of `test-settings` loads a packaged major mode as the editor does, as
 # a plugin, and asks the registry what that mode declared: the case needs the

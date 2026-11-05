@@ -141,7 +141,25 @@ it is off; the program and its arguments are read when a session is
 launched. The `Color identifiers` entry of the `C/C++` menu writes the same
 address as `clangd/semantic-tokens`.
 
-Those two are the themes the major modes export. A mode which uses no entry
+## harper
+
+| Entry                        | Widgets           | Takes effect                        |
+|------------------------------|-------------------|-------------------------------------|
+| `harper/launch-by-default`   | a check box       | a new buffer                        |
+| `harper/executable`          | a one line edit   | the next session                    |
+| `harper/dialect`             | a choice          | the buffers as they are read again  |
+
+What the grammar checker is asked, and what it is asked with: see
+[the grammar checking page](grammar-checking.html). The `Grammar checking`
+entry of a menu writes the same address as `harper/launch-by-default`, and
+the `English variant` submenu the same address as `harper/dialect`, so the
+dialog and the menus are two hands on two addresses, not four settings. The
+theme is named after the program the editor starts, as the `clangd` and
+`castem` themes are: it is shown whether or not a `harper-ls` is installed,
+since an entry which is read by the editor is an entry whatever the machine
+holds — only the menus disappear when there is no program to launch.
+
+Those three are the themes the major modes export. A mode which uses no entry
 of the configuration is not part of the dialog, which is the case of every
 other mode of the editor: the only thing they read from the configuration
 file is the history of the command their prompt proposes, and a history is

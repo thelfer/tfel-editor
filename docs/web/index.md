@@ -19,6 +19,11 @@ the amazing abilities of the [`Qt` library](https://www.qt.io/).
   go to definition and the hover provided by a
   [`clangd`](https://clangd.llvm.org) language server. See [the
   `clangd` support page](clangd-support.html) for details.
+- Checking the English prose of a buffer — the comments of a source file,
+  a `LaTeX` document, a `Markdown` note — with the
+  [`harper`](https://writewithharper.com) grammar checker, which is what
+  the underlines of a wrong agreement or of a foreign spelling come from.
+  See [the grammar checking page](grammar-checking.html) for details.
 - etc.
 
 The configuration of the editor, which is gathered by themes and can be

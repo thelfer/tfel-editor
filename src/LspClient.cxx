@@ -17,6 +17,10 @@ namespace tfel::gui {
         transport(new LspTransport(this)),
         connection(new LspConnection(*transport, this)),
         state(State::Idle) {
+    // the name of the server this client speaks with is its object name: an
+    // editor widget can hold a client of `clangd` and clients of the grammar
+    // checkers at once, and each kind is looked up by its own name
+    this->setObjectName(server_name);
     QObject::connect(connection, &LspConnection::notification, this,
                      &LspClient::handleNotification);
     QObject::connect(connection, &LspConnection::stopped, this, [this] {
@@ -27,7 +31,7 @@ namespace tfel::gui {
       if (!ending_session) {
         state = State::Dead;
         if (was_ready) {
-          showInformativeMessage(QStringLiteral("clangd exited"));
+          showInformativeMessage(QStringLiteral("%1 exited").arg(server_name));
         }
       }
       emit stopped();
@@ -59,11 +63,63 @@ namespace tfel::gui {
   }  // end of endSession
 
   LspClient &LspClient::get(EditorWidget &w) {
-    if (auto *const c = w.findChild<LspClient *>()) {
+    // by name, not just by type: the clients of the grammar checkers are
+    // children of the same widget tree, and one of them is no answer to a call
+    // which asks for `clangd`
+    if (auto *const c = w.findChild<LspClient *>(QLatin1String("clangd"))) {
       return *c;
     }
     return *(new LspClient(&w, &w));
   }  // end of LspClient::get
+
+  void LspClient::setServerName(const QString &name) {
+    this->server_name = name;
+    this->setObjectName(name);
+  }  // end of setServerName
+
+  void LspClient::setLanguageId(const QString &id) {
+    this->language_id = id;
+  }  // end of setLanguageId
+
+  void LspClient::setConfiguration(const QJsonValue &settings) {
+    this->configuration = settings;
+    this->connection->setConfigurationAnswer(settings);
+  }  // end of setConfiguration
+
+  void LspClient::setFullTextSync(const bool on) {
+    this->full_text_sync = on;
+  }  // end of setFullTextSync
+
+  void LspClient::recheckDocuments() {
+    if (!this->isReady()) {
+      // nothing to tell yet: the settings are read at the handshake of a
+      // session which asks for them, so a launch after `setConfiguration`
+      // needs no recheck at all
+      return;
+    }
+    // the settings live on the server side of a session too: a server which
+    // reads them at the handshake alone, and not on every analysis, is to be
+    // told that they changed
+    this->connection->notify(QStringLiteral("workspace/didChangeConfiguration"),
+                             QJsonObject{{"settings", this->configuration}});
+    // and the documents have to be read again under the new settings: nothing
+    // of theirs changed by itself, so no change of them would ever come
+    for (auto it = documents.begin(); it != documents.end(); ++it) {
+      if ((it->version == 0) || (it->doc == nullptr)) {
+        continue;
+      }
+      ++(it->version);
+      this->connection->notify(
+          QStringLiteral("textDocument/didChange"),
+          QJsonObject{{"textDocument",
+                       QJsonObject{{"uri", LspProtocol::uriOf(it.key())},
+                                   {"version", it->version}}},
+                      {"contentChanges",
+                       QJsonArray{QJsonObject{
+                           {"text", LspProtocol::textOf(*it->doc)}}}}});
+      it->text = LspProtocol::textOf(*it->doc);
+    }
+  }  // end of recheckDocuments
 
   bool LspClient::isReady() const {
     return state == State::Ready;
@@ -74,6 +130,21 @@ namespace tfel::gui {
   }  // end of isIdle
 
   bool LspClient::launch(const QStringList &extra_arguments, QString &error) {
+    const auto program = LspCxxSupport::serverExecutable();
+    if (program.isEmpty()) {
+      error = QStringLiteral(
+          "clangd was not found: install it or set the 'clangd/executable' "
+          "option");
+      return false;
+    }
+    auto arguments = LspCxxSupport::serverArguments();
+    arguments += extra_arguments;
+    return this->launch(program, arguments, error);
+  }  // end of launch
+
+  bool LspClient::launch(const QString &program,
+                         const QStringList &arguments,
+                         QString &error) {
     // the options of a session, the compilation database above all, are fixed
     // when the server starts, so a session which is running is dismissed and
     // replaced rather than asked to change its mind
@@ -87,15 +158,6 @@ namespace tfel::gui {
     }
     this->clearDiagnostics();
     state = State::Idle;
-    const auto program = LspCxxSupport::serverExecutable();
-    if (program.isEmpty()) {
-      error = QStringLiteral(
-          "clangd was not found: install it or set the 'clangd/executable' "
-          "option");
-      return false;
-    }
-    auto arguments = LspCxxSupport::serverArguments();
-    arguments += extra_arguments;
     if (!transport->start(program, arguments)) {
       error = QStringLiteral("'%1' could not be started").arg(program);
       return false;
@@ -203,6 +265,12 @@ namespace tfel::gui {
     const auto params = QJsonObject{
         {"capabilities",
          QJsonObject{{"textDocument", text_document},
+                     // a server which keeps its settings on the client side —
+                     // `harper-ls`, whose dialect is such a setting, asks them
+                     // of the client at the handshake and sometimes on every
+                     // analysis; the answer is what `setConfiguration` set,
+                     // and null for a server which is asked none
+                     {"workspace", QJsonObject{{"configuration", true}}},
                      {"window", QJsonObject{{"workDoneProgress", false}}}}},
         {"clientInfo", QJsonObject{{"name", QStringLiteral("tfel-editor")},
                                    {"version", QStringLiteral("1.1.0-dev")}}},
@@ -247,16 +315,28 @@ namespace tfel::gui {
                                          const QString &error_message) {
     if (!error_message.isEmpty()) {
       state = State::Dead;
-      showInformativeMessage(QStringLiteral("clangd refused to initialize: %1")
+      showInformativeMessage(QStringLiteral("%1 refused to initialize: %2")
+                                 .arg(server_name)
                                  .arg(error_message));
       return;
+    }
+    const auto capabilities =
+        result.toObject().value("capabilities").toObject();
+    // how the server wants its documents: a server which reads the text it is
+    // given as the text of the document (`change: 1`) can be sent nothing
+    // else, since the range of a change means nothing to it. A server which
+    // says nothing, as `harper-ls` does, is left to whoever set the client up
+    const auto sync_value = capabilities.value("textDocumentSync");
+    const auto sync = sync_value.toObject();
+    const auto change = (sync_value.isDouble() ? sync_value.toInt()
+                                               : sync.value("change").toInt(1));
+    if (change == 1) {
+      this->full_text_sync = true;
     }
     // what the server says a call is typed around: the mode asks its
     // signature question on those characters, and only on those, since a
     // server which lists `{` means it and would otherwise be asked on every
     // brace of every body
-    const auto capabilities =
-        result.toObject().value("capabilities").toObject();
     auto triggers = QVector<QChar>();
     const auto provider =
         capabilities.value("signatureHelpProvider").toObject();
@@ -330,7 +410,7 @@ namespace tfel::gui {
       if (isReady()) {
         auto opened = QJsonObject{
             {"textDocument", QJsonObject{{"uri", LspProtocol::uriOf(file)},
-                                         {"languageId", QStringLiteral("cpp")},
+                                         {"languageId", language_id},
                                          {"version", 1},
                                          {"text", st.text}}}};
         connection->notify(QStringLiteral("textDocument/didOpen"), opened);
@@ -388,7 +468,9 @@ namespace tfel::gui {
       it->text = text;
       return;
     }
-    const auto change = LspProtocol::diffAgainst(it->text, text);
+    const auto change = full_text_sync
+                            ? std::optional<LspProtocol::Change>()
+                            : LspProtocol::diffAgainst(it->text, text);
     ++(it->version);
     if (change) {
       connection->notify(
@@ -420,7 +502,7 @@ namespace tfel::gui {
           QStringLiteral("textDocument/didOpen"),
           QJsonObject{{"textDocument",
                        QJsonObject{{"uri", LspProtocol::uriOf(it.key())},
-                                   {"languageId", QStringLiteral("cpp")},
+                                   {"languageId", language_id},
                                    {"version", 1},
                                    {"text", it->text}}}});
       it->version = 1;
@@ -508,7 +590,7 @@ namespace tfel::gui {
     syncDocument(file);
     if (!isReady() || (!documents.contains(file))) {
       reply(QMap<QString, QVector<LspTextEdit>>(),
-            QStringLiteral("clangd is not answering"));
+            QStringLiteral("%1 is not answering").arg(server_name));
       return;
     }
     connection->request(
@@ -835,6 +917,12 @@ namespace tfel::gui {
       diagnostic.severity = d.value("severity").toInt(1);
       diagnostic.message = d.value("message").toString();
       diagnostic.source = d.value("source").toString();
+      // the rule a checker names its finding by, which is what a person looks
+      // up when they disagree with it; the protocol allows a number, and a
+      // number is spelled as the string of it
+      const auto code = d.value("code");
+      diagnostic.code =
+          code.isDouble() ? QString::number(code.toInt()) : code.toString();
       const auto range = d.value("range").toObject();
       const auto start = range.value("start").toObject();
       const auto end = range.value("end").toObject();

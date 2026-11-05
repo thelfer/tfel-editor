@@ -31,6 +31,8 @@ namespace tfel::gui {
   // forward declaration
   struct LspClient;
   // forward declaration
+  struct GrammarCheckSession;
+  // forward declaration
   struct LspLocation;
 
   /*!
@@ -418,6 +420,15 @@ namespace tfel::gui {
     void jumpTo(const LspLocation &);
     //! ask the server what the symbol under the cursor is
     void showHover();
+    /*!\brief the grammar checker of this buffer, and the entries of the menu
+     * which steer it
+     *
+     * \note built before the gate on `clangd/enable`: what the comments of a C++
+     * file say in English is a question of grammar and none of that server's
+     * business, so a buffer whose C++ support is off is checked like any other
+     * buffer of the editor
+     */
+    GrammarCheckSession *grammar = nullptr;
     //! the client of the editor widget, null when `clangd/enable` is false
     QPointer<LspClient> client;
     //! the file name the server knows this buffer by, empty if none

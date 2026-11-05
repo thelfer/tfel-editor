@@ -34,6 +34,8 @@
 #include "TFEL/GUI/LineEdit.hxx"
 #include "TFEL/GUI/LspClient.hxx"
 #include "TFEL/GUI/LspCxxSupport.hxx"
+#include "TFEL/GUI/LspHarperSupport.hxx"
+#include "TFEL/GUI/GrammarCheckSession.hxx"
 #include "TFEL/GUI/LspProtocol.hxx"
 #include "TFEL/GUI/MajorMode.hxx"
 #include "TFEL/GUI/PlainTextEdit.hxx"
@@ -544,23 +546,76 @@ void TestLspClient::testModeMenu() {
   auto *const menu = cxxMenu(*editor);
   QVERIFY(menu != nullptr);
   const auto actions = menu->actions();
-  // the two launch entries, a separator, the overview of the file, the entry
-  // which keeps the colors of the identifiers, a separator, and the entry which
-  // ends the session
-  QCOMPARE(static_cast<int>(actions.size()), 7);
+  // the entries of the menu are looked for by what they say, not by the place
+  // they sit on: the grammar checker adds its two entries and the separator
+  // which keeps them apart from `Stop clangd` where the program is installed,
+  // and nothing where it is not, and the entries of the session have no reason
+  // to move because of it
+  auto indexOf = [&actions](const QString &text) {
+    for (auto k = 0; k != actions.size(); ++k) {
+      if (actions.at(k)->text().contains(text)) {
+        return k;
+      }
+    }
+    return -1;
+  };
+  // the two launch entries, the overview of the file, the entry which keeps the
+  // colors of the identifiers, and the entry which ends the session
   QVERIFY(actions.at(0)->text().contains(QStringLiteral("Launch clangd")));
   QVERIFY(
       actions.at(1)->text().contains(QStringLiteral("compile_commands.json")));
-  QVERIFY(actions.at(2)->isSeparator());
-  QVERIFY(actions.at(3)->text().contains(QStringLiteral("Go to symbol")));
+  const auto symbols = indexOf(QStringLiteral("Go to symbol"));
+  const auto colors = indexOf(QStringLiteral("Color identifiers"));
+  const auto stop = indexOf(QStringLiteral("Stop clangd"));
+  QVERIFY2(symbols > 1, "the menu offers no overview of the file");
+  QVERIFY2(colors > symbols, "the menu offers no entry for the identifiers");
+  QVERIFY2(stop > colors, "the menu offers no way to end the session");
   // the colors are the one thing the server says about the text which is
   // nobody's answer to a question, so the entry which says whether to hear it
   // is checkable
-  QVERIFY(actions.at(4)->text().contains(QStringLiteral("Color identifiers")));
-  QVERIFY(actions.at(4)->isCheckable());
-  QVERIFY2(actions.at(4)->isChecked(), "the colors are off by default");
-  QVERIFY(actions.at(5)->isSeparator());
-  QVERIFY(actions.at(6)->text().contains(QStringLiteral("Stop clangd")));
+  QVERIFY(actions.at(colors)->isCheckable());
+  QVERIFY2(actions.at(colors)->isChecked(), "the colors are off by default");
+  // and the checker, where it is there to be launched, is the block between the
+  // entry which colors the identifiers and the one which ends the session: it is
+  // a program of its own, and the two entries which steer it are none of
+  // clangd's business
+  const auto grammar = indexOf(QStringLiteral("Grammar checking"));
+  const auto variants = indexOf(QStringLiteral("English variant"));
+  if (tfel::gui::GrammarCheckSession::isAvailable()) {
+    QVERIFY2(grammar > colors, "the menu offers no grammar checking");
+    QVERIFY2(actions.at(grammar)->isCheckable(),
+             "the entry which turns the checker off is not checkable");
+    QVERIFY2(!actions.at(grammar)->isChecked(),
+             "a buffer takes a grammar session on its own");
+    QVERIFY2(variants > grammar, "the menu names no varieties of English");
+    QVERIFY(actions.at(variants)->menu() != nullptr);
+    auto names = QStringList{};
+    for (const auto *const a : actions.at(variants)->menu()->actions()) {
+      names << a->text();
+    }
+    auto expected = QStringList{};
+    for (const auto &name : tfel::gui::LspHarperSupport::dialects()) {
+      expected << tfel::gui::LspHarperSupport::dialectLabel(name);
+    }
+    // the five varieties, in the order the checker's own settings name them, and
+    // the one it reads a text by is the one which is ticked
+    QCOMPARE(names, expected);
+    auto *const variant_menu = actions.at(variants)->menu();
+    auto checked = QStringList{};
+    for (const auto *const a : variant_menu->actions()) {
+      if (a->isChecked()) {
+        checked << a->text();
+      }
+      QVERIFY2(a->isCheckable(),
+               qPrintable("the entry '" + a->text() + "' names no state"));
+    }
+    QCOMPARE(checked,
+             QStringList() << tfel::gui::LspHarperSupport::dialectLabel(
+                 tfel::gui::LspHarperSupport::dialect()));
+  } else {
+    QVERIFY2(grammar < 0,
+             "the menu offers a grammar checker where there is none to launch");
+  }
   // the plain entry launches at once, with no question asked first
   actions.at(0)->trigger();
   QVERIFY(!editor->hasUserInput());
@@ -601,12 +656,12 @@ void TestLspClient::testModeMenu() {
   QVERIFY2(lsp.waitUntilReady(30000),
            "the answer of 'launch-clangd-with-compile-commands' launched no "
            "session");
-  // the last entry ends the session: the client goes back to the state of a
-  // session which was never launched
-  actions.at(6)->trigger();
+  // the entry which ends the session ends it: the client goes back to the state
+  // of a session which was never launched
+  actions.at(stop)->trigger();
   QVERIFY2(lsp.isIdle(), "'Stop clangd' left a running session");
   // stopping again asks nothing of a server which is gone, and says so
-  actions.at(6)->trigger();
+  actions.at(stop)->trigger();
   QVERIFY(lsp.isIdle());
   // the `stop-clangd` command ends a session which is running: the entry and
   // the command are two doors to one function, and a command which was never
