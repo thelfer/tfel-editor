@@ -13,6 +13,7 @@ qt_sources(TFEL_EDITOR_SOURCES
   "${PROJECT_SOURCE_DIR}/include/TFEL/GUI"
   EditorWidget
   MainWindow
+  ConfigurationDialog
   LineEdit
   MultiLineLineEdit
   FileDownloader
@@ -69,6 +70,9 @@ tfel_editor_library(TFELEditor
   TextEditQueryReplace.cxx
   TextEditReplaceFilter.cxx
   MajorModeFactory.cxx
+  SettingsKey.cxx
+  SettingsRegistry.cxx
+  CoreSettings.cxx
   GrepOutputMajorMode.cxx
   CompilationOutputMajorMode.cxx
   ${Resources_RCC}

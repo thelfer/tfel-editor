@@ -1977,6 +1977,64 @@ namespace tfel::gui {
     }
   }  // end of ~CxxMajorMode
 
+  QVector<SettingsGroup> CxxMajorMode::declareSettings() {
+    // the four addresses `LspCxxSupport` reads are gathered in a theme of their
+    // own, named after the program they are about: they are what a person looks
+    // for when the C/C++ support does not do what they expect, and a theme
+    // named `clangd` says it without spelling the mode out. An entry which
+    // names no theme belongs to the theme it is declared in, so none of them
+    // has to say it twice
+    auto clangd = SettingsGroup{};
+    clangd.name = QStringLiteral("clangd");
+    clangd.description = QObject::tr(
+        "What the C++ mode asks the language server, and what it "
+        "asks it with. A session reads the program, its arguments "
+        "and the compilation database when it is launched: what "
+        "changes here reaches the next `Launch clangd`");
+    clangd.keys =
+        QVector<SettingsKey>()
+        << SettingsKey::boolean(
+               "clangd/enable", QObject::tr("Ask clangd anything"),
+               QObject::tr("When this is off, the C++ mode highlights and "
+                           "indents its files and asks nothing to anyone: "
+                           "no diagnostics, no completion, no jump to a "
+                           "definition. The modes which are already "
+                           "attached to a buffer were built with this "
+                           "answer, and `Launch clangd` refuses a session "
+                           "while it is off"),
+               true)
+        << SettingsKey::text(
+               "clangd/executable",
+               QObject::tr("Program of the language server"),
+               QObject::tr("The `clangd` to start. Left empty, the editor "
+                           "looks for `clangd` in the directories of the "
+                           "session, then for the versioned names "
+                           "`clangd-<version>` in `/usr/bin`, "
+                           "`/usr/local/bin` and `/bin`, then for the "
+                           "newest `/usr/lib/llvm-<version>/bin/clangd`"))
+        << SettingsKey::stringList(
+               "clangd/arguments", QObject::tr("Arguments passed to clangd"),
+               QObject::tr("What is appended to the arguments the client "
+                           "needs, such as `--background-index=false`. In "
+                           "the configuration file the entries of the "
+                           "list are separated by a comma"))
+        << SettingsKey::boolean(
+               "clangd/semantic-tokens",
+               QObject::tr("Color the identifiers as clangd "
+                           "says they are"),
+               QObject::tr("Asks the server what the names of a buffer "
+                           "are and inks a function, a macro, a type and "
+                           "a deprecated name with the face of what they "
+                           "are. The `Color identifiers` entry of the "
+                           "`C/C++` menu writes this same address, and "
+                           "the buffer on screen follows it at once"),
+               true);
+    // nothing else: what the mode remembers of the commands it was asked to run
+    // is a history, and a history is not an entry of the configuration, see
+    // `CoreSettings.cxx`
+    return QVector<SettingsGroup>() << clangd;
+  }  // end of CxxMajorMode::declareSettings
+
   static StandardFunctionCommandProxy<launchClangd> launchClangdProxy(
       "launch-clangd");
 

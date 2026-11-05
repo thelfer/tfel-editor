@@ -21,6 +21,10 @@ the amazing abilities of the [`Qt` library](https://www.qt.io/).
   `clangd` support page](clangd-support.html) for details.
 - etc.
 
+The configuration of the editor, which is gathered by themes and can be
+edited from inside the editor, is described on [the configuration
+page](configuration.html).
+
 See also the [Frequently Asked Questions](faq.html).
 
 ## Portability

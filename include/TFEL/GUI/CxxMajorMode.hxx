@@ -19,6 +19,7 @@
 #include "TFEL/GUI/CMajorModeBase.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/LspProtocol.hxx"
+#include "TFEL/GUI/SettingsKey.hxx"
 
 // forward declarations
 class QKeyEvent;
@@ -99,6 +100,17 @@ namespace tfel::gui {
 
     //! \return "major mode dedicated to the C++ language"
     QString getDescription() const override;
+
+    /*!
+     * \return the entries of the configuration the mode uses: the four which
+     * decide what is asked to \c clangd, in a theme of their own named after
+     * the program
+     *
+     * \note this static method is what \c StandardMajorModeProxy reports as the
+     * settings of the mode, see \c MajorModeProxy::getSettingsGroups. The
+     * addresses are the ones \c LspCxxSupport reads
+     */
+    static QVector<SettingsGroup> declareSettings();
 
     //! \return the C++ icon of the editor resources
     QIcon getIcon() const override;

@@ -21,6 +21,12 @@ namespace tfel::gui {
 
   MajorModeProxy::~MajorModeProxy() = default;
 
+  QVector<SettingsGroup> MajorModeProxy::getSettingsGroups() const {
+    // a mode which uses no entry of the configuration declares nothing, which
+    // is what the configuration dialog shows it with: no theme of its own
+    return {};
+  }  // end of MajorModeProxy::getSettingsGroups
+
   void MajorModeFactory::loadLibrary(const QString& lib) {
     using namespace tfel::system;
     auto& lm = ExternalLibraryManager::getExternalLibraryManager();
@@ -109,6 +115,16 @@ namespace tfel::gui {
     }
     return QIcon();
   }  // end of getMajorModeIcon
+
+  QVector<SettingsGroup> MajorModeFactory::getMajorModeSettingsGroups(
+      const QString& n) const {
+    for (const auto& p : proxies) {
+      if (p.proxy->getName() == n) {
+        return p.proxy->getSettingsGroups();
+      }
+    }
+    return {};
+  }  // end of getMajorModeSettingsGroups
 
   QStringList MajorModeFactory::getAvailableMajorModesNames() const {
     QStringList n;

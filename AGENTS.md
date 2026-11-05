@@ -739,6 +739,208 @@ current. `docs/web/clangd-integration.md` keeps the same conclusion, and the one
 part of the idea that would still pay — watching the file to *report* a stale
 index, not to fix it.
 
+### The configuration dialog: entries are declared, never discovered (issue #127)
+
+`Options > Configuration` and `configure-tfel-editor` open a dialog built from
+`SettingsRegistry`, and what it shows is what the code **declared**, not what
+`QSettings` holds: the settings file answers the addresses that were *written to*,
+which says nothing about the addresses that are *read*, and a dialog built on it
+would promote a typo in the file to an entry of the editor. A declaration is a
+`SettingsKey` (address, label, description, type, default, choices, min/max) and
+sits next to the code that reads it; the machinery is the familiar one — a
+`SettingsRegistry` singleton and `StandardSettingsGroupProxy` static initialisers,
+like `CommandFactory` and `MajorModeFactory`.
+
+**What is shown is what one chooses, never what the editor remembers.** Every
+`.../history` address (the commands of `Alt+X`, `Alt+!`, `grep`, `Alt+%`, the
+compilation command `Alt+M` proposes per mode), the `recent files` list, and the
+`.../last-interface` addresses of the `MFront` mode are deliberately **not**
+entries: a `CommandLine` is given an address and writes it back when its answer is
+taken, so such a field shows a stale list and is overwritten by the next prompt on
+its own account. A test asserts those addresses are not declared
+(`theRegistryDeclaresTheEntriesOfTheEditor`), which is what keeps the next person
+from putting them back. The themes that remain are `General` and `Spell checking`
+from the core, `clangd` from the C++ mode and `castem` from the Cast3M mode; no
+other packaged mode exports anything today, because the only entry of the
+configuration those modes read is a history.
+
+How a mode exports its entries, since that is the part another mode has to imitate:
+
+- `MajorModeProxy::getSettingsGroups()` is virtual and answers nothing by default;
+  `StandardMajorModeProxy<T>` fills it through `if constexpr (requires {
+  T::declareSettings(); })`, so a mode opts in by declaring a static
+  `QVector<SettingsGroup> declareSettings()` and needs nothing else. The proxy fills
+  the name, description and icon of a group which names none of its own from the
+  mode; a mode whose entries are about a program it drives names the group itself,
+  which is why the C++ mode answers a theme called `clangd`.
+- An entry with an empty `group` belongs to the theme it is declared in;
+  `SettingsKey::inGroup` is how an entry says otherwise.
+- `MajorModeFactory::getMajorModeSettingsGroups(name)` is what feeds
+  `SettingsRegistry::getGroups()`: core themes first, then the modes' sorted
+  case-insensitively. A mode which declares nothing has no theme — a group emptied
+  by the merge is dropped, not shown as an empty page.
+- The merge (`appendGroup`) keeps the **first** declaration of an address and
+  reports it only when the two declarations *disagree*: `agree()` compares
+  label/description/type/default/min/max/choices but **not** `group`, because
+  `MTest` and `PipeTest` inherit `CxxMajorMode::declareSettings` and asking twice
+  about the same four `clangd` addresses is exactly right, not a clash. Without
+  that, every session printed eight lines of `qDebug` noise about correct code.
+
+Behaviour worth not re-litigating: `SettingsKey::write()` **removes** the address
+when the value equals the default, so the file holds only what was changed;
+`Restore Defaults` only sets widgets, it writes nothing until the dialog is
+accepted; and the three entries whose effect must be seen under the hands —
+`font/textedit` (`EditorWidget::changeFont`), `shortcut style`
+(`ShortCutStyle::setStyle`), `hunspell default dictionary` (per-buffer
+`setSpellCheckLanguage`) — are applied by `accept()`, everything else waits for the
+widget that reads it to be rebuilt.
+
+Qt 6.2 traps, all paid for:
+
+- There is **no `QFontButton`** in the widget set shipped here; the dialog uses an
+  anonymous-namespace `FontSelector : QPushButton` which shows the font's own name
+  and text and drives a `QFontDialog`.
+- `QDialogButtonBox` has the `RestoreDefaults` role but no `reset()` slot to lean
+  on: take `bb->button(QDialogButtonBox::RestoreDefaults)` and connect
+  `QPushButton::clicked`.
+- `QMetaType::QStringList` is *the enum value*, not a type: comparing a
+  `QVariant`'s kind needs `v.metaType().id()`, which is what `kindOf()` does.
+- `QFormLayout` sizes its label column to the **longest label of the theme**, so on a page
+  whose longest name is 265 px wide the field of a program's path is left 187 px. The dialog
+  therefore uses `form->setRowWrapPolicy(QFormLayout::WrapAllRows)` — label above, field the
+  width of the page. `QFormLayout` has **no `setFormStyle`** in Qt 6.2 (the style is a
+  constructor argument only), but the row wrap policy and the field growth policy do have
+  setters. Verified with the GUI probe (`castem 458 x 22` where the two-column form gave 274,
+  clangd 187) and a screenshot of each page on Xvfb + metacity.
+- The INI format writes a `QStringList` as comma-separated text, so a stored value
+  **containing a comma** reads back as a list and a list of **one** entry reads back
+  as a plain string. `toText`/`toStringListOf` accept both readings; a test asserts
+  the round trip of a one-entry list, through `clangd/arguments`, which is the one
+  list the dialog edits.
+
+Test traps:
+
+- `for (const auto& k : QStringList() << "a" << "b")` is a **use-after-scope**:
+  `operator<<` answers a reference to the temporary, which a range-for does not
+  extend the lifetime of. Valgrind blames the test's own frame and says nothing
+  useful; compiling the single `.cxx` by hand with `-fsanitize=address -fPIC
+  -DNDEBUG -DTFEL_ARCH64` and the build's own `-I`/`-isystem` flags against
+  `libTFELEditor` and `Qt6Test` names the line in one run. Bind the list to a named
+  `const auto` first.
+- Isolation: `initTestCase` points `QSettings` at `tfel-editor-tests`/`test-settings`
+  and every case starts with `forgetEverything()`, since the assertions "an entry
+  nobody changed is not in the file" are otherwise answered by the previous case.
+- Only the **C++** mode is registered in-process: the packaged modes are plugins, so
+  what the plugins do to the registry — exporting the entries they inherit, and
+  declaring nothing at all — is checked by loading the built `.so` files into a
+  probe that prints the registry (`/tmp/opencode/settings127/probe.cxx`). That probe
+  is what found the two merge bugs above.
+- In a dialog probe, only the **visible** page of the `QStackedWidget` has a real
+  geometry; hidden pages are still `100 x 30`, which is what a widget of a hidden
+  window is left with (`/tmp/opencode/settings127/gui.cxx` prints the visible page
+  only, and `import -window root` is what catches a page that does not fit).
+
+### The Cast3M mode launches the program the configuration names (issue #127)
+
+`castem/executable` decides which `castem` the mode starts, and
+`CastemMajorMode::declareSettings` names the theme `castem` after that program — as the C++
+mode does for `clangd` — so no page appears under `Cast3M`. The address is read at every launch
+(`castemExecutable()`, anonymous namespace of the mode), and both launch sites use it: the
+session of `startCastem` and the notice of `displayHelp`, which used to run a hard-coded release
+while the session could be told otherwise. The default of the entry is the name the mode ran
+before the entry existed (`castem2018_PLEIADES`, `castem17.bat` on Windows) and is declared with
+it, so the field shows the program the mode would run and an answer equal to that name is removed
+from the file rather than stored.
+
+Numbers about `QProcess` on this Qt 6.2.4 (`/tmp/opencode/castem131/probe3.cxx`) — they are what
+the failure path of `startCastem` rests on:
+
+- a program which does not exist is **not** reported inside `start()`: the call returns with
+  `state() == Starting` and `error() == UnknownError`, and `FailedToStart` arrives about 10 ms
+  later through the event loop. That is why the `errorOccurred` handler is connected before the
+  start and runs *after* `attachSecondaryTask` — a handler firing inside `start()` would leave
+  the very next statement attaching a frame the handler had already detached and nulled.
+- a program which does not exist is reported as `FailedToStart`, which is the only error
+  `startCastem` reports. What an earlier run of the probe read as `Crashed` for the same name was
+  the artifact of `kill()`ing a half-alive process: the control case (`/bin/sh`) reports nothing
+  at all while it lives.
+- because the state right after a start is `Starting` and not `Running`, the first
+  `sendToCastem` writes nothing (it asks for `Running`) and `sendLineToCastem` answers false: the
+  first line is dropped. Pre-existing and unrelated to the entry, but worth knowing before
+  "fixing" the return value of the slot.
+- the minibuffer names the program which did not start (`"%1 could not be started"`), which is
+  the whole report of a wrong path now that the path is what the user wrote.
+
+Driving a packaged mode although its class is not exported: the mode is built by name and its
+slot is invoked by name, which leaves the launched program visible through the exported frame.
+
+~~~~{.cxx}
+auto *const mode = b.getMainFrame().setMajorMode("Cast3M");
+auto started = false;
+QMetaObject::invokeMethod(mode, "sendLineToCastem", Q_RETURN_ARG(bool, started));
+auto *const f = qobject_cast<ProcessOutputFrame*>(b.getCurrentSecondaryTask());
+f->getProcess().program();  // the program the mode launched
+~~~~
+
+`/tmp/opencode/castem131/launch.cxx` does exactly that with the built `.so` and reports
+`castem2018_PLEIADES` when nothing is stored, `/bin/cat` in state `Running` when the entry names
+it, and `/opt/castem/17/bin/castem` — with that same name in the minibuffer a few milliseconds
+later — when the entry names a program which is not there.
+
+Two test traps of the case which loads a plugin
+(`aMajorModeLoadedAsAPluginExportsTheEntriesItUses`):
+
+- `dlopen` of a build-tree plugin needs nothing from `LD_LIBRARY_PATH`: the RUNPATH of
+  `libTFELEditorCastemMode.so` holds the absolute path of `libTFELEditorMFrontImportWidgets.so`,
+  of `libTFELEditor.so` and of the TFEL libraries. The test therefore asks CMake for the file
+  (`$<TARGET_FILE:TFELEditorCastemMode>` in a `target_compile_definitions`) and makes sure it is
+  built (`add_dependencies`); without the macro the case `QSKIP`s.
+- such a case must come **last** in the list of slots: a loaded mode stays registered for the
+  rest of the run, so from then on `SettingsRegistry::getGroups()` answers a `castem` theme and
+  every earlier assertion about the set of themes would disagree with it.
+
+### The configuration dialog keeps the themes of the modes apart (issue #127)
+
+`SettingsGroup::mode` — the name of the major mode which exported the theme, empty
+for a theme of the editor — is what tells the two kinds of themes apart, because a
+theme named after a program it drives (`clangd`, `castem`) says nothing of the kind
+by its name. `StandardMajorModeProxy` fills it as it fills the name, description and
+icon of a theme which names none of its own, and `appendGroup` keeps the first
+attribution, as it keeps the name. `ConfigurationDialog` splits `getGroups()` on that
+field and puts a non-selectable title (`Qt::NoItemFlags`, bold, the grey of disabled
+text) over each block, with an empty row between them, and a bold caption naming the
+mode at the top of every page of a mode theme (`objectName`
+`configuration-page-mode`, which is how a test singles it out).
+
+Four traps, all paid for:
+
+- A `QListWidgetItem` is **not a `QObject`**: no `setObjectName`, and a test cannot
+  single a row out by name. What a row means is kept in the item itself,
+  `setData(Qt::UserRole, page)`, and `QListWidgetItem::data` of an **unset** role
+  answers an invalid variant whose `toInt()` is `0` — a real page. Every item,
+  headings and the gap included, has to carry the role explicitly (`-1` for what
+  shows nothing), and `toInt()` of it is then meaningless without that guard.
+- The old `connect(themes, currentRowChanged, pages, setCurrentIndex)` cannot be
+  kept once rows exist which name no page: `currentRowChanged` fires for a
+  non-selectable row too. The slot is a lambda which sets the page only when the
+  role is not negative, and a test asserts that choosing a title leaves
+  `currentIndex` alone.
+- `QLabel` has **no `setForeground`** (that is `QListWidgetItem`): the grey of a
+  caption is a `QPalette` of the label itself.
+- Adding a member to `SettingsGroup` is an **ABI break for the packaged modes**: a
+  probe which loaded a `castem` plugin built against the old layout into a core
+  library built with the new one segfaulted in the reallocation of a
+  `QVector<SettingsKey>` inside `appendGroup`, three frames away from anything that
+  looks like the cause. `cmake --build . --target TFELEditor` is enough to see a
+  change of the dialog; it is not enough to run a probe against the plugins.
+
+`TestSettings` asserts the shape with `theThemesOfTheMajorModesAreSeparatedFromThose
+OfTheEditor` (the titles are the non-selectable rows and show no page, every theme is
+on its own side of the titles, a title changes no page, a caption names the mode and
+only mode pages have one), and `theDialogShowsWhatIsDeclared` reads the themes as the
+**selectable** rows — `getGroupsNames()` and `pages->count()` both disagree with
+`themes->count()` now.
+
 ## Architecture
 
 - `include/TFEL/GUI/` — public headers of the core library. `.hxx` are

@@ -8,6 +8,7 @@
 #ifndef LIB_TFEL_GUI_MAJORMODEFACTORY_IXX
 #define LIB_TFEL_GUI_MAJORMODEFACTORY_IXX
 
+#include <QtCore/QObject>
 #include <QtCore/QString>
 #include "TFEL/Config/TFELConfig.hxx"
 #include "TFEL/System/ExternalLibraryManager.hxx"
@@ -46,6 +47,34 @@ namespace tfel::gui {
                                                      TextEditBase& t) const {
     return new T(w, b, t);
   }  // end of StandardMajorModeProxy<T>::getMajorMode
+
+  template <typename T>
+  QVector<SettingsGroup> StandardMajorModeProxy<T>::getSettingsGroups() const {
+    if constexpr (requires { T::declareSettings(); }) {
+      auto gs = T::declareSettings();
+      for (auto& g : gs) {
+        if (g.name.isEmpty()) {
+          g.name = this->name;
+        }
+        // what says that this theme belongs to a major mode, and which one: a
+        // theme named after a program the mode drives, `clangd` or `castem`,
+        // would look like a theme of the editor to anything which only reads
+        // its name
+        g.mode = this->name;
+        if (g.description.isEmpty()) {
+          g.description =
+              QObject::tr("Entries of the configuration the %1 major mode uses")
+                  .arg(this->name);
+        }
+        if (g.icon.isNull()) {
+          g.icon = this->getIcon();
+        }
+      }
+      return gs;
+    } else {
+      return {};
+    }
+  }  // end of StandardMajorModeProxy<T>::getSettingsGroups
 
   template <typename T>
   StandardMajorModeProxy<T>::~StandardMajorModeProxy() = default;

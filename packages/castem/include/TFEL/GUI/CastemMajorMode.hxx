@@ -13,6 +13,7 @@
 #include "TFEL/GUI/ProcessInteractionFrame.hxx"
 #include "TFEL/GUI/FileDownloader.hxx"
 #include "TFEL/GUI/PlainTextEdit.hxx"
+#include "TFEL/GUI/SettingsKey.hxx"
 
 namespace tfel::gui {
 
@@ -58,6 +59,17 @@ namespace tfel::gui {
 
     //! \return "major mode dedicated to the castem finite element solver"
     QString getDescription() const override;
+
+    /*!
+     * \return the entries of the configuration the mode uses: the program it
+     * launches, in a theme of its own named after that program
+     *
+     * \note this static method is what \c StandardMajorModeProxy reports as the
+     * settings of the mode, see \c MajorModeProxy::getSettingsGroups. The
+     * address is the one \c castemExecutable reads, which is what both the
+     * session of \c startCastem and the notices of \c displayHelp launch
+     */
+    static QVector<SettingsGroup> declareSettings();
 
     /*!
      * \brief install a `CastemSyntaxHighlighter` on the given document
