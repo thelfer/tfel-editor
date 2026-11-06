@@ -14,7 +14,9 @@
 #include <QtWidgets/QTabBar>
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QPushButton>
 #include <QtWidgets/QSplitter>
+#include <QtWidgets/QToolButton>
 #include "TFEL/GUI/Debug.hxx"
 #include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
@@ -126,9 +128,55 @@ namespace tfel::gui {
     this->info->addStretch();
     this->info->addWidget(this->ti);
     this->info->addStretch();
+    // the warning shown when the file visited by this buffer is modified
+    // by another process: a line above the text naming the file, a button
+    // which reloads the file and a button which dismisses the warning, as
+    // gedit does. The strip wears the editor's own colors rather than
+    // gedit's dark one: it sets no palette of its own, so the plain widget
+    // lets the background of the buffer show through — the very background
+    // of the information line below the text — and its label takes the
+    // font of the mode-line labels
+    this->fileModifiedBanner = new QWidget(this);
+    this->fileModifiedBanner->setObjectName("file-modified-banner");
+    auto *const bfl = new QHBoxLayout;
+    bfl->setContentsMargins(6, 2, 6, 2);
+    bfl->setSpacing(6);
+    this->fileModifiedBannerLabel = new QLabel(this->fileModifiedBanner);
+    this->fileModifiedBannerLabel->setTextFormat(Qt::PlainText);
+    setQLabelFontSizeAndMargins(this->fileModifiedBannerLabel);
+    auto *const rb =
+        new QPushButton(QObject::tr("Reload"), this->fileModifiedBanner);
+    auto *const db = new QToolButton(this->fileModifiedBanner);
+    db->setText(QString::fromUtf8("\xE2\x9C\x95"));
+    db->setAutoRaise(true);
+    bfl->addWidget(this->fileModifiedBannerLabel);
+    bfl->addStretch();
+    bfl->addWidget(rb);
+    bfl->addWidget(db);
+    this->fileModifiedBanner->setLayout(bfl);
+    // no style sheet on purpose: a plain widget paints no background, so
+    // the strip shows the buffer's own background — the very background the
+    // information line is drawn on — and the label keeps the inherited text
+    // color, exactly like the mode line
+    // a one-line strip: the layout would otherwise give the banner a share
+    // of the window's height, since `Preferred` allows growth (verified on
+    // a live display: the strip ate the top half of the buffer)
+    this->fileModifiedBanner->setSizePolicy(QSizePolicy::Preferred,
+                                            QSizePolicy::Fixed);
+    this->fileModifiedBanner->setVisible(false);
+    QObject::connect(rb, &QPushButton::clicked, this,
+                     [this] { this->e->reloadFile(); });
+    QObject::connect(db, &QToolButton::clicked, this, [this] {
+      // dismissing the warning silences the banner for the state the
+      // file is in; a further change on disk is worth a warning again,
+      // and a save still confirms before overwriting those changes
+      this->e->acknowledgeFileModifiedOnDisk();
+      this->hideFileModifiedBanner();
+    });
     // main gui
     auto *vl = new QVBoxLayout;
     auto *hl = new QHBoxLayout;
+    vl->addWidget(this->fileModifiedBanner);
     this->splitter = new QSplitter;
     this->splitter->setOrientation(Qt::Vertical);
     QSizePolicy qs;
@@ -163,6 +211,12 @@ namespace tfel::gui {
     this->setLayout(vl);
     // timer
     QObject::connect(this->timer, &QTimer::timeout, this, &Buffer::updateDate);
+    // watch the visited file: a buffer which is visible or not, its file can
+    // be written over by another process at any time (issue: avoid cross
+    // modifications by warning the user as soon as the disk disagrees with
+    // the buffer)
+    QObject::connect(this->timer, &QTimer::timeout, this,
+                     [this] { this->e->checkFileModifiedOnDisk(); });
     // update every second
     this->timer->start(1000);
     // connecting signals
@@ -208,6 +262,12 @@ namespace tfel::gui {
     // Qt draws with the application font anyway
     for (auto *l : {this->bni, this->rpi, this->api, this->mi, this->ti}) {
       l->setFont(f);
+    }
+    // the banner of a file modified on disk reads with the same font as the
+    // information line, so it follows the font dialog too; the pointer is
+    // null when a font change reaches a buffer whose banner was not built
+    if (this->fileModifiedBannerLabel != nullptr) {
+      this->fileModifiedBannerLabel->setFont(f);
     }
     // the tab bar of the secondary tasks is not a child of the main frame
     // either, and the font given to it at construction wins over the font of
@@ -644,6 +704,49 @@ namespace tfel::gui {
   bool Buffer::isOkToClose() const {
     return !this->e->document()->isModified();
   }  // end of isOkToClose
+
+  void Buffer::showFileModifiedBanner(const QString &f) {
+    if (this->fileModifiedBannerLabel == nullptr) {
+      return;
+    }
+    this->fileModifiedBannerLabel->setText(
+        QObject::tr("file '%1' has been modified on disk").arg(f));
+    // while the warning is up, the buffer can not be edited: saving over
+    // what another program wrote has to stay a decision, not a slip of the
+    // fingers. `isReadOnly` stops the editing commands and the self-insert
+    // of keys, while the arrow keys, the mark-based selection, the mouse
+    // selection and PageUp/PageDown/Home/End keep working, as they do in
+    // every read-only buffer of the editor; the state the frame was in
+    // before the freeze is kept, so a frame the mode had already set
+    // read-only (a directory buffer, say) is not handed back writable
+    if (!this->mainFrameFrozenByBanner) {
+      this->mainFrameEditableBeforeBanner = !this->e->isReadOnly();
+      if (this->mainFrameEditableBeforeBanner) {
+        this->e->setReadOnly(true);
+      }
+      this->mainFrameFrozenByBanner = true;
+    }
+    this->fileModifiedBanner->setVisible(true);
+  }  // end of showFileModifiedBanner
+
+  void Buffer::hideFileModifiedBanner() {
+    // the freeze lasts exactly as long as the banner: whichever way the
+    // disagreement was settled — a reload, a save which overwrote the
+    // file, or the dismissal — the buffer is the user's again; the
+    // banner pointers, and with them the freeze flag, are declared above
+    // the main frame, so this runs safely from that frame's constructor,
+    // where the flag answers `false` and the main frame is not touched
+    if (this->mainFrameFrozenByBanner) {
+      this->e->setReadOnly(!this->mainFrameEditableBeforeBanner);
+      this->mainFrameFrozenByBanner = false;
+    }
+    // the main frame of a buffer visiting a file is built before the banner
+    // exists (see the constructor), and it clears the banner from
+    // `setFileName`, which is where that visit is declared
+    if (this->fileModifiedBanner != nullptr) {
+      this->fileModifiedBanner->setVisible(false);
+    }
+  }  // end of hideFileModifiedBanner
 
   void Buffer::closeCurrentSecondaryTask() {
     if (this->stw->count() != 0) {

@@ -241,6 +241,24 @@ namespace tfel::gui {
     virtual bool isOkToClose() const;
 
     /*!
+     * \brief display, above the main frame, the warning stating that the
+     * visited file has been modified on disk, with a button which reloads
+     * the file and a button which dismisses the warning
+     * \param[in] f : name of the file, displayed as given
+     *
+     * \note idempotent: the banner is called every second by the check of
+     * the main frame while the file it warns about does not change
+     */
+    void showFileModifiedBanner(const QString &f);
+
+    /*!
+     * \brief hide the warning about a modification of the visited file on
+     * disk; does nothing while the buffer is not initialized — the main
+     * frame visits files from its own constructor, before the banner exists
+     */
+    void hideFileModifiedBanner();
+
+    /*!
      * \brief change the font of the main frame, of the labels of the
      * information line and of the tab bar of the secondary tasks
      * \param[in] f: new font
@@ -394,6 +412,37 @@ namespace tfel::gui {
     QSplitter *splitter;
     //! SecondaryTask widgets
     SecondaryTaskTabWidget *stw;
+    /*!
+     * \brief warning banner displayed above the main frame while the
+     * visited file was modified on disk by another process; its buttons
+     * reload the file (`PlainTextEdit::reloadFile`) or dismiss the
+     * warning for the state the file is in
+     * (`TextEditBase::acknowledgeFileModifiedOnDisk`)
+     *
+     * \note these two pointers are declared before the main frame on
+     * purpose: members are initialized in declaration order, and the
+     * main frame of a buffer visiting a file calls
+     * `Buffer::hideFileModifiedBanner` from its own constructor, where a
+     * not-yet-initialized pointer is a wild one (verified: segfault in
+     * `EditorWidget::openFile`)
+     */
+    QWidget *fileModifiedBanner = nullptr;
+    //! message of the warning banner, naming the file
+    QLabel *fileModifiedBannerLabel = nullptr;
+    /*!
+     * \brief whether the main frame is currently frozen by the warning
+     * banner: while the banner is up, the buffer can not be edited, so
+     * that overwriting what another program wrote stays a decision and
+     * never a slip of the fingers; navigation and selection keep working,
+     * as they do in every read-only buffer
+     *
+     * \note declared with the banner pointers above the main frame on the
+     * same account: `hideFileModifiedBanner` reads it from the main frame
+     * constructor already
+     */
+    bool mainFrameFrozenByBanner = false;
+    //! whether the main frame accepted edits when the banner froze it
+    bool mainFrameEditableBeforeBanner = false;
     //! main widget
     PlainTextEdit *e;
     //! timer used to refresh the date of the information line every second

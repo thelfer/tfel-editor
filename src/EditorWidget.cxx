@@ -494,7 +494,11 @@ namespace tfel::gui {
       }
       auto& t = b->getMainFrame();
       if (t.document()->isModified()) {
-        t.save();
+        // a save triggered from a menu asks in a dialog whether a file
+        // modified on disk shall be overwritten: a click can wait on a
+        // dialog, contrary to a keyboard save, which keeps its questions
+        // in the minibuffer (see TextEditBase::save)
+        t.saveWithDialogConfirmation();
       }
     }
   }  // end of EditorWidget::saveAllBuffers()
@@ -1105,7 +1109,9 @@ namespace tfel::gui {
     }
     auto& t = b->getMainFrame();
     if (t.document()->isModified()) {
-      t.save();
+      // the menu path of a save: a file modified on disk is confirmed
+      // with a dialog (see saveAllBuffers and TextEditBase::save)
+      t.saveWithDialogConfirmation();
     }
   }  // end of EditorWidget::closeCurrentBuffer
 

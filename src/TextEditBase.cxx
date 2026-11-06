@@ -6,10 +6,12 @@
  */
 
 #include <stdexcept>
+#include <QtCore/QFile>
 #include <QtCore/QFileInfo>
 #include <QtCore/QDebug>
 #include <QtCore/QPointer>
 #include <QtCore/QSettings>
+#include <QtCore/QTextStream>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QMessageBox>
@@ -275,6 +277,36 @@ namespace tfel::gui {
 
   };  // end of struct TextEdit::WriteFile
 
+  struct TextEditBase::FileModifiedOnDiskInput : public YesOrNoUserInput {
+    FileModifiedOnDiskInput(EditorWidget& p, TextEditBase& t)
+        : YesOrNoUserInput(
+              QObject::tr("file '%1' has been modified on disk, overwrite ?")
+                  .arg(t.getCompleteFileName()),
+              p),
+          textEdit(t) {
+      this->setObjectName("file-modified-on-disk");
+    }
+
+    bool isBlocking() const override { return true; }  // end of isBlocking
+
+   protected:
+    void treatUserInput() override {
+      if (this->input->text() == "y") {
+        // the user chose their own text over what the other process put in
+        // the file: save again, the confirmation being this question, which
+        // the save itself must not ask a second time
+        this->textEdit.overwriteFileModifiedOnDisk = true;
+        this->textEdit.save();
+      }
+      // answering 'n' saves nothing: the save which asked the question is
+      // over, the warning banner of the buffer stays as the reminder that
+      // the file on disk and the buffer disagree, and its Reload button is
+      // the way to adopt the file instead of overwriting it
+    }  // end of treatUserInput
+
+    TextEditBase& textEdit;
+  };  // end of TextEditBase::FileModifiedOnDiskInput
+
   TextEditBase::SaveInput::SaveInput(EditorWidget& w, TextEditBase& p)
       : YesOrNoUserInput(QObject::tr("save current buffer"), w), textEdit(p) {}
 
@@ -282,6 +314,10 @@ namespace tfel::gui {
 
   void TextEditBase::SaveInput::treatUserInput() {
     if (this->input->text() == "y") {
+      // the save may have a question of its own — the file was modified
+      // on disk — and a blocking input can not hand the minibuffer over
+      // without leaving it first (see TextEditBase::OverWriteFile)
+      this->editor.removeUserInput(this);
       this->textEdit.save();
     }
   }  // end of treatUserInput
@@ -558,7 +594,18 @@ namespace tfel::gui {
 
   void TextEditBase::setFileName(const QString& f) {
     QFileInfo fi(f);
-    this->fileName = fi.absoluteFilePath();
+    const auto af = fi.absoluteFilePath();
+    if (af != this->fileName) {
+      // a buffer which starts visiting another file knows nothing about
+      // that file: what the disk holds now becomes its point of
+      // reference, else the difference with the file left behind would
+      // be reported as an external modification (see the WriteFile and
+      // OverWriteFile inputs, which reach this method on an existing
+      // file without having read it)
+      this->fileName = af;
+      this->noteFileStateOnDisk();
+      this->buffer.hideFileModifiedBanner();
+    }
     if (this->mode == nullptr) {
       this->setMajorMode();
     }
@@ -595,6 +642,33 @@ namespace tfel::gui {
       this->writeFile();
       return;
     }
+    if (this->fileModifiedOnDisk() && (!this->overwriteFileModifiedOnDisk)) {
+      // another process wrote over the file since this buffer read or
+      // wrote it: saving now would silently discard what that process
+      // put there, so the user has to say the opposite is what they
+      // want (issue: watch the file on disk to avoid cross
+      // modifications)
+      if (this->confirmSaveWithDialog) {
+        const auto ret = QMessageBox::warning(
+            this, QObject::tr("file modified on disk"),
+            QObject::tr("file '%1' has been modified on disk since this "
+                        "buffer read it.\n"
+                        "Saving it would overwrite those changes.\n"
+                        "Do you want to save anyway?")
+                .arg(this->fileName),
+            QMessageBox::Save | QMessageBox::Cancel, QMessageBox::Cancel);
+        if (ret != QMessageBox::Save) {
+          return;
+        }
+      } else {
+        this->editor.setUserInput(
+            new TextEditBase::FileModifiedOnDiskInput(this->editor, *this));
+        return;
+      }
+    }
+    // the confirmation of this save, asked by the dialog above or by
+    // `FileModifiedOnDiskInput`, is spent: the next save asks again
+    this->overwriteFileModifiedOnDisk = false;
     const auto& af = QFileInfo(this->fileName).absoluteFilePath();
     this->editor.displayInformativeMessage(
         QObject::tr("saving file '%1'").arg(af));
@@ -602,6 +676,10 @@ namespace tfel::gui {
     writer.setFormat("plaintext");
     if (writer.write(this->document())) {
       this->document()->setModified(false);
+      // the file on disk is this buffer's own text again: the warning
+      // banner has nothing left to say about it
+      this->noteFileStateOnDisk();
+      this->buffer.hideFileModifiedBanner();
       this->editor.displayInformativeMessage(
           QObject::tr("wrote file '%1'").arg(af));
     } else {
@@ -609,6 +687,104 @@ namespace tfel::gui {
           QObject::tr("saving file '%1' failed").arg(af));
     }
   }  // end of TextEditBase::save
+
+  void TextEditBase::saveWithDialogConfirmation() {
+    this->confirmSaveWithDialog = true;
+    this->save();
+    this->confirmSaveWithDialog = false;
+  }  // end of TextEditBase::saveWithDialogConfirmation
+
+  bool TextEditBase::fileModifiedOnDisk() const {
+    if (this->fileName.isEmpty()) {
+      return false;
+    }
+    const QFileInfo fi(this->fileName);
+    if (!fi.exists() || !fi.isFile()) {
+      return false;
+    }
+    return (fi.lastModified() != this->fileStateOnDisk.lastModified) ||
+           (fi.size() != this->fileStateOnDisk.size);
+  }  // end of TextEditBase::fileModifiedOnDisk
+
+  void TextEditBase::noteFileStateOnDisk() {
+    const QFileInfo fi(this->fileName);
+    if (fi.exists() && fi.isFile()) {
+      this->fileStateOnDisk.lastModified = fi.lastModified();
+      this->fileStateOnDisk.size = fi.size();
+    } else {
+      this->fileStateOnDisk = FileOnDiskState();
+    }
+    // whatever warning preceded this contact with the file, the file now
+    // holds what the buffer holds (save, reload) or holds the file the
+    // buffer chose to visit (setFileName): a banner about the past is
+    // stale information
+    this->dismissedFileStateOnDisk = this->fileStateOnDisk;
+  }  // end of TextEditBase::noteFileStateOnDisk
+
+  bool TextEditBase::reloadFile() {
+    if (this->fileName.isEmpty()) {
+      return false;
+    }
+    const auto& af = QFileInfo(this->fileName).absoluteFilePath();
+    const QFileInfo fi(this->fileName);
+    if (!fi.exists() || !fi.isFile()) {
+      this->editor.displayInformativeMessage(
+          QObject::tr("file '%1' can not be reloaded: it does not exist")
+              .arg(af));
+      return false;
+    }
+    QFile file(this->fileName);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+      this->editor.displayInformativeMessage(
+          QObject::tr("reloading file '%1' failed").arg(af));
+      return false;
+    }
+    QTextStream in(&file);
+    in.setAutoDetectUnicode(true);
+    in.setEncoding(QStringConverter::Utf8);
+    const auto text = in.readAll();
+    file.close();
+    // the cursor stays on the line it was on, as far as the new text has
+    // one; `gotoLine` stops at the last line when asked for a line past
+    // the end of the document
+    const auto line = this->textCursor().blockNumber() + 1;
+    this->setPlainText(text);
+    this->document()->setModified(false);
+    this->gotoLine(line);
+    this->noteFileStateOnDisk();
+    this->buffer.hideFileModifiedBanner();
+    this->editor.displayInformativeMessage(
+        QObject::tr("reloaded file '%1'").arg(af));
+    return true;
+  }  // end of TextEditBase::reloadFile
+
+  void TextEditBase::checkFileModifiedOnDisk() {
+    if (!this->isMainFrame()) {
+      return;
+    }
+    if (!this->fileModifiedOnDisk()) {
+      return;
+    }
+    const QFileInfo fi(this->fileName);
+    FileOnDiskState s;
+    s.lastModified = fi.lastModified();
+    s.size = fi.size();
+    if (s == this->dismissedFileStateOnDisk) {
+      return;
+    }
+    this->buffer.showFileModifiedBanner(this->fileName);
+  }  // end of TextEditBase::checkFileModifiedOnDisk
+
+  void TextEditBase::acknowledgeFileModifiedOnDisk() {
+    if (this->fileName.isEmpty()) {
+      return;
+    }
+    const QFileInfo fi(this->fileName);
+    if (fi.exists() && fi.isFile()) {
+      this->dismissedFileStateOnDisk.lastModified = fi.lastModified();
+      this->dismissedFileStateOnDisk.size = fi.size();
+    }
+  }  // end of TextEditBase::acknowledgeFileModifiedOnDisk
 
   void TextEditBase::writeFile() {
     QFileInfo fn(this->getCompleteFileName());
@@ -907,6 +1083,15 @@ namespace tfel::gui {
           return true;
         }
       }
+      // Ctrl-C Ctrl-C saves the buffer: the major modes bind Ctrl-C to
+      // their own second keys, and none of them claims this one; the
+      // binding matches the one a save has in other editors of the
+      // MFront ecosystem, and it goes through the minibuffer question
+      // of `save`, not the dialog the menus use
+      if ((m == Qt::ControlModifier) && (k == Qt::Key_C)) {
+        this->save();
+        return true;
+      }
       const auto modifier = TextEditBase::getModifier(*e);
       if (modifier.isEmpty()) {
         this->editor.displayInformativeMessage(
@@ -1007,7 +1192,15 @@ namespace tfel::gui {
       this->moveMode = QTextCursor::KeepAnchor;
     } else if (((m == Qt::ControlModifier) && (k == Qt::Key_Underscore)) ||
                ((m == Qt::ControlModifier) && (k == Qt::Key_U))) {
-      this->undo();
+      // undo changes the text as much as a key does, so the read-only
+      // state guards it too: a buffer frozen by the file-modified banner,
+      // or any other read-only one, answers with the same message instead
+      // of walking its document back through the undo history
+      if (this->isReadOnly()) {
+        this->editor.displayInformativeMessage(QObject::tr("read only buffer"));
+      } else {
+        this->undo();
+      }
       this->moveMode = QTextCursor::MoveAnchor;
     } else if ((m == Qt::ControlModifier) && (k == Qt::Key_M)) {
       if (this->isReadOnly()) {
@@ -1323,9 +1516,24 @@ namespace tfel::gui {
               QObject::tr("read only buffer"));
         } else {
           auto w = this->widget();
+          // a read-only `QPlainTextEdit` has no text cursor of its own
+          // and its `keyPressEvent` gives up before the cursor
+          // movements: forwarding a navigation key in that state moves
+          // nothing (verified: `End` stays put while the arrows, handled
+          // above through `moveCursor`, still move). Let the widget see
+          // this one event as writable — a navigation key can not
+          // mutate the document, which is all the read-only state
+          // guards — and restore the state as the event leaves
+          const auto frozen = this->isReadOnly();
+          if (frozen) {
+            this->setReadOnly(false);
+          }
           w->removeEventFilter(this);
           QCoreApplication::sendEvent(w, e);
           w->installEventFilter(this);
+          if (frozen) {
+            this->setReadOnly(true);
+          }
           if (completer != nullptr) {
             auto tc = this->textCursor();
             int pc = tc.position();

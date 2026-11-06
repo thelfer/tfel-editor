@@ -9,6 +9,7 @@
 #define LIB_TFEL_GUI_TEXTEDITBASE_HXX
 
 #include <functional>
+#include <QtCore/QDateTime>
 #include <QtCore/QMap>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
@@ -290,8 +291,58 @@ namespace tfel::gui {
      * the document has not been modified, and falls back to
      * `writeFile` if the buffer visits no file; the modified flag is
      * reset on success and the outcome is displayed in the minibuffer
+     *
+     * \note when the visited file was modified on disk since this
+     * buffer read or wrote it, nothing is written: a blocking input
+     * asks in the minibuffer whether the file shall be overwritten
+     * despite the change (see `saveWithDialogConfirmation` for
+     * the variant the menus use)
      */
     virtual void save();
+
+    /*!
+     * \brief save the buffer as `save` does, but confirm overwriting a
+     * file modified on disk with a message box rather than with a
+     * minibuffer question
+     *
+     * \note the menus use this slot: a click can wait on a dialog,
+     * whereas the keyboard path keeps the question in the minibuffer
+     */
+    virtual void saveWithDialogConfirmation();
+
+    /*!
+     * \brief replace the content of the buffer by the content of the
+     * visited file on disk
+     *
+     * \note the modified flag is reset, the cursor is left on the line
+     * it was on, the warning banner of the buffer is hidden and the
+     * state of the file on disk is recorded as the state this buffer
+     * knows; the undo history still holds the discarded text
+     *
+     * \return true if the file was read
+     */
+    virtual bool reloadFile();
+
+    /*!
+     * \brief show the warning banner of the buffer when the visited
+     * file was modified on disk since this buffer read or wrote it
+     *
+     * \note called every second by the timer of the buffer; a text
+     * area which visits no file, whose file was deleted, or whose file
+     * reached a state the user already dismissed with the close button
+     * of the banner reports nothing
+     */
+    virtual void checkFileModifiedOnDisk();
+
+    /*!
+     * \brief record that the user dismissed the warning about the
+     * current state of the visited file: the banner is not shown again
+     * until the file changes once more on disk
+     *
+     * \note this silences the banner only; a save still confirms
+     * before overwriting the changes of the other process
+     */
+    virtual void acknowledgeFileModifiedOnDisk();
 
     /*!
      * \brief move the cursor to the given line and center the view on
@@ -384,6 +435,13 @@ namespace tfel::gui {
      * "overwrite file" user input
      */
     struct OverWriteFile;
+
+    /*!
+     * "file modified on disk" user input: a blocking question asking
+     * whether the visited file, which another process modified, shall
+     * be overwritten by the save which uncovered the modification
+     */
+    struct FileModifiedOnDiskInput;
 
     /*!
      * "write file" user input
@@ -488,6 +546,15 @@ namespace tfel::gui {
 
     //! \return true if the document holds unsaved modifications
     virtual bool isModified() const;
+
+    /*!
+     * \return true if the visited file exists on disk in a state —
+     * modification time and size — which differs from the state this
+     * buffer read or wrote: another process has modified it since the
+     * last contact. A text area visiting no file, or visiting a file
+     * which does not exist, reports false
+     */
+    bool fileModifiedOnDisk() const;
 
     //! \return true if a major mode is set
     virtual bool hasMajorMode() const;
@@ -886,6 +953,58 @@ namespace tfel::gui {
      * when the buffer visits no file
      */
     QString fileName;
+
+    /*!
+     * \brief state of a file on disk at some moment, as far as this
+     * class can tell: its modification time and its size. A file which
+     * does not exist has the default state, an invalid date and a
+     * negative size
+     */
+    struct FileOnDiskState {
+      QDateTime lastModified;
+      qint64 size = -1;
+      bool operator==(const FileOnDiskState &o) const {
+        return (lastModified == o.lastModified) && (size == o.size);
+      }  // end of operator==
+      bool operator!=(const FileOnDiskState &o) const {
+        return !(*this == o);
+      }  // end of operator!=
+    };   // end of struct FileOnDiskState
+
+    /*!
+     * \brief record the current state of the visited file on disk as
+     * the state this buffer knows about, and consider the warning
+     * banner dismissed for everything that came before
+     *
+     * \note called when the buffer starts visiting a file, after a
+     * save which reached the disk and after a reload
+     */
+    void noteFileStateOnDisk();
+
+    //! state of the visited file when this buffer read or wrote it
+    FileOnDiskState fileStateOnDisk;
+
+    /*!
+     * \brief state of the visited file whose warning the user
+     * dismissed: the banner stays hidden while the file sits in that
+     * state, even though it differs from `fileStateOnDisk`
+     */
+    FileOnDiskState dismissedFileStateOnDisk;
+
+    /*!
+     * \brief when true, the confirmation of a save overwriting a file
+     * modified on disk has been asked and obtained: `save` writes without
+     * asking again; set by `FileModifiedOnDiskInput` for the single save it
+     * triggers, and spent by that save
+     */
+    bool overwriteFileModifiedOnDisk = false;
+
+    /*!
+     * \brief when true, a save asked to confirm the overwriting of a
+     * file modified on disk does it with a message box instead of a
+     * minibuffer question; set by `saveWithDialogConfirmation` only
+     */
+    bool confirmSaveWithDialog = false;
 
     /*!
      * \brief language used by the spell checker; initialized with the
