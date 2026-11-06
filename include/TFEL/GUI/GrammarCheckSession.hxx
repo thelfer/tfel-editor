@@ -50,12 +50,12 @@ namespace tfel::gui {
    * \c LspHarperSupport::configuration, so \c setDialect reaches a running
    * session without a restart
    *
-   * \note a session of a buffer takes the spell checker of hunspell off that
-   * buffer while it runs: the two say what is wrong with a word in the same
-   * place, in different colors, and a person who turned the grammar checker on
-   * is not asking to read both. It is the modes which do it, since the spell
-   * checker is theirs, see \c MajorModeBase::setSpellCheckLanguage and the
-   * \c stateChanged signal
+   * \note a session of a buffer leaves the spell checker of hunspell alone:
+   * what \c harper-ls says about a run of words is never what it says about the
+   * spelling of one, so the two underlines of a text buffer stand side by side,
+   * the misspelled words drawn by the highlighter of the mode, the lints drawn
+   * as an extra selection of the text edit. A run which carries both shows the
+   * lint, which is drawn over the words and is the rarer report
    *
    * \note the lints come as diagnostics of the protocol, with the severity the
    * server defaults to — a hint, which is why their color is one color and not

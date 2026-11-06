@@ -82,27 +82,29 @@ screen from disagreeing with each other.
 A machine which has no `harper-ls` to start offers no entry at all: an
 entry which could only report that the program is missing is no entry.
 
-# One checker of a text at a time
+# Two checkers of a text, side by side
 
-The two checkers of the editor say what is wrong with a word in the same
-place, one in the red of a spelling mistake, the other in the red of a
-grammar mistake, and a buffer which shows both says nothing. So while a
-grammar session reads a `LaTeX` or a `Markdown` buffer, the hunspell spell
-checker is taken off that text: the underlines of the lints are the only
-red on the screen, and the context menu stops proposing the replacements of
-a word hunspell does not know. Turning the session off hands the text back
-to hunspell.
+The checker of the grammar and the checker of the spelling answer two
+different questions, and a `LaTeX` or a `Markdown` buffer shows the answers of
+both at once: hunspell goes on underlining the words it does not know, in the
+face the highlighter of the mode gives them, and the lints of `harper-ls` stand
+under the runs of words it dislikes, in the red of an extra selection. What the
+grammar checker says is never about the spelling of a word — it is about the
+agreement of one word with another, the article before the noun it introduces,
+the variety of English a spelling belongs to — so it takes nothing off the
+dictionary of the buffer.
 
 A lint is not offered in the context menu, incidentally: the checker says
 what is wrong with a word and leaves the pen to the person who wrote the
 sentence, so the message of a lint is read where it is written, as a
 tooltip.
 
-What is taken away is the mode's use of the language, not the language of
-the buffer: the frame keeps the dictionary it was given, which the
-`Dictionaries` menu of `Options` writes and the frame reaches for again as
-soon as the checker is off. The `C`/`C++` mode needs no such rule, since it
-runs no spell checker at all.
+What is asked of the two checkers is answered by the buffer together: the
+frame holds the dictionary the `Dictionaries` menu of `Options` gave it, the
+highlighter of the mode underlines with it whatever it does not know, and the
+lints of the session stand under the runs of words the agreement does not
+like. The `C`/`C++` mode asks neither checker about spelling; what it says
+about a name comes from `clangd`.
 
 # The program, and the settings
 

@@ -43,9 +43,9 @@ namespace tfel::gui {
      * \note the document is rehighlighted so that the words are underlined
      * in the new language; an unknown language disables the spell checking
      *
-     * \note while the grammar checker of the buffer runs, the spell checker is
-     * given no language at all: the two underline a word in different colors,
-     * and a buffer is read one way at a time
+     * \note this is what the mode did before a grammar checker was ever
+     * asked of it: a session of `harper-ls` says nothing about the spelling
+     * of a word, so it takes nothing off the words hunspell does not know
      */
     void setSpellCheckLanguage(const QString &) override;
 
@@ -209,9 +209,8 @@ namespace tfel::gui {
      * which steer it
      *
      * \note a buffer of Markdown is prose, which is what the checker reads;
-     * while it runs, \c spellChecker is given no language at all: the two say
-     * what is wrong with a word in the same place, in different colors, and the
-     * checker is the one a person asked for
+     * it says nothing about the spelling of a word, which goes on being the
+     * business of \c spellChecker below, in its own face
      */
     GrammarCheckSession *grammar = nullptr;
     SpellChecker spellChecker;

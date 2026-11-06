@@ -32,18 +32,10 @@ namespace tfel::gui {
                                        TextEditBase &t)
       : CompiledLanguageMajorModeBase(w, b, t) {
     // a buffer of Markdown is prose, which is what the grammar checker reads;
-    // hunspell is taken off the text while the checker runs, since the two
-    // underline one word in two colors at once
+    // it says nothing about spelling, which goes on being hunspell's business
+    // under this session, in its own color
     this->grammar =
         new GrammarCheckSession(w, t, QStringLiteral("markdown"), this);
-    QObject::connect(
-        this->grammar, &GrammarCheckSession::stateChanged, this, [this] {
-          // the language of the frame is what the frame was asked to
-          // check with: giving it back to the mode is what puts the
-          // spell checker back on the text when the checker is gone,
-          // and an empty one what takes it off
-          this->setSpellCheckLanguage(this->textEdit.getSpellCheckLanguage());
-        });
     if (GrammarCheckSession::isAvailable() &&
         LspHarperSupport::launchByDefault()) {
       // the session follows the setting: it writes nothing back, and the entry
@@ -62,15 +54,7 @@ namespace tfel::gui {
   }  // end of getDescription
 
   void MarkdownMajorMode::setSpellCheckLanguage(const QString &l) {
-    // a buffer the grammar checker reads is not read by hunspell at the same
-    // time: the two underline one word in two colors, and the person who turned
-    // the checker on is not asking to read both. The language the frame was
-    // given lives on the frame itself, see
-    // \c TextEditBase::setSpellCheckLanguage, which is where the mode takes it
-    // back from when the checker starts or stops
-    this->spellChecker.setSpellCheckLanguage(
-        ((this->grammar != nullptr) && (this->grammar->isActive())) ? QString()
-                                                                    : l);
+    this->spellChecker.setSpellCheckLanguage(l);
     if (!this->highlighter.isNull()) {
       this->highlighter->rehighlight();
     }

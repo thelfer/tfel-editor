@@ -977,11 +977,18 @@ ctor's auto-launch passes `remembered = false, announced = false`. `LaTeX` and
 `Markdown` name their entry `Grammar checking (English only)` — a person choosing it
 must know the checker knows no word of French.
 
-Hunspell exclusion is the modes' business, not the session's: `setSpellCheckLanguage(l)`
-hands `SpellChecker` an **empty** language while `grammar->isActive()`, and the
-session's `stateChanged` re-applies `textEdit.getSpellCheckLanguage()`. The frame never
-loses its dictionary; only the mode's use of it is suspended. `CxxMajorMode` needs no
-such rule: it runs no spell checker.
+The two checkers of a text buffer work side by side, and nothing coordinates
+them: `harper-ls` says what is wrong with the agreement of two words, hunspell
+what is wrong with a word nobody spells, so a `LaTeX` buffer carries both faces
+at once — the misspelled words drawn by the highlighter of the mode, the lints
+drawn as the `harper` contribution to the extra selections, which is drawn over
+the words and so wins on the rare run that carries both reports. What was asked
+at first, and reverted on purpose, is the opposite: an exclusion which handed
+the text of a checked buffer to one checker at a time, per mode, through
+`setSpellCheckLanguage` answering `SpellChecker` an empty language while
+`grammar->isActive()` and the session's `stateChanged` re-applying
+`textEdit.getSpellCheckLanguage()`. A grammar checker which knows nothing of
+spelling has no business taking a dictionary away.
 
 Protocol facts, all read off `harper-ls` 3.0.0 (`/tmp/opencode/harper/probe8.py` drives
 it by hand, which is how each of these was found):
@@ -1034,9 +1041,10 @@ red is `(170, 0, 0)` and the two can sit beside each other on one buffer.
 Finally, the case which loads the `Markdown` plugin must stay **last** in the list of
 slots: loading registers the mode for the rest of the run (`TestSettings` carries the
 same rule for `castem`), and `underlinedWords` is what a text mode's lints look like to
-a test — the `Markdown` mode's `completeContextMenu` returns early, so the hunspell
-exclusion is asserted on the `LaTeX` mode, the one packaged text mode whose context
-menu asks the spell checker anything.
+a test — the `Markdown` mode's `completeContextMenu` returns early, so what the grammar
+checker leaves to hunspell is asserted on the `LaTeX` mode, the one packaged text mode
+whose context menu asks the spell checker anything: the suggestions of a misspelled
+word, counted before a session starts and after one answers about the same buffer.
 
 ## Architecture
 

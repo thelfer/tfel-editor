@@ -125,18 +125,11 @@ namespace tfel::gui {
     qDebug() << "TeX-master : " << this->getTeXMasterFile();
     // the prose of a document is what the grammar checker reads, and none of
     // the commands are: the checker reads the buffer as the variety of English
-    // the setting names, and hunspell is taken off the text while it runs,
-    // since the two underline one word in two colors at once
+    // the setting names, and it says nothing about spelling — that is the
+    // business of hunspell, which goes on underlining the words it does not
+    // know whatever this session does
     this->grammar =
         new GrammarCheckSession(w, t, QStringLiteral("latex"), this);
-    QObject::connect(
-        this->grammar, &GrammarCheckSession::stateChanged, this, [this] {
-          // the language of the frame is what the frame was asked to
-          // check with: giving it back to the mode is what puts the
-          // spell checker back on the text when the checker is gone,
-          // and an empty one what takes it off
-          this->setSpellCheckLanguage(this->textEdit.getSpellCheckLanguage());
-        });
     if (GrammarCheckSession::isAvailable() &&
         LspHarperSupport::launchByDefault()) {
       // the session follows the setting: it writes nothing back, and the entry
@@ -286,15 +279,7 @@ namespace tfel::gui {
   }  // end of LaTeXMajorMode::completeContextMenu
 
   void LaTeXMajorMode::setSpellCheckLanguage(const QString& l) {
-    // a buffer the grammar checker reads is not read by hunspell at the same
-    // time: the two underline one word in two colors, and the person who turned
-    // the checker on is not asking to read both. The language the frame was
-    // given lives on the frame itself, see
-    // \c TextEditBase::setSpellCheckLanguage, which is where the mode takes it
-    // back from when the checker starts or stops
-    this->spellChecker.setSpellCheckLanguage(
-        ((this->grammar != nullptr) && (this->grammar->isActive())) ? QString()
-                                                                    : l);
+    this->spellChecker.setSpellCheckLanguage(l);
     if (!this->highlighter.isNull()) {
       this->highlighter->rehighlight();
     }

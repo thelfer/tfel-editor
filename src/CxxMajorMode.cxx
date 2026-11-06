@@ -2092,9 +2092,10 @@ namespace tfel::gui {
                            "another variety of English. The buffers already "
                            "open keep what they were built with, and the "
                            "`Grammar checking` entry of a menu writes this "
-                           "same address. While a buffer is checked, the spell "
-                           "checker of hunspell is taken off it: the two say "
-                           "what is wrong with a word in the same place"),
+                           "same address. What the checker says is never "
+                           "about the spelling of a word: hunspell goes on "
+                           "underlining the words it does not know, whatever "
+                           "this session finds"),
                false)
         << SettingsKey::text(
                "harper/executable",
