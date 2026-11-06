@@ -24,6 +24,11 @@ the amazing abilities of the [`Qt` library](https://www.qt.io/).
   [`harper`](https://writewithharper.com) grammar checker, which is what
   the underlines of a wrong agreement or of a foreign spelling come from.
   See [the grammar checking page](grammar-checking.html) for details.
+- Watching the file a buffer visits: another program writing over it is
+  warned about in a banner above the buffer, which offers to reload the
+  file, and a save never overwrites such a change without asking. See
+  [the file modified on disk page](file-modified-on-disk.html) for
+  details.
 - etc.
 
 The configuration of the editor, which is gathered by themes and can be

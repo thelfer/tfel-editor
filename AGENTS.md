@@ -209,6 +209,131 @@ covered: they never read the setting, they use the application font, before and
 after. Verify with a probe printing `font().family()/pointSize()` of each widget
 (`/tmp/opencode/probe_events/fa121y.cxx`), not with `QWidget::grab()` under
 `offscreen`, which is stale for font-only changes.
+### The buffer watches the file it visits (cross modifications)
+
+`TextEditBase` keeps the state of the visited file on disk — modification
+**time and size**, a `FileOnDiskState` — as of the last moment the buffer
+read or wrote it, recorded by `noteFileStateOnDisk` at exactly three
+moments: `setFileName` when the name *changes*, a `save` which reached the
+disk, and `reloadFile`. `fileModifiedOnDisk()` is the one question
+(`QFileInfo` exists and is a file, and time or size differ); the file
+*vanishing* is deliberately not a modification, and a buffer writing under
+a new name takes that file's state as its reference, which is what keeps
+the `WriteFile`/`OverWriteFile` flows — they reach an existing file without
+reading it — from reporting the difference with the file left behind as an
+external change.
+
+Detection is a poll, not a watcher: `Buffer`'s own 1 s timer (the one that
+refreshes the date) calls `e->checkFileModifiedOnDisk()`, which shows the
+banner `Buffer::showFileModifiedBanner` unless the file sits in the state
+the user dismissed (`dismissedFileStateOnDisk`, written by
+`acknowledgeFileModifiedOnDisk`, the ✕ button). `QFileSystemWatcher` buys
+nothing here: this editor does not need to react in less than a second, a
+watcher of a *saved* file would fire on the editor's own writes, and files
+replaced through a temporary file (the way many programs write) drop their
+watch — the mtime+size pair catches exactly those rewrites.
+
+While the banner is up, the buffer is **frozen**: `showFileModifiedBanner`
+sets the main frame read-only and `hideFileModifiedBanner` hands it back
+(the freeze flag and the one holding the state captured before the freeze
+are declared with the banner pointers *above* `e`, because
+`hideFileModifiedBanner` runs already from the main frame's constructor,
+where the flag answers `false` and the frame is not touched). The freeze
+lasts exactly as long as the banner, so each of the ways out — reload,
+dismissal, or the save which overwrote the file and hides the banner —
+unfreezes with it; `save` itself is not frozen, because a frozen buffer
+must still be able to reach the overwrite question the banner waits for.
+The `Ctrl-/`/`Ctrl-U` undo binding checks `isReadOnly()` too — undo walks
+the document back as surely as a typed key writes into it, and it used to
+reach `undo()` ungated (there is no keyboard binding for redo).
+
+`isReadOnly` is the *existing* gate of the editing commands and of the
+self-insert of keys, and the arrows / the mark-based selection already
+worked in read-only buffers (compilation output, directories); freezing
+therefore costs no navigation — except for the keys listed in the trap
+below.
+
+The traps of the freeze, in addition to those of the banner:
+
+- **A read-only `QPlainTextEdit` ignores even forwarded navigation keys.**
+  It has no text cursor of its own and its `keyPressEvent` returns before
+  reaching the cursor movements, so the *Compilation Output*-style
+  exception which forwards `PageUp`/`PageDown`/`Home`/`End` to the widget
+  moved nothing while frozen (verified: `End` left the cursor at 4, with
+  the fix it reaches 7 — while the arrows, handled through `moveCursor`
+  before the gate, had already kept working). The exception now clears
+  the read-only state around the single forwarded event and restores it
+  after, which is safe because a navigation key can not mutate the
+  document — all the read-only state guards.
+- A test of that gate sends its keys with `QTest::keyClick(widget, …)`;
+  through the build system this is uneventful, but a throwaway probe
+  compiled by hand must add `-DQT_GUI_LIB -DQT_WIDGETS_LIB`, or the
+  `QWidget` overloads of `keyClick` — which are guarded on those macros —
+  are simply not declared.
+
+The two confirmation paths of a save are a deliberate split, not an
+oversight: both ask the **same question — overwrite ?** — through the
+confirmation mechanism each can afford. Menus go through
+`saveWithDialogConfirmation` — set `confirmSaveWithDialog`, call `save`,
+reset — which answers a conflict with a modal `QMessageBox` (Save /
+Cancel), while `save` itself, the keyboard path (`Ctrl-X Ctrl-S`, and
+`Ctrl-C Ctrl-C`, newly bound in the `ctrlc` branch *after*
+`MajorMode::handleShortCut`, which no mode claims), installs the blocking
+`FileModifiedOnDiskInput` (objectName `file-modified-on-disk`): `y` sets
+the one-shot `overwriteFileModifiedOnDisk` and saves again — `save` skips
+the conflict branch when it is set and spends it at once, which is what
+keeps the confirmation from asking twice —, `n` or `Ctrl-G` saves nothing
+and leaves the banner up. Re-adopting the file is the banner's **Reload**
+button's office, never the question's: `reloadFile` reads with the same
+`QTextStream` setup as the `PlainTextEdit` file constructor, restores the
+cursor's *line* through `gotoLine` (which stops at the last line when the
+document shrank), resets the modified flag and hides the banner.
+
+Four traps, all paid for:
+
+- **`Buffer`'s member declaration order is load-bearing.** A buffer
+  visiting a file builds its `PlainTextEdit` in the *member initializer
+  list*, and that constructor reaches `hideFileModifiedBanner` through
+  `setFileName` — before `initialize` has run. A banner pointer declared
+  after `e` is then read before its default member initializer, which is a
+  garbage pointer: `EditorWidget::openFile` segfaulted on the first
+  offscreen test run until the two banner pointers were declared *above*
+  `e`. `hideFileModifiedBanner` null-checks for the other half of the same
+  problem (it also runs before `initialize` created the widgets); the
+  declaration order is what makes the check answer "not built yet" rather
+  than "crash".
+- **A `Preferred` vertical policy lets the layout grow the banner**: with
+  one, the strip ate the top half of the buffer (a live-display screenshot
+  says it; offscreen geometry hides it). `QSizePolicy::Fixed` keeps it a
+  one-line strip over the text.
+- **The banner wears the editor's colors, not gedit's**: it sets **no style
+  sheet** — a plain `QWidget` child of `Buffer` paints no background, so the
+  buffer's own background shows through, which is exactly the surface the
+  information line is drawn on — and its label takes the mode line's font
+  through `setQLabelFontSizeAndMargins` at construction and through
+  `Buffer::changeFont` afterwards. A `background-color`/`color` stylesheet
+  here would disconnect it from the theme and from the font dialog.
+- **A blocking input can not hand the minibuffer to another input** —
+  `setUserInput` refuses with "command attempted to use minibuffer while
+  in minibuffer" when the topmost input blocks. So
+  `SaveInput::treatUserInput` (`getSaveInput`, the save-before-kill
+  question the modes install) now calls `editor.removeUserInput(this)`
+  *before* `save`, following the `OverWriteFile` pattern: a save answering
+  that question can uncover a file modified on disk and has to be able to
+  ask about it.
+- The check draws through the buffer, but only the **main frame** may
+  speak: `checkFileModifiedOnDisk` returns unless `isMainFrame()`; a
+  secondary task which was written to a file with `Ctrl-X Ctrl-W` still
+  gets the save-time confirmation, just never a banner of its own.
+
+`docs/web/file-modified-on-disk.md` is the user-facing page; the buttons of
+the banner are found by a test through `findChild<QPushButton*>` /
+`<QToolButton*>` under the objectName `file-modified-banner`, and
+`test-file-on-disk` covers detect, dismiss, re-appear, reload, the `n` and
+`y` answers of the question (answered the `TestLspClient` way: text of the
+visible `LineEdit` plus `userEditingFinished`), and the new-file save which
+must ask nothing.
+
 ## Tests / CI
 
 Tests exist (issue #123, Qt Test based) but are **not built by default**: they
