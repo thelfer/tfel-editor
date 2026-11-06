@@ -196,6 +196,10 @@ namespace tfel::gui {
      *
      * \note the document is rehighlighted so that the words are underlined
      * in the new language; an unknown language disables the spell checking
+     *
+     * \note this is what the mode did before a grammar checker was ever
+     * asked of it: a session of `harper-ls` says nothing about the spelling
+     * of a word, so it takes nothing off the words hunspell does not know
      */
     void setSpellCheckLanguage(const QString &) override;
 

@@ -97,7 +97,7 @@ struct TestGrammarCheck : QObject {
   void theLintsOfABufferStandUnderTheWordsTheyAreAbout();
   void stoppingTheModeTakesTheUnderlinesAway();
   void aVarietyOfEnglishChangesWhatIsFound();
-  void aCheckedTextBufferIsNotReadByBothCheckers();
+  void theSpellCheckerStaysOnATextBufferTheCheckerReads();
   // the last case: it loads a packaged mode, which stays registered for the
   // rest of the run
   void theMenuOfTheMarkdownModeLaunchesTheChecker();
@@ -634,12 +634,11 @@ void TestGrammarCheck::aVarietyOfEnglishChangesWhatIsFound() {
 }  // end of TestGrammarCheck::aVarietyOfEnglishChangesWhatIsFound
 
 #ifdef TFEL_EDITOR_LATEX_MODE
-void TestGrammarCheck::aCheckedTextBufferIsNotReadByBothCheckers() {
-  // the two checkers of the editor say what is wrong with a word in the same
-  // place, one in the red of a spelling mistake, the other in the red of a
-  // grammar mistake, and a buffer which shows both says nothing: while the
-  // grammar checker of a text mode runs, hunspell is taken off its text, which
-  // is what this case is about
+void TestGrammarCheck::theSpellCheckerStaysOnATextBufferTheCheckerReads() {
+  // the two checkers of the editor were asked for by two different needs: one
+  // says a word is not a word, the other that the words do not agree. A buffer
+  // which shows both says a great deal, and the person who turned the grammar
+  // checker on asked for the agreements, not for the loss of their dictionary
   //
   // the `LaTeX` mode is chosen over `Markdown` because that is the text mode
   // whose context menu asks the spell checker anything: what the suggestions of
@@ -675,8 +674,8 @@ void TestGrammarCheck::aCheckedTextBufferIsNotReadByBothCheckers() {
   auto *const mode = frame.setMajorMode(QStringLiteral("LaTeX"));
   QVERIFY(mode != nullptr);
   // the dictionary of this machine is asked for by name; a machine which has no
-  // English dictionary has nothing to take off the text, which the precondition
-  // below is what names
+  // English dictionary has nothing to observe, which the precondition below is
+  // what names
   frame.setSpellCheckLanguage(QStringLiteral("en_US"));
   const auto suggestions = [mode, &frame] {
     auto cursor = frame.document()->find(QStringLiteral("mistaked"));
@@ -711,21 +710,35 @@ void TestGrammarCheck::aCheckedTextBufferIsNotReadByBothCheckers() {
                       entry->text() + "'"));
   entry->trigger();
   // the session answers, which is what the underline of `an` says; the very
-  // same moment takes hunspell off the text, and the suggestions of the
-  // misspelled word go away with it
+  // same moment leaves hunspell where it was: the suggestions of the misspelled
+  // word are still asked about, and still answered
   QVERIFY2(
       waitFor([&frame] { return !underlinedWords(frame).isEmpty(); }, 30000),
       "the checker of a LaTeX buffer drew no underline");
   QVERIFY2(underlinedWords(frame).contains(QStringLiteral("an")),
            qPrintable("the article of `an tests` is not underlined: " +
                       underlinedWords(frame).join(QStringLiteral(", "))));
-  QVERIFY2(suggestions() == 0,
-           "a buffer the grammar checker reads is still read by hunspell");
-  // the frame has not forgotten the language it was given: what is taken away
-  // is the mode's use of it, not the setting of the buffer
+  QVERIFY2(suggestions() == with_hunspell,
+           "a buffer the grammar checker reads lost the suggestions of "
+           "hunspell");
+  // the frame has not forgotten the language it was given, and the mode still
+  // uses it: what the session says is never about the spelling of a word
   QCOMPARE(frame.getSpellCheckLanguage(), QStringLiteral("en_US"));
-  // and turning the checker off hands the text back to hunspell, which is what
-  // makes the one entry of the menu a switch and not a decision
+  // the two reports stand side by side on one buffer, drawn by two
+  // machineries: the highlighter of the mode inks a word it does not know, the
+  // `harper` contribution to the extra selections inks what the agreement of
+  // the words does not like
+  auto harper_drawn = false;
+  for (const auto &selection : frame.extraSelections()) {
+    if ((selection.cursor.selectedText() == QStringLiteral("an")) &&
+        (selection.format.underlineColor() == QColor(200, 0, 0))) {
+      harper_drawn = true;
+    }
+  }
+  QVERIFY(harper_drawn);
+  // and turning the checker off changes nothing of what hunspell was asked: it
+  // never stopped, which is what makes the entry of the menu a question about
+  // agreements and not a choice of checkers
   entry->trigger();
   QVERIFY2(
       waitFor([&frame] { return underlinedWords(frame).isEmpty(); }, 10000),
@@ -733,20 +746,21 @@ void TestGrammarCheck::aCheckedTextBufferIsNotReadByBothCheckers() {
   QCOMPARE(suggestions(), with_hunspell);
   editor.reset();
 }  // end of
-   // TestGrammarCheck::aCheckedTextBufferIsNotReadByBothCheckers
+   // TestGrammarCheck::theSpellCheckerStaysOnATextBufferTheCheckerReads
 #else  /* TFEL_EDITOR_LATEX_MODE */
-void TestGrammarCheck::aCheckedTextBufferIsNotReadByBothCheckers() {
+void TestGrammarCheck::theSpellCheckerStaysOnATextBufferTheCheckerReads() {
   QSKIP(
-      "this build does not name the library of the LaTeX mode: the exclusion "
-      "of hunspell can not be observed on a packaged mode");
+      "this build does not name the library of the LaTeX mode: what the "
+      "grammar "
+      "checker leaves to hunspell can not be observed on a packaged mode");
 }  // end of
-   // TestGrammarCheck::aCheckedTextBufferIsNotReadByBothCheckers
+   // TestGrammarCheck::theSpellCheckerStaysOnATextBufferTheCheckerReads
 #endif /* TFEL_EDITOR_LATEX_MODE */
 
 #ifdef TFEL_EDITOR_MARKDOWN_MODE
 void TestGrammarCheck::theMenuOfTheMarkdownModeLaunchesTheChecker() {
   // two text modes were asked for, not one: the case above is about hunspell
-  // being taken off the text of a `LaTeX` buffer, this one is about the other
+  // staying on the text of a `LaTeX` buffer, this one is about the other
   // half — that a buffer of Markdown offers the same entry with the same note
   // and gets the same answer from the same program, under the language of its
   // own mode
