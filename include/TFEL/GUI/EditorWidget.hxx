@@ -19,6 +19,7 @@
 #include <QtWidgets/QStackedWidget>
 #include <QtGui/QAction>
 #include "TFEL/GUI/Config.hxx"
+#include "TFEL/GUI/MajorMode.hxx"
 #include "TFEL/GUI/SecondaryTaskManager.hxx"
 
 namespace tfel::gui {
@@ -99,6 +100,63 @@ namespace tfel::gui {
      * (see Buffer::getId)
      */
     virtual std::vector<int> getBuffersIds() const;
+
+    /*!
+     * \return the buffers whose main frame wears a major mode of the given
+     * category, in the order in which this widget holds them
+     * \param[in] c: category looked for
+     *
+     * \note a buffer whose main frame has no major mode is of no category and
+     * is never returned: a buffer visiting a file of a type no mode claims
+     * shares nothing with the others
+     */
+    virtual std::vector<Buffer *> getBuffersOfCategory(
+        const MajorMode::Category) const;
+
+    /*!
+     * \brief share the output of a compilation with every buffer editing a
+     * source file of the project
+     * \param[in] w: secondary task which displays the output of a process,
+     * either the frame itself or the widget it was registered under
+     *
+     * The task is attached to every buffer whose main frame wears a major mode
+     * of the `MajorMode::Category::PROGRAMMING` category, so that switching to
+     * another file of the same project shows the same compilation output, as
+     * the output is about the whole project and not about the file which asked
+     * for the compilation. The buffer which already holds the task, which is
+     * the one that created it, is left untouched.
+     *
+     * \note nothing is done when \c w does not display a compilation output:
+     * the output of a `grep`, of a `mtest` or of an interactive session stays
+     * the business of the buffer which asked for it. See
+     * \c ProcessOutputFrame::displaysCompilationOutput
+     *
+     * \note the task is shared once it is created, and a buffer which reaches
+     * that category later, by opening a file or by changing major mode, is
+     * given the tasks which exist by then. A buffer which *leaves* the
+     * category keeps the tasks it holds: taking a task away from a buffer is
+     * what \c Buffer::removeSecondaryTask is for, and a task which no buffer
+     * holds anymore is deleted, running process included
+     */
+    virtual void shareCompilationOutputTaskWithProgrammingBuffers(
+        QWidget *const);
+
+    /*!
+     * \brief attach to the given buffer every compilation output another buffer
+     * holds, when that buffer edits the source of a compiled program
+     * \param[in] b: buffer
+     *
+     * This is the other half of the sharing \c
+     * shareCompilationOutputTaskWithProgrammingBuffers does: a buffer opened
+     * while a compilation is displayed, or a buffer whose major mode becomes a
+     * programming one, gets that output.
+     *
+     * \note nothing is done when the main frame of the buffer wears no major
+     * mode or a mode which is not of the
+     * `MajorMode::Category::PROGRAMMING` category, nor for a buffer which
+     * already holds such a task
+     */
+    virtual void shareCompilationOutputTasksWithBuffer(Buffer &);
 
     /*!
      * \brief switch to the buffer designated by the given name

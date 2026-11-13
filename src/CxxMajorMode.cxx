@@ -166,6 +166,20 @@ namespace tfel::gui {
     constexpr int HAS_DEFINITION = 1;
     constexpr int HAS_DECLARATION = 2;
 
+    // what the two questions about one tracked word bring back: the two places
+    // to jump to, and the countdown which says the answer is complete. The
+    // places are kept, not only counted, because a `Ctrl-Left click` on the very
+    // word the mouse rests on is the common way to jump, and the click which
+    // follows the icon of the jump shall not ask the server anything
+    struct WordAnswers {
+      //! the or-ing of `HAS_DEFINITION` and `HAS_DECLARATION`
+      int capabilities = 0;
+      //! the questions still to come back
+      int pending = 2;
+      QVector<LspLocation> definitions;
+      QVector<LspLocation> declarations;
+    };  // end of struct WordAnswers
+
     // the range of the identifier a position visits, empty when the position
     // visits none: a word is jumped with, not a character, and the range is
     // the whole identifier whether the position sits before its first letter,
@@ -375,15 +389,15 @@ namespace tfel::gui {
     };   // end of struct DocumentSymbolInput
 
     // true when requests can be sent: a server is running and its handshake
-    // is over, or is expected to be over shortly. No request path launches a
-    // server: what a session is launched with, in particular the compilation
+    // is over, or is expected to be over shortly. No request path starts a
+    // server: what a session is started with, in particular the compilation
     // database, is a decision of the user, see the "C/C++" menu and the
-    // `launch-clangd` commands
+    // `start-clangd` commands
     bool serverIsReachable(LspClient &c, EditorWidget &w) {
       if (c.isIdle()) {
         w.displayInformativeMessage(QStringLiteral(
-            "clangd is not launched: use the 'C/C++' menu or the "
-            "'launch-clangd' command"));
+            "clangd is not started: use the 'C/C++' menu or the "
+            "'start-clangd' command"));
         return false;
       }
       if (c.isReady()) {
@@ -393,7 +407,7 @@ namespace tfel::gui {
       return c.waitUntilReady(5000);
     }  // end of serverIsReachable()
 
-    // launch a clangd session on the client of the given editor widget;
+    // start a clangd session on the client of the given editor widget;
     // `arguments` are the extra arguments of the server and `description`
     // completes the message which tells the user about the new session
     //
@@ -404,10 +418,10 @@ namespace tfel::gui {
     // a session which is still running is replaced: what it was started with,
     // the compilation database above all, can not be changed under a running
     // server, so it can not be changed by asking it either
-    void startClangd(EditorWidget &w,
-                     const QStringList &arguments,
-                     const QString &description,
-                     const QString &report = QString()) {
+    void startSession(EditorWidget &w,
+                      const QStringList &arguments,
+                      const QString &description,
+                      const QString &report = QString()) {
       auto &client = LspClient::get(w);
       const auto restarting = (!client.isIdle());
       auto error = QString();
@@ -421,18 +435,18 @@ namespace tfel::gui {
       }
       auto message = QStringLiteral("clangd %1")
                          .arg(restarting ? QStringLiteral("restarted")
-                                         : QStringLiteral("launched"));
+                                         : QStringLiteral("started"));
       if (!description.isEmpty()) {
         message += QStringLiteral(": %1").arg(description);
       }
       w.displayInformativeMessage(message);
-    }  // end of startClangd()
+    }  // end of startSession()
 
     // the minibuffer question for the compilation database to use
     //
     // the answer is a path: either the database file, whose directory clangd
     // is told to look in, or a directory holding it, which it is told to look
-    // in as it stands; an empty answer launches a plain session, leaving the
+    // in as it stands; an empty answer starts a plain session, leaving the
     // search to the server
     struct CompileCommandsInput : public FilePathUserInput {
       CompileCommandsInput(EditorWidget &w, const QString &path)
@@ -461,7 +475,7 @@ namespace tfel::gui {
                 ? QStringLiteral("without a compilation database")
                 : QStringLiteral("with the compilation database of %1")
                       .arg(asked);
-        startClangd(this->editor, arguments, description);
+        startSession(this->editor, arguments, description);
       }  // end of treatUserInput
     };   // end of struct CompileCommandsInput
 
@@ -489,16 +503,21 @@ namespace tfel::gui {
     }  // end of supportIsEnabled()
 
     // the extra arguments of a session and the message which tells the user
-    // what the session was started with, in the end
+    // what the session was started with, in the end; `database` is the file
+    // which the arguments name, empty when the session is left to guess the
+    // compilation options of the files it is fed — which is exactly what an
+    // empty `arguments` says too
     struct ImplicitCompileCommands {
       QStringList arguments;
       QString message;
+      QString database;
     };  // end of struct ImplicitCompileCommands
 
-    // the database a session launched without an explicit one uses: the file
+    // the database a session started without an explicit one uses: the file
     // `tfel-editor` was started with, when `--compile-commands-file` named one
-    // which exists, else the one of the project of the current buffer, else
-    // none, which is a plain session leaving the search to the server
+    // which exists, else the one of the project of `directory` — or of the file
+    // the current buffer visits, when no directory is given —, else none, which
+    // is a plain session leaving the search to the server
     //
     // the miss of a default file is not reported as it happens: the message
     // says what the session ended up using, and mentions the default only
@@ -507,8 +526,9 @@ namespace tfel::gui {
     // the editor performs the search itself, rather than leaving it to the
     // server, because the option which hands a database to clangd is set when
     // the session starts and the user is told which database it was started
-    // with, which requires knowing it before launching
-    ImplicitCompileCommands implicitCompileCommands(EditorWidget &w) {
+    // with, which requires knowing it before starting
+    ImplicitCompileCommands implicitCompileCommands(EditorWidget &w,
+                                                    const QString &directory) {
       const auto restricted_to_current_file = QStringLiteral(
           "no compile_commands.json found, clangd is restricted to current "
           "C++ file");
@@ -521,57 +541,60 @@ namespace tfel::gui {
             LspCxxSupport::compileCommandsArguments(file, error);
         if (error.isEmpty()) {
           return {arguments,
-                  QStringLiteral("using %1 to start clangd").arg(path)};
+                  QStringLiteral("using %1 to start clangd").arg(path), path};
         }
         // a default which does not exist is a mistake the user made once, at
-        // the command line; it does not void the launch, the project is asked
+        // the command line; it does not void the session, the project is asked
         // instead and the mistake surfaces in the final message only
         missing_default = path;
       }
-      const auto directory = currentFileDirectory(w);
+      const auto start =
+          directory.isEmpty() ? currentFileDirectory(w) : directory;
       const auto found = LspCxxSupport::searchCompileCommandsFile(
-          directory.isEmpty() ? QDir::currentPath() : directory);
+          start.isEmpty() ? QDir::currentPath() : start);
       if (found.isEmpty()) {
         if (missing_default.isEmpty()) {
-          return {{}, restricted_to_current_file};
+          return {{}, restricted_to_current_file, QString()};
         }
         return {{},
                 QStringLiteral("no compile_commands.json found and default "
                                "file %1 is not found, clangd is restricted to "
                                "current C++ file")
-                    .arg(missing_default)};
+                    .arg(missing_default),
+                QString()};
       }
       auto error = QString();
       const auto arguments =
           LspCxxSupport::compileCommandsArguments(found, error);
       if (missing_default.isEmpty()) {
         return {arguments,
-                QStringLiteral("using %1 to start clangd").arg(found)};
+                QStringLiteral("using %1 to start clangd").arg(found), found};
       }
       return {arguments,
               QStringLiteral("using %1 to start clangd (default file %2 "
                              "not found)")
-                  .arg(found, missing_default)};
+                  .arg(found, missing_default),
+              found};
     }  // end of implicitCompileCommands()
 
   }  // end of namespace
 
-  // the command `launch-clangd`: a session of clangd with no other option
+  // the command `start-clangd`: a session of clangd with no other option
   // than those of the settings, using the compilation database the editor
   // was started with, or the one of the project of the current buffer, or
   // none, in which case clangd searches a database by itself, as it does
   // when it is run in a terminal
-  void launchClangd(EditorWidget &editor) {
+  void startClangd(EditorWidget &editor) {
     if (!supportIsEnabled(editor)) {
       return;
     }
-    const auto choice = implicitCompileCommands(editor);
-    startClangd(editor, choice.arguments, QString(), choice.message);
-  }  // end of launchClangd
+    const auto choice = implicitCompileCommands(editor, QString());
+    startSession(editor, choice.arguments, QString(), choice.message);
+  }  // end of startClangd
 
-  // the command `launch-clangd-with-compile-commands`: the same, after the
+  // the command `start-clangd-with-compile-commands`: the same, after the
   // compilation database to use has been asked for in the minibuffer
-  void launchClangdWithCompileCommands(EditorWidget &editor) {
+  void startClangdWithCompileCommands(EditorWidget &editor) {
     if (!supportIsEnabled(editor)) {
       return;
     }
@@ -580,7 +603,7 @@ namespace tfel::gui {
     // have to be replaced before it was even used
     const auto directory = currentFileDirectory(editor);
     editor.setUserInput(new CompileCommandsInput(editor, directory));
-  }  // end of launchClangdWithCompileCommands
+  }  // end of startClangdWithCompileCommands
 
   // the command `stop-clangd`: end the session which is running, if any, and
   // report through the minibuffer what became of it
@@ -592,7 +615,7 @@ namespace tfel::gui {
     auto *const client = editor.findChild<LspClient *>(QLatin1String("clangd"));
     if ((client == nullptr) || (!client->stop())) {
       editor.displayInformativeMessage(
-          QStringLiteral("clangd is not launched"));
+          QStringLiteral("clangd is not started"));
       return;
     }
     editor.displayInformativeMessage(QStringLiteral("clangd stopped"));
@@ -696,20 +719,22 @@ namespace tfel::gui {
     }
     auto *const m = new QMenu(QObject::tr("C/C++"), t);
     m->setIcon(this->getIcon());
-    auto *const lc = m->addAction(QObject::tr("Launch clangd"));
+    auto *const lc = m->addAction(QObject::tr("Start clangd"));
     lc->setToolTip(
         QObject::tr("Start clangd with the compilation database of the "
                     "project, or the one tfel-editor was started with; a "
                     "session which is running is restarted"));
     QObject::connect(lc, &QAction::triggered, this,
-                     [this] { launchClangd(this->editor); });
+                     [this] { startClangd(this->editor); });
     auto *const cd =
-        m->addAction(QObject::tr("Launch clangd with a compile_commands.json"));
+        m->addAction(QObject::tr("Start clangd with a compile_commands.json"));
     cd->setToolTip(QObject::tr(
         "Ask for a compilation database and start clangd with it; a "
         "session which is running is restarted"));
     QObject::connect(cd, &QAction::triggered, this,
-                     [this] { launchClangdWithCompileCommands(this->editor); });
+                     [this] {
+                       startClangdWithCompileCommands(this->editor);
+                     });
     m->addSeparator();
     // the overview of the file is the one entry of this menu which asks a
     // question of the buffer rather than of the session; it is here because a
@@ -880,6 +905,7 @@ namespace tfel::gui {
         this->client->openDocument(f, this->document);
         this->tokens_timer->start();
       }
+      this->startClangdIfNeeded();
       return;
     }
     if (!this->documentFile.isEmpty()) {
@@ -893,11 +919,50 @@ namespace tfel::gui {
     }
     this->documentFile = f;
     this->document = this->textEdit.document();
-    // the document is registered on the client, ready to be sent, whether a
-    // server runs or not: opening a file is not asking for a session, which
-    // the user launches from the "C++" menu or the `launch-clangd` command
+    // the document is registered on the client, ready to be sent: whether a
+    // session runs to receive it is what `startClangdIfNeeded` decides on the
+    // project of the file, and the entries of the "C++" menu decide on the
+    // answer of whoever asks for one
     this->client->openDocument(f, this->document);
+    this->startClangdIfNeeded();
   }  // end of openOrRenameDocument
+
+  void CxxMajorMode::startClangdIfNeeded() {
+    if ((this->client == nullptr) || (this->documentFile.isEmpty()) ||
+        (!LspCxxSupport::startedByDefault())) {
+      // the setting is read on every buffer, so a person who turns the automatic
+      // session off sees the next file opened without a server, without a
+      // restart of the editor
+      return;
+    }
+    if (!this->client->isIdle()) {
+      // a session runs: the database it reads was chosen when it started and a
+      // buffer of another project is none to replace the one somebody is
+      // working with
+      return;
+    }
+    const auto choice = implicitCompileCommands(
+        this->editor, QFileInfo(this->documentFile).absolutePath());
+    if (choice.database.isEmpty()) {
+      // nothing was found to start a session with: a session which guesses the
+      // compilation options of a file is a decision, not a discovery, and the
+      // entries of the "C/C++" menu are where it is taken
+      return;
+    }
+    auto error = QString();
+    if (!this->client->launch(choice.arguments, error)) {
+      // the program the settings name did not start. It is said once: the
+      // failure is in the settings, and every buffer of the project would
+      // otherwise report the same line again
+      if (!this->auto_start_failure_reported) {
+        this->auto_start_failure_reported = true;
+        this->editor.displayInformativeMessage(error);
+      }
+      return;
+    }
+    this->editor.displayInformativeMessage(
+        QStringLiteral("clangd started using %1").arg(choice.database));
+  }  // end of startClangdIfNeeded
 
   void CxxMajorMode::updateDiagnostics(const QString &f) {
     if (f == this->documentFile) {
@@ -1104,6 +1169,14 @@ namespace tfel::gui {
   }  // end of resetNavigation
 
   bool CxxMajorMode::eventFilter(QObject *const o, QEvent *const e) {
+    if ((this->mouse_press_consumed) &&
+        (e->type() == QEvent::MouseButtonRelease)) {
+      // the release of a click the mode answered with a jump is kept from the
+      // text edit too: let through, it would move the cursor to the place the
+      // click was pressed on, after the jump had put it somewhere else
+      this->mouse_press_consumed = false;
+      return true;
+    }
     if ((this->client != nullptr) && (this->navigation_timer != nullptr)) {
       if (e->type() == QEvent::ToolTip) {
         // resting the mouse on an underlined range says what the cursor
@@ -1141,6 +1214,29 @@ namespace tfel::gui {
     }
     return CMajorModeBase::eventFilter(o, e);
   }  // end of eventFilter
+
+  bool CxxMajorMode::mousePressEvent(QMouseEvent *const e) {
+    // `Ctrl-Left click` is the mouse's `Alt-.`: the icon of the jump the mode
+    // put under the pointer promised a place to go. Any other click — and any
+    // click of a buffer which asks nothing to a server — is the plain click the
+    // text edit makes of it itself
+    const auto m = e->modifiers();
+    if ((this->client == nullptr) || (this->document == nullptr) ||
+        (this->documentFile.isEmpty()) || (e->button() != Qt::LeftButton) ||
+        ((m & Qt::ControlModifier) == Qt::NoModifier) ||
+        ((m & (Qt::ShiftModifier | Qt::AltModifier | Qt::MetaModifier)) !=
+         Qt::NoModifier)) {
+      this->mouse_press_consumed = false;
+      return CMajorModeBase::mousePressEvent(e);
+    }
+    const auto handled = this->jumpFromMouse(
+        this->textEdit.cursorForPosition(e->pos()).position());
+    // the press of the click which jumped is consumed, and so is its release,
+    // see `eventFilter`; a click which found nothing goes back to the text edit
+    // whole, cursor and all
+    this->mouse_press_consumed = handled;
+    return handled;
+  }  // end of mousePressEvent
 
   void CxxMajorMode::refreshTrackedWords() {
     const auto asking_cursor = this->cursor_tracking;
@@ -1219,6 +1315,8 @@ namespace tfel::gui {
     if ((other.start == word.start) && (other.revision == word.revision) &&
         (other.capabilities >= 0)) {
       word.capabilities = other.capabilities;
+      word.definitions = other.definitions;
+      word.declarations = other.declarations;
       if (track_cursor) {
         this->applyTrackedCursor();
       } else {
@@ -1228,19 +1326,22 @@ namespace tfel::gui {
     }
     // the two questions of one word are one answer: it is defined or
     // declared, or it is neither, and that is known once both are back
-    auto answer = std::make_shared<QPair<int, int>>();
-    answer->first = 0;
-    answer->second = 2;
+    auto answer = std::make_shared<WordAnswers>();
     auto self = QPointer<CxxMajorMode>(this);
     const auto start = word.start;
     const auto revision = word.revision;
     auto note = [self, answer, track_cursor, start, revision](
                     const int capability,
                     const QVector<LspLocation> &locations) {
-      if (!locations.isEmpty()) {
-        answer->first |= capability;
+      if (capability == HAS_DEFINITION) {
+        answer->definitions = locations;
+      } else {
+        answer->declarations = locations;
       }
-      if ((--answer->second) != 0) {
+      if (!locations.isEmpty()) {
+        answer->capabilities |= capability;
+      }
+      if ((--answer->pending) != 0) {
         return;
       }
       if (self == nullptr) {
@@ -1253,7 +1354,12 @@ namespace tfel::gui {
       if ((w.start != start) || (w.revision != revision)) {
         return;
       }
-      w.capabilities = answer->first;
+      w.capabilities = answer->capabilities;
+      // the places themselves go with the verdict: a `Ctrl-Left click` on this
+      // word is the jump the icon under the pointer promised, and it is then
+      // answered out of what is already here
+      w.definitions = answer->definitions;
+      w.declarations = answer->declarations;
       if (track_cursor) {
         self->applyTrackedCursor();
       } else {
@@ -1321,6 +1427,77 @@ namespace tfel::gui {
       area->viewport()->setCursor(Qt::IBeamCursor);
     }
   }  // end of applyTrackedHover
+
+  bool CxxMajorMode::jumpFromMouse(const int position) {
+    const auto range = identifier_range(*this->document, position);
+    if (range.x() < 0) {
+      // no identifier under the pointer: a click on a brace, a blank or a word
+      // of a comment is the plain click the text edit makes of it anyway
+      return false;
+    }
+    const auto revision = this->document->revision();
+    auto definitions = QVector<LspLocation>();
+    auto declarations = QVector<LspLocation>();
+    if ((this->hovered_word.start == range.x()) &&
+        (this->hovered_word.revision == revision) &&
+        (this->hovered_word.capabilities >= 0)) {
+      // the word has been asked about already — which is what the icon of the
+      // jump under the pointer is made of — and its answer holds the places to
+      // go: the click which follows the icon asks nothing and lands at once
+      definitions = this->hovered_word.definitions;
+      declarations = this->hovered_word.declarations;
+    } else if (this->client->isReady()) {
+      // a word the mouse never rested on, or one whose answer is still on its
+      // way: the two questions are asked at once and waited for together, as the
+      // two of the context menu are, and the wait is as short. A session which
+      // is not up is not waited for: a click which starts nothing and moves
+      // nothing is a click, not a request
+      auto answer = std::make_shared<WordAnswers>();
+      auto waiter = std::make_shared<std::function<void()>>();
+      LspProtocol::boundedWait(
+          [this, range, answer,
+           waiter](const std::function<void()> &stop) {
+            // one countdown shared by the two answers: the last one back ends
+            // the wait, and a late one is a late one only
+            *waiter = [answer, stop] {
+              if ((--(answer->pending)) == 0) {
+                stop();
+              }
+            };
+            this->client->requestDefinition(
+                this->documentFile, *this->document, range.x(),
+                [answer, waiter](const QVector<LspLocation> &locations) {
+                  answer->definitions = locations;
+                  (*waiter)();
+                });
+            this->client->requestDeclaration(
+                this->documentFile, *this->document, range.x(),
+                [answer, waiter](const QVector<LspLocation> &locations) {
+                  answer->declarations = locations;
+                  (*waiter)();
+                });
+          },
+          1000);
+      definitions = answer->definitions;
+      declarations = answer->declarations;
+    }
+    // the definition wins, as it does for `Alt-.`: the declaration of a symbol
+    // which nothing defines is what `clangd` answers the definition question
+    // with anyway, so the second question only speaks for a symbol whose body
+    // lives where the first question could not follow it
+    if (!definitions.isEmpty()) {
+      this->jumpTo(definitions.at(0));
+      return true;
+    }
+    if (!declarations.isEmpty()) {
+      this->jumpTo(declarations.at(0));
+      return true;
+    }
+    // nothing to jump to, in the same words `Alt-.` says it; the click itself is
+    // handed back to the text edit, which places the cursor where it was pressed
+    this->report(QStringLiteral("no definition found"));
+    return false;
+  }  // end of jumpFromMouse
 
   void CxxMajorMode::completeWithClangd() {
     if (this->client == nullptr) {
@@ -2017,7 +2194,7 @@ namespace tfel::gui {
   }  // end of ~CxxMajorMode
 
   QVector<SettingsGroup> CxxMajorMode::declareSettings() {
-    // the four addresses `LspCxxSupport` reads are gathered in a theme of their
+    // the five addresses `LspCxxSupport` reads are gathered in a theme of their
     // own, named after the program they are about: they are what a person looks
     // for when the C/C++ support does not do what they expect, and a theme
     // named `clangd` says it without spelling the mode out. An entry which
@@ -2028,8 +2205,8 @@ namespace tfel::gui {
     clangd.description = QObject::tr(
         "What the C++ mode asks the language server, and what it "
         "asks it with. A session reads the program, its arguments "
-        "and the compilation database when it is launched: what "
-        "changes here reaches the next `Launch clangd`");
+        "and the compilation database when it is started: what "
+        "changes here reaches the next `Start clangd`");
     clangd.keys =
         QVector<SettingsKey>()
         << SettingsKey::boolean(
@@ -2039,8 +2216,25 @@ namespace tfel::gui {
                            "no diagnostics, no completion, no jump to a "
                            "definition. The modes which are already "
                            "attached to a buffer were built with this "
-                           "answer, and `Launch clangd` refuses a session "
+                           "answer, and `Start clangd` refuses a session "
                            "while it is off"),
+               true)
+        << SettingsKey::boolean(
+               "clangd/start-by-default",
+               QObject::tr("Start clangd when the project of a "
+                           "file has a compile_commands.json"),
+               QObject::tr("When this is on, a buffer of a project which holds "
+                           "a compilation database starts a session which reads "
+                           "it, and the minibuffer names the database it used: "
+                           "the options the files of a project are compiled "
+                           "with are then known, and a buffer opened in such a "
+                           "project was opened to be worked on with them. Where "
+                           "no database is found, nothing is started either "
+                           "way: a session which guesses the compilation "
+                           "options of a file is a decision, and the two "
+                           "`Start clangd` entries of the `C/C++` menu are "
+                           "where it is taken. The buffers which are already "
+                           "open keep the session they were opened with"),
                true)
         << SettingsKey::text(
                "clangd/executable",
@@ -2120,12 +2314,12 @@ namespace tfel::gui {
     return QVector<SettingsGroup>() << clangd << harper;
   }  // end of CxxMajorMode::declareSettings
 
-  static StandardFunctionCommandProxy<launchClangd> launchClangdProxy(
-      "launch-clangd");
+  static StandardFunctionCommandProxy<startClangd> startClangdProxy(
+      "start-clangd");
 
-  static StandardFunctionCommandProxy<launchClangdWithCompileCommands>
-      launchClangdWithCompileCommandsProxy(
-          "launch-clangd-with-compile-commands");
+  static StandardFunctionCommandProxy<startClangdWithCompileCommands>
+      startClangdWithCompileCommandsProxy(
+          "start-clangd-with-compile-commands");
 
   static StandardFunctionCommandProxy<stopClangd> stopClangdProxy(
       "stop-clangd");

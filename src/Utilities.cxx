@@ -49,6 +49,21 @@ namespace tfel::gui {
     return "";
   }  // end of findFileInDirectoryOrParentDirectory()
 
+  QString normalizeLineSeparators(const QString& t) {
+    if (!t.contains(QChar::LineSeparator) && !t.contains(QChar(0x0085))) {
+      return t;
+    }
+    auto r = t;
+    // a `QTextDocument` keeps those two characters inside a block while the
+    // layout breaks the displayed line on them: the text is drawn on two
+    // lines, the document knows only one, and the current line highlight
+    // which follows the document covers the phantom line too. U+2029 is the
+    // one character Qt does turn into the end of a block
+    r.replace(QChar::LineSeparator, QChar('\n'));
+    r.replace(QChar(0x0085), QChar('\n'));
+    return r;
+  }  // end of normalizeLineSeparators
+
   void setFontSizeAndContentsMargins(QWidget* const w) {
     QSettings s;
     if (s.contains("font/textedit")) {

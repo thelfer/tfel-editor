@@ -49,6 +49,10 @@ namespace tfel::gui {
     return "Markdown";
   }  // end of getName
 
+  MajorMode::Category MarkdownMajorMode::getCategory() const {
+    return Category::TEXT_EDITING;
+  }  // end of getCategory
+
   QString MarkdownMajorMode::getDescription() const {
     return "major mode dedicated to the Markdown language";
   }  // end of getDescription

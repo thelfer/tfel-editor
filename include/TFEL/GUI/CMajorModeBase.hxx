@@ -27,6 +27,16 @@ namespace tfel::gui {
      * parent widget of the mode
      */
     CMajorModeBase(EditorWidget&, Buffer&, TextEditBase&);
+
+    /*!
+     * \return `Category::PROGRAMMING`: the buffers editing the source or a
+     * header of a compiled program are the ones the output of a compilation
+     * concerns
+     *
+     * \note \c CxxMajorMode, hence every mode built on it (\c MFront,
+     * \c MTest, \c PipeTest), inherits that category
+     */
+    Category getCategory() const override;
     /*!
      * \brief format the whole buffer
      *

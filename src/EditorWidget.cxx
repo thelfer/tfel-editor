@@ -28,6 +28,8 @@
 #include "TFEL/GUI/LineEdit.hxx"
 #include "TFEL/GUI/CommandLine.hxx"
 #include "TFEL/GUI/PlainTextEdit.hxx"
+#include "TFEL/GUI/ProcessOutputFrame.hxx"
+#include "TFEL/GUI/QAbstractScrollAreaWrapper.hxx"
 #include "TFEL/GUI/Buffer.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
 
@@ -122,6 +124,50 @@ namespace tfel::gui {
     }
     return ambiguous ? nullptr : raw;
   }  // end of findBuffer
+
+  /*!
+   * \return true when the main frame of the given buffer wears a major mode of
+   * the given category
+   * \param[in] b: buffer
+   * \param[in] c: category
+   *
+   * \note a buffer whose main frame has no major mode at all is of no category:
+   * it is the case of a buffer visiting a file of a type no mode claims, and of
+   * an empty buffer nobody gave a mode yet
+   */
+  static bool isOfCategory(Buffer& b, const MajorMode::Category c) {
+    auto& t = b.getMainFrame();
+    return t.hasMajorMode() && (t.getMajorMode().getCategory() == c);
+  }  // end of isOfCategory
+
+  /*!
+   * \return the given widget when it displays the output of a compilation
+   * process, nullptr otherwise
+   * \param[in] w: widget a secondary task is held under
+   *
+   * \note a task is registered under the widget its tab displays, which is the
+   * `QAbstractScrollAreaWrapper` built around a scroll area. A compilation
+   * output frame is a plain text edit, so it is registered as itself, and both
+   * identities are accepted here as they are everywhere the tasks are looked up
+   */
+  static ProcessOutputFrame* compilationOutputFrameOf(QWidget* const w) {
+    if (w == nullptr) {
+      return nullptr;
+    }
+    if (auto* const f = qobject_cast<ProcessOutputFrame*>(w)) {
+      return f->displaysCompilationOutput() ? f : nullptr;
+    }
+    auto* const wrapper = qobject_cast<QAbstractScrollAreaWrapper*>(w);
+    if (wrapper != nullptr) {
+      if (auto* const f =
+              qobject_cast<ProcessOutputFrame*>(wrapper->getWrappedObject())) {
+        if (f->displaysCompilationOutput()) {
+          return f;
+        }
+      }
+    }
+    return nullptr;
+  }  // end of compilationOutputFrameOf
 
   static void setQLineEditFont(LineEdit* l) {
     QSettings s;
@@ -404,6 +450,15 @@ namespace tfel::gui {
         emit updatedMenu();
       }
     });
+    // the compilation outputs which are already displayed concern this buffer
+    // too, as soon as it edits the source of a compiled program. The signal is
+    // not enough for the mode a buffer visiting a file wears from the start:
+    // that one is installed by `TextEditBase::setFileName`, inside the
+    // constructor of the text edit, where nothing can be connected to it yet
+    QObject::connect(b, &Buffer::mainFrameMajorModeChanged, this, [this, b] {
+      this->shareCompilationOutputTasksWithBuffer(*b);
+    });
+    this->shareCompilationOutputTasksWithBuffer(*b);
     return b;
   }  // end of EditorWidget::createNewBuffer
 
@@ -759,6 +814,53 @@ namespace tfel::gui {
     }
     return ids;
   }
+
+  std::vector<Buffer*> EditorWidget::getBuffersOfCategory(
+      const MajorMode::Category c) const {
+    auto v = std::vector<Buffer*>{};
+    for (int i = 0; i != this->buffers->count(); ++i) {
+      auto* const b = qobject_cast<Buffer*>(this->buffers->widget(i));
+      if (b == nullptr) {
+        continue;
+      }
+      if (isOfCategory(*b, c)) {
+        v.push_back(b);
+      }
+    }
+    return v;
+  }  // end of getBuffersOfCategory
+
+  void EditorWidget::shareCompilationOutputTaskWithProgrammingBuffers(
+      QWidget* const w) {
+    if (compilationOutputFrameOf(w) == nullptr) {
+      // that task is the output of something else than a compilation, or it
+      // wears no mode yet: see the note on the two places this is looked at
+      return;
+    }
+    for (auto* const b :
+         this->getBuffersOfCategory(MajorMode::Category::PROGRAMMING)) {
+      b->attachSecondaryTask(w);
+    }
+  }  // end of shareCompilationOutputTaskWithProgrammingBuffers
+
+  void EditorWidget::shareCompilationOutputTasksWithBuffer(Buffer& b) {
+    if (!isOfCategory(b, MajorMode::Category::PROGRAMMING)) {
+      return;
+    }
+    // the tasks are collected before any of them is attached: attaching one
+    // adds an entry to the very map this scan reads
+    auto frames = std::vector<QWidget*>{};
+    for (const auto& bt : this->bufferTasks) {
+      for (const auto& t : bt.second) {
+        if (compilationOutputFrameOf(t.w) != nullptr) {
+          frames.push_back(t.w);
+        }
+      }
+    }
+    for (auto* const f : frames) {
+      b.attachSecondaryTask(f);
+    }
+  }  // end of shareCompilationOutputTasksWithBuffer
 
   void EditorWidget::changeBuffer(const QString& n) {
     // the current buffer is discarded first: when several buffers visit

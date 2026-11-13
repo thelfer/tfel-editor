@@ -24,12 +24,40 @@ namespace tfel::gui {
   //! \brief abstract interface for all major modes
   struct TFEL_GUI_VISIBILITY_EXPORT MajorMode : public QObject {
     /*!
+     * \brief what a major mode is meant for, which decides which secondary
+     * tasks are worth sharing between the buffers it drives
+     *
+     * \note only the buffers whose main frame wears a mode of the
+     * `PROGRAMMING` category share a compilation output: the output of a
+     * compiler is about the source files of a project, and the buffers which
+     * edit prose or a `Makefile` have nothing to do with it
+     *
+     * \note a buffer whose main frame has no major mode at all is of no
+     * category: it shares nothing
+     */
+    enum class Category {
+      //! the mode edits text which is read as prose: `LaTeX`, `Markdown`
+      TEXT_EDITING,
+      //! the mode edits the source of a compiled program: the C/C++ modes
+      PROGRAMMING,
+      //! anything else
+      MISC
+    };
+    /*!
      * \brief constructor
      * \param[in] p: parent widget
      */
     MajorMode(QWidget* const);
     //! \return the name of the major mode
     virtual QString getName() const = 0;
+    /*!
+     * \return the category of the major mode
+     *
+     * \note \c MajorModeBase answers `Category::MISC`: a mode says what it is
+     * by overriding this method, as \c CMajorModeBase does for the C/C++
+     * family and \c LaTeXMajorMode and \c MarkdownMajorMode do for prose
+     */
+    virtual Category getCategory() const = 0;
     //! \return the description of the major mode
     virtual QString getDescription() const = 0;
    public slots:

@@ -50,11 +50,31 @@ namespace tfel::gui {
     QProcess& getProcess();
 
     /*!
+     * \return true when the frame displays the output of a compilation process,
+     * that is when its major mode is the `compilation-output` one
+     *
+     * \note that is what decides that the frame is shared with every buffer of
+     * the `MajorMode::Category::PROGRAMMING` category, see
+     * \c EditorWidget::shareCompilationOutputTaskWithProgrammingBuffers. The
+     * very same widget class shows the output of a `grep`, of a `mtest` or of
+     * an interactive session, and those are the business of the buffer which
+     * asked for them
+     *
+     * \note a frame which has no major mode yet displays nothing in
+     * particular: the mode is what tells the two cases apart, so the sharing is
+     * looked at both when the frame is attached to a buffer and when its major
+     * mode is installed, the sites which create such a frame doing one before
+     * the other
+     */
+    bool displaysCompilationOutput() const;
+
+    /*!
      * \brief destructor
      *
-     * \note the running process is terminated, then killed if it does not stop,
-     * and the \c finished signal is disconnected first so that the frame is not
-     * used as a reply is being handled
+     * \note the process is terminated, whether it is running or was only asked
+     * to start, then killed if it does not stop, and the \c finished signal is
+     * disconnected first so that the frame is not used as a reply is being
+     * handled
      */
     ~ProcessOutputFrame() override;
 

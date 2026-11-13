@@ -44,6 +44,12 @@ namespace tfel::gui {
     //! \return "LaTeX"
     QString getName() const override;
 
+    /*!
+     * \return `Category::TEXT_EDITING`: a LaTeX buffer is read as prose, the
+     * output of a compiler has nothing to share with it
+     */
+    Category getCategory() const override;
+
     //! \return "major mode dedicated to the LaTeX"
     QString getDescription() const override;
 

@@ -53,6 +53,17 @@ namespace tfel::gui {
     MajorModeBase(EditorWidget&, Buffer&, TextEditBase&, QWidget* const);
 
     /*!
+     * \return `Category::MISC`, which is what a mode which neither edits prose
+     * nor the source of a compiled program is made of
+     *
+     * \note a mode which wants its buffers to share the output of a compilation
+     * answers `Category::PROGRAMMING`, as \c CMajorModeBase does for the whole
+     * C/C++ family; a mode which edits text which is read as prose answers
+     * `Category::TEXT_EDITING`
+     */
+    Category getCategory() const override;
+
+    /*!
      * default implementation of the getCompleter method
      * \return a NULL pointer
      */

@@ -101,6 +101,10 @@ namespace tfel::gui {
     return QSettings().value("clangd/enable", true).toBool();
   }  // end of LspCxxSupport::isEnabled()
 
+  bool LspCxxSupport::startedByDefault() {
+    return QSettings().value("clangd/start-by-default", true).toBool();
+  }  // end of LspCxxSupport::startedByDefault()
+
   bool LspCxxSupport::semanticTokensEnabled() {
     return QSettings().value("clangd/semantic-tokens", true).toBool();
   }  // end of LspCxxSupport::semanticTokensEnabled()

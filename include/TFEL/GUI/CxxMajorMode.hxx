@@ -23,6 +23,7 @@
 
 // forward declarations
 class QKeyEvent;
+class QMouseEvent;
 
 namespace tfel::gui {
 
@@ -68,24 +69,31 @@ namespace tfel::gui {
    * where it is defined or declared, and the mouse cursor becomes the icon of
    * that jump — \c go-jump-definition or \c go-jump-declaration of the
    * Freedesktop Icon Naming Specification, the pointing hand when the theme
-   * has neither — while it rests on such a word. Neither asks the server on
-   * every keystroke or every pixel: one settling timer of the mode is shared
-   * by the cursor and the mouse, and the answers they get are remembered by
-   * word until the text or the session changes
+   * has neither — while it rests on such a word. A \c Ctrl-Left click on that
+   * word is the jump itself, which is what the icon promised: the same jump
+   * \c Alt-. does, to the declaration when nothing defines the symbol. Neither
+   * asks the server on every keystroke or every pixel: one settling timer of
+   * the mode is shared by the cursor and the mouse, and the answers they get
+   * are remembered by word, with the places they name, until the text or the
+   * session changes
    *
    * \note the message of a diagnostic is shown when it is pointed at: the
    * minibuffer echoes it once the cursor has settled on the underlined range,
    * and resting the mouse on that range shows the same text as a tooltip
    *
-   * \note the server is never started by the mode: a session is launched by
-   * the user, from the "C/C++" menu of the mode or the \c launch-clangd
-   * commands, with or without a compilation database, and a session which is
-   * running is replaced by the one which is asked for. The session launched
-   * without an explicit database uses the file given to \c tfel-editor as
-   * \c --compile-commands-file, or the database \c searchCompileCommandsFile
-   * finds in the project of the current buffer, or none. The documents of the
-   * buffers are held by the client in the meantime and sent to the session
-   * once it is up
+   * \note a buffer of a project which holds a compilation database starts a
+   * session with it, since the options its files are compiled with are then
+   * known and a session which reads them is what such a buffer was opened
+   * for; the setting `clangd/start-by-default` turns that off, and a file of a
+   * project which holds no database starts nothing either way: a session which
+   * guesses the compilation options is a decision, not a discovery, and is what
+   * the entries of the "C/C++" menu and the \c start-clangd commands ask for.
+   * A session which is running is replaced by the one which is asked for. The
+   * session started without an explicit database uses the file given to
+   * \c tfel-editor as \c --compile-commands-file, or the database
+   * \c searchCompileCommandsFile finds in the project of the buffer, or none.
+   * The documents of the buffers are held by the client in the meantime and
+   * sent to the session once it is up
    */
   struct TFEL_GUI_VISIBILITY_EXPORT CxxMajorMode : public CMajorModeBase {
     /*!
@@ -104,9 +112,9 @@ namespace tfel::gui {
     QString getDescription() const override;
 
     /*!
-     * \return the entries of the configuration the mode uses: the four which
-     * decide what is asked to \c clangd, in a theme of their own named after
-     * the program
+     * \return the entries of the configuration the mode uses: the five which
+     * decide what is asked to \c clangd and when a session of it is started, in
+     * a theme of their own named after the program
      *
      * \note this static method is what \c StandardMajorModeProxy reports as the
      * settings of the mode, see \c MajorModeProxy::getSettingsGroups. The
@@ -145,6 +153,27 @@ namespace tfel::gui {
     bool eventFilter(QObject *const, QEvent *const) override;
 
     /*!
+     * \brief jump to the definition, or to the declaration, of the symbol the
+     * \c Ctrl-Left click was pressed on
+     * \param[in] e : the mouse press the text edit is about to handle itself
+     *
+     * \note the click is the mouse's \c Alt-.: the icon of the jump which the
+     * mode put under the pointer promised a place to go, and a pointer which
+     * promises and does nothing is worse than one which says nothing. Where the
+     * symbol is nothing to jump to, the click is handed back to the text edit,
+     * which places the cursor as it always does
+     *
+     * \note the answers the tracking of the mouse already got for that word are
+     * used as they are, so the click which follows the icon of the jump asks
+     * nothing and lands at once; a word which was never rested on is asked
+     * about, and waited for a moment only, as the context menu is
+     *
+     * \return true when the click jumped, that is when the text edit shall not
+     * move the cursor to the place it was clicked on
+     */
+    bool mousePressEvent(QMouseEvent *const) override;
+
+    /*!
      * \return the completer of the language server while its popup is shown,
      * the one of the base class otherwise, that is none
      */
@@ -165,7 +194,7 @@ namespace tfel::gui {
     void completeCurrentWord(TextEditBase &, const QString &) override;
 
     /*!
-     * \return the "C/C++" menu of the mode, with the two entries which launch
+     * \return the "C/C++" menu of the mode, with the two entries which start
      * a \c clangd session and the one which ends it
      *
      * \note as any specific menu of a major mode, the caller owns the returned
@@ -243,6 +272,24 @@ namespace tfel::gui {
      */
     void openOrRenameDocument();
     /*!
+     * \brief start a session of \c clangd for the file this buffer visits, when
+     * nothing is running and the project of that file holds a compilation
+     * database
+     *
+     * \note what is started here is a session which reads the options the
+     * files of a project are compiled with: that is not a guess, and a buffer
+     * opened in a project which says how it is built was opened to be worked
+     * on with those options. Where no database is found, nothing is started: a
+     * session which guesses the compilation options of a file is a decision for
+     * the user, and the entries of the "C/C++" menu are where it is taken
+     *
+     * \note the setting `clangd/start-by-default` is read here, on every buffer
+     * which is opened, and a session which runs is left alone: which database a
+     * running session reads was decided when it started, and a buffer of
+     * another project is none to replace it
+     */
+    void startClangdIfNeeded();
+    /*!
      * \brief underline the diagnostics the server last published, as the
      * `clangd` contribution of the extra selections of the text edit
      */
@@ -266,6 +313,13 @@ namespace tfel::gui {
       qint64 revision = -1;
       //! what the server says of it, see above
       int capabilities = -1;
+      /*!\brief where the server says the word is defined, empty when nothing
+       * was found: the places a \c Ctrl-Left click on the word jumps to, which
+       * is why the answers are kept and not only counted
+       */
+      QVector<LspLocation> definitions;
+      //! the same, for the declarations of the word
+      QVector<LspLocation> declarations;
     };
     //! the word under the text cursor, as far as it was resolved
     TrackedWord cursor_word;
@@ -371,6 +425,20 @@ namespace tfel::gui {
     void applyTrackedCursor();
     //! the mouse cursor over the word it rests on, once it is resolved
     void applyTrackedHover();
+    /*!\brief jump to the definition of the symbol at the given position of the
+     * document, or to its declaration when nothing defines it, as the
+     * \c Ctrl-Left click of the mouse does
+     * \param[in] position: where the click was pressed, in the document
+     * \return true when the cursor went somewhere, false when the symbol has
+     * nowhere to go, in which case the click is a plain click
+     *
+     * \note the two questions are asked at once and waited for together, as the
+     * context menu asks its two, and the answers the tracking of the mouse
+     * already holds are used without asking again: the click which follows the
+     * icon of the jump is the common case and shall not wait on a server which
+     * is busy parsing the file
+     */
+    bool jumpFromMouse(const int position);
     /*!\brief echo the message of the diagnostic the cursor stands on, if any
      *
      * \c report is called only when the diagnostic under the cursor differs
@@ -445,6 +513,21 @@ namespace tfel::gui {
     QCompleter *lspCompleter = nullptr;
     //! true while the server popup is up
     bool lspCompletionActive = false;
+    /*!\brief true while the \c Ctrl-Left click the mode answered is held down
+     *
+     * The press is consumed by the jump, so the release of the same click has
+     * to be consumed too: left to the text edit, it would move the cursor to the
+     * place it was clicked on, after the jump had moved it elsewhere
+     */
+    bool mouse_press_consumed = false;
+    /*!\brief true once the failure of an automatic session has been reported
+     *
+     * A program which will not start is a mistake the settings hold, and every
+     * new buffer of the project would report it again; once is enough to find
+     * the address of the setting, and the entries of the menu say what the
+     * automatic start left unsaid.
+     */
+    bool auto_start_failure_reported = false;
 
     Q_OBJECT
   };  // end of struct CxxMajorMode

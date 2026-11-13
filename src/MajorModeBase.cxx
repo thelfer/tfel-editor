@@ -43,6 +43,10 @@ namespace tfel::gui {
     emit updatedMenu();
   }  // end of MajorModeBase::update
 
+  MajorMode::Category MajorModeBase::getCategory() const {
+    return Category::MISC;
+  }  // end of getCategory
+
   QCompleter* MajorModeBase::getCompleter() {
     return nullptr;
   }  // end of MajorModeBase::getCompleter

@@ -164,6 +164,10 @@ namespace tfel::gui {
     return "LaTeX";
   }  // end of LaTeXMajorMode::LaTeXMajorMode
 
+  MajorMode::Category LaTeXMajorMode::getCategory() const {
+    return Category::TEXT_EDITING;
+  }  // end of getCategory
+
   QString LaTeXMajorMode::getDescription() const {
     return "major mode dedicated to the LaTeX";
   }  // end of LaTeXMajorMode::LaTeXMajorMode

@@ -15,6 +15,7 @@
 #include <TFEL/GUI/Config.hxx>
 
 class QValidator;
+class QMimeData;
 
 namespace tfel::gui {
 
@@ -34,7 +35,11 @@ namespace tfel::gui {
    * - `Return` emits `returnPressed` without inserting anything, as in a
    *   `QLineEdit`, while `Shift+Return` inserts a new line (`QLineEdit`
    *   treated both keys alike);
-   * - pasted newlines are kept: the widget grows to display them;
+   * - pasted newlines are kept: the widget grows to display them. The Unicode
+   *   line separators are not: they are turned into new lines, as a
+   *   `QTextDocument` keeps them inside a block while the layout breaks the
+   *   displayed line on them, which makes an input show two rows for what the
+   *   document knows as a single line;
    * - the height grows up to ten lines, beyond which a vertical scroll bar
    *   takes over;
    * - rich text is never accepted: pasted content is inserted as plain text.
@@ -223,6 +228,12 @@ namespace tfel::gui {
      * shrinks and the content has to grow back when it grows again
      */
     bool eventFilter(QObject *, QEvent *) override;
+    /*!
+     * \brief insert the text a paste or a drop asks for, the Unicode line
+     * separators of that text being turned into new lines, see \c setText
+     * \param[in] source: data to insert
+     */
+    void insertFromMimeData(const QMimeData *source) override;
     /*!
      * \brief handle the request to propagate the height of the content to the
      * enclosing layouts

@@ -241,20 +241,28 @@ void TestSettings::theMajorModesExportTheEntriesTheyUse() {
   auto& r = SettingsRegistry::getSettingsRegistry();
   const auto themes = r.getGroupsNames();
   // the C++ mode is part of the library the test links, so the theme it names
-  // after the program it drives is there, with the four entries the clangd
+  // after the program it drives is there, with the five entries the clangd
   // support reads
   QVERIFY2(
       themes.contains(QStringLiteral("clangd")),
       qPrintable("the clangd theme is missing. Themes: " + themes.join(", ")));
   const auto clangd = r.getSettingsKeysOfGroup(QStringLiteral("clangd"));
   QCOMPARE(addressesOf(clangd), QStringList() << "clangd/enable"
+                                              << "clangd/start-by-default"
                                               << "clangd/executable"
                                               << "clangd/arguments"
                                               << "clangd/semantic-tokens");
   QCOMPARE(clangd[0].type, SettingsKey::BOOLEAN);
   QVERIFY2(clangd[0].default_value.toBool(),
            "the clangd support is not asked for by default");
-  QCOMPARE(clangd[2].type, SettingsKey::STRING_LIST);
+  // a file of a project which says how it is compiled is a file which was
+  // opened to be worked on with those options: the session which reads them is
+  // started without being asked for, and that choice is the second entry
+  QCOMPARE(clangd[1].type, SettingsKey::BOOLEAN);
+  QVERIFY2(clangd[1].default_value.toBool(),
+           "a project which has a compilation database starts no session by "
+           "default");
+  QCOMPARE(clangd[3].type, SettingsKey::STRING_LIST);
   // the grammar checker is a program of its own, and the C++ mode declares the
   // three addresses its sessions read: whether a buffer takes one with it, which
   // program such a session runs, and which English it reads a text as. The
@@ -291,7 +299,7 @@ void TestSettings::theMajorModesExportTheEntriesTheyUse() {
   QCOMPARE(r.getSettingsKey("harper/dialect")->group,
            QStringLiteral("harper"));
   // a mode which uses no entry of the configuration has no theme of its own:
-  // the mode `C++` asks `clangd` the four entries above, the checker the three
+  // the mode `C++` asks `clangd` the five entries above, the checker the three
   // of it, and nothing else, the grep output is registered in this library and
   // exports nothing
   const auto silent = QStringList() << "C++"

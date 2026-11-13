@@ -12,6 +12,7 @@
 #include <QtCore/QTemporaryFile>
 #include <QtGui/QSyntaxHighlighter>
 #include <QtGui/QDesktopServices>
+#include <QtGui/QTextBlock>
 #include "TFEL/Glossary/Glossary.hxx"
 #include "TFEL/Glossary/GlossaryEntry.hxx"
 #include "TFEL/GUI/Utilities.hxx"
@@ -652,9 +653,18 @@ namespace tfel::gui {
       return false;
     }
     auto& p = this->co->getProcess();
-    if (p.state() != QProcess::Running) {
+    if (p.state() == QProcess::NotRunning) {
       return false;
     }
+    // A process which was asked to start on this very call is still `Starting`
+    // for a few milliseconds: `QProcess` keeps what is written to it then and
+    // hands it to the child as soon as it is up, so the first line of a session
+    // waits in the queue of the process, it is not lost. Refusing to write in
+    // that state is what made `Ctrl-C Ctrl-L` drop the line which started the
+    // solver — and `Ctrl-C Ctrl-B` refuse the whole buffer, since its very
+    // first line is that line. The state is asked for, never `waitForStarted`,
+    // which would freeze the interface instead of letting the event loop do its
+    // work.
     p.write((l + '\n').toLatin1());
     return true;
   }  // end of CastemMajorMode::sendToCastem
@@ -966,9 +976,13 @@ namespace tfel::gui {
   }  // end of CastemMajorMode::getCommentSyntax
 
   bool CastemMajorMode::sendLineToCastem() {
-    auto tc = this->textEdit.textCursor();
-    tc.select(QTextCursor::BlockUnderCursor);
-    return this->sendToCastem(tc.selectedText());
+    // the text of the line the cursor is in, not the text of a selection over
+    // that line: `select(BlockUnderCursor)` reaches back to the character the
+    // preceding line ends with, and the `toLatin1` of the write turns it into a
+    // `?` the solver is given in front of the line. The text of the block is
+    // the line of the file, whatever the place of the cursor in it and whatever
+    // the wrapping policy gives it on the screen.
+    return this->sendToCastem(this->textEdit.textCursor().block().text());
   }  // end of CastemMajorMode::sendLineToCastem
 
   bool CastemMajorMode::sendRegionToCastem() {
@@ -985,8 +999,10 @@ namespace tfel::gui {
     b.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
     const auto last = e.blockNumber();
     while (b.blockNumber() <= last) {
-      b.select(QTextCursor::BlockUnderCursor);
-      if (!this->sendToCastem(b.selectedText())) {
+      // the text of the block, as in `sendLineToCastem`: a selection over the
+      // line would carry the character the preceding line ends with, which the
+      // `toLatin1` of the write turns into a `?` in front of the line
+      if (!this->sendToCastem(b.block().text())) {
         return false;
       }
       if (b.blockNumber() == last) {
@@ -1008,8 +1024,8 @@ namespace tfel::gui {
     // the buffer does not end with a new line)
     const auto last = e.atBlockStart() ? e.blockNumber() - 1 : e.blockNumber();
     while (b.blockNumber() <= last) {
-      b.select(QTextCursor::BlockUnderCursor);
-      if (!this->sendToCastem(b.selectedText())) {
+      // the text of the block, as in the two other sending commands
+      if (!this->sendToCastem(b.block().text())) {
         return false;
       }
       if (b.blockNumber() == last) {

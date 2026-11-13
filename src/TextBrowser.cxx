@@ -79,15 +79,15 @@ namespace tfel::gui {
   void TextBrowser::appendPlainText(const QString& t) {
     QTextCursor tc = this->e->textCursor();
     tc.movePosition(QTextCursor::End, QTextCursor::MoveAnchor);
-    tc.insertText(t);
+    tc.insertText(normalizeLineSeparators(t));
   }
 
   void TextBrowser::insertPlainText(const QString& t) {
-    return this->e->insertPlainText(t);
+    return this->e->insertPlainText(normalizeLineSeparators(t));
   }
 
   void TextBrowser::setPlainText(const QString& t) {
-    return this->e->setPlainText(t);
+    return this->e->setPlainText(normalizeLineSeparators(t));
   }
 
   void TextBrowser::appendHtml(const QString& t) {

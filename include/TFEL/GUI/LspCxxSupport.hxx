@@ -22,11 +22,29 @@ namespace tfel::gui {
    * `clangd/enable` (true by default), `clangd/executable` (an absolute path,
    * tried first), `clangd/arguments` (a string list appended to what the
    * client needs), `clangd/semantic-tokens` (true by default: the identifiers
-   * the server says what they are take the face of what they are)
+   * the server says what they are take the face of what they are),
+   * `clangd/start-by-default` (true by default: a buffer of a project which
+   * holds a compilation database starts a session with it)
    */
   struct TFEL_GUI_VISIBILITY_EXPORT LspCxxSupport {
     //! \return the setting `clangd/enable`, true when unset
     static bool isEnabled();
+    /*!
+     * \return the setting `clangd/start-by-default`, true when unset: whether a
+     * buffer whose project holds a compilation database starts a session with
+     * that database
+     *
+     * \note what makes an automatic session worth having is that the options
+     * the files of a project are compiled with are *known*: a session which
+     * guesses them reports errors which the build does not have. Where no
+     * database is found, nothing is started either way, and a session which
+     * guesses is what the entries of the `C/C++` menu ask for
+     *
+     * \note like `clangd/semantic-tokens`, this one is read on every buffer,
+     * not once at the construction of a mode, so the next file which is opened
+     * follows the answer without restarting the editor
+     */
+    static bool startedByDefault();
     /*!
      * \return the setting `clangd/semantic-tokens`, true when unset: whether
      * the colors of the identifiers come from the server

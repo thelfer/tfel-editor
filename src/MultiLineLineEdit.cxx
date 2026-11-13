@@ -7,6 +7,7 @@
 
 #include <QtCore/QEvent>
 #include <QtCore/QCoreApplication>
+#include <QtCore/QMimeData>
 #include <QtGui/QAbstractTextDocumentLayout>
 #include <QtGui/QFontMetrics>
 #include <QtGui/QKeyEvent>
@@ -19,6 +20,7 @@
 #include <QtWidgets/QLayout>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSplitter>
+#include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/MultiLineLineEdit.hxx"
 
 namespace tfel::gui {
@@ -167,7 +169,7 @@ namespace tfel::gui {
   }  // end of MultiLineLineEdit::text
 
   void MultiLineLineEdit::setText(const QString& t) {
-    this->setPlainText(t);
+    this->setPlainText(normalizeLineSeparators(t));
     auto c = this->textCursor();
     // a read only widget shows a text rather than receiving one: the cursor
     // goes to the start, as the view follows the cursor and an editable
@@ -184,9 +186,35 @@ namespace tfel::gui {
     }
     auto c = this->textCursor();
     // as in a `QLineEdit`, the selection, if any, is replaced
-    c.insertText(t);
+    c.insertText(normalizeLineSeparators(t));
     this->setTextCursor(c);
   }  // end of MultiLineLineEdit::insert
+
+  /*!
+   * \brief insert the text a paste or a drop asks for, the Unicode line
+   * separators being turned into new lines
+   * \param[in] source: data to insert
+   *
+   * The clipboard is the main way an invisible U+2028 LINE SEPARATOR reaches a
+   * text of the editor, and a `QTextDocument` keeps that character inside a
+   * block while the layout breaks the displayed line on it: the input would
+   * show two rows for what the document knows as a single line, and `Ctrl-E`
+   * would stop above the second row.
+   */
+  void MultiLineLineEdit::insertFromMimeData(const QMimeData* const source) {
+    if ((source == nullptr) || (!source->hasText())) {
+      return QTextEdit::insertFromMimeData(source);
+    }
+    const auto t = normalizeLineSeparators(source->text());
+    if (t == source->text()) {
+      return QTextEdit::insertFromMimeData(source);
+    }
+    // rich text is never accepted by this widget, so a mime data holding the
+    // normalized text stands for the original one
+    auto mimeData = QMimeData();
+    mimeData.setText(t);
+    return QTextEdit::insertFromMimeData(&mimeData);
+  }  // end of MultiLineLineEdit::insertFromMimeData
 
   int MultiLineLineEdit::cursorPosition() const {
     return this->textCursor().position();

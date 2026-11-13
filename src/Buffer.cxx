@@ -496,6 +496,10 @@ namespace tfel::gui {
         this->stw->setCurrentWidget(w);
         this->stw->show();
       }
+      // a task which has just come to life is shared with the buffers it
+      // concerns; the widget handed over is the one the caller gave, either
+      // identity reaches the registered task
+      this->editor.shareCompilationOutputTaskWithProgrammingBuffers(s);
       return w;
     }
     st.w = s;
@@ -505,6 +509,9 @@ namespace tfel::gui {
       this->stw->setCurrentWidget(s);
       this->stw->show();
     }
+    // same for a task which is not a scroll area, which is the case of the
+    // frames displaying the output of a process
+    this->editor.shareCompilationOutputTaskWithProgrammingBuffers(s);
     return s;
   }  // end of attachSecondaryTask
 

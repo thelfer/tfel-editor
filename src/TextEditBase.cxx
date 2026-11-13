@@ -379,6 +379,16 @@ namespace tfel::gui {
       this->mode->setSpellCheckLanguage(this->spellCheckLanguage);
       this->mode->setSyntaxHighlighter(this->document());
       emit majorModeChanged();
+      // the frame which displays the output of a compilation is shared with
+      // every buffer editing a source file, and the mode of that frame is what
+      // says it is such a frame. This is looked at here as well as when a
+      // secondary task is attached because the sites which create such a frame
+      // do not install its mode in the same order: `ProcessLineEdit` gives the
+      // mode then attaches, `MFrontMajorMode::runMFront` attaches then gives
+      // the mode, and both share nothing until the second of the two happened.
+      if (this->isSecondaryTask()) {
+        this->editor.shareCompilationOutputTaskWithProgrammingBuffers(this);
+      }
     } else {
       this->editor.displayInformativeMessage(
           QObject::tr("setting major mode '%1' is not allowed")

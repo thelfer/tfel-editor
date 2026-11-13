@@ -24,6 +24,10 @@ namespace tfel::gui {
       : CompiledLanguageMajorModeBase(w, b, t) {
   }  // end of CMajorModeBase::CMajorModeBase
 
+  MajorMode::Category CMajorModeBase::getCategory() const {
+    return Category::PROGRAMMING;
+  }  // end of getCategory
+
   void CMajorModeBase::format() {
     auto c = this->textEdit.textCursor();
     auto b = c;

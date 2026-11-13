@@ -107,8 +107,9 @@ Refused in the `initialize` handshake, so the server will not use them:
   lines**: `Qt 6.2` does not ink wave styles in its text widgets. The
   faces of the semantic tokens are a foreground color and a strike-out,
   which that Qt does ink.
-- One `clangd` per editor **window**, launched by the user; the
-  compilation database is read from the directory fixed at launch.
+- One `clangd` per editor **window**, started on being asked or by the file
+  of a project which has a database; the compilation database is read from
+  the directory fixed when the session starts.
   Regenerating that file in place changes the options the next parse of
   a file uses — `clangd` re-reads it by itself — but not what the server
   knows about the files it has already indexed: see

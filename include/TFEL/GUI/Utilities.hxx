@@ -53,6 +53,27 @@ namespace tfel::gui {
   findFileInDirectoryOrParentDirectory(const QString&, const QString&);
 
   /*!
+   * \brief replace the Unicode line separators of a text by the character the
+   * documents of the editor break their lines on
+   * \param[in] t: text to normalize
+   *
+   * A `QTextDocument` stores the U+2028 LINE SEPARATOR and U+0085 NEXT LINE
+   * characters as any other character: they stay inside a single block of its
+   * internal structure, while the layout breaks a displayed line on them. A
+   * text which carries one of them is therefore drawn on two lines, but the
+   * document knows only one: the current line highlight covers both,
+   * `EndOfBlock` stops before the phantom line and the first of the two lines
+   * is highlighted as a whole.
+   *
+   * Qt itself turns U+2029 PARAGRAPH SEPARATOR into the end of a block, which
+   * is why that one is left alone here. The line separator U+2028 is the
+   * character which matters: it is what the clipboard of a text cut on a folded
+   * line, or of a Java or JavaScript source, can carry, and it is invisible on
+   * the screen.
+   */
+  TFEL_GUI_VISIBILITY_EXPORT QString normalizeLineSeparators(const QString& t);
+
+  /*!
    * \return the regular expression matching a file name, that is, a sequence
    * of letters, digits, dots, underscores, pluses and minuses
    *

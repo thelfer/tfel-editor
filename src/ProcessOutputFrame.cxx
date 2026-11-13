@@ -54,12 +54,24 @@ namespace tfel::gui {
     return *(this->process);
   }  // end of getProcess
 
+  bool ProcessOutputFrame::displaysCompilationOutput() const {
+    // the name of the mode is the only thing which tells the output of a
+    // compilation from the output of any other command: the modes which display
+    // a process output are not exported and the frame holds none of them
+    return this->hasMajorMode() &&
+           (this->getMajorMode().getName() == "compilation-output");
+  }  // end of displaysCompilationOutput
+
   ProcessOutputFrame::~ProcessOutputFrame() {
     using QProcessFinished = void (QProcess::*)(int, QProcess::ExitStatus);
     QObject::disconnect(this->process,
                         static_cast<QProcessFinished>(&QProcess::finished),
                         this, &ProcessOutputFrame::processFinished);
-    if (this->process->state() == QProcess::Running) {
+    if (this->process->state() != QProcess::NotRunning) {
+      // a process which was only asked to start is `Starting`, and it is as
+      // much this frame's child as one which is up already: left alone, it is
+      // killed by the destructor of the process itself, with a complaint on the
+      // standard error. `terminate` reaches it in that state too.
       this->process->terminate();
       if (!this->process->waitForFinished()) {
         this->process->kill();

@@ -175,7 +175,9 @@ namespace tfel::gui {
 
     /*!
      * \brief send the line the editor's cursor is in to `Cast3M`
-     * \return true if the line was written to the solver
+     * \return true if the line reached the input of the solver, which includes
+     * the line which started it: such a line waits in the queue of the process
+     * until the child is up
      *
      * \note \c startCastem is called first, so the solver is started when no
      * process is running yet
@@ -193,7 +195,7 @@ namespace tfel::gui {
 
     /*!
      * \brief send the whole buffer to `Cast3M`, one line at a time
-     * \return true if every line was written to the solver
+     * \return true if every line reached the input of the solver
      *
      * \note the last line is skipped when it is empty, that is when the
      * buffer ends with a new line character
@@ -260,7 +262,8 @@ namespace tfel::gui {
     /*!
      * \brief write a line to the standard input of the `Cast3M` process
      * \param[in] l : line to send; a new line character is appended to it
-     * \return true if the line was written
+     * \return true if the line reached the input of the process, that is if it
+     * was written or queued for the child which is being started
      *
      * \note \c startCastem is called first, so the solver is started when it
      * is not running yet

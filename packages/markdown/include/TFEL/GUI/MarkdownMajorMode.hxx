@@ -33,6 +33,13 @@ namespace tfel::gui {
     //! \return "Markdown"
     QString getName() const override;
 
+    /*!
+     * \return `Category::TEXT_EDITING`: a Markdown buffer is read as prose, the
+     * output of a compiler has nothing to share with it, even though the mode
+     * does know how to run a command on the file it edits
+     */
+    Category getCategory() const override;
+
     //! \return "major mode dedicated to the Markdown language"
     QString getDescription() const override;
 

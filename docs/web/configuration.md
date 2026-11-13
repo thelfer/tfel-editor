@@ -129,6 +129,7 @@ written and nothing else.
 | Entry                      | Widgets             | Takes effect             |
 |----------------------------|---------------------|--------------------------|
 | `clangd/enable`            | a check box         | a new buffer             |
+| `clangd/start-by-default`  | a check box         | the next file opened     |
 | `clangd/executable`        | a one line edit     | the next session         |
 | `clangd/arguments`         | a list of strings   | the next session         |
 | `clangd/semantic-tokens`   | a check box         | the buffer as it settles |
@@ -136,10 +137,12 @@ written and nothing else.
 What the `C`/`C++` mode asks the language server, and what it asks it
 with. See [the `clangd` support page](clangd-support.html) for what each
 of them does: a mode which is already attached to a buffer was built with
-the answer of `clangd/enable`, and `Launch clangd` refuses a session while
+the answer of `clangd/enable`, and `Start clangd` refuses a session while
 it is off; the program and its arguments are read when a session is
-launched. The `Color identifiers` entry of the `C/C++` menu writes the same
-address as `clangd/semantic-tokens`.
+started; `clangd/start-by-default` decides whether a file of a project
+which has a `compile_commands.json` starts a session which reads it, and
+is read again on every file opened. The `Color identifiers` entry of the
+`C/C++` menu writes the same address as `clangd/semantic-tokens`.
 
 ## harper
 
@@ -217,8 +220,8 @@ program it drives names its theme after that program:
     clangd.description = QObject::tr(
         "What the C++ mode asks the language server, and what it "
         "asks it with. A session reads the program, its arguments "
-        "and the compilation database when it is launched: what "
-        "changes here reaches the next `Launch clangd`");
+        "and the compilation database when it is started: what "
+        "changes here reaches the next `Start clangd`");
     clangd.keys =
         QVector<SettingsKey>()
         << SettingsKey::boolean("clangd/enable",
@@ -228,7 +231,7 @@ program it drives names its theme after that program:
                                             "its files and asks nothing to "
                                             "anyone"),
                                 true)
-        // ... the three other entries the clangd support reads
+        // ... the four other entries the clangd support reads
         ;
     return QVector<SettingsGroup>() << clangd;
   }

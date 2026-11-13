@@ -11,6 +11,7 @@
 #include <QtCore/QDate>
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
+#include <QtCore/QMimeData>
 #include <QtCore/QSettings>
 #include <QtCore/QTextStream>
 #include <QtCore/QStandardPaths>
@@ -30,8 +31,41 @@
 
 namespace tfel::gui {
 
+  namespace {
+
+    /*!
+     * \brief the text edit of a plain text buffer
+     *
+     * The only thing this class adds to `QPlainTextEdit` is that the text which
+     * comes in through the clipboard or a drag and drop is normalized as the
+     * text which is read from a file or typed is: a `QTextDocument` keeps the
+     * Unicode line separators inside a block, while the layout breaks the
+     * displayed line on them, so that such an invisible character makes a line
+     * which is drawn on two rows, highlighted on both, and which `Ctrl-E` does
+     * not reach the end of.
+     */
+    struct EditorTextWidget : QPlainTextEdit {
+      explicit EditorTextWidget(QWidget* const p) : QPlainTextEdit(p) {}
+      void insertFromMimeData(const QMimeData* const s) override {
+        if ((s == nullptr) || (!s->hasText())) {
+          return QPlainTextEdit::insertFromMimeData(s);
+        }
+        const auto t = normalizeLineSeparators(s->text());
+        if (t == s->text()) {
+          return QPlainTextEdit::insertFromMimeData(s);
+        }
+        // `QPlainTextEdit` only ever inserts the plain text of a mime data, so
+        // replacing it by the normalized text loses nothing
+        auto d = QMimeData();
+        d.setText(t);
+        return QPlainTextEdit::insertFromMimeData(&d);
+      }  // end of insertFromMimeData
+    };   // end of struct EditorTextWidget
+
+  }  // end of anonymous namespace
+
   PlainTextEdit::PlainTextEdit(EditorWidget& g, Buffer& b)
-      : TextEditBase(g, b), e(new QPlainTextEdit(this)) {
+      : TextEditBase(g, b), e(new EditorTextWidget(this)) {
     this->initialize(this->e);
 #pragma message("warning")
     auto* hl = new QHBoxLayout;
@@ -45,7 +79,7 @@ namespace tfel::gui {
   }  // end of PlainTextEdit()
 
   PlainTextEdit::PlainTextEdit(const QString& f, EditorWidget& g, Buffer& b)
-      : TextEditBase(g, b), e(new QPlainTextEdit(this)) {
+      : TextEditBase(g, b), e(new EditorTextWidget(this)) {
     this->initialize(this->e);
     auto* hl = new QHBoxLayout;
     setQAbstractScrollAreaInLayout(hl, this->e);
@@ -122,15 +156,15 @@ namespace tfel::gui {
   bool PlainTextEdit::isReadOnly() { return this->e->isReadOnly(); }
 
   void PlainTextEdit::appendPlainText(const QString& t) {
-    return this->e->appendPlainText(t);
+    return this->e->appendPlainText(normalizeLineSeparators(t));
   }
 
   void PlainTextEdit::insertPlainText(const QString& t) {
-    return this->e->insertPlainText(t);
+    return this->e->insertPlainText(normalizeLineSeparators(t));
   }
 
   void PlainTextEdit::setPlainText(const QString& t) {
-    return this->e->setPlainText(t);
+    return this->e->setPlainText(normalizeLineSeparators(t));
   }
 
   void PlainTextEdit::appendHtml(const QString& t) {

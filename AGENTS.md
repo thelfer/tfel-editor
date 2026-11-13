@@ -334,6 +334,79 @@ the banner are found by a test through `findChild<QPushButton*>` /
 visible `LineEdit` plus `userEditingFinished`), and the new-file save which
 must ask nothing.
 
+### No Unicode line separator inside a block (`normalizeLineSeparators`)
+
+A `QTextDocument` keeps the U+2028 LINE SEPARATOR and the U+0085 NEXT LINE
+character **inside a block**, while `QTextLayout` breaks the **displayed** line
+on them: such an invisible character makes a line the screen draws on two rows
+and the document knows as one. `highlightCurrentLine` covers both rows (what
+reads as "the first *and* the second line are highlighted"), and `Ctrl-E`, which
+is `QTextCursor::EndOfBlock`, stops at the end of the block — that is, on the
+*second* row, one character past where the line the reader sees ends — which is
+"the end of the first line is not detected correctly". Qt itself turns U+2029
+PARAGRAPH SEPARATOR into the end of a block, so that one needs nothing: what
+matters is U+2028, the character the clipboard of a text cut on a folded line,
+or a Java or JavaScript source, carries.
+
+`normalizeLineSeparators` (`Utilities.cxx`, declared in `Utilities.hxx`) is the
+one place that turns the two characters into `'\n'`, and the rule is that **every
+text which reaches a document of the editor goes through it**:
+`PlainTextEdit::setPlainText` / `insertPlainText` / `appendPlainText` (hence the
+file constructors, `reloadFile`, the templates and the output of a process), the
+same three of `TextEdit` and `TextBrowser`, `MultiLineLineEdit::setText` and
+`insert`, and the two `insertFromMimeData` overrides.
+
+Traps, all paid for:
+
+- **Word wrap is not the cause, and a screenshot cannot tell them apart without
+  measuring.** With wrap on (`WrapAnywhere`, what `PlainTextEdit` sets), the band
+  of the current line spans the whole viewport on both readings; what distinguishes
+  them is that the *text* stops well short of the right edge while the band runs to
+  it, and `block.layout()->lineCount() > 1` for a block no visible break explains.
+  Measured for a first line of 83 characters which fits the width: the band of
+  `darkYellow` at alpha 60 is 17 pixel rows of one text row, and 38 — two rows —
+  for the same line ending with U+2028 (a live display, `DISPLAY=:99` with
+  metacity, `QWidget::render` of the buffer of the real editor); and the caret of
+  `Ctrl-E` goes to x=484 on the row the line is drawn on, against x=4, y=18, the
+  start of the phantom row, with it (offscreen).
+  Fixing the movement primitives instead (`Ctrl-E` moving to the end of the visual
+  line) would leave the two rows, the highlight over both, and the arrow keys, which
+  do follow the layout, disagreeing with `Ctrl-E`.
+- **Only the separators do this, so filter those and nothing else.** U+200B ZERO
+  WIDTH SPACE and U+0085 NEXT LINE were checked the same way: the first is an
+  ordinary zero-width character of the block, the second is a line break in the
+  encodings which have it and does break the displayed line, so it is normalized
+  with U+2028. U+2029 needs nothing, as Qt makes it the end of a block.
+- **The entry point is the text edit, and paste is not one of its methods.**
+  `QTextEdit` and `QPlainTextEdit` have no setter of the pasted text to wrap: the
+  clipboard, the context menu, the X11 middle-click selection *and* drag and drop
+  all funnel through the protected virtual `insertFromMimeData`, which the editor
+  therefore overrides — in the anonymous-namespace `EditorTextWidget` of
+  `PlainTextEdit.cxx` (no `Q_OBJECT`, so no `qt_sources` entry, and the base class
+  vtable dispatches to it), and in `MultiLineLineEdit`, whose declaration of it is a
+  vtable change: `cmake --build . --target TFELEditor` alone leaves the packaged
+  modes built against the old layout, see the note on `SettingsGroup`.
+- **The shim of the minibuffer needs it as much as the buffers.** Its height comes
+  from `documentSize()`, so a phantom row is a row the entry pays for and `text()`
+  says nothing about — a two-rows-tall input holding a one-line command.
+- A raw `QTextCursor::insertText` is deliberately **not** filtered: what the modes,
+  the kill ring and the LSP edits insert is text the document already holds, so
+  whatever reaches such an insertion with a separator came from a document which
+  was normalized when it was read.
+
+`LspProtocol::textOf` keeps a U+2028 it finds inside a block as the character it
+is (`testTextOf` asserts that), because the protocol counts a block as one line and
+turning the character into a line break would move every offset behind it; that is
+consistent with the invariant above, since no block of a document of the editor
+holds one of the two characters any more.
+
+`test-line-separators` covers the helper, the file which is read with a separator
+at the end of a line (no block holds one, and the first line is drawn on **one**
+row), `Ctrl-E` reaching the end of the line it was asked on, the paste of a text
+which carries one, and `MultiLineLineEdit` — the input's `text()` and its number of
+blocks. Run against a library which normalizes nothing, five of its seven cases
+fail; the assertions are what the defect is, not an echo of the fix.
+
 ## Tests / CI
 
 Tests exist (issue #123, Qt Test based) but are **not built by default**: they
@@ -402,15 +475,17 @@ and unambiguous: the widget the layout of its parent still holds is the live one
 `CommandLine::userEditingFinished()`, the public slot `Return` triggers. See
 `TestLspClient::isLaidOut` and `TestLspClient::answerUserInput`.
 
-### The clangd session is launched by the user (issue #125)
+### The clangd session is started on being asked, and by the file of a project (issue #125)
 
-The mode never starts a server: `LspClient::launch(extra_arguments, error)` and
+The mode starts no server on its own account except in the one case below, and
+the API is named for being asked: `LspClient::launch(extra_arguments, error)` and
 `isIdle()` replaced `ensureStarted`, `waitUntilReady` waits for a handshake which
 was asked for instead of starting one, and the two entries of
-`CxxMajorMode::getSpecificMenu` (menu "C/C++"), `launch-clangd` and
-`launch-clangd-with-compile-commands`, are what starts a session, with
+`CxxMajorMode::getSpecificMenu` (menu "C/C++"), `Start clangd` and
+`Start clangd with a compile_commands.json` — commands `start-clangd` and
+`start-clangd-with-compile-commands` — are what starts a session, with
 `Stop clangd`/`stop-clangd` (`LspClient::stop`, which reports "clangd is
-not launched" when none was running) what ends one. Relaunching
+not started" when none was running) what ends one. Relaunching
 ends the running session first (`LspClient::endSession`, shared with the
 destructor, plus the `ending_session` flag that keeps that exit from reporting
 "clangd exited" in the minibuffer), resets every document version to 0 so
@@ -420,9 +495,67 @@ becomes `--compile-commands-dir=<dir>` in
 `LspCxxSupport::compileCommandsArguments`, tested without a server in
 `test-lsp-protocol`.
 
-### Which database a plain launch uses (issue #125)
+**The one session the editor starts on its own** is decided in
+`CxxMajorMode::startClangdIfNeeded()`, called from both paths of
+`openOrRenameDocument()` (the document was already registered, or is registered
+now) and so from the constructor of the mode of every buffer of a file. It starts
+a session when three things hold: `LspCxxSupport::startedByDefault()` — the
+setting `clangd/start-by-default`, read on **every call**, so turning it off needs
+no restart and reaches the next file opened; `client->isIdle()`, because the
+database a running session reads was chosen when it started and a buffer of
+another project is none to replace the one somebody is working with; and
+`implicitCompileCommands(editor, QFileInfo(documentFile).absolutePath())` answers
+a non-empty `database`. The directory of *that file* is given to the search, not
+the current buffer's directory, which is what the two menu entries pass. The
+report replaces the message of a start whole — `clangd started using <path>` —
+because a session nobody asked for has to say what it reads; `report()` is
+`MajorModeBase::report`, i.e. `EditorWidget::displayInformativeMessage`, which is
+what a test overrides to see it. A program which does not start is reported once
+per mode (`auto_start_failure_reported`), since the mistake is in the settings and
+every buffer of the project would repeat the same line.
 
-A session launched without an explicit database takes
+`ImplicitCompileCommands` therefore holds `database` (the path the session is
+started with, the command-line default included), and `implicitCompileCommands`
+takes the directory to start the search from, empty meaning the current buffer.
+
+**`Ctrl-Left click` is the mouse's `Alt-.`**: `CxxMajorMode::mousePressEvent`
+(reached through `TextEditBase::handleMousePressEvent`, which asks the mode before
+the text edit sees the press) takes plain Ctrl+Left only — another modifier,
+another button, or a buffer with no session, no document or no file is handed to
+`CMajorModeBase`. `jumpFromMouse(position)`: no identifier under the pointer
+answers false at once; else the cached answers of `hovered_word` when its word,
+its start and the document revision match and `capabilities >= 0` (the click which
+follows the icon of the jump asks nothing), else both questions with the shared
+countdown of `WordAnswers` and a 1 s `boundedWait` — a session which is not up is
+not waited for, because a click which starts nothing and moves nothing is a click,
+not a request. The definition wins over the declaration, as it does for `Alt-.`,
+and nothing found reports "no definition found" and hands the click back.
+`TrackedWord` hence stores `definitions` and `declarations`, not only what they
+say of the word (`WordAnswers` replaced a `QPair<int,int>` of capabilities), and
+`askTrackedWord` copies them from the cursor's word to the mouse's when the two
+are the same word.
+
+Four traps, all paid for:
+
+- **The release of a consumed press has to be consumed too.** The mode sets
+  `mouse_press_consumed` and its `eventFilter` swallows the next
+  `MouseButtonRelease`: let through, the release moves the cursor back under the
+  pointer after the jump put it on the definition.
+- A test of a jump **must move the cursor off the target line first**: a freshly
+  opened buffer has its cursor at position 0, which is the line a definition in
+  that same file answers with, and the assertion then holds whatever the click did.
+- `QTest::mouseClick(viewport, Qt::LeftButton, Qt::ControlModifier, over)` does
+  reach the mode, and the answer lands where `QTextBlock::position() + character`
+  says; `testCtrlClickFollowsTheDefinition` asserts on `blockNumber()` and not on
+  the position, since the column of an answer is clangd's, not the mode's.
+- A click which asks on its own waits a second, and clangd answers about a file it
+  has parsed, so that case retries the click (up to eight times) rather than
+  assuming the first press is answered; a click on a *cached* word lands inside
+  the press.
+
+### Which database a plain start uses (issue #125)
+
+A session started without an explicit database takes
 `LspCxxSupport::defaultCompileCommandsFile()` — the `--compile-commands-file=`
 option parsed in `main` of `tfel-editor.cxx` into a file-scope static —, else
 the result of `LspCxxSupport::searchCompileCommandsFile(directory_of_buffer)`,
@@ -432,19 +565,35 @@ project; the alternative reading, ascending while the *current* directory has
 one, stops at the first leaf and misses the database at the project root),
 then looks into a `build*` sub-directory of the last project directory and of
 the directory outside the project which holds it. The editor searches rather
-than leaving it to clangd because `--compile-commands-dir` is fixed at launch
-and the minibuffer names the database the session runs with. The plain launch
-reports the outcome once, not the miss as it happens: `startClangd` takes a
-`report` which replaces the `clangd launched/restarted` message whole — `using
+than leaving it to clangd because `--compile-commands-dir` is fixed when the
+session starts and the minibuffer names the database the session runs with. The
+plain start reports the outcome once, not the miss as it happens: `startSession`
+takes a `report` which replaces the `clangd started/restarted` message whole — `using
 <path> to start clangd` or `no compile_commands.json found, clangd is
 restricted to current C++ file`, with `(default file <path> not found)` appended
-only when a bad default actually played no part. Two test traps:
-a database left in a shared `QTemporaryDir` root is found by every later plain
-launch of the mode tests (`testModeLaunchesWithACompilationDatabase` therefore
-lives in its own `db-project/` subtree), and a database proving "the search
-found it" must be named something other than `build*` when it is meant to be
-reachable by the command-line default only — the `#ifdef X` + `-DX` entry with
-an error inside is what makes "the database reached clangd" a positive wait.
+only when a bad default actually played no part. Three test traps:
+a database left in a shared `QTemporaryDir` root is found by every later start of
+the mode tests, by the automatic ones included (the cases which build a project
+therefore live in subtrees of their own, `db-project/`, `auto-project/`,
+`off-project/`, and a "no database" case needs the *parent* of its project to hold
+no `build*` directory either, since that is the second place the search looks); a
+database proving "the search found it" must be named something other than `build*`
+when it is meant to be reachable by the command-line default only — the `#ifdef X`
++ `-DX` entry with an error inside is what makes "the database reached clangd" a
+positive wait; and a test which asserts what a *start* says has to compare against
+what the search answers, `QFileInfo::absoluteFilePath()`, so the collected
+messages are matched with `startsWith`/`contains`, not with an equality on a path
+the test wrote itself.
+
+What keeps the automatic session out of the way of the cases which start their
+session through the menu — and assert on what the menu's message says — is a
+setting, not a mock: `TestLspClient::isolateSettings()` writes
+`clangd/start-by-default=false`, and the `cleanup()` slot re-applies that after
+every case, because a case which failed on its way out would otherwise leave the
+switch on for the cases which run after it. The three cases which are about the
+switch (`testAFileOfAProjectStartsClangd`,
+`testAFileWithoutADatabaseStartsNothing`, `testStartingByDefaultCanBeTurnedOff`)
+write what their name says and stop the client they started.
 
 ### `build` wins among several `build*` directories (issue #125, `d9611f6`)
 
@@ -768,7 +917,7 @@ Numbers and traps, all verified:
   `LspClient::ready`, by `openOrRenameDocument`, and by `updateDiagnostics`, which
   is the cue that `clangd` has finished parsing the file and can answer about it.
 - The setting `clangd/semantic-tokens` (true by default) is read **on every
-  question**, not at the launch of a session, because the colors of a buffer are
+  question**, not at the start of a session, because the colors of a buffer are
   the kind of thing a person turns off the first time they dislike them and expects
   the text to change back under their hands. The checkable `Color identifiers` entry
   of the `C/C++` menu writes that setting and repaints the buffer of the file on
@@ -777,8 +926,9 @@ Numbers and traps, all verified:
   British occurrence is a pre-existing comment in `DirectoryMajorMode.hxx`), and the
   menu entry is `Color identifiers`, so a test which asserts on the text of the entry
   has to spell it that way.
-- The `C/C++` menu has seven entries: the two launches, a separator, `Go to symbol...`,
-  `Color identifiers`, a separator, `Stop clangd` — which moved `Stop clangd` from
+- The `C/C++` menu has seven entries: the two which start a session, a
+  separator, `Go to symbol...`, `Color identifiers`, a separator,
+  `Stop clangd` — which moved `Stop clangd` from
   index 5 to 6 of what `testModeMenu` walks.
 
 Three things worth remembering:
@@ -870,7 +1020,7 @@ Three traps, all paid for:
   Assert on the file the answer names.
 
 So the sentence the docs carry — the database a session reads is chosen when it
-launches — is about the directory and about the index. The options a file is
+is started — is about the directory and about the index. The options a file is
 compiled with are not frozen for the session, which is why no `QFileSystemWatcher`
 restarting clangd was added: it would buy the index of unchanged files nothing (the
 shards survive the restart) and would throw away a session whose parse is already
@@ -1006,10 +1156,9 @@ the failure path of `startCastem` rests on:
   `startCastem` reports. What an earlier run of the probe read as `Crashed` for the same name was
   the artifact of `kill()`ing a half-alive process: the control case (`/bin/sh`) reports nothing
   at all while it lives.
-- because the state right after a start is `Starting` and not `Running`, the first
-  `sendToCastem` writes nothing (it asks for `Running`) and `sendLineToCastem` answers false: the
-  first line is dropped. Pre-existing and unrelated to the entry, but worth knowing before
-  "fixing" the return value of the slot.
+- because the state right after a start is `Starting` and not `Running`, a command
+  which asks for `Running` before writing loses the line which started the session;
+  what the state is worth is in the section below.
 - the minibuffer names the program which did not start (`"%1 could not be started"`), which is
   the whole report of a wrong path now that the path is what the user wrote.
 
@@ -1040,6 +1189,60 @@ Two test traps of the case which loads a plugin
 - such a case must come **last** in the list of slots: a loaded mode stays registered for the
   rest of the run, so from then on `SettingsRegistry::getGroups()` answers a `castem` theme and
   every earlier assertion about the set of themes would disagree with it.
+
+### The line which starts the solver reaches the solver (issue #131)
+
+`Ctrl-C Ctrl-L` / `Ctrl-C Ctrl-R` / `Ctrl-C Ctrl-B` of the `Cast3M` mode send a
+line, the region and the whole buffer to the interpreter. Two independent defects
+made the *first* line of a session do nothing, and the symptom was doubled by a
+second report: the minibuffer said `unknown shortcut : Ctr-C - L` because
+`handleShortCut` returns the value of `sendLineToCastem`, which was answering false.
+
+- **A process which is starting is not a process which must not be written to.**
+  The guard was `state() == QProcess::Running`, and the state right after
+  `startCastem` is `Starting`: the first `write` is not reached inside `start()`
+  either — `QProcess` on this Qt 6.2.4 answers `Starting` / `UnknownError` when
+  `start()` returns for a program which does not exist, and reports
+  `FailedToStart` through `errorOccurred` about 10 ms later (`probe3.cxx`). The
+  guard is now `!= QProcess::NotRunning`, and **`QProcess` itself queues a write
+  made while `Starting`** and flushes it at `started` (`probe.cxx`: `write`
+  returned 11 with `bytesToWrite() == 11`, the state became `Running`, and
+  `/bin/cat` echoed the line back). So no `waitForStarted()`: that blocks the
+  GUI for up to the timeout of a program which is only slow to appear.
+- **The selection of the block under a cursor carries the *preceding* line
+  separator, and that separator is U+2029.** `select(BlockUnderCursor)` on the
+  second block of a `QPlainTextEdit` selects `U+2029` plus the text; the mode
+  converted that with `(l + '\n').toLatin1()`, which has no rune for it and
+  answers `'?'` — the interpreter was fed `?result = 2*2;`. Verified on Qt 6.2.4
+  and Qt 6.9.1, offscreen and on a live X11 display, with and without wrapping
+  and with hard breaks in between (`block5.cxx`, `block5_69.cxx`: the first block
+  has no separator, the second begins with `U+2029`). The three slots now take
+  `cursor.block().text()` (and the lines of `cursor.block()` for a region), which
+  is the text of the line and nothing else.
+- The same `U+2029` is what the frame of the session shows: `QPlainTextEdit` renders
+  it as a **paragraph separator**, so `toPlainText()` of the echo of `/bin/cat` reads
+  `    1|?result = 2*2;` with the parts separated by U+2029 and *no* `'\n'`. A test
+  must cut on the code point and drop the empty parts.
+
+`~ProcessOutputFrame` had the same `Running`-only test for its `terminate()`, so a
+child still `Starting` when the buffer was killed was left to `~QProcess`, which
+`SIGKILL`s it and prints `QProcess: Destroyed while process (...) is still
+running`; `terminate()` does reach a `Starting` process (`term.cxx`: the state goes
+`Starting` → `NotRunning`). The condition is now `!= QProcess::NotRunning`.
+
+Test traps, all paid for: the *class* is exported but not the `Session` helper
+which follows it in the same header-less `.cxx`, so the out-of-class definition
+must not qualify it; two `sendLineToCastem` calls in a row send the **same** line
+until the cursor is moved; and the assertion which proves the fix is the *first*
+line of a session — everything after it worked before.
+
+Two adjacent defects of exactly this kind are deliberately left alone, as they are
+outside the mode this issue is about and each needs its own fix: the shell command
+of `GnuplotMajorMode.cxx:80` sends the `BlockUnderCursor` selection, and the file
+name `DirectoryMajorMode.cxx:99` opens is taken from a token which keeps its
+leading separator (`dir.cxx`: the first token of `U+2029 + "base.o"` is
+`U+2029 + "base.o"`, so the entry of a line which is not the first of the buffer
+would ask for a name no file has).
 
 ### The configuration dialog keeps the themes of the modes apart (issue #127)
 

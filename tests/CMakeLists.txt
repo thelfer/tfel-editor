@@ -49,6 +49,7 @@ function(add_tfel_editor_test name)
 endfunction(add_tfel_editor_test)
 
 add_tfel_editor_test(test-utilities TestUtilities.cxx)
+add_tfel_editor_test(test-line-separators TestLineSeparators.cxx)
 add_tfel_editor_test(test-multi-line-line-edit TestMultiLineLineEdit.cxx)
 add_tfel_editor_test(test-editor-widget TestEditorWidget.cxx)
 add_tfel_editor_test(test-file-on-disk TestFileOnDiskModification.cxx)
@@ -57,6 +58,9 @@ add_tfel_editor_test(test-lsp-protocol TestLspProtocol.cxx)
 add_tfel_editor_test(test-lsp-client TestLspClient.cxx)
 add_tfel_editor_test(test-grammar-check TestGrammarCheck.cxx)
 add_tfel_editor_test(test-settings TestSettings.cxx)
+add_tfel_editor_test(test-castem-mode TestCastemMode.cxx)
+add_tfel_editor_test(test-shared-compilation-output
+                     TestSharedCompilationOutput.cxx)
 
 # The grammar checker is a program of its own, and the cases which ask it anything
 # are skipped when it is not installed. The library of the `LaTeX` mode is needed
@@ -85,3 +89,22 @@ add_dependencies(test-settings TFELEditorCastemMode)
 target_compile_definitions(
   test-settings PRIVATE
   TFEL_EDITOR_CASTEM_MODE="$<TARGET_FILE:TFELEditorCastemMode>")
+
+# The cases of `test-castem-mode` drive the sending commands of the `Cast3M` mode,
+# whose class is not exported: the mode is loaded as the editor loads it, and its
+# slots are reached by name through the meta-object. As above, the case needs the
+# built library and has to know where it is.
+add_dependencies(test-castem-mode TFELEditorCastemMode)
+target_compile_definitions(
+  test-castem-mode PRIVATE
+  TFEL_EDITOR_CASTEM_MODE="$<TARGET_FILE:TFELEditorCastemMode>")
+
+# The last case of `test-shared-compilation-output` asks the two text modes what
+# their category is. Those modes are plugins, and loading them registers them for
+# the rest of the run, which is why no case may follow the one which loads them.
+add_dependencies(test-shared-compilation-output TFELEditorLaTeXMode
+                 TFELEditorMarkdownMode)
+target_compile_definitions(
+  test-shared-compilation-output PRIVATE
+  TFEL_EDITOR_LATEX_MODE="$<TARGET_FILE:TFELEditorLaTeXMode>"
+  TFEL_EDITOR_MARKDOWN_MODE="$<TARGET_FILE:TFELEditorMarkdownMode>")

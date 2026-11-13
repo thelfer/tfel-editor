@@ -80,15 +80,15 @@ namespace tfel::gui {
   void TextEdit::appendPlainText(const QString& t) {
     QTextCursor tc = this->e->textCursor();
     tc.movePosition(QTextCursor::End, QTextCursor::MoveAnchor);
-    tc.insertText(t);
+    tc.insertText(normalizeLineSeparators(t));
   }
 
   void TextEdit::insertPlainText(const QString& t) {
-    return this->e->insertPlainText(t);
+    return this->e->insertPlainText(normalizeLineSeparators(t));
   }
 
   void TextEdit::setPlainText(const QString& t) {
-    return this->e->setPlainText(t);
+    return this->e->setPlainText(normalizeLineSeparators(t));
   }
 
   void TextEdit::appendHtml(const QString& t) {

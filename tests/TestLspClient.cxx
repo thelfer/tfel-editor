@@ -67,6 +67,8 @@ struct TestLspClient : QObject {
  private slots:
   void initTestCase();
   void cleanupTestCase();
+  //! what a test changed in the settings is no business of the next one
+  void cleanup();
   void testHandshake();
   void testDocumentOpenAndIncrementalSync();
   void testDiagnostics();
@@ -78,6 +80,11 @@ struct TestLspClient : QObject {
   void testModeMenu();
   void testModeIntegration();
   void testWordNavigationUnderCursorAndHover();
+  void testCtrlClickFollowsTheDefinition();
+  void testCtrlClickOnNothingToJumpToIsAPlainClick();
+  void testAFileOfAProjectStartsClangd();
+  void testAFileWithoutADatabaseStartsNothing();
+  void testStartingByDefaultCanBeTurnedOff();
   void testModeLaunchesWithACompilationDatabase();
   void testModePlainLaunchFindsTheDatabase();
   void testModePlainLaunchUsesTheDefaultDatabase();
@@ -150,6 +157,11 @@ void TestLspClient::isolateSettings() {
   // it restored the setting would leave them off, and a test which asserts on
   // the colors would then ask about a state nobody chose
   settings.remove("clangd/semantic-tokens");
+  // a session the mode starts on its own, as soon as a file of a project which
+  // has a database is opened, is the behaviour of three cases and of none of the
+  // others: this class starts its sessions the way the menu does, so that which
+  // options a session runs with is decided by the case which asserts on them
+  settings.setValue("clangd/start-by-default", false);
   // the background index would build a cache of the whole standard library
   // for each run of the test; the handshake and the requests do not need it
   settings.setValue("clangd/arguments",
@@ -251,6 +263,13 @@ void TestLspClient::cleanupTestCase() {
   delete client;
   client = nullptr;
 }  // end of TestLspClient::cleanupTestCase
+
+void TestLspClient::cleanup() {
+  // a test which turned the automatic session on — or off — leaves that choice
+  // to its own case: what the settings hold is reset here, so that a case which
+  // failed on its way out can not decide what the next one sees
+  isolateSettings();
+}  // end of TestLspClient::cleanup
 
 void TestLspClient::testHandshake() {
   // the client never launches a server of its own accord: what a session runs
@@ -561,7 +580,7 @@ void TestLspClient::testModeMenu() {
   };
   // the two launch entries, the overview of the file, the entry which keeps the
   // colors of the identifiers, and the entry which ends the session
-  QVERIFY(actions.at(0)->text().contains(QStringLiteral("Launch clangd")));
+  QVERIFY(actions.at(0)->text().contains(QStringLiteral("Start clangd")));
   QVERIFY(
       actions.at(1)->text().contains(QStringLiteral("compile_commands.json")));
   const auto symbols = indexOf(QStringLiteral("Go to symbol"));
@@ -644,17 +663,17 @@ void TestLspClient::testModeMenu() {
   QVERIFY(!editor->hasUserInput());
   // the same through the commands, which are what a `Meta-X` offers and what
   // a key binding is written against
-  editor->launchCommand(QStringLiteral("launch-clangd"));
+  editor->launchCommand(QStringLiteral("start-clangd"));
   QVERIFY(!editor->hasUserInput());
   QVERIFY2(lsp.waitUntilReady(30000),
-           "the 'launch-clangd' command launched no session");
-  editor->launchCommand(QStringLiteral("launch-clangd-with-compile-commands"));
+           "the 'start-clangd' command launched no session");
+  editor->launchCommand(QStringLiteral("start-clangd-with-compile-commands"));
   QVERIFY(editor->hasUserInput());
   QVERIFY(userInput(*editor) != nullptr);
   answerUserInput(*editor, QStringLiteral(""));
   QVERIFY(!editor->hasUserInput());
   QVERIFY2(lsp.waitUntilReady(30000),
-           "the answer of 'launch-clangd-with-compile-commands' launched no "
+           "the answer of 'start-clangd-with-compile-commands' launched no "
            "session");
   // the entry which ends the session ends it: the client goes back to the state
   // of a session which was never launched
@@ -667,7 +686,7 @@ void TestLspClient::testModeMenu() {
   // the command are two doors to one function, and a command which was never
   // registered is an unknown command, not a stop, so the wait below is what
   // tells the two apart
-  editor->launchCommand(QStringLiteral("launch-clangd"));
+  editor->launchCommand(QStringLiteral("start-clangd"));
   QVERIFY2(lsp.waitUntilReady(30000),
            "the launch following a 'stop' did not complete");
   QVERIFY(lsp.isDocumentOpen(file));
@@ -675,7 +694,7 @@ void TestLspClient::testModeMenu() {
   QVERIFY2(lsp.isIdle(), "the 'stop-clangd' command left a running session");
   // and the buffers the mode holds are opened again on the next session, which
   // is what the version reset of `stop` is for
-  editor->launchCommand(QStringLiteral("launch-clangd"));
+  editor->launchCommand(QStringLiteral("start-clangd"));
   QVERIFY2(lsp.waitUntilReady(30000),
            "the launch following a 'stop-clangd' did not complete");
   QVERIFY(lsp.isDocumentOpen(file));
@@ -731,6 +750,53 @@ void TestLspClient::testModeIntegration() {
   QVERIFY(highlighted);
   editor.reset();
 }  // end of TestLspClient::testModeIntegration
+
+namespace {
+
+  // create a file and the directories which hold it; the mode tests build
+  // little project trees in the temporary directory of the class so that the
+  // search of a plain launch has something to find, or something to miss
+  bool makeFile(const QString &path, const QByteArray &content) {
+    const auto info = QFileInfo(path);
+    if (!QDir().mkpath(info.absolutePath())) {
+      return false;
+    }
+    auto handle = QFile(path);
+    if (!handle.open(QIODevice::WriteOnly)) {
+      return false;
+    }
+    const auto written = handle.write(content) == content.size();
+    handle.close();
+    return written;
+  }  // end of makeFile()
+
+  // a compilation database of one entry: the given file compiled with the
+  // given flags, which is all a test needs to make the server say something
+  // it would not say without the database
+  bool makeDatabase(const QString &path,
+                    const QString &file,
+                    const QString &flags) {
+    const auto entry = QJsonObject{
+        {QStringLiteral("directory"), QFileInfo(file).absolutePath()},
+        {QStringLiteral("file"), file},
+        {QStringLiteral("command"),
+         QStringLiteral("c++ -std=c++11 -fsyntax-only %1 %2")
+             .arg(flags, file)}};
+    return makeFile(path, QJsonDocument(QJsonArray{entry}).toJson());
+  }  // end of makeDatabase()
+
+  // an editor widget which remembers what the minibuffer was told: which
+  // database a launch ended up using is part of the behaviour under test, and
+  // overriding this public virtual is the only door to the messages
+  struct RecordingEditor : tfel::gui::EditorWidget {
+    QStringList messages;
+    void displayInformativeMessage(const QString &m) override {
+      messages << m;
+      tfel::gui::EditorWidget::displayInformativeMessage(m);
+    }
+  };  // end of struct RecordingEditor
+
+}  // end of namespace
 
 void TestLspClient::testWordNavigationUnderCursorAndHover() {
   // the word the cursor sits on gains an underline, and the word the mouse
@@ -810,6 +876,283 @@ void TestLspClient::testWordNavigationUnderCursorAndHover() {
   editor.reset();
 }  // end of TestLspClient::testWordNavigationUnderCursorAndHover
 
+void TestLspClient::testCtrlClickFollowsTheDefinition() {
+  // `Ctrl-Left click` is the mouse's `Alt-.`: the click on a symbol goes to the
+  // place clangd answers for the word it was pressed on, which is what the icon
+  // of the jump under the pointer promised
+  const auto source = QStringLiteral(
+      "int counter = 0;\n"
+      "\n"
+      "int twice() {\n"
+      "  return 2 * counter;\n"
+      "}\n"
+      "\n"
+      "int main() {\n"
+      "  return twice();\n"
+      "}\n");
+  const auto file = writeSource(QStringLiteral("click.cxx"), source);
+  QVERIFY(!file.isEmpty());
+  auto editor = std::make_unique<tfel::gui::EditorWidget>();
+  editor->show();
+  editor->openFile(file);
+  auto &frame = editor->getCurrentBuffer().getMainFrame();
+  auto &lsp = tfel::gui::LspClient::get(*editor);
+  cxxMenu(*editor)->actions().at(0)->trigger();
+  QVERIFY(waitFor([&] { return lsp.isReady(); }, 30000));
+  auto *const doc = frame.document();
+  QVERIFY(doc != nullptr);
+  auto *const view = frame.widget()->viewport();
+  QVERIFY(view != nullptr);
+  const auto text = doc->toPlainText();
+  // where a line begins, in the units the document counts its characters in:
+  // the line clangd answers with is converted to a position the same way the
+  // mode converts it
+  auto line_start = [doc](const int line) {
+    const auto block = doc->findBlockByNumber(line);
+    return block.isValid() ? block.position() : -1;
+  };
+  QVERIFY(line_start(0) >= 0);
+  QVERIFY(line_start(2) > line_start(0));
+  // the point to press a click on: a little into the second character of the
+  // word, at the middle height of the line it is written on
+  auto aim_at = [&frame, doc](const int start, const int length, QPoint &p) {
+    auto c = QTextCursor(doc);
+    c.setPosition(start + 2);
+    const auto rect = frame.cursorRect(c);
+    p = QPoint(rect.x() + 3, rect.y() + rect.height() / 2);
+    // the point has to name the word it is supposed to be pressed on, or the
+    // click would prove nothing about that word and everything about the mapping
+    const auto at = frame.cursorForPosition(p).position();
+    QVERIFY((at >= start) && (at < start + length));
+  };
+  auto on_line = [&frame](const int line) {
+    return (frame.textCursor().blockNumber() == line);
+  };
+  // `counter` in the body of `twice`: its definition is the line above
+  const auto used =
+      text.indexOf(QStringLiteral("counter"), text.indexOf("twice"));
+  QVERIFY(used > 0);
+  auto word = QPoint();
+  aim_at(used, 7, word);
+  // the word the mouse rests on is the word the icon of the jump is made of, and
+  // the answer which drew that icon is the answer the click uses: nothing is
+  // asked a second time and the click lands at once
+  auto jumped = [view]() {
+    const auto shape = view->cursor().shape();
+    return (shape == Qt::PointingHandCursor) || (shape == Qt::BitmapCursor);
+  };
+  QTest::mouseMove(view, word);
+  QVERIFY2(waitFor(jumped, 30000),
+           "the word the mouse rests on gained no icon of a jump");
+  auto c = QTextCursor(doc);
+  c.setPosition(used);
+  frame.setTextCursor(c);
+  QTest::mouseClick(view, Qt::LeftButton, Qt::ControlModifier, word);
+  QVERIFY2(waitFor([&] { return on_line(0); }, 30000),
+           "the click did not follow the definition of the word under it");
+  // the release of the click is consumed with its press: let through, it would
+  // have moved the cursor back to the place the click was pressed on, and let
+  // through with a selection, it would have left one around the definition
+  QCOMPARE(frame.textCursor().selectionStart(), frame.textCursor().position());
+  // a word the mouse never rested on is asked about by the click itself, which
+  // waits for the two questions as the context menu does. `clangd` answers about
+  // a file it has parsed, and the wait of the click is the short one of an
+  // interaction, so the click is repeated until the answer is there to be had
+  const auto call =
+      text.indexOf(QStringLiteral("twice"), text.indexOf("int main"));
+  QVERIFY(call > used);
+  auto where = QPoint();
+  aim_at(call, 5, where);
+  auto tries = 0;
+  while ((!on_line(2)) && (tries < 8)) {
+    QTest::mouseClick(view, Qt::LeftButton, Qt::ControlModifier, where);
+    QTest::qWait(250);
+    ++tries;
+  }
+  QVERIFY2(on_line(2),
+           "the click on a word nobody hovered went nowhere: the cursor is on "
+           "the line it was asked about");
+  QVERIFY(tries < 8);
+  lsp.stop();
+  editor.reset();
+}  // end of TestLspClient::testCtrlClickFollowsTheDefinition
+
+void TestLspClient::testCtrlClickOnNothingToJumpToIsAPlainClick() {
+  // a click the mode can not answer stays a click: the text edit places its own
+  // cursor where it was pressed. The two ways out are the plain click on a word
+  // clangd does know, and the click with the key held on a word it knows nothing
+  // about; neither moves the cursor to a definition
+  const auto source = QStringLiteral(
+      "int counter = 0;\n"
+      "\n"
+      "int twice() {\n"
+      "  return 2 * counter;\n"
+      "}\n");
+  const auto file = writeSource(QStringLiteral("click-plain.cxx"), source);
+  QVERIFY(!file.isEmpty());
+  auto editor = std::make_unique<RecordingEditor>();
+  editor->show();
+  editor->openFile(file);
+  auto &frame = editor->getCurrentBuffer().getMainFrame();
+  auto &lsp = tfel::gui::LspClient::get(*editor);
+  cxxMenu(*editor)->actions().at(0)->trigger();
+  QVERIFY(waitFor([&] { return lsp.isReady(); }, 30000));
+  auto *const doc = frame.document();
+  QVERIFY(doc != nullptr);
+  auto *const view = frame.widget()->viewport();
+  QVERIFY(view != nullptr);
+  const auto text = doc->toPlainText();
+  const auto used =
+      text.indexOf(QStringLiteral("counter"), text.indexOf("twice"));
+  QVERIFY(used > 0);
+  auto c = QTextCursor(doc);
+  c.setPosition(0);
+  frame.setTextCursor(c);
+  auto word = QPoint();
+  {
+    auto aim = QTextCursor(doc);
+    aim.setPosition(used + 2);
+    const auto rect = frame.cursorRect(aim);
+    word = QPoint(rect.x() + 3, rect.y() + rect.height() / 2);
+  }
+  // no key held: the click is the text edit's own, on the line it was pressed on
+  QTest::mouseClick(view, Qt::LeftButton, Qt::NoModifier, word);
+  QVERIFY2(frame.textCursor().blockNumber() == 3,
+           "a plain click on a jumpable word moved the cursor somewhere else");
+  QVERIFY(!editor->hasUserInput());
+  // the key held on a keyword: clangd answers no place for it, which is said,
+  // and the cursor still goes where the pointer is
+  auto keyword = QTextCursor(doc);
+  keyword.setPosition(text.indexOf("return") + 2);
+  const auto rect = frame.cursorRect(keyword);
+  const QPoint key(rect.x() + 3, rect.y() + rect.height() / 2);
+  const auto before = editor->messages.size();
+  QTest::mouseClick(view, Qt::LeftButton, Qt::ControlModifier, key);
+  auto reported = [this, &editor, before] {
+    for (auto k = before; k != editor->messages.size(); ++k) {
+      if (editor->messages.at(k).contains(
+              QStringLiteral("no definition found"))) {
+        return true;
+      }
+    }
+    return false;
+  };
+  QVERIFY2(waitFor(reported, 30000),
+           "a click on a word clangd points nowhere reported nothing");
+  QVERIFY2(frame.textCursor().blockNumber() == 3,
+           "a click which found a definition it had none to follow");
+  lsp.stop();
+  editor.reset();
+}  // end of TestLspClient::testCtrlClickOnNothingToJumpToIsAPlainClick
+
+void TestLspClient::testAFileOfAProjectStartsClangd() {
+  // `clangd/start-by-default`, on in the editor and turned off for the other
+  // cases of this class, is what makes a buffer of a project which has a
+  // compilation database start a session with that database as it is opened
+  QSettings().setValue("clangd/start-by-default", true);
+  // the file is clean unless its database defines `TFEL_TEST_DATABASE` for it,
+  // so what clangd publishes says both that a session started and that it was
+  // started with the database of the project
+  const auto project = QDir(directory.path()).filePath("auto-project");
+  const auto file = QDir(project).filePath("src/auto.cxx");
+  QVERIFY(makeFile(file, "#ifdef TFEL_TEST_DATABASE\n"
+                         "int x = \"not an int\";\n"
+                         "#endif\n"
+                         "int main() { return 0; }\n"));
+  const auto database = QDir(project).filePath("build/compile_commands.json");
+  QVERIFY(makeDatabase(database, file, "-DTFEL_TEST_DATABASE"));
+  auto editor = std::make_unique<RecordingEditor>();
+  editor->show();
+  auto &lsp = tfel::gui::LspClient::get(*editor);
+  QVERIFY(lsp.isIdle());
+  editor->openFile(file);
+  QVERIFY2(waitFor([&] { return !lsp.isIdle(); }, 30000),
+           "a file of a project which has a compilation database started "
+           "nothing");
+  // the minibuffer names the database the session was started with: a session
+  // which starts on its own has to say what it reads
+  auto named = QString();
+  for (const auto &m : qAsConst(editor->messages)) {
+    if (m.startsWith(QStringLiteral("clangd started using "))) {
+      named = m;
+    }
+  }
+  QVERIFY2(!named.isEmpty(), "the session the mode started announced nothing");
+  QVERIFY2(named.contains(QStringLiteral("compile_commands.json")),
+           named.toUtf8().constData());
+  QVERIFY2(waitFor([&] { return lsp.isReady(); }, 30000),
+           "the session the mode started did not answer");
+  QVERIFY2(waitFor([&] { return !lsp.diagnosticsFor(file).isEmpty(); }, 30000),
+           "the database of the project did not reach the session the mode "
+           "started");
+  lsp.stop();
+  QVERIFY(lsp.isIdle());
+  editor.reset();
+}  // end of TestLspClient::testAFileOfAProjectStartsClangd
+
+void TestLspClient::testAFileWithoutADatabaseStartsNothing() {
+  // a session which guesses the compilation options of a file is a decision, not
+  // a discovery: the automatic start waits for a database to be found, and the
+  // entries of the menu are where the decision is taken
+  QSettings().setValue("clangd/start-by-default", true);
+  const auto project = QDir(directory.path()).filePath("no-database-project");
+  const auto file = QDir(project).filePath("clean.cxx");
+  QVERIFY(makeFile(project + "/CMakeLists.txt", "project(none)\n"));
+  QVERIFY(makeFile(file, "int main() { return 0; }\n"));
+  auto editor = std::make_unique<RecordingEditor>();
+  editor->show();
+  auto &lsp = tfel::gui::LspClient::get(*editor);
+  QVERIFY(lsp.isIdle());
+  editor->openFile(file);
+  QVERIFY2(!waitFor([&] { return !lsp.isIdle(); }, 3000),
+           "a session was started for a project which holds no compilation "
+           "database");
+  for (const auto &m : qAsConst(editor->messages)) {
+    QVERIFY2(!m.startsWith(QStringLiteral("clangd started using ")),
+             m.toUtf8().constData());
+  }
+  editor.reset();
+}  // end of TestLspClient::testAFileWithoutADatabaseStartsNothing
+
+void TestLspClient::testStartingByDefaultCanBeTurnedOff() {
+  // the setting gates the session the mode starts on its own and nothing else:
+  // the entries of the menu start a session whatever the setting says, with the
+  // database the project of the file has
+  QSettings().setValue("clangd/start-by-default", false);
+  const auto project = QDir(directory.path()).filePath("off-project");
+  const auto file = QDir(project).filePath("kept.cxx");
+  QVERIFY(makeFile(file, "#ifdef TFEL_TEST_DATABASE\n"
+                         "int x = \"not an int\";\n"
+                         "#endif\n"
+                         "int main() { return 0; }\n"));
+  const auto database = QDir(project).filePath("compile_commands.json");
+  QVERIFY(makeDatabase(database, file, "-DTFEL_TEST_DATABASE"));
+  auto editor = std::make_unique<RecordingEditor>();
+  editor->show();
+  auto &lsp = tfel::gui::LspClient::get(*editor);
+  editor->openFile(file);
+  QVERIFY2(!waitFor([&] { return !lsp.isIdle(); }, 3000),
+           "the setting turned nothing off: a session started on its own");
+  cxxMenu(*editor)->actions().at(0)->trigger();
+  QVERIFY2(waitFor([&] { return lsp.isReady(); }, 30000),
+           "the entry of the menu refused to start a session while the setting "
+           "was off");
+  auto named = QString();
+  for (const auto &m : qAsConst(editor->messages)) {
+    if (m.startsWith(QStringLiteral("using ")) &&
+        m.contains(QStringLiteral("compile_commands.json"))) {
+      named = m;
+    }
+  }
+  QVERIFY2(!named.isEmpty(),
+           "the entry of the menu started a session which reads no database");
+  QVERIFY2(waitFor([&] { return !lsp.diagnosticsFor(file).isEmpty(); }, 30000),
+           "the session asked for through the menu published nothing");
+  lsp.stop();
+  QVERIFY(lsp.isIdle());
+  editor.reset();
+}  // end of TestLspClient::testStartingByDefaultCanBeTurnedOff
+
 void TestLspClient::testModeLaunchesWithACompilationDatabase() {
   // the second entry of the "C/C++" menu: the database is asked for in the
   // minibuffer, and the session which is launched reads the buffers as that
@@ -817,8 +1160,9 @@ void TestLspClient::testModeLaunchesWithACompilationDatabase() {
   const auto source = QStringLiteral(
       "int main() {\n  int x = \"not an int\";\n  return x;\n}\n");
   // the file and its database live in a subtree of the temporary directory: a
-  // database at its root would be found by the plain launches of the tests
-  // which run after this one, which launch the sessions they do not ask for
+  // database at its root would be found by the plain launches and by the
+  // automatic sessions of the tests which run after this one, which ask for the
+  // sessions they want and not for whatever a search turns up
   const auto project = QDir(directory.path()).filePath("db-project");
   QVERIFY(QDir().mkpath(project));
   const auto file = QDir(project).filePath("database.cxx");
@@ -870,55 +1214,9 @@ void TestLspClient::testModeLaunchesWithACompilationDatabase() {
   editor.reset();
 }  // end of TestLspClient::testModeLaunchesWithACompilationDatabase
 
-namespace {
-
-  // create a file and the directories which hold it; the mode tests build
-  // little project trees in the temporary directory of the class so that the
-  // search of a plain launch has something to find, or something to miss
-  bool makeFile(const QString &path, const QByteArray &content) {
-    const auto info = QFileInfo(path);
-    if (!QDir().mkpath(info.absolutePath())) {
-      return false;
-    }
-    auto handle = QFile(path);
-    if (!handle.open(QIODevice::WriteOnly)) {
-      return false;
-    }
-    const auto written = handle.write(content) == content.size();
-    handle.close();
-    return written;
-  }  // end of makeFile()
-
-  // a compilation database of one entry: the given file compiled with the
-  // given flags, which is all a test needs to make the server say something
-  // it would not say without the database
-  bool makeDatabase(const QString &path,
-                    const QString &file,
-                    const QString &flags) {
-    const auto entry = QJsonObject{
-        {QStringLiteral("directory"), QFileInfo(file).absolutePath()},
-        {QStringLiteral("file"), file},
-        {QStringLiteral("command"),
-         QStringLiteral("c++ -std=c++11 -fsyntax-only %1 %2")
-             .arg(flags, file)}};
-    return makeFile(path, QJsonDocument(QJsonArray{entry}).toJson());
-  }  // end of makeDatabase()
-
-  // an editor widget which remembers what the minibuffer was told: which
-  // database a launch ended up using is part of the behaviour under test, and
-  // overriding this public virtual is the only door to the messages
-  struct RecordingEditor : tfel::gui::EditorWidget {
-    QStringList messages;
-    void displayInformativeMessage(const QString &m) override {
-      messages << m;
-      tfel::gui::EditorWidget::displayInformativeMessage(m);
-    }
-  };  // end of struct RecordingEditor
-
-}  // end of namespace
 
 void TestLspClient::testModePlainLaunchFindsTheDatabase() {
-  // the plain entry of the "C/C++" menu, and the `launch-clangd` command,
+  // the plain entry of the "C/C++" menu, and the `start-clangd` command,
   // take the database of the project when there is one: the file below is
   // clean as long as no database defines `TFEL_TEST_DATABASE` for it, and
   // holds an error once a session reads the database which does
