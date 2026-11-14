@@ -80,6 +80,19 @@ target_compile_definitions(
   test-grammar-check PRIVATE
   TFEL_EDITOR_MARKDOWN_MODE="$<TARGET_FILE:TFELEditorMarkdownMode>")
 
+# The other proofreader of the editor is a Java program a person downloads where
+# they like, so nothing in the session finds it on its own unless it sits in one
+# of the usual places. Naming it here is what lets the cases which ask that
+# server anything run; without the option, and without an installation the editor
+# discovers by itself, those cases are skipped.
+set(LANGUAGE_TOOL_JAR "" CACHE FILEPATH
+    "LanguageTool server jar the grammar cases are run against")
+if(LANGUAGE_TOOL_JAR)
+  target_compile_definitions(
+    test-grammar-check PRIVATE
+    TFEL_EDITOR_LANGUAGE_TOOL_JAR="${LANGUAGE_TOOL_JAR}")
+endif()
+
 # One case of `test-settings` loads a packaged major mode as the editor does, as
 # a plugin, and asks the registry what that mode declared: the case needs the
 # built library and has to know where it is. Loading it needs no help from the

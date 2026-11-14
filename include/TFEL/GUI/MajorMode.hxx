@@ -194,6 +194,42 @@ namespace tfel::gui {
      */
     virtual void setSpellCheckLanguage(const QString&) = 0;
     /*!
+     * \brief the text a proofreader reads of a buffer whose text is \c text
+     * \param[in] text : the whole text of the document, the blocks joined by
+     * `'\n'`, which is what the offsets of an answer are places in
+     * \return the text the proofreader is handed
+     *
+     * \note the default answer is the text itself, which is what a mode whose
+     * words all are prose hands to a checker. A mode which mixes markup and
+     * text overrides it, since a proofreader knows no markup: a checker handed
+     * the source of a `\section{Title}` says that `section` is misspelled and
+     * says nothing of the title, which is the one thing of that line it has any
+     * business reading
+     *
+     * \note what a mode which removes anything removes, it removes by blanks of
+     * the same length, never by deleting: the answer of a proofreader is a
+     * place in the text it was handed, and a text which was shortened by what
+     * was taken out of it would have those places land on words the buffer does
+     * not hold there. A blanked run is nothing to a checker and no word of it
+     * is reported, which is what a run of markup is to a person reading the
+     * text of the file
+     *
+     * \note this is asked when a request is built and not when a document is
+     * opened, because what of a text is markup is what the mode knows at that
+     * moment, and the mode of a frame is replaced under a person who changes the
+     * mode of a buffer without changing the buffer
+     */
+    virtual QString grammarCheckText(const QString &text) const;
+    /*!
+     * \return the grammar checker of the mode, null when the mode holds none
+     *
+     * \note what \c SpellingAndGrammar walks the buffers with: the choice of the
+     * proofreader is one for the editor and the buffers follow it, which is
+     * said to the sessions of the buffers which are on the screen, see
+     * \c GrammarCheckSession::followChecker
+     */
+    virtual struct GrammarCheckSession *grammarCheckSession() const;
+    /*!
      * \brief destructor
      *
      * The syntax highlighter installed by this mode is released: it is a child

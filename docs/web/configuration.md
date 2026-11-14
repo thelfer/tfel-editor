@@ -21,6 +21,12 @@ nothing. The page of a theme of a mode says whose it is above the entries
 it holds, since `clangd` and `castem` are names of programs and say
 nothing of the mode which launches them.
 
+A theme which is a corner of another one is a submenu of it: the entries
+of a proofreader — which program it is, which language it reads — are
+opened under the theme which chooses that proofreader, since the two are
+one decision. Those submenus are opened, never folded: an entry behind a
+click nobody makes is an entry which is not found.
+
 The name of an entry stands
 above the field which edits it, which has the width of the page to
 itself — a path of a program is not something to read in a narrow box —
@@ -34,9 +40,10 @@ Nothing is written while one edits: the dialog writes when it is
 accepted, since most entries are read once, when the widgets which use
 them are built. The entries whose effect one has to see under one's hands
 are applied at once: the font of the text edits, the style of the key
-bindings, and the language the misspelled words are underlined with. What
-is left waits for a new buffer, or for a restart of the editor, and the
-minibuffer says how many entries were written.
+bindings, the language the misspelled words are underlined with, and which
+proofreader reads them. What is left waits for a new buffer, or for a
+restart of the editor, and the minibuffer says how many entries were
+written.
 
 `Restore Defaults` sets every field back to the value the editor uses
 when the configuration file holds nothing; it writes nothing by itself, so
@@ -95,17 +102,38 @@ key bindings style decides whether the line edits and the text areas
 handle the usual `Qt` short cuts or keep the `GNU Emacs` bindings; the
 menus are rebuilt as soon as it changes.
 
-## Spell checking
+## Spelling and grammar
 
-| Entry                         | Widgets         | Takes effect |
-|-------------------------------|-----------------|--------------|
-| `hunspell default dictionary` | a one line edit | nothing      |
+| Entry                         | Widgets                | Takes effect        |
+|-------------------------------|------------------------|---------------------|
+| `spelling/checker`            | `None`, `Hunspell`, `Hunspell and Harper`, `LanguageTool` | every buffer, at once |
+| `hunspell default dictionary` | a one line edit        | nothing             |
 
-The language the misspelled words are underlined with, named as the
-installed dictionaries name it, such as `en_US`. Leaving it empty takes
-the language of the session. This is the theme of a build which found
-`hunspell`; it is the same address the `Dictionaries` menu of `Options`
-writes, and the buffers follow it at once.
+What reads the words of the buffers: nothing, the dictionary of `hunspell`,
+that dictionary and the sentences as read by `harper-ls`, or LanguageTool,
+which says both and needs no dictionary. This is the address the
+`Orthograph/Grammar` submenu of `Options` writes, and the menus of the
+`C`/`C++`, `LaTeX` and `Markdown` modes write the same one. `Hunspell` is
+the default and is kept by the *absence* of the address, which is what the
+editor did before any grammar checker was added to it. See
+[the grammar checking page](grammar-checking.html) for what each choice does
+to a buffer, and for the one case where a buffer is not read with the choice
+it was offered.
+
+The language of the dictionary is an entry of this theme and not a theme of
+its own: which program reads the words and which words that reading holds to
+be spelled right is one decision. It is named as the installed dictionaries
+name it, such as `en_US`; leaving it empty takes the language of the session,
+and it is the same address the `Language` submenu of the `Orthograph/Grammar`
+menu writes when `Hunspell` is the choice in use. A buffer which LanguageTool reads is
+handed no dictionary at all, whatever is written here: that program checks
+the spellings of the language it was given, and two sets of underlines of one
+word say nothing one does not. The entry is there in a build which found
+`hunspell`; where it did not, only the choice is shown.
+
+`Harper` and `LanguageTool` are the submenus of this theme: what the program
+which was chosen is, and what it is asked with, follows from the choice
+itself.
 
 ## castem
 
@@ -144,29 +172,70 @@ which has a `compile_commands.json` starts a session which reads it, and
 is read again on every file opened. The `Color identifiers` entry of the
 `C/C++` menu writes the same address as `clangd/semantic-tokens`.
 
-## harper
+## Harper
 
 | Entry                        | Widgets           | Takes effect                        |
 |------------------------------|-------------------|-------------------------------------|
-| `harper/launch-by-default`   | a check box       | a new buffer                        |
 | `harper/executable`          | a one line edit   | the next session                    |
 | `harper/dialect`             | a choice          | the buffers as they are read again  |
 
-What the grammar checker is asked, and what it is asked with: see
-[the grammar checking page](grammar-checking.html). The `Grammar checking`
-entry of a menu writes the same address as `harper/launch-by-default`, and
-the `English variant` submenu the same address as `harper/dialect`, so the
-dialog and the menus are two hands on two addresses, not four settings. The
-theme is named after the program the editor starts, as the `clangd` and
-`castem` themes are: it is shown whether or not a `harper-ls` is installed,
-since an entry which is read by the editor is an entry whatever the machine
-holds — only the menus disappear when there is no program to launch.
+What the checker of sentences is, and which English it reads a text as: see
+[the grammar checking page](grammar-checking.html). A variety chosen in the
+`Language` submenu while `Hunspell and Harper` is the choice writes the same
+address as `harper/dialect`, so the dialog and the menu are two hands on one
+address. The program is
+`harper-ls`, started with `--stdio`; left empty, the editor looks for that
+name in the directories of the session, and a release which is not on the
+search path is named by its full path. A session which runs under a program
+the dialog no longer names is ended by the first request which follows the
+change.
 
-Those three are the themes the major modes export. A mode which uses no entry
-of the configuration is not part of the dialog, which is the case of every
-other mode of the editor: the only thing they read from the configuration
-file is the history of the command their prompt proposes, and a history is
-not an entry of the configuration.
+The theme is named after the program the editor starts, as the `clangd` and
+`castem` themes are, but it is a theme of the *editor*: `harper-ls` checks
+prose, and the prose of this editor is read in the core library, in the three
+modes which hold a buffer of text. It is shown whether or not a `harper-ls`
+is installed, since an entry which is read by the editor is an entry whatever
+the machine holds — only the menus disappear when there is no program to
+launch. It is a submenu of `Spelling and grammar`, and it is spelled as the
+program is spelled; the addresses of its entries keep the lower case name of
+the program, which is what a configuration file written before the theme had
+a name of its own holds, and what `harper-ls` itself is called by.
+
+## LanguageTool
+
+| Entry                                | Widgets           | Takes effect               |
+|--------------------------------------|-------------------|----------------------------|
+| `language-tool/installation`         | a one line edit   | the next server            |
+| `language-tool/java-runtime`         | a one line edit   | the next server            |
+| `language-tool/port`                 | a spin box        | the next server            |
+| `language-tool/java-options`         | a list of texts   | the next server            |
+| `language-tool/language`             | a one line edit   | the next request           |
+| `language-tool/enabled-categories`   | a list of texts   | the next request           |
+| `language-tool/disabled-categories`  | a list of texts   | the next request           |
+
+Where the program is, what runs it, and what of its rules reach a text. The
+server is a Java archive, `languagetool-server.jar`, and the two entries
+which name a path have to be filled on a machine where the program is a
+download: the installation is looked for in the directories named above, the
+runtime in the directories of the session and in `JAVA_HOME`, and neither of
+those guesses is worth trusting for a program which is not packaged.
+
+What is stored under `language-tool/port` is the port the person asked to
+start the server on, and zero is the entry which says *take a free one*: the
+free number is picked when the process is started, which is what lets two
+editors of one session run two servers and collide with nothing. The
+`language` entry is the same address the `Language` submenu writes while
+LanguageTool is the choice in use, and any code the program knows can be
+written here, not only the thirty the submenu offers. Like `Harper`, this
+theme is a submenu of `Spelling and grammar`.
+
+Those themes — `Spelling and grammar`, with `Harper` and `LanguageTool`
+under it — are themes of the editor, and are there whatever plugins
+are loaded. Only `clangd` and `castem` are themes a major mode exports: the
+mode `C++` asks the language server those five entries and nothing else, the
+`Cast3M` mode launches one program, and every other mode of the editor reads
+nothing from the configuration file but the history of the command its prompt
+proposes, which is not an entry of the configuration.
 
 An address is shown once, in the first theme which declared it: the modes
 which derive from the `C++` mode, such as `MTest` and `PipeTest`, use the
@@ -206,6 +275,14 @@ A theme of the editor itself is registered by a `StandardSettingsGroupProxy`
 at the bottom of the source file which holds that code, in the same spirit
 and by the same mechanism as the commands of `CommandFactory` and the modes
 of `MajorModeFactory`; see `src/CoreSettings.cxx`.
+
+A theme which is a corner of another one says so with the fourth argument of
+that declaration, and a theme a mode exports through its own
+`SettingsGroup::parent`. `SettingsRegistry::getGroups` answers such a theme
+directly after the theme it names, whatever file declared it and whatever
+static initialiser ran first, and the dialog opens it as a submenu of that
+theme. A theme whose parent is not declared keeps its own place: the relation
+is a promise about the list, never a way to hide a theme.
 
 A major mode exports its entries through a static `declareSettings` method
 returning a `QVector<SettingsGroup>`. Its proxy reports them, filling the

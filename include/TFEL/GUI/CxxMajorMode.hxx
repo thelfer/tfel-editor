@@ -497,6 +497,12 @@ namespace tfel::gui {
      * buffer of the editor
      */
     GrammarCheckSession *grammar = nullptr;
+    /*!
+     * \brief the session above, which is what \c SpellingAndGrammar asks the
+     * buffers of this mode for: the choice of the proofreader is one for the
+     * editor and this is how it is said to a buffer of a C++ file
+     */
+    GrammarCheckSession *grammarCheckSession() const override;
     //! the client of the editor widget, null when `clangd/enable` is false
     QPointer<LspClient> client;
     //! the file name the server knows this buffer by, empty if none

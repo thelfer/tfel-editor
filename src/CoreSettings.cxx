@@ -64,21 +64,12 @@ namespace tfel::gui {
   // and what stays.
 
 #ifdef TFEL_GUI_HUNSPELL_SUPPORT
-  // the language the misspelled words are underlined with. The `Dictionaries`
-  // menu of `Options` writes the same address, which is how that choice
-  // survives the session, see issue #69
-  static const StandardSettingsGroupProxy spell_checking(
-      "Spell checking",
-      QObject::tr("The language the misspelled words are underlined with"),
-      QVector<SettingsKey>() << SettingsKey::text(
-          "hunspell default dictionary",
-          QObject::tr("Default dictionary"),
-          QObject::tr(
-              "The language the misspelled words are underlined with, named as "
-              "the installed dictionaries name it, such as `en_US`. Leaving it "
-              "empty takes the language of the session, and the `Dictionaries` "
-              "menu of `Options` chooses the same language one buffer at a "
-              "time")));
+  // the language of the misspelled words is an entry of `Spelling and grammar`,
+  // declared with the choice of the proofreader itself in
+  // `SpellingAndGrammar.cxx`: which program reads the words, which words that
+  // program holds to be spelled right and which variety of English they are, is
+  // one decision, and the dialog shows it as one theme. What this file declares
+  // is what the editor itself is about, and nothing of the checkers.
 #endif /* TFEL_GUI_HUNSPELL_SUPPORT */
 
 }  // end of namespace tfel::gui

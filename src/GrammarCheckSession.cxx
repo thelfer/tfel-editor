@@ -1,7 +1,7 @@
 /*!
  * \file   GrammarCheckSession.cxx
- * \brief  a `harper-ls` session, the lints it draws under a text edit, and the
- *         menu which steers it.
+ * \brief  the proofreader of a text edit, whichever of them that is, the lints
+ *         it draws under the text, and the choice which decides between them.
  * \author Thomas Helfer
  * \date   5 nov. 2026
  */
@@ -21,6 +21,8 @@
 
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/GrammarCheckSession.hxx"
+#include "TFEL/GUI/LanguageToolClient.hxx"
+#include "TFEL/GUI/LanguageToolSupport.hxx"
 #include "TFEL/GUI/LspClient.hxx"
 #include "TFEL/GUI/LspHarperSupport.hxx"
 #include "TFEL/GUI/LspProtocol.hxx"
@@ -32,12 +34,14 @@ namespace tfel::gui {
 
     // the face of a lint: a plain underline in red, the spelling checker's own
     // look, and one face for every lint. The severity of the protocol lives in
-    // the color of the diagnostics of `clangd` because that server sorts what
-    // it finds by it; the grammar checker answers all of its lints with the
-    // same severity — a hint — so its whole output is to be seen, and only the
-    // words it says something about are inked. A wave underline would be the
-    // look of the hunspell underlines: `QPlainTextEdit` does not ink one
-    // through the extra selections, see `CxxMajorMode::applyDiagnostics`
+    // the color of the diagnostics of `clangd` because that server sorts what it
+    // finds by it; both proofreaders answer all of their lints with a severity
+    // which says nothing — `harper-ls` calls every one of them a hint, Language
+    // Tool names the category of its rules and no severity — so their whole
+    // output is to be seen, and only the words they say something about are
+    // inked. A wave underline would be the look of the hunspell underlines:
+    // `QPlainTextEdit` does not ink one through the extra selections, see
+    // `CxxMajorMode::applyDiagnostics`
     QTextCharFormat lintFace() {
       auto format = QTextCharFormat();
       format.setUnderlineStyle(QTextCharFormat::SingleUnderline);
@@ -60,171 +64,156 @@ namespace tfel::gui {
   GrammarCheckSession::GrammarCheckSession(EditorWidget &w,
                                            TextEditBase &t,
                                            const QString &language_id,
+                                           const bool whole_text_is_prose,
                                            QObject *const p)
-      : QObject(p), editor(&w), text_edit(&t) {
-    // a client of its own, and not the one of the editor widget: that one
-    // speaks with `clangd`, which a buffer of Markdown has no use for, and the
-    // documents of the two kinds of server are not to be sent to each other
-    this->client = new LspClient(&w, this);
-    this->client->setServerName(QStringLiteral("harper-ls"));
-    this->client->setLanguageId(language_id);
-    // the checker is silent about how it wants its documents and reads the text
-    // it is given as the text of the document; the range of a change would
-    // corrupt the copy it works on
-    this->client->setFullTextSync(true);
-    this->client->setConfiguration(LspHarperSupport::configuration());
-    QObject::connect(this->client, &LspClient::diagnosticsUpdated, this,
-                     &GrammarCheckSession::updateDiagnostics);
-    QObject::connect(this->client, &LspClient::stopped, this, [this] {
-      // a checker which exited of its own accord checks nothing anymore,
-      // whatever was chosen; the mode has to learn it to take its own spell
-      // checker back, and the underlines of a dead server are none
-      if (this->active) {
-        this->active = false;
-        this->applyDiagnostics();
-        emit this->stateChanged();
-      }
-    });
+      : QObject(p),
+        editor(&w),
+        text_edit(&t),
+        language_id(language_id),
+        whole_text_is_prose(whole_text_is_prose) {
+    // `checker` is left at the value it is declared with, which names no grammar
+    // checker: the choice held in the settings is asked of at the end of this
+    // constructor, and that answer decides both which backend reads the buffer
+    // and that the text of the buffer is handed to it — which is why the
+    // document is registered before, while no backend holds it yet
+    //
     // the buffer of a new file has no name when the mode is built, and gains it
-    // before or after, depending on how the file was reached; the same holds
-    // for a save under a new name
-    QObject::connect(&t, &TextEditBase::fileNameChanged, this,
+    // before or after, depending on how the file was reached; the same holds for
+    // a save under a new name
+    QObject::connect(&t,
+                     &TextEditBase::fileNameChanged,
+                     this,
                      [this](const QString &) { this->openOrRenameDocument(); });
     if (auto *const scroll_area = t.widget()) {
       this->area = scroll_area;
       scroll_area->viewport()->installEventFilter(this);
     }
-    // the document is registered whether a session runs or not: the setting
-    // which launches one by default is read at the construction of the mode,
-    // before this constructor has a chance to run, and the session launched
-    // there sends what it was given once its handshake is over
+    // the document is registered whether a checker runs or not: a buffer gains
+    // its file name after the mode was built, and a checker chosen afterwards
+    // asks for the text of the buffer it is built on
     this->openOrRenameDocument();
+    // the choice held in the settings decides now: a buffer opened while the
+    // editor is set to check its prose is checked from the moment it is on the
+    // screen, and says nothing about it, the way the buffers opened before it
+    // were. The language of the spell checker is asked of the text edit, which
+    // is a value stored at this point — the mode under which this session is
+    // built is handed that value as soon as its constructor is over, see
+    // `TextEditBase::setMajorMode`
+    this->followChecker(false);
   }  // end of GrammarCheckSession::GrammarCheckSession
 
   GrammarCheckSession::~GrammarCheckSession() {
-    // the client dies with this session and ends its process, which reports
-    // through signals: nobody may answer them by drawing on a text edit which
-    // is dying with the mode, see the `area` member
-    QObject::disconnect(this->client, nullptr, this, nullptr);
+    // the backends report through signals: nobody may answer them by drawing on
+    // a text edit which is dying with the mode, see the `area` member. The
+    // shared client of LanguageTool outlives this session, so what it is told is
+    // that this buffer reads it no longer
+    if (this->harper != nullptr) {
+      QObject::disconnect(this->harper, nullptr, this, nullptr);
+    }
+    if (this->language_tool != nullptr) {
+      QObject::disconnect(this->language_tool, nullptr, this, nullptr);
+    }
+    if (!this->document_file.isEmpty()) {
+      if (this->harper != nullptr) {
+        this->harper->closeDocument(this->document_file, this->document);
+      }
+      if (this->language_tool != nullptr) {
+        this->language_tool->closeDocument(this->document_file,
+                                           this->document);
+      }
+    }
     if ((this->area != nullptr) && (this->text_edit != nullptr)) {
       // a mode which is replaced leaves its text edit behind, and the lints of
       // the checker it had with it, which are the keyed contribution this
-      // session wrote and nobody else will clear: the client is a child of this
-      // session, so it is gone only after this body ran and still holds the
-      // answer it published. Asking `applyDiagnostics` to redraw it would put
-      // the underlines of a dead session back on the screen; handing the key an
-      // empty list whole is what takes them off. A text edit which is destroyed
-      // along with its mode needs none of this, and `area` is null by then
-      this->text_edit->setExtraSelections("harper", {});
+      // session wrote and nobody else will clear: the backend of `harper-ls` is
+      // a child of this session, so it is gone only after this body ran and
+      // still holds the answer it published. Asking `applyDiagnostics` to redraw
+      // it would put the underlines of a dead session back on the screen; handing
+      // the key an empty list whole is what takes them off. A text edit which is
+      // destroyed along with its mode needs none of this, and `area` is null by
+      // then
+      this->text_edit->setExtraSelections("grammar", {});
     }
   }  // end of GrammarCheckSession::~GrammarCheckSession
 
   bool GrammarCheckSession::isAvailable() {
-    return !LspHarperSupport::serverExecutable().isEmpty();
+    return (!LspHarperSupport::serverExecutable().isEmpty()) ||
+           LanguageToolClient::isAvailable();
   }  // end of GrammarCheckSession::isAvailable
 
   bool GrammarCheckSession::isActive() const {
-    return this->active;
+    return SpellingAndGrammar::usesHarper(this->checker_in_use) ||
+           SpellingAndGrammar::usesLanguageTool(this->checker_in_use);
   }  // end of GrammarCheckSession::isActive
 
-  void GrammarCheckSession::setActive(const bool on,
-                                      const bool remembered,
-                                      const bool announced) {
-    if (remembered) {
-      // the choice is the one the whole editor follows: a buffer opened
-      // afterwards, in this mode or in another one, starts as this one does
-      LspHarperSupport::setLaunchByDefault(on);
-    }
-    if (on == this->active) {
-      // saying what already is says nothing; the entry of a menu which is
-      // already checked still had its answer written above
-      return;
-    }
-    if (!on) {
-      this->active = false;
-      this->client->stop();
-      this->applyDiagnostics();
-      if (announced) {
-        this->editor->displayInformativeMessage(
-            QObject::tr("grammar checking stopped"));
-      }
-      emit this->stateChanged();
-      return;
-    }
-    const auto program = LspHarperSupport::serverExecutable();
-    if (program.isEmpty()) {
-      if (announced) {
-        this->editor->displayInformativeMessage(
-            QObject::tr("harper-ls was not found: install it or set the "
-                        "'harper/executable' option"));
-      }
-      return;
+  SpellingAndGrammar::Checker GrammarCheckSession::checker() const {
+    return this->checker_in_use;
+  }  // end of GrammarCheckSession::checker
+
+  bool GrammarCheckSession::readsWholeTextAsProse() const {
+    return this->whole_text_is_prose;
+  }  // end of GrammarCheckSession::readsWholeTextAsProse
+
+  bool GrammarCheckSession::usesHarper() const {
+    return SpellingAndGrammar::usesHarper(this->checker_in_use);
+  }
+
+  bool GrammarCheckSession::usesLanguageTool() const {
+    return SpellingAndGrammar::usesLanguageTool(this->checker_in_use);
+  }
+
+  void GrammarCheckSession::followChecker(const bool announced) {
+    const auto wanted =
+        SpellingAndGrammar::effectiveChecker(this->whole_text_is_prose);
+    const auto changed = wanted != this->checker_in_use;
+    if (changed) {
+      // the underlines of the checker which is left are none of the one which
+      // comes: they go, and the answers of the new one take their place
+      this->releaseDocument();
+      // and so does the process of a checker which has nothing left to read: a
+      // person who chooses another proofreader in a menu means it, and a
+      // `harper-ls` which holds no document has no reason to stay started. The
+      // shared LanguageTool server is ended by the same release above, which is
+      // what spends the last use of it
+      this->stopChecker();
+      this->checker_in_use = wanted;
     }
     auto error = QString();
-    if (!this->client->launch(program, LspHarperSupport::serverArguments(),
-                              error)) {
-      if (announced) {
-        this->editor->displayInformativeMessage(error);
-      }
-      return;
+    auto started = true;
+    if (this->usesHarper()) {
+      started = this->startHarper(error);
+    } else if (this->usesLanguageTool()) {
+      started = this->startLanguageTool(error);
     }
-    this->active = true;
+    if (changed) {
+      // the text of the buffer goes to the checker which is in use now, and the
+      // answers of the one which is gone are spent with its underlines
+      this->openDocumentOnChecker();
+    } else if (started && this->isActive()) {
+      // the same checker under a new language or a new set of rules: the request
+      // reads its settings when it is built, so the texts have to go over again
+      // for the answer to be of any use to a person looking at the old one
+      this->recheckChecker();
+    }
+    // what becomes of the spell checker is decided by the same choice: a
+    // proofreader which reads the whole text wants no dictionary beside it, and
+    // an empty language is the one way a mode has of taking its underlines off
+    this->text_edit->setSpellCheckLanguage(
+        SpellingAndGrammar::spellCheckLanguage(this->checker_in_use));
     if (announced) {
-      // the dialect is named because it is the one thing the answer changes,
-      // and a person who reads a buffer of British English wants to see which
-      // English the underlines were drawn against
-      this->editor->displayInformativeMessage(
-          QObject::tr("grammar checking with %1, reading the text as %2")
-              .arg(program)
-              .arg(
-                  LspHarperSupport::dialectLabel(LspHarperSupport::dialect())));
+      this->editor->displayInformativeMessage(started ? this->reportOf()
+                                                      : error);
     }
     emit this->stateChanged();
-  }  // end of GrammarCheckSession::setActive
+  }  // end of GrammarCheckSession::followChecker
 
-  void GrammarCheckSession::setDialect(const QString &name) {
-    LspHarperSupport::setDialect(name);
-    // the settings the client answers are what the next question of the server
-    // reads; the documents, which changed by nothing, have to be handed over
-    // again for the new answer to be of any use to the buffer on screen
-    this->client->setConfiguration(LspHarperSupport::configuration());
-    this->client->recheckDocuments();
-  }  // end of GrammarCheckSession::setDialect
-
-  void GrammarCheckSession::addToMenu(QMenu &menu, const QString &toggle) {
-    // the entry says what this buffer does, not what the editor does on the
-    // whole: a person who turns the checker off here turns it off for the
-    // buffers opened afterwards all the same, which the tooltip says
-    auto *const gc = menu.addAction(toggle);
-    gc->setCheckable(true);
-    gc->setChecked(this->active);
-    gc->setToolTip(
-        QObject::tr("Ask the grammar checker about this buffer and "
-                    "underline what it finds, and take the spell "
-                    "checker of the mode off it while it runs. The "
-                    "choice is kept in the setting "
-                    "'harper/launch-by-default' and the buffers "
-                    "opened afterwards follow it"));
-    QObject::connect(gc, &QAction::toggled, this,
-                     [this](const bool on) { this->setActive(on); });
-    auto *const v = menu.addMenu(QObject::tr("English variant"));
-    v->setToolTip(
-        QObject::tr("Which English the text is read as: which "
-                    "spellings are held to be their own, and which "
-                    "inflections are accepted. The choice is kept in "
-                    "the setting 'harper/dialect' and reaches the "
-                    "checker at once"));
-    auto *const group = new QActionGroup(v);
-    group->setExclusive(true);
-    const auto current = LspHarperSupport::dialect();
-    for (const auto &name : LspHarperSupport::dialects()) {
-      auto *const a = v->addAction(LspHarperSupport::dialectLabel(name));
-      a->setCheckable(true);
-      a->setChecked(name == current);
-      group->addAction(a);
-      QObject::connect(a, &QAction::triggered, this,
-                       [this, name] { this->setDialect(name); });
-    }
+  void GrammarCheckSession::addToMenu(QMenu &menu) {
+    // the four choices are one question asked of every buffer of the editor, so
+    // the menu of a mode offers them as the menu of `Options` does; what the
+    // mode says is for which kind of buffer that menu stands, which is the one
+    // thing the choice itself cannot tell: in a source file, LanguageTool reads
+    // no grammar and the entry has to say so
+    SpellingAndGrammar::addToMenu(menu, *this->editor, this->whole_text_is_prose);
   }  // end of GrammarCheckSession::addToMenu
 
   bool GrammarCheckSession::eventFilter(QObject *const watched,
@@ -250,6 +239,152 @@ namespace tfel::gui {
     return QObject::eventFilter(watched, event);
   }  // end of GrammarCheckSession::eventFilter
 
+  bool GrammarCheckSession::startHarper(QString &error) {
+    const auto program = LspHarperSupport::serverExecutable();
+    if (program.isEmpty()) {
+      error = QObject::tr("harper-ls was not found: install it or set the "
+                          "'harper/executable' option");
+      return false;
+    }
+    if (this->harper == nullptr) {
+      // a client of its own, and not the one of the editor widget: that one
+      // speaks with `clangd`, which a buffer of Markdown has no use for, and the
+      // documents of the two kinds of server are not to be sent to each other
+      this->harper = new LspClient(this->editor, this);
+      this->harper->setServerName(QStringLiteral("harper-ls"));
+      this->harper->setLanguageId(this->language_id);
+      // the checker is silent about how it wants its documents and reads the text
+      // it is given as the text of the document; the range of a change would
+      // corrupt the copy it works on
+      this->harper->setFullTextSync(true);
+      this->harper->setConfiguration(LspHarperSupport::configuration());
+      QObject::connect(this->harper,
+                       &LspClient::diagnosticsUpdated,
+                       this,
+                       &GrammarCheckSession::updateDiagnostics);
+      QObject::connect(this->harper, &LspClient::stopped, this, [this] {
+        // a checker which exited of its own accord reads nothing anymore, and
+        // the underlines of a dead server are none
+        this->applyDiagnostics();
+      });
+    }
+    if (this->harper->isReady()) {
+      return true;
+    }
+    if (!this->harper->launch(program, LspHarperSupport::serverArguments(),
+                              error)) {
+      return false;
+    }
+    // what the process was started with is what `recheckChecker` compares the
+    // setting to: a program which changed in the dialog is none of what the
+    // server which runs reads
+    this->harper_program = program;
+    return true;
+  }  // end of GrammarCheckSession::startHarper
+
+  bool GrammarCheckSession::startLanguageTool(QString &error) {
+    // the client is the one of the editor widget, and the reason it is shared is
+    // the size of what it starts: a Java virtual machine with the rules of every
+    // language the program knows, which costs a second to boot and a hundred
+    // megabytes to sit there, and two buffers of one editor reading two files of
+    // one project have nothing to gain from two of them
+    this->language_tool = &LanguageToolClient::get(*this->editor);
+    QObject::connect(this->language_tool,
+                     &LanguageToolClient::diagnosticsUpdated,
+                     this,
+                     &GrammarCheckSession::updateDiagnostics,
+                     Qt::UniqueConnection);
+    QObject::connect(this->language_tool,
+                     &LanguageToolClient::stopped,
+                     this,
+                     [this] { this->applyDiagnostics(); },
+                     Qt::UniqueConnection);
+    // the server is started by `openDocument`, which is where a text to read is
+    // known: a checker chosen for a buffer which visits no file has nothing to
+    // hand over and starts nothing
+    auto unused = QString();
+    if (this->document_file.isEmpty()) {
+      return LanguageToolClient::isAvailable();
+    }
+    if (!LanguageToolSupport::isAvailable()) {
+      error = QObject::tr("LanguageTool is not configured: set the installation "
+                          "directory in Options > Configuration > LanguageTool");
+      return false;
+    }
+    return this->language_tool->startSession(unused) ||
+           LanguageToolClient::isAvailable();
+  }  // end of GrammarCheckSession::startLanguageTool
+
+  void GrammarCheckSession::stopChecker() {
+    // the documents are released by `releaseDocument`, which is what ends the
+    // shared server when this buffer was its last user
+    if (this->harper != nullptr) {
+      this->harper->stop();
+    }
+  }  // end of GrammarCheckSession::stopChecker
+
+  void GrammarCheckSession::recheckChecker() {
+    if (this->harper != nullptr) {
+      if (this->harper_program != LspHarperSupport::serverExecutable()) {
+        // the program of the checker is not the one which runs: the server which
+        // answers is the one the person left behind, so it is ended and the one
+        // which is named now is started. The dialect and the documents go with
+        // it, since `launch` ends the session, spends the versions of the
+        // documents and reads them again with its handshake
+        this->harper->stop();
+        auto error = QString();
+        if (!this->startHarper(error) && !error.isEmpty()) {
+          this->editor->displayInformativeMessage(error);
+        }
+        return;
+      }
+      // the settings the client answers with are what the next question of the
+      // server reads; the documents have to be handed over again for the new
+      // dialect to be of any use to the buffer on screen
+      this->harper->setConfiguration(LspHarperSupport::configuration());
+      this->harper->recheckDocuments();
+    }
+    if (this->language_tool != nullptr) {
+      this->language_tool->recheckDocuments();
+    }
+  }  // end of GrammarCheckSession::recheckChecker
+
+  void GrammarCheckSession::releaseDocument() {
+    if (this->document_file.isEmpty()) {
+      return;
+    }
+    // both backends are told, and not the one in use only: the client of
+    // `harper-ls` is kept because the choice may come back to it, and a document
+    // it still reads is a process it keeps running and underlines it keeps
+    // drawing on a text edit which shows the answer of another checker
+    if (this->harper != nullptr) {
+      this->harper->closeDocument(this->document_file, this->document);
+    }
+    if (this->language_tool != nullptr) {
+      this->language_tool->closeDocument(this->document_file, this->document);
+    }
+    this->applyDiagnostics();
+  }  // end of GrammarCheckSession::releaseDocument
+
+  void GrammarCheckSession::openDocumentOnChecker() {
+    if (this->document_file.isEmpty()) {
+      // a buffer which visits no file has no name to be read under; the checker
+      // says nothing of it until the buffer is saved, which is also what the
+      // diagnostics of `clangd` wait for
+      return;
+    }
+    this->document = this->text_edit->document();
+    if (this->harper != nullptr) {
+      this->harper->openDocument(this->document_file, this->document);
+    }
+    if (this->language_tool != nullptr) {
+      // the frame is given with the document: the mode of that frame is who says
+      // what of its text a proofreader has any business reading
+      this->language_tool->openDocument(this->document_file, this->document,
+                                        this->text_edit);
+    }
+  }  // end of GrammarCheckSession::openDocumentOnChecker
+
   void GrammarCheckSession::updateDiagnostics(const QString &file) {
     if (file == this->document_file) {
       this->applyDiagnostics();
@@ -259,36 +394,81 @@ namespace tfel::gui {
   void GrammarCheckSession::openOrRenameDocument() {
     const auto f = this->text_edit->getCompleteFileName();
     if (f == this->document_file) {
-      if ((!f.isEmpty()) && (!this->client->isDocumentOpen(f))) {
-        // the client is a fresh one since this session last opened the file
-        this->document = this->text_edit->document();
-        this->client->openDocument(f, this->document);
+      if ((!f.isEmpty()) && (!this->openedOnChecker())) {
+        // the buffer had its name before a checker was there to read it: the mode
+        // of a new file is built before the file is visited, and a backend is
+        // created when a choice names one, which may be after
+        this->openDocumentOnChecker();
       }
       return;
     }
-    if (!this->document_file.isEmpty()) {
-      this->client->closeDocument(this->document_file,
-                                  this->text_edit->document());
-      this->document_file = QString();
-      this->applyDiagnostics();
-    }
+    this->releaseDocument();
+    this->document_file = f;
     if (f.isEmpty()) {
-      // a buffer which visits no file has no name to be read under; the checker
-      // says nothing of it until the buffer is saved, which is also what the
-      // diagnostics of `clangd` wait for
       return;
     }
-    this->document_file = f;
-    this->document = this->text_edit->document();
-    this->client->openDocument(f, this->document);
+    this->openDocumentOnChecker();
   }  // end of GrammarCheckSession::openOrRenameDocument
+
+  bool GrammarCheckSession::openedOnChecker() const {
+    if (this->document_file.isEmpty()) {
+      return false;
+    }
+    if (this->usesHarper()) {
+      return (this->harper != nullptr) &&
+             this->harper->isDocumentOpen(this->document_file);
+    }
+    if (this->usesLanguageTool()) {
+      return (this->language_tool != nullptr) &&
+             this->language_tool->isDocumentOpen(this->document_file);
+    }
+    return false;
+  }  // end of GrammarCheckSession::openedOnChecker
+
+  QVector<LspDiagnostic> GrammarCheckSession::diagnostics() const {
+    if (this->document_file.isEmpty()) {
+      return {};
+    }
+    if ((this->harper != nullptr) && this->usesHarper()) {
+      return this->harper->diagnosticsFor(this->document_file);
+    }
+    if ((this->language_tool != nullptr) && this->usesLanguageTool()) {
+      return this->language_tool->diagnosticsFor(this->document_file);
+    }
+    return {};
+  }  // end of GrammarCheckSession::diagnostics
+
+  QString GrammarCheckSession::reportOf() const {
+    if (this->usesHarper()) {
+      // the dialect is named because it is the one thing the answer changes, and
+      // a person who reads a buffer of British English wants to see which
+      // English the underlines were drawn against
+      return QObject::tr("grammar checking with %1, reading the text as %2")
+          .arg(LspHarperSupport::serverExecutable(),
+               LspHarperSupport::dialectLabel(LspHarperSupport::dialect()));
+    }
+    if (this->usesLanguageTool()) {
+      if (!this->whole_text_is_prose) {
+        // the choice was made for the prose of the editor and this buffer is
+        // none: what actually reads it is the one thing the entry of a menu does
+        // not say, so the minibuffer does
+        return QObject::tr(
+            "LanguageTool reads no code: this buffer is checked for "
+            "spelling only");
+      }
+      return QObject::tr("checking with LanguageTool, reading the text as %1")
+          .arg(LanguageToolSupport::languageLabel(
+              LanguageToolSupport::language()));
+    }
+    return QObject::tr("no spell or grammar checking");
+  }  // end of GrammarCheckSession::reportOf
 
   void GrammarCheckSession::applyDiagnostics() {
     auto selections = QList<QTextEdit::ExtraSelection>();
     if ((this->area != nullptr) && (!this->document_file.isEmpty()) &&
         (this->document != nullptr)) {
       auto &doc = *this->document;
-      for (const auto &d : this->client->diagnosticsFor(this->document_file)) {
+      for (const auto &d : this->diagnostics()) {
         if ((!blockExists(doc, d.startLine)) ||
             (!blockExists(doc, d.endLine))) {
           // the answer is late, or the text it described is shorter now
@@ -315,19 +495,16 @@ namespace tfel::gui {
         selections.append(selection);
       }
     }
-    this->text_edit->setExtraSelections("harper", selections);
+    this->text_edit->setExtraSelections("grammar", selections);
   }  // end of GrammarCheckSession::applyDiagnostics
 
   QString GrammarCheckSession::diagnosticAt(const QTextDocument &doc,
                                             const int position) const {
-    if (this->document_file.isEmpty()) {
-      return QString();
-    }
     // several lints of one run are said together: the checker has a lot to say
     // about a single word sometimes, and the tooltip is the place where it is
     // read
     auto parts = QStringList();
-    for (const auto &d : this->client->diagnosticsFor(this->document_file)) {
+    for (const auto &d : this->diagnostics()) {
       if ((!blockExists(doc, d.startLine)) || (!blockExists(doc, d.endLine))) {
         continue;
       }
@@ -338,11 +515,10 @@ namespace tfel::gui {
         end = start + 1;
       }
       if ((position >= start) && (position <= end)) {
-        // the code of the lint, `SpellCheck` or `PronounVerbAgreement`, names
-        // the rule the checker applied; it is what a person who thinks the rule
-        // is wrong looks up in the documentation of the checker, so it goes
-        // with the message, and the name of the checker only when the server
-        // named no rule
+        // the code of the lint, `SpellCheck` or `EN_A_VS_AN`, names the rule the
+        // checker applied; it is what a person who thinks the rule is wrong looks
+        // up in the documentation of the checker, so it goes with the message,
+        // and the name of the checker only when neither named a rule
         auto text = d.message;
         const auto name = (!d.code.isEmpty()) ? d.code : d.source;
         if (!name.isEmpty()) {

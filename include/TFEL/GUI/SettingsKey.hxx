@@ -209,6 +209,11 @@ namespace tfel::gui {
    * are always there, the themes of the modes come and go with the plugins
    * which are loaded, and a theme whose name is that of a program -- `clangd`,
    * `castem` -- says nothing of the kind unless its mode says it
+   *
+   * \note \c parent is what says that a theme is a corner of another one: the
+   * entries of a program which checks a text are about the same thing as the
+   * choice of that program, and a dialog which lists them beside `General` says
+   * so little about what they belong to
    */
   struct TFEL_GUI_VISIBILITY_EXPORT SettingsGroup {
     //! name of the theme, the name of the declaring mode when it is empty
@@ -227,6 +232,17 @@ namespace tfel::gui {
     QVector<SettingsKey> keys;
     //! icon of the theme, the one of the declaring mode when it is null
     QIcon icon;
+    /*!
+     * \brief name of the theme this theme is a submenu of, empty when it stands
+     * on its own
+     *
+     * \note the entries of a program a checker runs are about the same decision
+     * as the choice of that checker, and a dialog which lists `Harper` beside
+     * `General` says nothing of that. A theme whose parent is not declared is
+     * shown on its own: the relation is a promise about the list, never a way
+     * to hide a theme
+     */
+    QString parent;
   };  // end of struct SettingsGroup
 
 }  // end of namespace tfel::gui

@@ -16,13 +16,18 @@ namespace tfel::gui {
       const QString &group,
       const QString &what,
       const QVector<SettingsKey> &entries,
+      const QString &sub_theme_of,
       const bool b)
-      : name(group), description(what), keys(entries) {
+      : name(group),
+        description(what),
+        keys(entries),
+        parent(sub_theme_of) {
     if (b) {
       auto g = SettingsGroup{};
       g.name = group;
       g.description = description;
       g.keys = entries;
+      g.parent = sub_theme_of;
       SettingsRegistry::getSettingsRegistry().addSettingsGroup(g);
     }
   }  // end of StandardSettingsGroupProxy::StandardSettingsGroupProxy
@@ -130,6 +135,11 @@ namespace tfel::gui {
       if (h.mode.isEmpty()) {
         h.mode = filled.mode;
       }
+      // and so does the theme it is a submenu of: what a theme is a corner of
+      // is what its first declaration said
+      if (h.parent.isEmpty()) {
+        h.parent = filled.parent;
+      }
       return;
     }
     // A theme which holds nothing says nothing: it is not worth a page of the
@@ -145,8 +155,95 @@ namespace tfel::gui {
     appendGroup(g, this->groups);
   }  // end of SettingsRegistry::addSettingsGroup
 
+  namespace {
+    /*!
+     * \brief write a theme and, after it, every theme which names it as its
+     * parent
+     * \param[in] gs : all the themes
+     * \param[in] k : index of the theme to write
+     * \param[in,out] ordered : themes written so far
+     * \param[in,out] done : which themes were written
+     */
+    void writeTheme(const QVector<SettingsGroup> &gs,
+                    const int k,
+                    QVector<SettingsGroup> &ordered,
+                    QVector<bool> &done) {
+      ordered.append(gs[k]);
+      done[k] = true;
+      for (auto m = 0; m != gs.size(); ++m) {
+        if ((not done[m]) &&
+            (gs[m].parent.compare(gs[k].name, Qt::CaseInsensitive) == 0)) {
+          writeTheme(gs, m, ordered, done);
+        }
+      }
+    }  // end of writeTheme
+
+    /*!
+     * \return the given themes, each sub-theme directly after the theme it is a
+     * submenu of
+     * \param[in] gs : themes to order
+     *
+     * \note the order the declarations were gathered in is no order a person can
+     * guess, and it says nothing about which theme is a corner of which other:
+     * the entries of a proofreader belong under the choice of that proofreader,
+     * whatever file declared them and whatever static initialiser ran first
+     *
+     * \note a theme whose parent is not declared, a theme nobody declared a
+     * parent for, and the themes caught in a cycle of promises are all kept, in
+     * the order they came in: an order is nothing to lose a theme over
+     */
+    QVector<SettingsGroup> orderUnderParents(const QVector<SettingsGroup> &gs) {
+      auto ordered = QVector<SettingsGroup>{};
+      auto done = QVector<bool>(gs.size(), false);
+      // \c true when a theme of the list bears the given name
+      const auto declared = [&gs](const QString &name) {
+        for (const auto &g : gs) {
+          if (g.name.compare(name, Qt::CaseInsensitive) == 0) {
+            return true;
+          }
+        }
+        return false;
+      };  // end of declared
+      for (auto k = 0; k != gs.size(); ++k) {
+        if (done[k]) {
+          continue;
+        }
+        // a sub-theme is written with its parent; what names no parent, or a
+        // theme which is not there to hold it, stands on its own
+        if (gs[k].parent.isEmpty() || (!declared(gs[k].parent))) {
+          writeTheme(gs, k, ordered, done);
+        }
+      }
+      // what is left is a chain of promises which leads nowhere but onto itself:
+      // it keeps its order rather than being lost
+      for (auto k = 0; k != gs.size(); ++k) {
+        if (!done[k]) {
+          ordered.append(gs[k]);
+          done[k] = true;
+        }
+      }
+      return ordered;
+    }  // end of orderUnderParents
+
+    /*!
+     * \brief order themes by name, case insensitively
+     * \param[in,out] gs : themes to order
+     */
+    void orderByName(QVector<SettingsGroup> &gs) {
+      std::sort(gs.begin(), gs.end(), [](const SettingsGroup &a,
+                                         const SettingsGroup &b) {
+        return a.name.compare(b.name, Qt::CaseInsensitive) < 0;
+      });
+    }  // end of orderByName
+  }    // end of anonymous namespace
+
   QVector<SettingsGroup> SettingsRegistry::getGroups() const {
     auto gs = this->groups;
+    // the order the static initialisers of the libraries ran in is unspecified,
+    // so the themes of the editor would be listed in an order which changes
+    // with how the library was linked: what a person looks for in a list of
+    // themes is a name, and the list is therefore sorted by name
+    orderByName(gs);
     auto &f = MajorModeFactory::getMajorModeFactory();
     // the modes, oldest declaration first, so that the first declaration of a
     // theme shared by two of them is the one which is shown
@@ -159,14 +256,11 @@ namespace tfel::gui {
     }
     // the themes of the modes come last and in a fixed order: the order the
     // plugins happen to be scanned in is no order a user can guess
-    std::sort(modes.begin(), modes.end(),
-              [](const SettingsGroup &a, const SettingsGroup &b) {
-                return a.name.compare(b.name, Qt::CaseInsensitive) < 0;
-              });
+    orderByName(modes);
     for (const auto &g : modes) {
       appendGroup(g, gs);
     }
-    return gs;
+    return orderUnderParents(gs);
   }  // end of SettingsRegistry::getGroups
 
   QStringList SettingsRegistry::getGroupsNames() const {

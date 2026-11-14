@@ -33,6 +33,18 @@ namespace tfel::gui {
     this->highlighter = h;
   }  // end of MajorMode::setHighlighter
 
+  QString MajorMode::grammarCheckText(const QString &text) const {
+    // a mode whose text all is prose hands it over as it stands: what a
+    // checker says about it is said about the words of the buffer
+    return text;
+  }  // end of MajorMode::grammarCheckText
+
+  GrammarCheckSession *MajorMode::grammarCheckSession() const {
+    // the modes which hold a session say so; a mode which holds none has
+    // nothing to follow the choice of a proofreader with
+    return nullptr;
+  }  // end of MajorMode::grammarCheckSession
+
   MajorMode::~MajorMode() {
     // releasing the highlighter here is what keeps a stale one from
     // highlighting the document after this mode is gone. TextEditBase

@@ -28,7 +28,7 @@ What is covered:
 | `test-main-window`        | the real application shape: a main window with its menu bar and its central editor |
 | `test-lsp-protocol`       | the shapes of the Language Server Protocol the client reads: framing, positions as UTF-16 code units, file uris, the answers of semantic tokens, document symbols and workspace edits |
 | `test-lsp-client`         | a real `clangd` session: the start and the handshake, the menu of the `C++` mode, the session a file of a project starts on its own and the setting which turns it off, the jumps — `Alt+.` and `Ctrl-Left click` —, the diagnostics, the rename, the signature help, the quick fixes, the compilation database the session is started with |
-| `test-grammar-check`      | a real `harper-ls` session: the settings and the varieties of English, the menus which offer the checker, the lints and the face they are drawn in, what a mode which is gone leaves behind, the spell checker going on its way on a text the grammar checker reads |
+| `test-grammar-check`      | the proofreader a buffer is read with: the four choices and the menu which offers them, the languages of each of them, a real `harper-ls` session and a real LanguageTool server, the lints and the face they are drawn in, what a mode which is gone leaves behind, the spell checker going off a text LanguageTool reads, and the reports the blanked markup of a mode must not produce |
 | `test-settings`           | the entries of the configuration: what is declared, what the dialog shows, how it keeps the themes of the major modes apart, what writing it stores and what it applies live, what a packaged mode loaded as a plugin exports |
 
 These encode the invariants fixed by

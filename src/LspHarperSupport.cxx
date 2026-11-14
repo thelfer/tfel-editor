@@ -12,6 +12,8 @@
 #include <QtCore/QStandardPaths>
 
 #include "TFEL/GUI/LspHarperSupport.hxx"
+#include "TFEL/GUI/SettingsKey.hxx"
+#include "TFEL/GUI/SettingsRegistry.hxx"
 
 namespace tfel::gui {
   QString LspHarperSupport::serverExecutable() {
@@ -29,24 +31,6 @@ namespace tfel::gui {
     }
     return QStandardPaths::findExecutable(QStringLiteral("harper-ls"));
   }  // end of LspHarperSupport::serverExecutable
-
-  bool LspHarperSupport::launchByDefault() {
-    return QSettings()
-        .value(QStringLiteral("harper/launch-by-default"), false)
-        .toBool();
-  }  // end of LspHarperSupport::launchByDefault
-
-  void LspHarperSupport::setLaunchByDefault(const bool on) {
-    auto settings = QSettings();
-    if (on) {
-      settings.setValue(QStringLiteral("harper/launch-by-default"), true);
-    } else {
-      // the default is not stored, as no entry of the editor stores its own
-      // default: the file holds what was chosen, not what the editor would
-      // have answered anyway
-      settings.remove(QStringLiteral("harper/launch-by-default"));
-    }
-  }  // end of LspHarperSupport::setLaunchByDefault
 
   QString LspHarperSupport::dialect() {
     const auto name =
@@ -95,5 +79,63 @@ namespace tfel::gui {
     return QJsonObject{{QStringLiteral("harper-ls"),
                         QJsonObject{{QStringLiteral("dialect"), dialect()}}}};
   }  // end of LspHarperSupport::configuration
+
+  namespace {
+
+    // the five varieties of English, offered under the names a person reads and
+    // kept under the names the server reads them
+    QVector<SettingsKey::Choice> dialectChoices() {
+      auto choices = QVector<SettingsKey::Choice>();
+      for (const auto &name : LspHarperSupport::dialects()) {
+        choices << SettingsKey::Choice(
+            name, QObject::tr("%1 English").arg(name));
+      }
+      return choices;
+    }  // end of dialectChoices()
+
+  }  // end of anonymous namespace
+
+  // the checker is a program of its own and the theme is named after it, the way
+  // the theme of `clangd` is: that is the name a person looks for when the
+  // underlines of a buffer are not what they expected. The `C++` mode declared
+  // this theme while it was the only mode to hold a grammar session; it is a
+  // theme of the editor now, because a document of LaTeX, a note of Markdown and
+  // the comments of a source file are read by the same program, and what reads a
+  // buffer is one choice for the editor, see `SpellingAndGrammar`. Whether a
+  // buffer is read at all is an entry of that choice and no entry of this theme;
+  // what is left here are the two entries which say which program runs and which
+  // English it reads
+  //
+  // The theme is a submenu of `Spelling and grammar`: which program checks a
+  // text is one decision, and which program was chosen then has to say what it
+  // is asked with. It is spelled `Harper`, as the program is spelled, whatever
+  // the address of its entries is
+  static const StandardSettingsGroupProxy harper(
+      "Harper",
+      QObject::tr(
+          "The English grammar checker a buffer can be read with: the text it "
+          "is given is underlined where it finds something wrong. The checker "
+          "knows no word of French, and it reads the whole text it is handed, "
+          "which is to say the comments of a source file"),
+      QVector<SettingsKey>()
+          << SettingsKey::text(
+                 "harper/executable",
+                 QObject::tr("Program of the grammar checker"),
+                 QObject::tr("The `harper-ls` to start. Left empty, the editor "
+                             "looks for `harper-ls` in the directories of the "
+                             "session; when there is none, no menu offers a "
+                             "checker which names this program at all"))
+          << SettingsKey::choice(
+                 "harper/dialect", QObject::tr("Variety of English to read as"),
+                 QObject::tr("Which English the text is read as: which spellings "
+                             "are held to be their own — `colour` and `color` do "
+                             "not both fit one variety — and which inflections "
+                             "are accepted. The language submenu of the "
+                             "`Hunspell and Harper` entry of `Options > "
+                             "Orthograph/Grammar` writes this same address, and a "
+                             "checker which runs reads its buffers again under "
+                             "the new answer"),
+                 dialectChoices(), QStringLiteral("American")),
+      QStringLiteral("Spelling and grammar"));
 
 }  // end of namespace tfel::gui

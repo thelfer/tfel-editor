@@ -1048,13 +1048,13 @@ entries: a `CommandLine` is given an address and writes it back when its answer 
 taken, so such a field shows a stale list and is overwritten by the next prompt on
 its own account. A test asserts those addresses are not declared
 (`theRegistryDeclaresTheEntriesOfTheEditor`), which is what keeps the next person
-from putting them back. The themes that remain are `General` and `Spell checking`
-from the core, `clangd` and `harper` from the C++ mode and `castem` from the
-Cast3M mode; no other packaged mode exports anything today, because the only entry
-of the configuration those modes read is a history. The `harper` theme is declared
-by `CxxMajorMode::declareSettings` as the `clangd` theme is, which is why the
-grammar entries reach `MTest` and `PipeTest` too, and why the theme is attributed to
-the `C++` mode in the dialog although it is named after a program.
+from putting them back. The themes that remain are `General` and `Spelling and
+grammar` (with the `Harper` and `LanguageTool` subthemes) from the core, `clangd`
+from the C++ mode and `castem` from the Cast3M mode; no other packaged mode
+exports anything today, because the only entry of the configuration those modes
+read is a history. The proofreader themes belong to the core, not to the C++
+mode: `harper-ls` and LanguageTool read prose, and prose is read in the three
+modes which hold a buffer of text and in none of them alone.
 
 How a mode exports its entries, since that is the part another mode has to imitate:
 
@@ -1257,21 +1257,38 @@ text) over each block, with an empty row between them, and a bold caption naming
 mode at the top of every page of a mode theme (`objectName`
 `configuration-page-mode`, which is how a test singles it out).
 
-Four traps, all paid for:
+The list is a **`QTreeWidget`** since the proofreaders: `SettingsGroup::parent` — the
+fourth argument of `StandardSettingsGroupProxy`, before the registering `bool` — says
+that a theme is a corner of another one, `SettingsRegistry::getGroups()` answers such
+a theme directly after its parent (`orderUnderParents`, which keeps orphans and a
+cycle of promises in incoming order rather than losing a theme), and the dialog hangs
+the item of a sub-theme under the item of the name. `Harper` and `LanguageTool` are
+declared as subthemes of `Spelling and grammar`, and the theme of the choice carries
+the hunspell dictionary entry, which is no a theme of its own (`Spell checking` is
+gone; the entry is in `spelling_entries()` of `SpellingAndGrammar.cxx`, under
+`TFEL_GUI_HUNSPELL_SUPPORT`). `expandAll()` runs **after** the items are built.
 
-- A `QListWidgetItem` is **not a `QObject`**: no `setObjectName`, and a test cannot
-  single a row out by name. What a row means is kept in the item itself,
-  `setData(Qt::UserRole, page)`, and `QListWidgetItem::data` of an **unset** role
-  answers an invalid variant whose `toInt()` is `0` — a real page. Every item,
-  headings and the gap included, has to carry the role explicitly (`-1` for what
-  shows nothing), and `toInt()` of it is then meaningless without that guard.
+Five traps, all paid for:
+
+- A `QTreeWidgetItem` is **not a `QObject`**: no `setObjectName`, and a test cannot
+  single an item out by name. What an item means is kept in the item itself,
+  `setData(0, Qt::UserRole, page)` — and **every** method wants the column —, and
+  `data` of an **unset** role answers an invalid variant whose `toInt()` is `0`, a
+  real page. Every item, headings and the gap included, has to carry the role
+  explicitly (`-1` for what shows nothing), and `toInt()` of it is then meaningless
+  without that guard. `setForeground` wants a **brush**, not a colour: the palette
+  answers `brush(QPalette::Disabled, QPalette::Text)`.
+- A **top-level** item has `parent() == nullptr`, *not* the invisible root: whoever
+  asserts "this theme stands on its own" compares against null. And `QVERIFY2`
+  evaluates its message **whether the assertion holds or not**, so a message built
+  with `item->parent()->text(0)` segfaults on the path which passes — take the
+  parent in a named local and make the message null-safe before the test.
 - The old `connect(themes, currentRowChanged, pages, setCurrentIndex)` cannot be
-  kept once rows exist which name no page: `currentRowChanged` fires for a
-  non-selectable row too. The slot is a lambda which sets the page only when the
-  role is not negative, and a test asserts that choosing a title leaves
-  `currentIndex` alone.
-- `QLabel` has **no `setForeground`** (that is `QListWidgetItem`): the grey of a
-  caption is a `QPalette` of the label itself.
+  kept once items exist which name no page: the signal fires for a non-selectable
+  item too. The slot is a lambda which sets the page only when the role is not
+  negative, and a test asserts that choosing a title leaves `currentIndex` alone.
+- `QLabel` has **no `setForeground`** (that is a list item): the grey of a caption
+  is a `QPalette` of the label itself.
 - Adding a member to `SettingsGroup` is an **ABI break for the packaged modes**: a
   probe which loaded a `castem` plugin built against the old layout into a core
   library built with the new one segfaulted in the reallocation of a
@@ -1280,43 +1297,119 @@ Four traps, all paid for:
   change of the dialog; it is not enough to run a probe against the plugins.
 
 `TestSettings` asserts the shape with `theThemesOfTheMajorModesAreSeparatedFromThose
-OfTheEditor` (the titles are the non-selectable rows and show no page, every theme is
-on its own side of the titles, a title changes no page, a caption names the mode and
-only mode pages have one), and `theDialogShowsWhatIsDeclared` reads the themes as the
-**selectable** rows — `getGroupsNames()` and `pages->count()` both disagree with
-`themes->count()` now.
+OfTheEditor` (the titles are the non-selectable items and show no page, every theme is
+on its own side of the titles, a sub-theme is a child of its parent and of nothing
+else and its submenu is expanded, a title changes no page, a caption names the mode
+and only mode pages have one), and `theDialogShowsWhatIsDeclared` reads the themes as
+the **selectable** items of a depth-first walk (`readList`) — `getGroupsNames()` and
+`pages->count()` both disagree with `themes->topLevelItemCount()` now.
 
-### The grammar checker is a language server of its own (`harper-ls`)
+### The proofreader of a buffer: one choice, two programs (`harper-ls`, LanguageTool)
 
-`harper-ls` checks the **English prose** of a buffer — the comments of a source
-file, the whole of a `LaTeX` or `Markdown` text. `LspClient` is no longer the clangd
-client: it gained `setServerName`/`setLanguageId`/`setConfiguration`/`setFullTextSync`
+What reads the words of a buffer is a **single choice for the editor**:
+`SpellingAndGrammar::Checker` (`None`, `Hunspell`, `HunspellHarper`,
+`LanguageTool`) in the address `spelling/checker`, whose default is
+`Hunspell` and is kept by the *absence* of the address. `SpellingAndGrammar`
+(`src/SpellingAndGrammar.cxx`) is the one place which knows the choice, the
+language each checker reads, and the menu which offers them; it declares the
+`Spelling and grammar` theme of the configuration, the hunspell dictionary
+entry included (`spelling_entries()`), since which program reads the words and
+which words that reading holds to be spelled right is one decision — and
+`Harper` and `LanguageTool` name that theme as their `parent`, which is how the
+dialog opens them as its submenus. **`harper/launch-by-default`
+is gone**: what once made a *new* buffer take a session is replaced by a
+choice every buffer follows, the open ones through
+`SpellingAndGrammar::applyTo(editor)`, the later ones built with it.
+
+`LspClient` is no longer the clangd client: it gained `setServerName`/`setLanguageId`/`setConfiguration`/`setFullTextSync`
 and `launch(program, args, error)`, and **`get()` and `CxxMajorMode::stopClangd` look
 clangd's client up by `objectName() == "clangd"`** because a `C++` buffer now holds
 two clients at once. `LspHarperSupport` (static: settings, discovery, the
-`workspace/configuration` answer) and `GrammarCheckSession` (per mode instance, owns a
-child `LspClient` named "harper-ls", draws the lints) are core classes; the three
-hosting modes each keep one member.
+`workspace/configuration` answer) and `GrammarCheckSession` (per mode instance, one
+backend in use, draws the lints) are core classes, and so are `LanguageToolSupport`
+(finding the jar and the runtime, the request body, the answer) and
+`LanguageToolClient` (the process, the requests); the three hosting modes — `C++`,
+`LaTeX`, `Markdown` — each keep one `GrammarCheckSession` member.
 
-The menu of the feature is `GrammarCheckSession::addToMenu(menu, toggle)`: a checkable
-entry plus the `English variant` submenu. The toggle writes the **one global setting**
-(`harper/launch-by-default`), which is why a buffer opened afterwards follows it; the
-ctor's auto-launch passes `remembered = false, announced = false`. `LaTeX` and
-`Markdown` name their entry `Grammar checking (English only)` — a person choosing it
-must know the checker knows no word of French.
+The menu is `SpellingAndGrammar::addToMenu(menu, whole_text_is_prose)`: the four
+choices are one exclusive question (what reads the words of the buffers), each is a
+**plain clickable entry** which calls `setChecker` + `applyTo` and reports
+`"checking with %1"`; a choice whose program is not to be found is not offered at all.
+Below the four entries stands one submenu of the languages of the choice **in use**
+(`objectName` `spelling-languages`), which is built **when it is opened**, not when the
+menu was constructed — so it always names the languages of the current choice, whether
+the click on a choice above it happened before or after this menu was built. The choice's
+languages are the installed dictionaries for hunspell, the five varieties for harper, the
+codes (plus `auto`) for LanguageTool, and its entries call `setChecker` + `setLanguage` +
+`applyTo` — because the leaf writes the choice it names, picking a language is picking
+that checker, and a stored language of its own must never reach a buffer of another
+program. `setLanguage(c, language)` writes the address of the choice named *and* the
+addresses of the two others wherever they have an entry for that same variety, which is
+what keeps the languages of each choice agreeing with each other. The four entries stand
+in `Options > Orthograph/Grammar` (`MainWindow::updateOptionsMenu`, icon
+`tools-check-spelling`) and in the menus of the three modes, all writing the same
+address. **`SpellingAndGrammar` has no `changed` signal**: a test which sets the
+checker must call `applyTo(editor)` itself, and a menu entry does it for the user.
 
-The two checkers of a text buffer work side by side, and nothing coordinates
-them: `harper-ls` says what is wrong with the agreement of two words, hunspell
+**A choice with languages must not be a submenu header** (issue #131, the complaint
+"Selecting LanguageTool in the menu does nothing"). Qt opens the entry above a submenu as
+a popup instead of triggering it, so a checkable entry which carries the submenu of its
+own languages can not be clicked — its languages are what one reaches, not the checker.
+Putting each program's languages behind the entry which named it therefore made that
+entry inoperative: clicking `LanguageTool (spelling and grammar)` opened the submenu of
+codes, ticked nothing, left the checker unmodified, and the person was still reading
+their buffer with the choice which was in use before the click. The fix which keeps both
+the choice and its languages on screen is what the paragraph above describes: the four
+choices as plain entries, their languages in one submenu of their own below, which names
+those of the choice the setting holds. A test of the menu asserts it — no entry which
+names a checker carries a submenu — and the probe which reproduces the complaint
+(`/tmp/opencode/menu_probe/clickprobe.cxx`, offscreen and on `DISPLAY=:99`) reaches the
+entries with `QTest::mouseClick`, which is what the mouse does, rather than with
+`QAction::trigger()`, which is not: `trigger()` works on a submenu header and a real
+click never does, which is why the old shape passed its test suite while doing nothing
+under the hand.
+
+`effectiveChecker(whole_text_is_prose)` is the one question the choice cannot answer on
+its own: LanguageTool is handed a text and reads no source file, so a buffer whose whole
+text is *not* prose is read by the choice which names hunspell — the entry is labelled
+`" (text files)"` there, and `GrammarCheckSession::reportOf` says
+`LanguageTool reads no code: this buffer is checked for spelling only`. Prose-ness is the
+fourth argument of the `GrammarCheckSession` constructor, and
+`MajorMode::grammarCheckSession()` with `readsWholeTextAsProse()` are how the menu and
+`MainWindow` ask it. The off switch of the misspelled-words face is
+`TextEditBase::setSpellCheckLanguage("")`, answered by
+`SpellingAndGrammar::spellCheckLanguage(Checker)`: a choice which does not name hunspell
+hands **no dictionary**, which is not the same thing as a checker being stopped.
+
+Two traps of that surface, both paid for:
+
+- **`applyTo` may not require a major mode.** It used to skip a `TextEditBase` whose mode
+  was not built, which silently dropped the empty buffers of the editor: the dialog's live
+  entry then reached the buffers on screen and left a `*scratch*` with the dictionary of
+  the locale, which is what `TestSettings::acceptingTheDialogAppliesTheLiveEntries`
+  asserts against (it got `fr_FR` where `en_GB` was written). A mode-less text edit keeps
+  the language all the same, and `setMajorMode` hands that stored language to the mode it
+  installs.
+- **`MainWindow` must count the buffers before asking for the current one**: asking for
+  the current buffer of an editor which holds none *creates* one, from the menu.
+
+The two checkers of a buffer read with `HunspellHarper` work side by side, and nothing
+coordinates them: `harper-ls` says what is wrong with the agreement of two words, hunspell
 what is wrong with a word nobody spells, so a `LaTeX` buffer carries both faces
 at once — the misspelled words drawn by the highlighter of the mode, the lints
-drawn as the `harper` contribution to the extra selections, which is drawn over
+drawn as the `grammar` contribution to the extra selections, which is drawn over
 the words and so wins on the rare run that carries both reports. What was asked
-at first, and reverted on purpose, is the opposite: an exclusion which handed
-the text of a checked buffer to one checker at a time, per mode, through
+at first, and reverted on purpose, is the opposite for *that* choice: an exclusion which
+handed the text of a checked buffer to one checker at a time, per mode, through
 `setSpellCheckLanguage` answering `SpellChecker` an empty language while
 `grammar->isActive()` and the session's `stateChanged` re-applying
 `textEdit.getSpellCheckLanguage()`. A grammar checker which knows nothing of
-spelling has no business taking a dictionary away.
+spelling has no business taking a dictionary away. `LanguageTool` is the exception, and
+the reason it is a choice of the user and not of the mode: that program *does* check
+spellings, in the language it was given, and a buffer it reads is handed an empty
+dictionary. So the rule is one line of `spellCheckLanguage(Checker)` — a dictionary for
+the choices which name hunspell, nothing for the two which do not — and not a per-mode
+policy.
 
 Protocol facts, all read off `harper-ls` 3.0.0 (`/tmp/opencode/harper/probe8.py` drives
 it by hand, which is how each of these was found):
@@ -1339,8 +1432,8 @@ it by hand, which is how each of these was found):
 
 Three traps, all paid for:
 
-- **`~GrammarCheckSession` must hand the `"harper"` key an EMPTY list**
-  (`text_edit->setExtraSelections("harper", {})`), never `applyDiagnostics()`: the
+- **`~GrammarCheckSession` must hand the `"grammar"` key an EMPTY list**
+  (`text_edit->setExtraSelections("grammar", {})`), never `applyDiagnostics()`: the
   client is a *child* of the session, so it is still alive in the destructor body and
   still holds the answer it published — redrawing republishes a dead session's
   underlines on the text edit the next mode inherits. Verified by reverting the line:
@@ -1365,6 +1458,100 @@ read the keyed selections (`TextEditBase::extraSelections()`), and
 372 → 510 on `DISPLAY=:99`, 239 → 368 offscreen, back to the exact baseline when the
 session is stopped. A lint's red is `QColor(200, 0, 0)`, chosen because clangd's error
 red is `(170, 0, 0)` and the two can sit beside each other on one buffer.
+
+### LanguageTool is a Java HTTP server, not a language server
+
+LanguageTool 6.4 (`languagetool-server.jar`) speaks no protocol the editor speaks: it is
+started as
+
+~~~~{.bash}
+java -cp <installation>/languagetool-server.jar \
+     org.languagetool.server.HTTPServer --port <port>
+~~~~
+
+and asked over HTTP — `POST /v2/check` with an `application/x-www-form-urlencoded` body,
+`GET /v2/languages` as the readiness probe. `LanguageToolClient` (a `QObject`, one per
+`EditorWidget`, `objectName` `language-tool`) is its client and reaches the same
+`GrammarCheckSession` surface as the harper backend, which is why the three hosting modes
+know one `setChecker` and not two APIs. Numbers and shape facts, all verified against a
+live 6.4 server (`/tmp/opencode/lt_probe/check.py` drives it by hand):
+
+- **The process is booted by the first buffer which asks and ended by the loss of the
+  last one**: `openDocument`/`closeDocument` refcount the users of a client, and a
+  virtual machine with the rules of every installed language costs ~100 MB to serve
+  nobody. Boot is ~1.1 s to the first answer of `GET /v2/languages` and its first check
+  lands ~2.3 s after the start, which is what `SERVER_BOOT_TIMEOUT` and the waits of the
+  test cases are scaled to. A process which does not answer is `terminate`d and reported
+  by the port it was given.
+- **Readiness is polled, every 200 ms, one probe at a time** (`ready_timer` is stopped
+  while a probe is on its way). There is no handshake to wait for: the API has no
+  notion of a session.
+- **The API is stateless, so every change is a whole new request.** A document is sent
+  500 ms after the last key (`TYPING_SETTLES_IN`) and a text longer than
+  `maximumTextLength()` — 40 000 characters, which is a tenth of a second of server,
+  where 60 000 is two seconds — is cut by `sliceStarts` in the last half of the piece,
+  at an empty line, else at a line end; the offsets of an answer are then places in the
+  piece and the place of the piece is what turns them into places of the buffer.
+- **`port()` answers the setting, 0 included**: the free number a 0 stands for is taken
+  in `startServer` by `listen`ing a throwaway `QTcpServer` on port 0 and reading
+  `serverPort()` back, because only whoever binds the port learns it. Java is then
+  started with that number. `--public` is deliberately not passed: the server stays on
+  `127.0.0.1`.
+- **A server which reads the settings the dialog no longer writes is ended** by
+  `recheckDocuments` comparing `serverSettings()` with the `launch_settings` the process
+  was started with (installation, runtime, port, Java options). The language and the two
+  lists of categories are in every request body, so they need no restart and the
+  documents are simply handed over again. `harper` has the same check with
+  `harper_program` against `LspHarperSupport::serverExecutable()`, and neither has a
+  public restart API: what makes a session stale decides inside the client.
+- **The offsets of an answer are `QString` indices** (UTF-16 code units), so no
+  conversion is needed; a request the server refuses is answered as **plain text** —
+  `errorOf` reads its first line, which is what reaches the minibuffer.
+
+Qt 6.2 traps of that HTTP surface, both paid for:
+
+- **There is no `QUrl::FullyUrlEncoding`**; the encoding a form is read with is
+  `QUrl::FullyEncoded`, and `requestBody` is then byte-identical to what
+  `curl --data-urlencode` writes (the test asserts exactly that, with
+  `QUrl::toPercentEncoding(text, {}, "/")`). The alternative reading of the content type
+  turns a space into a `+`.
+- **`QUrlQuery::queryItemValue` decodes with `PrettyDecoded` by default**, which leaves
+  the `%0A` of an escaped text standing for the newline it came from: a test which reads
+  a body back must ask for `QUrl::FullyDecoded`, or it compares a text against its own
+  escaped form.
+
+The trap of a mode which hides its markup, and the one this half of the feature really
+costs: `LaTeXMajorMode::grammarCheckText` blanks `\section` and friends with **spaces of
+the same length** — shortening the text would put every answer behind the cut on a word
+the buffer does not hold there — and LanguageTool reads a run of blanks as a repeated
+whitespace (`WHITESPACE_RULE`, category `TYPOGRAPHY`). So the editor would underline
+where its own spaces are, in a place of the file of which the checker was handed nothing.
+The filter is in `LanguageToolSupport::diagnosticsOf`: **a report whose named text holds
+no letter and no digit is dropped**, since every report a reader wants names the word it
+is about (verified: a missing space after a period is answered on the *following* word,
+`an tests.It` at offset 17 and length 2, which is `It`). Filler characters which the
+program treats as word characters (`_ - ~ # | *`) are silent; zero-width and soft hyphens
+are worse than the blanks, they make reports on the words beside them.
+
+And the coordinate trap of that filter: `diagnosticsOf(text, offset)` is handed the
+**whole** text of the document and the place of the piece which was sent, so the named
+text is `text.mid(start, length)` — `start` already carries `offset`. Writing
+`text.mid(start - offset, length)` reads a report against the piece instead of the
+whole text, which drops a report standing at the front of a piece (the blanks which lead
+a sliced text are exactly `offset` characters long) and is a one-token change. Both
+mutants are named by `aReportAboutTheBlanksOfAModeIsNotADetailOfTheBuffer`, which is the
+only case of the suite needing no server for the LaTeX path: it feeds the two
+`WHITESPACE_RULE` reports and one `A_NNS` report of a live server, once whole-text and
+once as the answer of a piece at offset 18, and asserts one diagnostic survives on the
+line the whole text draws it on.
+
+Test wiring: `tests/CMakeLists.txt` has a `LANGUAGE_TOOL_JAR` cache filepath turned into
+the `TFEL_EDITOR_LANGUAGE_TOOL_JAR` compile definition, which is what
+`languageToolInstallation()` reads; without it the cases which ask the server anything
+`QSKIP`, and `initTestCase` writes the address for the cases which only read the
+settings. A run leaves its server running when a case is interrupted —
+`pkill -f "[H]TTPServer"` between runs, and mind that a plain `pkill -f HTTPServer`
+matches the `grep`/`pkill` command line itself.
 
 Finally, the case which loads the `Markdown` plugin must stay **last** in the list of
 slots: loading registers the mode for the rest of the run (`TestSettings` carries the

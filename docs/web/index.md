@@ -19,11 +19,14 @@ the amazing abilities of the [`Qt` library](https://www.qt.io/).
   go to definition and the hover provided by a
   [`clangd`](https://clangd.llvm.org) language server. See [the
   `clangd` support page](clangd-support.html) for details.
-- Checking the English prose of a buffer — the comments of a source file,
-  a `LaTeX` document, a `Markdown` note — with the
-  [`harper`](https://writewithharper.com) grammar checker, which is what
-  the underlines of a wrong agreement or of a foreign spelling come from.
-  See [the grammar checking page](grammar-checking.html) for details.
+- Checking what the words of a buffer say: the spelling of a word no
+  dictionary knows, and the way a sentence is written — the comments of a
+  source file, a `LaTeX` document, a `Markdown` note. The proofreader is a
+  choice between [`hunspell`](https://hunspell.github.io), the
+  [`harper`](https://writewithharper.com) language server and
+  [LanguageTool](https://languagetool.org), and it is one choice for the
+  editor, made under `Options > Orthograph/Grammar`. See
+  [the grammar checking page](grammar-checking.html) for details.
 - Watching the file a buffer visits: another program writing over it is
   warned about in a banner above the buffer, which offers to reload the
   file, and a save never overwrites such a change without asking. See

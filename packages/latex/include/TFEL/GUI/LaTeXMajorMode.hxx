@@ -210,6 +210,28 @@ namespace tfel::gui {
     void setSpellCheckLanguage(const QString &) override;
 
     /*!
+     * \brief the text a proofreader reads of a buffer of this mode
+     * \param[in] text : the whole text of the document
+     * \return the text with every command of LaTeX blanked out
+     *
+     * \note LanguageTool reads a text and knows no markup: handed the source of
+     * a `\section{Title}`, it says that `section` is misspelled and says nothing
+     * of the title, which is the one thing of that line it has any business
+     * reading. What is taken out is therefore blanked and not removed, since the
+     * answer of the checker is a place in the text it was handed, see \c
+     * MajorMode::grammarCheckText
+     */
+    QString grammarCheckText(const QString &text) const override;
+
+    /*!
+     * \brief the session of the proofreader of this buffer
+     *
+     * \note what \c SpellingAndGrammar walks the buffers with: the choice of the
+     * proofreader is one for the editor and the buffers of this mode follow it
+     */
+    struct GrammarCheckSession *grammarCheckSession() const override;
+
+    /*!
      * \brief destructor
      *
      * \note the highlighter is released by \c MajorMode, which detaches it

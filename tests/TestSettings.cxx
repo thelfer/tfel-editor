@@ -9,9 +9,10 @@
 
 #include <QtTest/QtTest>
 #include <QtCore/QLibrary>
+#include <QtCore/QMap>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QLabel>
-#include <QtWidgets/QListWidget>
+#include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QScrollArea>
@@ -129,6 +130,25 @@ namespace {
           QObject::tr("Another label"),
           QObject::tr("What another declaration says about the same address")));
 
+  // the items of a tree, in the order a reader of the list meets them: an item,
+  // then what hangs under it. The list of themes is a tree since a theme can be
+  // a submenu of another one, and an assertion which walks the rows of the
+  // screen has to walk them the way they are drawn
+  void appendItems(QTreeWidgetItem *const item,
+                   QVector<QTreeWidgetItem *> &items) {
+    for (auto k = 0; k != item->childCount(); ++k) {
+      auto *const c = item->child(k);
+      items << c;
+      appendItems(c, items);
+    }
+  }  // end of appendItems
+
+  QVector<QTreeWidgetItem *> readList(QTreeWidget *const w) {
+    auto items = QVector<QTreeWidgetItem *>{};
+    appendItems(w->invisibleRootItem(), items);
+    return items;
+  }  // end of readList
+
 }  // end of namespace
 
 struct TestSettings : QObject {
@@ -180,10 +200,18 @@ void TestSettings::theRegistryDeclaresTheEntriesOfTheEditor() {
            qPrintable("the theme of the editor is not declared. Themes: " +
                       themes.join(", ")));
 #ifdef TFEL_GUI_HUNSPELL_SUPPORT
-  // hunspell is found by this build, so the theme which names the language of
-  // the underlines is part of the configuration
-  QVERIFY2(themes.contains("Spell checking"),
-           "the spell checking theme is not declared");
+  // hunspell is found by this build, so the language of the underlines is an
+  // entry of the configuration — and an entry of the theme of the proofreaders,
+  // not a theme of its own: which program reads the words and which words it
+  // holds to be spelled right is one decision, and the dialog shows one theme
+  // for it
+  QVERIFY2(!themes.contains(QStringLiteral("Spell checking")),
+           "the language of the dictionary is a theme beside the proofreaders");
+  {
+    const auto k = r.getSettingsKey("hunspell default dictionary");
+    QVERIFY2(k.has_value(), "the language of the dictionary is not declared");
+    QCOMPARE(k->group, QStringLiteral("Spelling and grammar"));
+  }
 #endif /* TFEL_GUI_HUNSPELL_SUPPORT */
   // an entry the editor reads has a label and a sentence of its own
   auto addresses = QStringList() << "font/textedit"
@@ -216,6 +244,86 @@ void TestSettings::theRegistryDeclaresTheEntriesOfTheEditor() {
   QCOMPARE(font->type, SettingsKey::FONT);
   QVERIFY2(!font->default_value.isValid(),
            "the font entry pretends a default font");
+  // which way of checking the language of a buffer the editor uses is an entry
+  // of the editor: it is one decision for every buffer, whatever mode it wears,
+  // and the submenu which writes it sits in the `Options` menu of the editor
+  {
+    const auto k = r.getSettingsKey("spelling/checker");
+    QVERIFY2(k.has_value(),
+             "the entry of the way of checking the language is not declared");
+    QCOMPARE(k->type, SettingsKey::CHOICE);
+    auto choices = QStringList{};
+    for (const auto& c : k->choices) {
+      choices << c.value.toString();
+    }
+    QCOMPARE(choices, QStringList() << "none" << "hunspell" << "hunspell-harper"
+                                    << "language-tool");
+    // what the editor does when the configuration file holds nothing is what it
+    // did before a checker of sentences existed: the words are looked up
+    QCOMPARE(k->default_value.toString(), QStringLiteral("hunspell"));
+  }
+  // the programs the two ways of checking a text run are entries of the editor
+  // as well: a person chooses them from the `Options` menu, in whatever buffer,
+  // and the C++ mode declaring the grammar entries used to make them look like
+  // entries of that mode
+  for (const auto& theme :
+       {QStringLiteral("Spelling and grammar"), QStringLiteral("Harper"),
+        QStringLiteral("LanguageTool")}) {
+    QVERIFY2(themes.contains(theme),
+             qPrintable("the theme '" + theme +
+                        "' of the language of a buffer is not declared. "
+                        "Themes: " + themes.join(", ")));
+    for (const auto& g : r.getGroups()) {
+      if (g.name == theme) {
+        QVERIFY2(g.mode.isEmpty(),
+                 qPrintable("the theme '" + theme + "' of the editor claims "
+                            "the mode '" + g.mode + "'"));
+      }
+    }
+  }
+  // which program checks a text, and what that program is asked with, is one
+  // decision: the theme of a proofreader is a submenu of the theme of the
+  // choice, and the list answers a submenu directly under its parent
+  {
+    auto parent_of = QMap<QString, QString>{};
+    for (const auto& g : r.getGroups()) {
+      parent_of.insert(g.name, g.parent);
+    }
+    QCOMPARE(parent_of.value(QStringLiteral("Spelling and grammar")), QString());
+    QCOMPARE(parent_of.value(QStringLiteral("Harper")),
+             QStringLiteral("Spelling and grammar"));
+    QCOMPARE(parent_of.value(QStringLiteral("LanguageTool")),
+             QStringLiteral("Spelling and grammar"));
+    // and the order of the list is that nesting, not the order two static
+    // initialisers happened to run in
+    const auto chosen = themes.indexOf(QStringLiteral("Spelling and grammar"));
+    QVERIFY2(chosen >= 0, "the theme of the proofreaders is not in the list");
+    QVERIFY2(chosen + 1 < themes.size(),
+             "the theme of the proofreaders holds no submenu");
+    QCOMPARE(themes[chosen + 1], QStringLiteral("Harper"));
+    QCOMPARE(themes[chosen + 2], QStringLiteral("LanguageTool"));
+    // the themes a major mode exports are on their own: what a mode drives is
+    // not a corner of the choice of a proofreader
+    for (const auto& g : r.getGroups()) {
+      if (!g.mode.isEmpty()) {
+        QVERIFY2(g.parent.isEmpty(),
+                 qPrintable("the theme '" + g.name + "' of the mode '" + g.mode +
+                            "' is a submenu of '" + g.parent + "'"));
+      }
+    }
+  }
+  // the choice of the way of checking decides what the buffers do, so the
+  // program a session runs and the Java runtime which starts it have to be
+  // chosen before one asks for them
+  auto needs = QStringList() << "harper/executable"
+                             << "language-tool/java-runtime"
+                             << "language-tool/installation"
+                             << "language-tool/port";
+  for (const auto& key : needs) {
+    QVERIFY2(r.hasSettingsKey(key),
+             qPrintable("the entry '" + key + "', which names a program the "
+                        "language check of a buffer runs, is not declared"));
+  }
   // what the editor remembers by itself is not part of the configuration: the
   // histories of the prompts, the compilation commands and the recent files are
   // written by the very act of working, and an address nothing declares has no
@@ -252,6 +360,10 @@ void TestSettings::theMajorModesExportTheEntriesTheyUse() {
                                               << "clangd/executable"
                                               << "clangd/arguments"
                                               << "clangd/semantic-tokens");
+  // what the mode uses the language server for is one entry: the checker of
+  // sentences a C++ buffer runs is about the language of a comment, not about
+  // the code, so its entries belong to the editor and are shown under `Harper`
+  // and `LanguageTool`, both themes of the editor, see the first test
   QCOMPARE(clangd[0].type, SettingsKey::BOOLEAN);
   QVERIFY2(clangd[0].default_value.toBool(),
            "the clangd support is not asked for by default");
@@ -263,33 +375,26 @@ void TestSettings::theMajorModesExportTheEntriesTheyUse() {
            "a project which has a compilation database starts no session by "
            "default");
   QCOMPARE(clangd[3].type, SettingsKey::STRING_LIST);
-  // the grammar checker is a program of its own, and the C++ mode declares the
-  // three addresses its sessions read: whether a buffer takes one with it, which
-  // program such a session runs, and which English it reads a text as. The
-  // `LaTeX` and `Markdown` modes offer the same two choices under their own
-  // menus and declare nothing of their own: which buffers are checked is one
-  // decision for the whole editor, so the three addresses are shown once
-  QVERIFY2(
-      themes.contains(QStringLiteral("harper")),
-      qPrintable("the theme of the grammar checker is missing. Themes: " +
-                 themes.join(", ")));
-  const auto harper = r.getSettingsKeysOfGroup(QStringLiteral("harper"));
+  // the checker of sentences is a program of its own, and what its sessions
+  // read is declared by the core library: which program such a session runs, and
+  // which English it reads a text as. The `LaTeX`, `Markdown` and C++ modes all
+  // offer the choices of the language under the `Options` menu and declare
+  // nothing of their own, which is why these addresses are shown once. The theme
+  // is spelled as the program is spelled, `Harper`, whatever the addresses of its
+  // entries are
+  const auto harper = r.getSettingsKeysOfGroup(QStringLiteral("Harper"));
   QCOMPARE(addressesOf(harper),
-           QStringList() << "harper/launch-by-default" << "harper/executable"
-                        << "harper/dialect");
-  QCOMPARE(harper[0].type, SettingsKey::BOOLEAN);
-  QVERIFY2(!harper[0].default_value.toBool(),
-           "a buffer is asked to start a grammar session on its own");
-  QCOMPARE(harper[1].type, SettingsKey::STRING);
+           QStringList() << "harper/executable" << "harper/dialect");
+  QCOMPARE(harper[0].type, SettingsKey::STRING);
   // the varieties the checker reads a text as are the names the server reads in
   // its settings, in the order they are offered, and the first of them is the
   // default of the server itself. The entry of the dialog and the submenu of a
   // menu both come from \c LspHarperSupport, which is what a session is answered
   // with, so the three can not disagree about which varieties there are
-  QCOMPARE(harper[2].type, SettingsKey::CHOICE);
-  QCOMPARE(harper[2].default_value.toString(), QStringLiteral("American"));
+  QCOMPARE(harper[1].type, SettingsKey::CHOICE);
+  QCOMPARE(harper[1].default_value.toString(), QStringLiteral("American"));
   auto varieties = QStringList{};
-  for (const auto& c : harper[2].choices) {
+  for (const auto& c : harper[1].choices) {
     varieties << c.value.toString();
     QVERIFY2(c.label.startsWith(c.value.toString()),
              qPrintable("the variety '" + c.value.toString() +
@@ -297,11 +402,46 @@ void TestSettings::theMajorModesExportTheEntriesTheyUse() {
   }
   QCOMPARE(varieties, LspHarperSupport::dialects());
   QCOMPARE(r.getSettingsKey("harper/dialect")->group,
-           QStringLiteral("harper"));
+           QStringLiteral("Harper"));
+  // the server of the other way of checking a text is a Java program, which is
+  // why the runtime which starts it is an entry beside the archive it runs. The
+  // two lists of categories are the two filters on what of the rules of the
+  // program reach a text, and no category is named by the editor itself
+  const auto tool = r.getSettingsKeysOfGroup(QStringLiteral("LanguageTool"));
+  QCOMPARE(addressesOf(tool),
+           QStringList() << "language-tool/installation"
+                        << "language-tool/java-runtime"
+                        << "language-tool/port"
+                        << "language-tool/java-options"
+                        << "language-tool/language"
+                        << "language-tool/enabled-categories"
+                        << "language-tool/disabled-categories");
+  for (const auto& key : {"language-tool/installation",
+                          "language-tool/java-runtime"}) {
+    const auto k = r.getSettingsKey(QString::fromLatin1(key));
+    QVERIFY2(k.has_value(), qPrintable(QString("'%1' is not declared").arg(key)));
+    QCOMPARE(k->type, SettingsKey::STRING);
+    QCOMPARE(k->group, QStringLiteral("LanguageTool"));
+  }
+  // a port of 0 is what lets a session pick a free one for itself, which is what
+  // makes two editors of this build sit beside each other. What is stored is the
+  // port the person asked to start the server on, never the one a session picked
+  QCOMPARE(r.getSettingsKey("language-tool/port")->default_value.toInt(), 0);
+  QCOMPARE(r.getSettingsKey("language-tool/port")->minimum, 0);
+  QCOMPARE(r.getSettingsKey("language-tool/port")->maximum, 65535);
+  // the language the text is read as is an entry of its own, and the submenu of
+  // the menu writes that very address: the dialog and the menu can not disagree
+  // about which language a buffer is read as. Its default is empty and not
+  // `en-US`: what an unset address reads as is the answer of
+  // `LanguageToolSupport::language`, and the default of a program is none of the
+  // editor's business to write in every configuration file
+  QCOMPARE(r.getSettingsKey("language-tool/language")->type,
+           SettingsKey::STRING);
+  QCOMPARE(r.getSettingsKey("language-tool/language")->default_value.toString(),
+           QString());
   // a mode which uses no entry of the configuration has no theme of its own:
-  // the mode `C++` asks `clangd` the five entries above, the checker the three
-  // of it, and nothing else, the grep output is registered in this library and
-  // exports nothing
+  // the mode `C++` asks `clangd` the five entries above and nothing else, the
+  // grep output is registered in this library and exports nothing
   const auto silent = QStringList() << "C++"
                                     << "grep-output"
                                     << "compilation-output";
@@ -316,12 +456,11 @@ void TestSettings::theMajorModesExportTheEntriesTheyUse() {
   // and a theme says which mode exported it: a theme named after a program
   // would otherwise look like a theme of the editor to the dialog
   for (const auto& g : r.getGroups()) {
-    if ((g.name == QStringLiteral("clangd")) ||
-        (g.name == QStringLiteral("harper"))) {
-      // the two themes the C++ mode declares are named after the programs they
-      // are about, and both are read from that mode: what a checker says of a
-      // C++ buffer says nothing of clangd, and the entry of the menu which turns
-      // it on sits in that mode's menu
+    if (g.name == QStringLiteral("clangd")) {
+      // the theme the C++ mode declares is named after the program it drives, and
+      // it is read from that mode: what clangd says of a buffer says nothing of
+      // the language of a comment, and the entries of the menu which turn the
+      // session on sit in that mode's menu
       QCOMPARE(g.mode, QStringLiteral("C++"));
     } else {
       QVERIFY2(g.mode.isEmpty(), qPrintable("the theme '" + g.name +
@@ -352,30 +491,35 @@ void TestSettings::theDialogShowsWhatIsDeclared() {
   QVERIFY2(!dialog.hasSetting("no/such/address"),
            "the dialog shows an entry nobody declared");
   // one page per theme, and the list on the left names them in the same order.
-  // The list holds more rows than it has pages: the titles which keep the
+  // The list holds more items than it has pages: the titles which keep the
   // themes of the modes apart from those of the editor name no page and cannot
-  // be chosen, so the themes are the rows which can be chosen
+  // be chosen, and a sub-theme is an item hung under the theme it is a corner
+  // of. What the walk answers is therefore the order of the registry, parents
+  // and children included, which is the order of the names of the themes
   const auto& r = SettingsRegistry::getSettingsRegistry();
-  auto* const themes = dialog.findChild<QListWidget*>("configuration-themes");
+  auto* const themes = dialog.findChild<QTreeWidget*>("configuration-themes");
   auto* const pages = dialog.findChild<QStackedWidget*>("configuration-pages");
   QVERIFY(themes != nullptr);
   QVERIFY(pages != nullptr);
+  auto shown = QVector<QTreeWidgetItem*>{};
+  appendItems(themes->invisibleRootItem(), shown);
   auto names = QStringList{};
-  for (auto row = 0; row != themes->count(); ++row) {
-    auto* const item = themes->item(row);
+  for (auto* const item : shown) {
     if (item->flags().testFlag(Qt::ItemIsSelectable)) {
-      names << item->text();
+      names << item->text(0);
     }
   }
   QCOMPARE(names, r.getGroupsNames());
   QCOMPARE(pages->count(), names.size());
-  // picking a theme shows the page of that theme, which is not the row the
-  // theme sits on: the titles in between shift the rows of the modes
-  for (const auto& name : names) {
-    themes->setCurrentItem(themes->findItems(name, Qt::MatchExactly).at(0));
-    QVERIFY(themes->currentItem() != nullptr);
-    QCOMPARE(pages->currentIndex(),
-             themes->currentItem()->data(Qt::UserRole).toInt());
+  // picking a theme shows the page of that theme: the item of a theme names the
+  // page of the stack it was given, and the items in between name none
+  for (auto* const item : shown) {
+    const auto page = item->data(0, Qt::UserRole).toInt();
+    if (page < 0) {
+      continue;
+    }
+    themes->setCurrentItem(item);
+    QVERIFY(pages->currentIndex() == page);
   }
   // an address which was never written shows what the entry answers then: the
   // font of the application for the font, the default of the choice for the
@@ -393,9 +537,14 @@ void TestSettings::theThemesOfTheMajorModesAreSeparatedFromThoseOfTheEditor() {
   shell.show();
   pump(8);
   auto dialog = ConfigurationDialog(*shell.ed);
-  auto* const themes = dialog.findChild<QListWidget*>("configuration-themes");
+  auto* const themes = dialog.findChild<QTreeWidget*>("configuration-themes");
   auto* const pages = dialog.findChild<QStackedWidget*>("configuration-pages");
   QVERIFY((themes != nullptr) && (pages != nullptr));
+  // the walk is the order of the screen: an item, then what hangs under it. The
+  // rows below are places in that order, which is how an item of one block is
+  // compared to an item of another one
+  const auto shown = readList(themes);
+  QVERIFY(!shown.isEmpty());
   // the themes of the editor and those a major mode exports are two kinds of
   // things: the first are always there, the second come with the plugins which
   // were loaded and are about a program the mode drives. What tells them apart
@@ -419,19 +568,18 @@ void TestSettings::theThemesOfTheMajorModesAreSeparatedFromThoseOfTheEditor() {
   QVERIFY2(exported != 0,
            "no major mode exports an entry, the separation has nothing to "
            "separate");
-  // the titles are the rows which can not be chosen, and a title shows no page
+  // the titles are the items which can not be chosen, and a title shows no page
   auto editor_title = -1;
   auto modes_title = -1;
-  for (auto row = 0; row != themes->count(); ++row) {
-    auto* const item = themes->item(row);
+  for (auto row = 0; row != shown.size(); ++row) {
+    auto* const item = shown[row];
     if (item->flags().testFlag(Qt::ItemIsSelectable)) {
       continue;
     }
-    QVERIFY2(item->data(Qt::UserRole).toInt() < 0,
-             qPrintable("the row '" + item->text() +
-                        "' is a title and shows a "
-                        "page"));
-    if (item->text().isEmpty()) {
+    QVERIFY2(item->data(0, Qt::UserRole).toInt() < 0,
+             qPrintable("the item '" + item->text(0) +
+                        "' is a title and shows a page"));
+    if (item->text(0).isEmpty()) {
       continue;  // the empty row which keeps the two blocks apart
     }
     if (editor_title < 0) {
@@ -444,54 +592,102 @@ void TestSettings::theThemesOfTheMajorModesAreSeparatedFromThoseOfTheEditor() {
   QVERIFY2(modes_title > editor_title,
            "the themes the major modes export carry no title");
   // each block is on its own side of its title
-  for (auto row = 0; row != themes->count(); ++row) {
-    auto* const item = themes->item(row);
+  for (auto row = 0; row != shown.size(); ++row) {
+    auto* const item = shown[row];
     if (!item->flags().testFlag(Qt::ItemIsSelectable)) {
       continue;
     }
-    const auto message = "the theme '" + item->text() + "' of the mode '" +
-                         mode_of(item->text()) + "' is shown at row " +
+    const auto message = "the theme '" + item->text(0) + "' of the mode '" +
+                         mode_of(item->text(0)) + "' is shown at row " +
                          QString::number(row) + ", titles at " +
                          QString::number(editor_title) + " and " +
                          QString::number(modes_title);
-    if (mode_of(item->text()).isEmpty()) {
+    if (mode_of(item->text(0)).isEmpty()) {
       QVERIFY2((row > editor_title) && (row < modes_title),
                qPrintable(message));
     } else {
       QVERIFY2(row > modes_title, qPrintable(message));
     }
   }
-  // choosing a title changes nothing: no page is reached by a row which is not
+  // a sub-theme is a child of the item of its parent, and of nothing else: what
+  // a proofreader is asked with belongs under the choice of that proofreader,
+  // which is the whole point of the nesting
+  {
+    auto parent_of = QMap<QString, QString>{};
+    for (const auto& g : r.getGroups()) {
+      parent_of.insert(g.name, g.parent);
+    }
+    for (auto* const item : shown) {
+      if (!item->flags().testFlag(Qt::ItemIsSelectable)) {
+        continue;
+      }
+      const auto parent = parent_of.value(item->text(0));
+      if (parent.isEmpty()) {
+        // a top-level item of a tree has no parent item at all: the invisible
+        // root which holds it is not an item. `qPrintable` of the message is
+        // evaluated whether the assertion holds or not, so the name of the
+        // parent is taken in a null-safe way before the test, not in it
+        auto *const par = item->parent();
+        const auto held = (par == nullptr) ? QStringLiteral("<none>")
+                                           : par->text(0);
+        QVERIFY2(par == nullptr,
+                 qPrintable("the theme '" + item->text(0) +
+                            ", which is one of its own, hangs under '" + held +
+                            "'"));
+        continue;
+      }
+      auto* const held = item->parent();
+      QVERIFY2((held != nullptr) && (held->text(0) == parent),
+               qPrintable("the sub-theme '" + item->text(0) + "' hangs under '" +
+                          ((held == nullptr) ? QStringLiteral("<none>")
+                                             : held->text(0)) +
+                          "' and not under '" + parent + "'"));
+      // and the submenu is opened: an entry behind a click nobody makes is an
+      // entry which is not found
+      QVERIFY2(held->isExpanded(),
+               qPrintable("the submenu of '" + parent + "' is folded"));
+    }
+  }
+  // choosing a title changes nothing: no page is reached by an item which is not
   // a theme, and the page which was shown stays shown
+  auto* const a_theme = [shown]() {
+    for (auto* const item : shown) {
+      if (item->flags().testFlag(Qt::ItemIsSelectable)) {
+        return item;
+      }
+    }
+    return static_cast<QTreeWidgetItem *>(nullptr);
+  }();
+  QVERIFY(a_theme != nullptr);
+  themes->setCurrentItem(a_theme);
   const auto before = pages->currentIndex();
   QVERIFY(before >= 0);
-  themes->setCurrentRow(modes_title);
+  themes->setCurrentItem(shown[modes_title]);
   QCOMPARE(pages->currentIndex(), before);
   // the page of a theme a mode exported says whose it is, and only those pages
   // do
-  for (auto row = 0; row != themes->count(); ++row) {
-    auto* const item = themes->item(row);
+  for (auto* const item : shown) {
     if (!item->flags().testFlag(Qt::ItemIsSelectable)) {
       continue;
     }
-    const auto mode = mode_of(item->text());
+    const auto mode = mode_of(item->text(0));
     auto* const area = qobject_cast<QScrollArea*>(
-        pages->widget(item->data(Qt::UserRole).toInt()));
+        pages->widget(item->data(0, Qt::UserRole).toInt()));
     QVERIFY(area != nullptr);
     QVERIFY(area->widget() != nullptr);
     auto* const caption = area->widget()->findChild<QLabel*>(
         QStringLiteral("configuration-page-mode"));
     if (mode.isEmpty()) {
       QVERIFY2(caption == nullptr,
-               qPrintable("the page of the theme '" + item->text() +
+               qPrintable("the page of the theme '" + item->text(0) +
                           "' of the editor claims a major mode"));
       continue;
     }
     QVERIFY2(caption != nullptr,
-             qPrintable("the page of the theme '" + item->text() +
+             qPrintable("the page of the theme '" + item->text(0) +
                         "' does not say the mode it belongs to"));
     QVERIFY2(caption->text().contains(mode),
-             qPrintable("the page of the theme '" + item->text() +
+             qPrintable("the page of the theme '" + item->text(0) +
                         "' names another mode than '" + mode + "'"));
     QVERIFY2(caption->font().bold(),
              "the name of the mode on the page is not set apart from the "

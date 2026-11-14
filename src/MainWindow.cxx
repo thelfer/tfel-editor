@@ -19,7 +19,9 @@
 #include <QtGui/QCloseEvent>
 #include "TFEL/GUI/Debug.hxx"
 #include "TFEL/GUI/Utilities.hxx"
-#include "TFEL/GUI/HunspellDictionariesManager.hxx"
+#include "TFEL/GUI/MajorMode.hxx"
+#include "TFEL/GUI/GrammarCheckSession.hxx"
+#include "TFEL/GUI/SpellingAndGrammar.hxx"
 #include "TFEL/GUI/ShortCutStyle.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/Buffer.hxx"
@@ -359,16 +361,14 @@ namespace tfel::gui {
   }  // end of MainWindow::createActions
 
   void MainWindow::updateOptionsMenu() {
-#ifdef TFEL_GUI_HUNSPELL_SUPPORT
-    using HunspellDictionaries = HunspellDictionariesManager;
-#endif /* TFEL_GUI_HUNSPELL_SUPPORT */
     auto &s = ShortCutStyle::getShortCutStyle();
     // QMenu::clear() removes the actions but leaves the submenus it
-    // created behind as invisible children -- the Dictionaries submenu
-    // and its per-dictionary actions piled up on every call (twice per
-    // shortcut-style toggle), exactly the trap src/Utilities.cxx
-    // (clearMenu) exists for. This menu must not use clearMenu itself:
-    // fa/esca/qsca are owned here and only removed, not deleted.
+    // created behind as invisible children -- the Orthograph/Grammar
+    // submenu, its languages and their actions would pile up on every
+    // call (twice per shortcut-style toggle), exactly the trap
+    // src/Utilities.cxx (clearMenu) exists for. This menu must not use
+    // clearMenu itself: fa/esca/qsca are owned here and only removed,
+    // not deleted.
     const auto submenus = this->om->findChildren<QMenu *>();
     this->om->clear();
     for (auto *sm : submenus) sm->deleteLater();
@@ -376,31 +376,30 @@ namespace tfel::gui {
     this->om->addAction(this->cfa);
     // font
     this->om->addAction(this->fa);
-#ifdef TFEL_GUI_HUNSPELL_SUPPORT
-    // available dictionaries
-    auto &dm = HunspellDictionaries::getHunspellDictionariesManager();
-    const auto dicts = dm.getAvailableDictionnaries();
-    if (!dicts.isEmpty()) {
-      auto *const d = this->om->addMenu(QObject::tr("Dictionaries"));
-      d->setIcon(QIcon::fromTheme("accessories-dictionary"));
-      for (const auto &di : dicts) {
-        auto *a = d->addAction(di);
-        a->setData(di);
-        QObject::connect(a, &QAction::triggered, this, [di, this]() {
-          auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
-          if (e != nullptr) {
-            // issue #69: the choice must survive the session...
-            QSettings settings;
-            settings.setValue("hunspell default dictionary", di);
-            // ...and apply to every buffer, not only to the current one
-            for (auto *b : e->findChildren<Buffer *>()) {
-              b->getMainFrame().setSpellCheckLanguage(di);
-            }
+    // what reads the words of the buffers and the language it reads them
+    // as: the four proofreaders, each with the languages it knows. This is
+    // the same menu the text modes put under `Grammar` in the menu bar, so
+    // that the choice is one choice wherever it is made. What the buffer on
+    // the screen is changes only what the entry of LanguageTool has to say
+    // about itself, see `SpellingAndGrammar::addToMenu`
+    if (auto *const e = qobject_cast<EditorWidget *>(this->centralWidget());
+        e != nullptr) {
+      // the buffers are counted before the current one is asked for: asking
+      // for it when the editor holds none would create a buffer of the menu
+      auto prose = true;
+      if (!e->getBuffersNames().isEmpty()) {
+        auto &frame = e->getCurrentBuffer().getMainFrame();
+        if (frame.hasMajorMode()) {
+          if (auto *const s = frame.getMajorMode().grammarCheckSession();
+              s != nullptr) {
+            prose = s->readsWholeTextAsProse();
           }
-        });
+        }
       }
+      auto *const g = this->om->addMenu(QObject::tr("Orthograph/Grammar"));
+      g->setIcon(QIcon::fromTheme("tools-check-spelling"));
+      SpellingAndGrammar::addToMenu(*g, *e, prose);
     }
-#endif /* TFEL_GUI_HUNSPELL_SUPPORT */
     // short cuts
     if (s.getStyle() != ShortCutStyle::EMACS) {
       this->om->addAction(this->esca);

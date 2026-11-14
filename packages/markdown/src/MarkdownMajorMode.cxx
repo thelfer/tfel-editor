@@ -31,18 +31,15 @@ namespace tfel::gui {
                                        Buffer &b,
                                        TextEditBase &t)
       : CompiledLanguageMajorModeBase(w, b, t) {
-    // a buffer of Markdown is prose, which is what the grammar checker reads;
-    // it says nothing about spelling, which goes on being hunspell's business
-    // under this session, in its own color
+    // a buffer of Markdown is prose: its whole text is what a proofreader reads
+    // as text, which is what the `true` below says, and what a buffer which is
+    // none — the source of a program — is read with is the answer of
+    // `SpellingAndGrammar::effectiveChecker`. What reads this buffer is the choice
+    // held in the settings when the mode is built, the same choice the buffers
+    // opened afterwards follow; the text is handed over as it stands, since the
+    // markup of a Markdown note is none of a checker's business either way
     this->grammar =
-        new GrammarCheckSession(w, t, QStringLiteral("markdown"), this);
-    if (GrammarCheckSession::isAvailable() &&
-        LspHarperSupport::launchByDefault()) {
-      // the session follows the setting: it writes nothing back, and the entry
-      // of the menu says what the buffer does whatever brought the session
-      // about
-      this->grammar->setActive(true, false, false);
-    }
+        new GrammarCheckSession(w, t, QStringLiteral("markdown"), true, this);
   }  // end of MarkdownMajorMode
 
   QString MarkdownMajorMode::getName() const {
@@ -64,6 +61,13 @@ namespace tfel::gui {
     }
   }  // end of setSpellCheckLanguage
 
+  GrammarCheckSession *MarkdownMajorMode::grammarCheckSession() const {
+    // the choice of the proofreader walks the buffers of the editor through this
+    // hook, and a note of Markdown is the one kind of buffer it reads whole: the
+    // text goes to LanguageTool as it stands and no dictionary stands beside it
+    return this->grammar;
+  }  // end of MarkdownMajorMode::grammarCheckSession
+
   void MarkdownMajorMode::format() {}  // end of format()
 
   QMenu *MarkdownMajorMode::getSpecificMenu() {
@@ -75,16 +79,16 @@ namespace tfel::gui {
     // mode does otherwise — cutting a paragraph, running pandoc — is bound to
     // keys, and a menu which would be empty on a machine which has no checker
     // to launch is a menu nobody should see
-    if (!this->grammar->isAvailable()) {
+    if (!GrammarCheckSession::isAvailable()) {
       return nullptr;
     }
     auto *const m = new QMenu(QObject::tr("Markdown"), t);
     m->setIcon(this->getIcon());
-    // the note spells what the entry does not: the checker knows no word of
-    // French, and a buffer of French is underlined by hunspell and by nothing
-    // else
-    this->grammar->addToMenu(*m,
-                             QObject::tr("Grammar checking (English only)"));
+    // the four choices of the proofreader and, under each of them, the languages
+    // that choice reads. The checker of harper says on its own name that it knows
+    // no word of French: a buffer of French is read by hunspell, by the spellings
+    // of the dictionary which is chosen for it, and by nothing else
+    this->grammar->addToMenu(*m);
     return m;
   }  // end of getSpecificMenu
 

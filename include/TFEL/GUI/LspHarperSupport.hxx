@@ -21,9 +21,11 @@ namespace tfel::gui {
    *
    * \note the settings live in `QSettings`, as the rest of the editor:
    * `harper/executable` (empty by default: the program is looked for in the
-   * directories of the session), `harper/launch-by-default` (false: a buffer of
-   * English starts no session on its own) and `harper/dialect` ("American": the
-   * variety the text is read as)
+   * directories of the session) and `harper/dialect` ("American": the variety
+   * the text is read as). Whether a buffer is read by this checker at all is not
+   * one of those two addresses: it is the answer of `spelling/checker`, see \c
+   * SpellingAndGrammar, which is one choice for the editor and names either of
+   * the two grammar checkers, this one or LanguageTool
    *
    * \note what the checker is started with beyond its dialect — the severity of
    * its lints, the size of a file it still reads, how long it waits for the
@@ -43,25 +45,6 @@ namespace tfel::gui {
      * read against whatever directory the editor was started in
      */
     static QString serverExecutable();
-    /*!
-     * \return the setting `harper/launch-by-default`, false when unset: whether
-     * a buffer takes a grammar session with it as it is opened
-     *
-     * \note the entry of a menu which launches a session writes this address,
-     * whichever mode it is the menu of: the state of the checker is one
-     * decision, made once, and a buffer opened afterwards follows it. The
-     * setting is what the entry of the `C++` mode says it keeps, and it is what
-     * the configuration dialog edits
-     */
-    static bool launchByDefault();
-    /*!
-     * \brief store the setting `harper/launch-by-default`
-     * \param[in] on : true when a buffer is to take a session with it
-     *
-     * \note false removes the address: a configuration file holds what was
-     * chosen, not what the editor would have answered anyway
-     */
-    static void setLaunchByDefault(const bool on);
     /*!
      * \return the variety of English a session reads the text as, from the
      * setting `harper/dialect`: "American" when unset or when the stored name

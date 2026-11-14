@@ -34,15 +34,22 @@
 #include "TFEL/GUI/TextEditQueryReplace.hxx"
 #include "TFEL/GUI/ShortCutStyle.hxx"
 #include "TFEL/GUI/ShellProcessLineEdit.hxx"
-#include "TFEL/GUI/HunspellDictionariesManager.hxx"
+#include "TFEL/GUI/SpellingAndGrammar.hxx"
+#include "TFEL/GUI/GrammarCheckSession.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
 
 namespace tfel::gui {
 
   TextEditBase::TextEditBase(EditorWidget& g, Buffer& b)
       : QWidget(&g), editor(g), buffer(b) {
-    auto& dm = HunspellDictionariesManager::getHunspellDictionariesManager();
-    this->spellCheckLanguage = dm.getDefaultSpellCheckLanguage();
+    // what the choice in use leaves to the spell checker: a dictionary for the
+    // two choices which name hunspell, nothing at all for the buffer
+    // LanguageTool reads on its own. A mode whose checker reads no source file
+    // is not known yet — the mode is built by the constructor of the frame
+    // which holds this one — so this is the language of a buffer whose text is
+    // the source of a program, which `setMajorMode` corrects for a text mode
+    this->spellCheckLanguage = SpellingAndGrammar::spellCheckLanguage(
+        SpellingAndGrammar::effectiveChecker(false));
     //
   }  // end of TextEditBase::TextEditBase
 
@@ -376,6 +383,17 @@ namespace tfel::gui {
       this->editor.displayInformativeMessage(
           QObject::tr("setting major mode '%1'").arg(m->getName()));
       this->mode = m;
+      // the language of the spell checker follows the proofreader the buffer is
+      // read with, and which of them reads a buffer is what the mode's own
+      // grammar session knows: a mode which holds none is never read as prose,
+      // so it keeps the dictionary even when the choice names a grammar checker
+      // which reads no source file. A mode which holds a session has already
+      // asked for its own language, from its own constructor, and is left with
+      // it
+      if (this->mode->grammarCheckSession() == nullptr) {
+        this->spellCheckLanguage = SpellingAndGrammar::spellCheckLanguage(
+            SpellingAndGrammar::effectiveChecker(false));
+      }
       this->mode->setSpellCheckLanguage(this->spellCheckLanguage);
       this->mode->setSyntaxHighlighter(this->document());
       emit majorModeChanged();

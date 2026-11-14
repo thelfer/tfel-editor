@@ -6,6 +6,7 @@
  * \date   05/11/2026
  */
 
+#include <QtCore/QMap>
 #include <QtCore/QSettings>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QCheckBox>
@@ -16,12 +17,12 @@
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
-#include <QtWidgets/QListWidget>
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QScrollArea>
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QStackedWidget>
+#include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QVBoxLayout>
 
 #include "TFEL/GUI/Buffer.hxx"
@@ -29,6 +30,7 @@
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/PlainTextEdit.hxx"
 #include "TFEL/GUI/SettingsRegistry.hxx"
+#include "TFEL/GUI/SpellingAndGrammar.hxx"
 #include "TFEL/GUI/ShortCutStyle.hxx"
 #include "TFEL/GUI/StandardFunctionCommand.hxx"
 
@@ -36,10 +38,11 @@ namespace tfel::gui {
 
   namespace {
     // the addresses of the entries whose effect the user has to see under their
-    // hands. These are the addresses the `General` and `Spell checking` themes
-    // declare in src/CoreSettings.cxx: they are spelled twice because the
-    // declaration says what an entry is and this file says what applying it
-    // takes, which is the one thing the entry can not say about itself
+    // hands. These are the addresses the `General` theme declares in
+    // src/CoreSettings.cxx and the `Spelling and grammar` theme declares in
+    // src/SpellingAndGrammar.cxx: they are spelled twice because the declaration
+    // says what an entry is and this file says what applying it takes, which is
+    // the one thing the entry can not say about itself
     static const QString font_address = QStringLiteral("font/textedit");
     static const QString short_cut_style_address =
         QStringLiteral("shortcut style");
@@ -335,9 +338,11 @@ namespace tfel::gui {
     this->setWindowTitle(QObject::tr("Configuration"));
     auto *const vl = new QVBoxLayout();
     auto *const hl = new QHBoxLayout();
-    auto *const themes = new QListWidget(this);
+    auto *const themes = new QTreeWidget(this);
     themes->setObjectName(QStringLiteral("configuration-themes"));
-    themes->setMinimumWidth(180);
+    themes->setMinimumWidth(200);
+    themes->setColumnCount(1);
+    themes->setHeaderHidden(true);
     auto *const pages = new QStackedWidget(this);
     pages->setObjectName(QStringLiteral("configuration-pages"));
     // The themes are of two kinds which have nothing in common: those of the
@@ -359,16 +364,27 @@ namespace tfel::gui {
     // A title is not a theme: it names no page, holds nothing to edit, and is
     // given the row of nothing (-1) so that choosing it changes nothing.
     auto add_heading = [themes](const QString &text) {
-      auto *const item = new QListWidgetItem(text, themes);
+      auto *const item = new QTreeWidgetItem(themes);
+      item->setText(0, text);
       item->setFlags(Qt::NoItemFlags);
-      auto f = item->font();
+      auto f = item->font(0);
       f.setBold(true);
-      item->setFont(f);
-      item->setForeground(
-          themes->palette().color(QPalette::Disabled, QPalette::Text));
-      item->setData(Qt::UserRole, -1);
+      item->setFont(0, f);
+      // the grey of a title, the same disabled text role the caption of a page
+      // wears: `setForeground` of an item wants a brush, and the palette of the
+      // list is what says what disabled means under this style
+      item->setForeground(0, themes->palette().brush(QPalette::Disabled,
+                                                     QPalette::Text));
+      item->setData(0, Qt::UserRole, -1);
     };  // end of add_heading
-    auto add_group = [this, themes, pages](const SettingsGroup &g) {
+    // the items of the list which hold a page, by theme name, held under the
+    // lower case of the name: the registry compares theme names that way, and a
+    // mode and a theme named `bash` and `Bash` are one corner of the editor
+    auto items = QMap<QString, QTreeWidgetItem *>{};
+    //! first theme of the list, the page the dialog opens on
+    auto *first = static_cast<QTreeWidgetItem *>(nullptr);
+    auto add_group = [this, themes, pages, &items, &first](
+                         const SettingsGroup &g) {
       auto *const page = new QWidget(pages);
       auto *const pl = new QVBoxLayout(page);
       if (!g.mode.isEmpty()) {
@@ -421,14 +437,25 @@ namespace tfel::gui {
       scroll->setWidgetResizable(true);
       scroll->setFrameShape(QFrame::NoFrame);
       scroll->setWidget(page);
-      auto *const item = new QListWidgetItem(g.name, themes);
+      // a sub-theme is hung under the item of its parent, which the registry
+      // promised to answer before the child: the list is built in that order. An
+      // item with no parent in this block of the list stands on its own
+      const auto held =
+          g.parent.isEmpty() ? nullptr : items.value(g.parent.toLower(), nullptr);
+      auto *const item = (held != nullptr) ? new QTreeWidgetItem(held)
+                                           : new QTreeWidgetItem(themes);
+      item->setText(0, g.name);
       if (!g.icon.isNull()) {
-        item->setIcon(g.icon);
+        item->setIcon(0, g.icon);
       }
-      item->setToolTip(g.description);
-      // the row of the list is not the page of the stack: the titles in between
-      // hold no page, so what a row means is kept in the item itself
-      item->setData(Qt::UserRole, pages->count());
+      item->setToolTip(0, g.description);
+      // the item of the list is not the page of the stack: the titles which hold
+      // no page sit in between, so what an item means is kept in the item itself
+      item->setData(0, Qt::UserRole, pages->count());
+      items.insert(g.name.toLower(), item);
+      if (first == nullptr) {
+        first = item;
+      }
       pages->addWidget(scroll);
     };  // end of add_group
     add_heading(QObject::tr("Editor"));
@@ -436,33 +463,32 @@ namespace tfel::gui {
       add_group(g);
     }
     if (!mode_groups.isEmpty()) {
-      auto *const gap = new QListWidgetItem(themes);
+      auto *const gap = new QTreeWidgetItem(themes);
       gap->setFlags(Qt::NoItemFlags);
-      gap->setData(Qt::UserRole, -1);
+      gap->setData(0, Qt::UserRole, -1);
       add_heading(QObject::tr("Major modes"));
       for (const auto &g : mode_groups) {
         add_group(g);
       }
     }
-    // choosing a title changes nothing: only a row which names a page shows one
-    QObject::connect(themes, &QListWidget::currentRowChanged, this,
-                     [themes, pages](const int row) {
-                       auto *const item =
-                           (row < 0) ? nullptr : themes->item(row);
+    // a submenu is opened: what a theme holds as its own entries is not worth
+    // hiding behind a click, and `expandAll` only works once the items are there
+    themes->expandAll();
+    // choosing a title changes nothing: only an item which names a page shows one
+    QObject::connect(themes, &QTreeWidget::currentItemChanged, this,
+                     [pages](QTreeWidgetItem *item, QTreeWidgetItem *) {
                        if (item == nullptr) {
                          return;
                        }
-                       const auto page = item->data(Qt::UserRole).toInt();
+                       const auto page = item->data(0, Qt::UserRole).toInt();
                        if (page >= 0) {
                          pages->setCurrentIndex(page);
                        }
                      });
-    // the first theme, which is the row after the title of the first block
-    for (auto row = 0; row != themes->count(); ++row) {
-      if (themes->item(row)->data(Qt::UserRole).toInt() >= 0) {
-        themes->setCurrentRow(row);
-        break;
-      }
+    // the first theme of the editor block, which is what a person who opens the
+    // dialog is shown
+    if (first != nullptr) {
+      themes->setCurrentItem(first);
     }
     hl->addWidget(themes);
     hl->addWidget(pages, 1);
@@ -602,17 +628,23 @@ namespace tfel::gui {
         s.setStyle(ShortCutStyle::EMACS);
       }
     }
-#ifdef TFEL_GUI_HUNSPELL_SUPPORT
-    if (written.contains(dictionary_address)) {
-      // the same as what the entries of the `Dictionaries` menu do: the
-      // language has to reach every buffer, not the only one on screen
-      const auto settings = QSettings();
-      const auto dictionary = settings.value(dictionary_address).toString();
-      for (auto *b : this->editor.findChildren<Buffer *>()) {
-        b->getMainFrame().setSpellCheckLanguage(dictionary);
+    // what reads the words of the buffers, the language each proofreader reads
+    // them as, and the programs which run them. An underline of a checker which
+    // is gone stays on the text until something is typed again there, and a server
+    // which runs under the settings which are gone answers about the rules of an
+    // installation nobody chose any more: the buffers of the editor are therefore
+    // asked to follow what was written, and each backend which holds a buffer
+    // decides on its own whether the server which runs is still the one the
+    // settings name
+    for (const auto &address : std::as_const(written)) {
+      if ((address == dictionary_address) ||
+          address.startsWith(QStringLiteral("harper/")) ||
+          address.startsWith(QStringLiteral("language-tool/")) ||
+          (address == SpellingAndGrammar::checkerAddress())) {
+        SpellingAndGrammar::applyTo(this->editor);
+        break;
       }
     }
-#endif /* TFEL_GUI_HUNSPELL_SUPPORT */
     this->editor.displayInformativeMessage(
         QObject::tr("%1 entries of the configuration written. Some of them are "
                     "read when the widgets which use them are built: they wait "

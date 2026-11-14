@@ -42,6 +42,10 @@ namespace tfel::gui {
      * \param[in] what : sentence which says what the theme holds
      * \param[in] entries : entries of the theme. An entry which names no theme
      * belongs to \c group
+     * \param[in] sub_theme_of : name of the theme this theme is a submenu of,
+     * empty when it stands on its own. What a program is asked with, or which
+     * program it is, is a corner of the choice of using that program, and a
+     * theme of the dialog has to say so
      * \param[in] b : if true, register this declaration in the settings
      * registry. The constructor of a declaration which is itself a registration
      * copy must pass false not to register itself again
@@ -49,6 +53,7 @@ namespace tfel::gui {
     StandardSettingsGroupProxy(const QString &group,
                                const QString &what,
                                const QVector<SettingsKey> &entries,
+                               const QString &sub_theme_of = QString(),
                                const bool = true);
     //! \return the name of the theme
     QString getName() const;
@@ -66,6 +71,8 @@ namespace tfel::gui {
     const QString description;
     //! entries of the theme
     const QVector<SettingsKey> keys;
+    //! theme this theme is a submenu of
+    const QString parent;
   };  // end of struct StandardSettingsGroupProxy
 
   /*!
@@ -111,6 +118,12 @@ namespace tfel::gui {
      * every call, so the plugins loaded after the registry was built are part
      * of the answer, and a theme an entry of a mode named explicitly is created
      * even when no mode of that name is registered
+     *
+     * \note a sub-theme is answered directly after the theme it is a submenu
+     * of, which is the order a person reading the list of the configuration
+     * dialog has to see it in: the entries of a program belong under the choice
+     * of that program, and the order the two were declared in says nothing about
+     * it. A sub-theme whose parent is not declared keeps its own place
      */
     QVector<SettingsGroup> getGroups() const;
 

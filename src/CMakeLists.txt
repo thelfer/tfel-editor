@@ -44,6 +44,7 @@ qt_sources(TFEL_EDITOR_SOURCES
   LspTransport
   LspConnection
   LspClient
+  LanguageToolClient
   GrammarCheckSession
   DirectoryMajorMode)
 
@@ -61,6 +62,8 @@ tfel_editor_library(TFELEditor
   LspProtocol.cxx
   LspCxxSupport.cxx
   LspHarperSupport.cxx
+  LanguageToolSupport.cxx
+  SpellingAndGrammar.cxx
   Utilities.cxx
   SpellChecker.cxx
   StandardFunctionCommand.cxx

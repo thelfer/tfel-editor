@@ -35,7 +35,6 @@
 #include "TFEL/GUI/LspClient.hxx"
 #include "TFEL/GUI/LspCxxSupport.hxx"
 #include "TFEL/GUI/LspHarperSupport.hxx"
-#include "TFEL/GUI/GrammarCheckSession.hxx"
 #include "TFEL/GUI/LspProtocol.hxx"
 #include "TFEL/GUI/MajorMode.hxx"
 #include "TFEL/GUI/PlainTextEdit.hxx"
@@ -594,47 +593,18 @@ void TestLspClient::testModeMenu() {
   // is checkable
   QVERIFY(actions.at(colors)->isCheckable());
   QVERIFY2(actions.at(colors)->isChecked(), "the colors are off by default");
-  // and the checker, where it is there to be launched, is the block between the
-  // entry which colors the identifiers and the one which ends the session: it is
-  // a program of its own, and the two entries which steer it are none of
-  // clangd's business
-  const auto grammar = indexOf(QStringLiteral("Grammar checking"));
-  const auto variants = indexOf(QStringLiteral("English variant"));
-  if (tfel::gui::GrammarCheckSession::isAvailable()) {
-    QVERIFY2(grammar > colors, "the menu offers no grammar checking");
-    QVERIFY2(actions.at(grammar)->isCheckable(),
-             "the entry which turns the checker off is not checkable");
-    QVERIFY2(!actions.at(grammar)->isChecked(),
-             "a buffer takes a grammar session on its own");
-    QVERIFY2(variants > grammar, "the menu names no varieties of English");
-    QVERIFY(actions.at(variants)->menu() != nullptr);
-    auto names = QStringList{};
-    for (const auto *const a : actions.at(variants)->menu()->actions()) {
-      names << a->text();
-    }
-    auto expected = QStringList{};
-    for (const auto &name : tfel::gui::LspHarperSupport::dialects()) {
-      expected << tfel::gui::LspHarperSupport::dialectLabel(name);
-    }
-    // the five varieties, in the order the checker's own settings name them, and
-    // the one it reads a text by is the one which is ticked
-    QCOMPARE(names, expected);
-    auto *const variant_menu = actions.at(variants)->menu();
-    auto checked = QStringList{};
-    for (const auto *const a : variant_menu->actions()) {
-      if (a->isChecked()) {
-        checked << a->text();
-      }
-      QVERIFY2(a->isCheckable(),
-               qPrintable("the entry '" + a->text() + "' names no state"));
-    }
-    QCOMPARE(checked,
-             QStringList() << tfel::gui::LspHarperSupport::dialectLabel(
-                 tfel::gui::LspHarperSupport::dialect()));
-  } else {
-    QVERIFY2(grammar < 0,
-             "the menu offers a grammar checker where there is none to launch");
+  // and the menu holds no entry of the checker of sentences: that is about the
+  // language of a comment, it is chosen under `Options` whatever mode the buffer
+  // wears, and see `TestGrammarCheck`
+  for (const auto *const a : actions) {
+    QVERIFY2(!a->text().contains(QStringLiteral("Grammar")),
+             qPrintable("a major mode's menu holds '" + a->text() +
+                        "', which belongs to the menu of the editor"));
+    QVERIFY2(!a->text().contains(QStringLiteral("English")),
+             qPrintable("a major mode's menu holds '" + a->text() +
+                        "', which belongs to the menu of the editor"));
   }
+
   // the plain entry launches at once, with no question asked first
   actions.at(0)->trigger();
   QVERIFY(!editor->hasUserInput());

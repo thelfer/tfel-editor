@@ -57,6 +57,14 @@ namespace tfel::gui {
     void setSpellCheckLanguage(const QString &) override;
 
     /*!
+     * \brief the session of the proofreader of this buffer
+     *
+     * \note what \c SpellingAndGrammar walks the buffers with: the choice of the
+     * proofreader is one for the editor and the buffers of this mode follow it
+     */
+    struct GrammarCheckSession *grammarCheckSession() const override;
+
+    /*!
      * \brief install a `MarkdownSyntaxHighlighter` on the given document
      * \param[in] d : document to highlight
      *

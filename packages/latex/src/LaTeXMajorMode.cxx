@@ -123,20 +123,15 @@ namespace tfel::gui {
         rb2(R"(^\s*\\begin\{\w+\})"),
         re2(R"(^\s*\\end\{\w+\})") {
     qDebug() << "TeX-master : " << this->getTeXMasterFile();
-    // the prose of a document is what the grammar checker reads, and none of
-    // the commands are: the checker reads the buffer as the variety of English
-    // the setting names, and it says nothing about spelling — that is the
-    // business of hunspell, which goes on underlining the words it does not
-    // know whatever this session does
+    // the prose of a document is what a proofreader reads, and none of the
+    // commands are: what of the text is markup is said by `grammarCheckText`, and
+    // `true` here says that the whole of it is text to be read — which is what
+    // makes a buffer of LaTeX the one kind of buffer LanguageTool reads on its own
+    // account, dictionary off, see `SpellingAndGrammar::effectiveChecker`. What
+    // reads this buffer is the choice held in the settings when the mode is built,
+    // the same choice the buffers opened afterwards follow
     this->grammar =
-        new GrammarCheckSession(w, t, QStringLiteral("latex"), this);
-    if (GrammarCheckSession::isAvailable() &&
-        LspHarperSupport::launchByDefault()) {
-      // the session follows the setting: it writes nothing back, and the entry
-      // of the menu says what the buffer does whatever brought the session
-      // about
-      this->grammar->setActive(true, false, false);
-    }
+        new GrammarCheckSession(w, t, QStringLiteral("latex"), true, this);
   }  // end of LaTeXMajorMode::LaTeXMajorMode
 
   QString LaTeXMajorMode::getTeXMasterFile() {
@@ -241,16 +236,16 @@ namespace tfel::gui {
     // the menu of the mode is the grammar checker's, and nothing else: the mode
     // has no other entry of its own, and a menu which would be empty on a
     // machine which has no checker to launch is a menu nobody should see
-    if (!this->grammar->isAvailable()) {
+    if (!GrammarCheckSession::isAvailable()) {
       return nullptr;
     }
     auto* const m = new QMenu(QObject::tr("LaTeX"), t);
     m->setIcon(this->getIcon());
-    // the note spells what the entry does not: the checker knows no word of
-    // French, and a document of French is underlined by hunspell and by nothing
-    // else
-    this->grammar->addToMenu(*m,
-                             QObject::tr("Grammar checking (English only)"));
+    // the four choices of the proofreader and, under each of them, the languages
+    // that choice reads. The checker of harper says on its own name that it knows
+    // no word of French: a document of French is read by hunspell, by the
+    // spellings of the dictionary which is chosen for it, and by nothing else
+    this->grammar->addToMenu(*m);
     return m;
   }  // end of LaTeXMajorMode::getSpecificMenu
 
@@ -288,6 +283,61 @@ namespace tfel::gui {
       this->highlighter->rehighlight();
     }
   }  // end of LaTeXMajorMode::setSpellCheckLanguage
+
+  QString LaTeXMajorMode::grammarCheckText(const QString &text) const {
+    // The markup of a line is blanked out and not removed: the answer of a
+    // proofreader is a place in the text it was handed, and a text shortened by
+    // what was taken out of it would have every place behind that run land on a
+    // word the buffer does not hold there. A blanked run is nothing to the
+    // checker and no word of it is reported, which is what a `\command` is to a
+    // person reading the text of the file: `\textbf{value}` handed over as it
+    // stands reads as a typo in `textbf` and says nothing of `value`, and that is
+    // the whole of what the mode has to keep a proofreader from saying.
+    //
+    // What is kept is what `LaTeXSyntaxHighlighter::parseLine` names the plain
+    // text of a line — the portions which are neither a command nor a comment —
+    // and the text of the comment of the line: a note to a reader is prose like
+    // any other and only its `%` is markup.
+    auto result = QString();
+    const auto lines = text.split(QLatin1Char('\n'));
+    for (auto i = 0; i != lines.size(); ++i) {
+      const auto &line = lines.at(i);
+      const auto parsed = LaTeXSyntaxHighlighter::parseLine(line);
+      auto kept = QVector<bool>(line.size(), false);
+      for (const auto &part : parsed.plainText) {
+        // the portions are pairs of a position and of a *length*, as the
+        // highlighter spells them for the spell checker it draws with
+        const auto end = qMin(part.first + part.second, line.size());
+        for (auto k = qMax(0, part.first); k != end; ++k) {
+          kept[k] = true;
+        }
+      }
+      if (parsed.comment >= 0) {
+        for (auto k = parsed.comment + 1; k != line.size(); ++k) {
+          kept[k] = true;
+        }
+      }
+      auto blanked = line;
+      for (auto k = 0; k != blanked.size(); ++k) {
+        if (!kept[k]) {
+          blanked[k] = QLatin1Char(' ');
+        }
+      }
+      result += blanked;
+      if (i + 1 != lines.size()) {
+        result += QLatin1Char('\n');
+      }
+    }
+    return result;
+  }  // end of LaTeXMajorMode::grammarCheckText
+
+  GrammarCheckSession *LaTeXMajorMode::grammarCheckSession() const {
+    // the choice of the proofreader walks the buffers of the editor through this
+    // hook, and a document of LaTeX is the one kind of buffer it reads whole: the
+    // text is handed to LanguageTool with its markup blanked out, see \c
+    // grammarCheckText, and no dictionary stands beside it
+    return this->grammar;
+  }  // end of LaTeXMajorMode::grammarCheckSession
 
   void LaTeXMajorMode::completeContextMenuForMispelledWord(QMenu* m,
                                                            const QString& l,
