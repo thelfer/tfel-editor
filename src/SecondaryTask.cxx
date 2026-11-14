@@ -17,7 +17,10 @@ namespace tfel::gui {
   SecondaryTask::~SecondaryTask() = default;
 
   bool operator<(const SecondaryTask& a, const SecondaryTask& b) {
-    return a.w < b.w;
+    // the addresses, not the pointers: `w` is a QPointer, which has no order of
+    // its own, and the widget which died names nothing, whatever the address it
+    // wore when it was alive
+    return a.w.data() < b.w.data();
   }  // end of operator<
 
 }  // end of namespace tfel::gui

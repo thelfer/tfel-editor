@@ -462,11 +462,33 @@ namespace tfel::gui {
     return b;
   }  // end of EditorWidget::createNewBuffer
 
+  bool EditorWidget::hasUserInputWaitingOn(const Buffer& b) const {
+    for (const auto& e : this->ui) {
+      if ((e.first != nullptr) && (e.first->isWaitingForAnAnswer()) &&
+          (e.first->getBuffer() == &b)) {
+        return true;
+      }
+    }
+    return false;
+  }  // end of EditorWidget::hasUserInputWaitingOn
+
   void EditorWidget::removeBuffer(Buffer* const b) {
     if (b == nullptr) {
       return;
     }
     if (this->buffers->indexOf(b) == -1) {
+      return;
+    }
+    // A prompt which still waits for its answer names the buffer it was raised
+    // in: the completion list it may show is a secondary task of that buffer,
+    // and killing the buffer would leave the question pointing at nothing. This
+    // is the choke point every kill goes through, which is where the check has
+    // to sit: closeCurrentBuffer sees only the current buffer, while a kill can
+    // come from the answer of a prompt raised in another one. The flows which
+    // kill a buffer from their own answer are not stopped by that answer, since
+    // an input which has been answered is no longer waiting.
+    if (this->hasUserInputWaitingOn(*b)) {
+      this->displayInformativeMessage(QObject::tr("minibuffer is busy"));
       return;
     }
     const auto n = b->getBufferName();
@@ -852,8 +874,11 @@ namespace tfel::gui {
     auto frames = std::vector<QWidget*>{};
     for (const auto& bt : this->bufferTasks) {
       for (const auto& t : bt.second) {
-        if (compilationOutputFrameOf(t.w) != nullptr) {
-          frames.push_back(t.w);
+        // an entry whose widget died with the buffer whose tab widget held the
+        // page names nothing, and a new buffer has nothing to be given
+        auto* const w = t.w.data();
+        if ((w != nullptr) && (compilationOutputFrameOf(w) != nullptr)) {
+          frames.push_back(w);
         }
       }
     }
@@ -1081,7 +1106,10 @@ namespace tfel::gui {
    protected:
     void treatUserInput() override {
       if (this->input->text() == "y") {
-        this->t.removeBuffer(&(this->buffer));
+        // the buffer is asked for by pointer: this input has been answered, so
+        // the editor lets it kill the buffer it was raised in, which no waiting
+        // prompt may name (see removeBuffer)
+        this->t.removeBuffer(this->buffer.data());
       }
     }  // end of treatUserInput
     EditorWidget& t;
@@ -1094,16 +1122,18 @@ namespace tfel::gui {
                   .arg(b.getBufferName()),
               p),
           t(p),
-          buf(b) {}
+          buf(&b) {}
     bool isBlocking() const override { return true; }  // end of isBlocking
    protected:
     void treatUserInput() override {
       if (this->input->text() == "y") {
-        this->t.removeBuffer(&(this->buf));
+        // by pointer: the buffer asked about here is the one another flow is
+        // about to kill, and nothing keeps it from being gone by the answer
+        this->t.removeBuffer(this->buf.data());
       }
     }  // end of treatUserInput
     EditorWidget& t;
-    Buffer& buf;
+    QPointer<Buffer> buf;
   };
 
   std::vector<QMenu*> EditorWidget::getCurrentBufferSpecificMenus() {
@@ -1178,13 +1208,14 @@ namespace tfel::gui {
   }  // end of EditorWidget::closeBuffer
 
   void EditorWidget::closeCurrentBuffer(const bool b) {
-    // A pending minibuffer prompt may hold a reference to the current
-    // buffer (its Buffer& / TextEditBase& members): closing the buffer
-    // while the prompt is displayed leaves a live prompt pointing at a
-    // destroyed buffer, and the next key press in it is a use-after-free.
-    // The legitimate kill flows (SaveCurrentBufferAndKill,
-    // KillOtherBufferAndWriteFile) call removeBuffer()/closeBuffer()
-    // directly from treatUserInput(), so they are not affected.
+    // Killing the buffer on screen while the minibuffer holds a question is
+    // refused whatever that question waits for: the prompt was raised in this
+    // buffer and its answer may want the buffer back, and the user would be
+    // handed the answer to a question no longer on the screen. The precise
+    // protection against a prompt left pointing at a destroyed buffer sits in
+    // removeBuffer(), the choke point of every kill, since a kill can be asked
+    // for from the answer of a prompt raised in another buffer than the current
+    // one.
     if (!this->ui.empty()) {
       this->displayInformativeMessage(QObject::tr("minibuffer is busy"));
       return;

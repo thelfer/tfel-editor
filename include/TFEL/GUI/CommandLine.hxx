@@ -164,6 +164,30 @@ namespace tfel::gui {
      */
     virtual void hideCompletions();
 
+    /*!
+     * \return the buffer the command line was built for, which is the one that
+     * was current when the input was shown, null when that buffer has been
+     * killed since
+     *
+     * \note the completions of an input are a secondary task of that buffer,
+     * not of the one which is current when they are shown, and the buffer it
+     * was raised in can be killed while the input still waits: hence a pointer
+     * which is null once the input is stranded, instead of the reference to a
+     * buffer that no longer exists
+     */
+    Buffer *getBuffer() const;
+
+    /*!
+     * \brief true while the input waits for the user to answer it
+     *
+     * \note false once the answer has been taken or the editing cancelled,
+     * which is what \c EditorWidget::removeBuffer leans on to tell a prompt
+     * waiting in the minibuffer from the one which is presently running its \c
+     * treatUserInput: the flows which kill a buffer do it from the answer of a
+     * prompt and must not be stopped by the question they are answering
+     */
+    bool isWaitingForAnAnswer() const;
+
    signals:
 
     /*!
@@ -394,8 +418,14 @@ namespace tfel::gui {
      *
      * \note the completions of the input are displayed as a secondary task of
      * that buffer, not of the one which is current when they are shown
+     *
+     * \note a pointer and not a reference: the buffer an input was raised in
+     * can be killed while the input waits for its answer, which the editor lets
+     * happen when the kill itself is the answer of another prompt. Read it
+     * through \c getBuffer, which answers null once the buffer is gone; acting
+     * on a stranded input has to check that.
      */
-    Buffer &buffer;
+    QPointer<Buffer> buffer;
     /*!
      * \brief vertical layout the label and the input used to be laid out in
      *
@@ -431,8 +461,12 @@ namespace tfel::gui {
      * has been shown
      *
      * \note it is what \c hideCompletions and the destructor act on
+     *
+     * \note a pointer which goes null with the widget: the completion list is a
+     * page of the tab widget of the buffer the input was raised in and dies
+     * with it, so an input which outlives that buffer has nothing left to hide
      */
-    QWidget *scompletions;
+    QPointer<QWidget> scompletions;
     /*!
      * \brief address of the input history in the settings, an empty string when
      * the history is not saved

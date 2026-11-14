@@ -29,19 +29,23 @@ namespace tfel::gui {
   // returned (the wrapper). Resolve either against the registered one so that
   // both keep working, instead of silently doing nothing.
   static bool taskMatches(const SecondaryTask& t, QWidget* const w) {
-    if (t.w == w) {
-      return true;
-    }
-    if ((t.w == nullptr) || (w == nullptr)) {
+    // a task whose widget has been destroyed names nothing: `t.w` reads null
+    // once the buffer whose tab widget held the page is gone, and such an entry
+    // matches no caller, whatever the caller holds
+    auto* const tw = t.w.data();
+    if ((tw == nullptr) || (w == nullptr)) {
       return false;
     }
-    if (auto* const wrapper = qobject_cast<QAbstractScrollAreaWrapper*>(t.w)) {
+    if (tw == w) {
+      return true;
+    }
+    if (auto* const wrapper = qobject_cast<QAbstractScrollAreaWrapper*>(tw)) {
       if (wrapper->getWrappedObject() == w) {
         return true;
       }
     }
     if (auto* const wrapper = qobject_cast<QAbstractScrollAreaWrapper*>(w)) {
-      if (wrapper->getWrappedObject() == t.w) {
+      if (wrapper->getWrappedObject() == tw) {
         return true;
       }
     }
@@ -75,10 +79,16 @@ namespace tfel::gui {
     const auto tasks = std::move(pb->second);
     this->bufferTasks.erase(pb);
     for (const auto& t : tasks) {
+      // a task whose widget is already gone names nothing: it was a page of the
+      // tab widget of another buffer, which took it in and died with it
+      auto* const w = t.w.data();
+      if (w == nullptr) {
+        continue;
+      }
       // counting the number of times this task exists
       bool found = false;
       for (const auto& bv : this->bufferTasks) {
-        const auto pt = wfind(bv.second, t.w);
+        const auto pt = wfind(bv.second, w);
         if (pt != bv.second.end()) {
           found = true;
           break;
@@ -86,9 +96,7 @@ namespace tfel::gui {
       }
       if (!found) {
         debug("deleting widget associated with task:", t.title);
-        if (t.w != nullptr) {
-          t.w->deleteLater();
-        }
+        w->deleteLater();
       }
     }
   }  // end of SecondaryTaskManager::removeBuffer
@@ -97,6 +105,11 @@ namespace tfel::gui {
                                                      QWidget* const w) {
     const auto pb = this->bufferTasks.find(b);
     if (pb == this->bufferTasks.end()) {
+      return;
+    }
+    if (w == nullptr) {
+      // no task is asked for: a null widget must not be taken for the first
+      // entry whose widget has been destroyed, which reads the same
       return;
     }
     if (wfind(pb->second, w) == pb->second.end()) {
@@ -143,14 +156,17 @@ namespace tfel::gui {
 
   void SecondaryTaskManager::attachSecondaryTask(Buffer* const b,
                                                  const SecondaryTask& t) {
-    if ((t.w == nullptr) || (b == nullptr)) {
+    auto* const w = t.w.data();
+    if ((w == nullptr) || (b == nullptr)) {
+      // either there is no buffer or the widget of the task has been destroyed;
+      // a task which names nothing is not a task
       return;
     }
     auto& v = this->bufferTasks[b];
-    if (wfind(v, t.w) == v.end()) {
+    if (wfind(v, w) == v.end()) {
       v.push_back(t);
     }
-    this->setCurrentSecondaryTask(b, t.w);
+    this->setCurrentSecondaryTask(b, w);
   }  // end of SecondaryTaskManager::attachSecondaryTask
 
   const SecondaryTask& SecondaryTaskManager::attachSecondaryTask(

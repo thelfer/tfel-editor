@@ -579,9 +579,6 @@ void TestSettings::theThemesOfTheMajorModesAreSeparatedFromThoseOfTheEditor() {
     QVERIFY2(item->data(0, Qt::UserRole).toInt() < 0,
              qPrintable("the item '" + item->text(0) +
                         "' is a title and shows a page"));
-    if (item->text(0).isEmpty()) {
-      continue;  // the empty row which keeps the two blocks apart
-    }
     if (editor_title < 0) {
       editor_title = row;
     } else {

@@ -61,6 +61,7 @@ add_tfel_editor_test(test-settings TestSettings.cxx)
 add_tfel_editor_test(test-castem-mode TestCastemMode.cxx)
 add_tfel_editor_test(test-shared-compilation-output
                      TestSharedCompilationOutput.cxx)
+add_tfel_editor_test(test-kill-buffer TestKillBuffer.cxx)
 
 # The grammar checker is a program of its own, and the cases which ask it anything
 # are skipped when it is not installed. The library of the `LaTeX` mode is needed

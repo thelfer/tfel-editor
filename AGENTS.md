@@ -1253,7 +1253,8 @@ by its name. `StandardMajorModeProxy` fills it as it fills the name, description
 icon of a theme which names none of its own, and `appendGroup` keeps the first
 attribution, as it keeps the name. `ConfigurationDialog` splits `getGroups()` on that
 field and puts a non-selectable title (`Qt::NoItemFlags`, bold, the grey of disabled
-text) over each block, with an empty row between them, and a bold caption naming the
+text) over each block — the title alone keeps the blocks apart, a blank row between
+them read as a hole in the list — and a bold caption naming the
 mode at the top of every page of a mode theme (`objectName`
 `configuration-page-mode`, which is how a test singles it out).
 
@@ -1560,6 +1561,67 @@ a test — the `Markdown` mode's `completeContextMenu` returns early, so what th
 checker leaves to hunspell is asserted on the `LaTeX` mode, the one packaged text mode
 whose context menu asks the spell checker anything: the suggestions of a misspelled
 word, counted before a session starts and after one answers about the same buffer.
+
+### Killing a buffer takes the pages of its tab widget with it (the `Ctrl-x b` segfaults)
+
+`SecondaryTask::w` is a `QPointer<QWidget>` and `CommandLine::buffer` a
+`QPointer<Buffer>`, because both outlive what they name in two ways which were
+reached by hand and are pinned by `tests/TestKillBuffer.cxx`:
+
+- **A shared secondary task is a page of one tab widget.** `QTabWidget::addTab`
+  reparents the page, so when the compilation output of a `C++` buffer is shared
+  with the other programming buffers, the buffer which added the last tab owns
+  the widget — and that is not the one which created the task. Killing the owner
+  frees the widget while the other buffers still name it, and the next
+  `Buffer::refreshSecondaryTaskTabWidget` handed the freed address to `addTab`
+  and died inside `QWidget::setParent`. Every reader of `w` tests it, and an
+  entry whose widget is gone is inert: it matches no widget, because `taskMatches`,
+  `wfind` and `operator<` all go through `.data()`. The registry is not pruned of
+  such entries on purpose — pruning it from a `destroyed()` connection would
+  re-enter `SecondaryTaskManager` in the middle of its own iterations.
+- **A prompt which waits names the buffer it was raised in**, and the kill can be
+  asked for while the user looks elsewhere, since `Ctrl-x b` does not block.
+  `CommandLine::hideCompletions` reached that buffer to hide its `*completions*`
+  page, which made the next typed character a use-after-free. `getBuffer()`
+  answers null once the buffer is gone, and `hideCompletions`, `showCompletions`
+  and the destructor then do nothing.
+
+The guard against stranding a prompt sits in `EditorWidget::removeBuffer`, the
+choke point of every kill — not in `closeCurrentBuffer`, which sees only the
+current buffer and keeps its own stricter "any prompt at all" refusal and wording.
+Its predicate is `CommandLine::isWaitingForAnAnswer()`, which is
+`!isUserEditingFinished`: `userEditingFinished()` sets that flag **before** it
+calls `treatUserInput()`, which is what lets the flows that kill a buffer from
+their own answer (`SaveCurrentBufferAndKill`, `SaveBufferAndKill`,
+`KillOtherBufferAndWriteFile`) go through while a prompt which merely waits is
+refused; a predicate on the *presence* of an input would stop those flows dead.
+`TextEditBase::KillOtherBufferAndWriteFile` holds its victim by pointer for the
+same reason, and it is the only caller of `closeBuffer`.
+
+The one behaviour change to expect: answering *another buffer is visiting this
+file, proceed ?* with `y` no longer kills a buffer which holds a waiting prompt,
+so the file ends up visited twice and the banner of the other buffer says so (see
+"The buffer watches the file it visits").
+
+Traps, all paid for:
+
+- **The change is an ABI break**: `SecondaryTask` is in an exported header, so
+  `cmake --build . --target TFELEditor` plus a packaged mode built against the
+  old layout is a crash three frames from anything that looks like the cause, and
+  a probe against it must be relinked (see the note on `SettingsGroup`).
+- **How to test that a test catches the defect and not the shape of the fix.**
+  Mutating the *guards* proves nothing: with the null test in
+  `SecondaryTaskManager::removeBuffer` dropped, `deleteLater` on a null pointer is
+  a `QWARN` and the suite stays green. What reproduces the old crash exactly, with
+  no call site reverted, is a fifteen-line stand-in for `QPointer` which keeps the
+  raw address and never nulls — `aKilledBufferTakesASharedOutputWithIt` then
+  receives `signal 11`, which is the whole acceptance test of the fix.
+- In a test of these two shapes: `removeBuffer` is **protected**, so expose it
+  with `using` in a subclass as `ExposedEditorWidget` does; `getSecondaryTasks`
+  takes a `Buffer *`; the buffer of the `Ctrl-x b` question is the one which is
+  **current when the question is asked**, so the test makes its victim current
+  first and switches away afterwards; and the wording of a refusal is seen by
+  overriding `displayInformativeMessage`, which is virtual.
 
 ## Architecture
 

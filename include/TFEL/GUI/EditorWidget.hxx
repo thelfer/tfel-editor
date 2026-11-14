@@ -253,6 +253,17 @@ namespace tfel::gui {
     //! \return true if at least one user input is currently active
     virtual bool hasUserInput() const;
 
+    /*!
+     * \return true when a user input which still waits for its answer was
+     * raised in the given buffer
+     *
+     * \note that is the buffer \c removeBuffer refuses to kill: such a prompt
+     * names that buffer and the completion list it may display is a secondary
+     * task of it. An input whose answer has been taken is not waiting, which is
+     * what lets the flows that kill a buffer from the answer of a prompt do so
+     */
+    virtual bool hasUserInputWaitingOn(const Buffer &b) const;
+
     //! destructor
     ~EditorWidget() override;
 

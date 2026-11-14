@@ -463,9 +463,6 @@ namespace tfel::gui {
       add_group(g);
     }
     if (!mode_groups.isEmpty()) {
-      auto *const gap = new QTreeWidgetItem(themes);
-      gap->setFlags(Qt::NoItemFlags);
-      gap->setData(0, Qt::UserRole, -1);
       add_heading(QObject::tr("Major modes"));
       for (const auto &g : mode_groups) {
         add_group(g);

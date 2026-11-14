@@ -523,9 +523,12 @@ namespace tfel::gui {
       return;
     }
     const auto &st = this->editor.attachSecondaryTask(this, p);
-    if (st.w != nullptr) {
-      this->stw->addTab(st.w, st.icon, st.title);
-      this->stw->setCurrentWidget(st.w);
+    if (auto *const w = st.w.data()) {
+      // the page moves into this tab widget: the buffer which added the tab
+      // last owns the widget, which is why the registry holds a QPointer and
+      // why killing this buffer takes a task shared with others along with it
+      this->stw->addTab(w, st.icon, st.title);
+      this->stw->setCurrentWidget(w);
       this->stw->show();
     }
   }  // end of attachSecondaryTask
@@ -583,15 +586,21 @@ namespace tfel::gui {
     auto current = [&tasks]() -> QWidget * {
       for (const auto &t : tasks) {
         if (t.current) {
-          return t.w;
+          return t.w.data();
         }
       }
       return nullptr;
     }();
     auto visible = false;
     for (const auto &t : tasks) {
-      if (t.w != nullptr) {
-        this->stw->addTab(t.w, t.icon, t.title);
+      // a task shared with the other programming buffers is a page of one tab
+      // widget only, so the buffer which is killed may be the one that held it:
+      // the pointer every other buffer keeps of it then reads null and the
+      // entry has no tab left to re-add. The check is what keeps the switch
+      // from handing a destroyed widget to the tab widget, which is a use of
+      // freed memory inside QWidget::setParent.
+      if (auto *const w = t.w.data()) {
+        this->stw->addTab(w, t.icon, t.title);
         visible = visible || t.visible;
       }
     }

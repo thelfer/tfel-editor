@@ -158,7 +158,7 @@ namespace tfel::gui {
   CommandLine::CommandLine(const QString& l, EditorWidget& p, const bool b)
       : QWidget(&p),
         editor(p),
-        buffer(p.getCurrentBuffer()),
+        buffer(&p.getCurrentBuffer()),
         // vl(new QVBoxLayout),
         hl(new QHBoxLayout),
         label(new QLabel(this)),
@@ -207,19 +207,39 @@ namespace tfel::gui {
     return false;
   }  // end of CommandLine::isBlocking
 
+  Buffer* CommandLine::getBuffer() const {
+    return this->buffer.data();
+  }  // end of CommandLine::getBuffer
+
+  bool CommandLine::isWaitingForAnAnswer() const {
+    return !this->isUserEditingFinished;
+  }  // end of CommandLine::isWaitingForAnAnswer
+
   void CommandLine::hideCompletions() {
-    this->buffer.hideSecondaryTask(this->scompletions);
+    // the buffer the input was raised in can be killed while the input waits,
+    // and the completion list is a page of that buffer: an input which outlives
+    // both has no completion list left to hide
+    if (auto* const b = this->buffer.data()) {
+      b->hideSecondaryTask(this->scompletions.data());
+    }
   }  // end of CommandLine::hideCompletions
 
   void CommandLine::showCompletions(const QString& b, const QStringList& cl) {
+    // the buffer of the input is the one the list is a secondary task of, which
+    // is not necessarily the current one; it can have been killed while this
+    // input waited, and there is then nowhere left to show the completions
+    auto* const buf = this->buffer.data();
+    if (buf == nullptr) {
+      return;
+    }
     if (this->completions == nullptr) {
-      this->completions = new TextEdit(this->editor, this->buffer);
+      this->completions = new TextEdit(this->editor, *buf);
       if (this->completions == nullptr) {
         return;
       }
       this->completions->setReadOnly(true);
       this->scompletions =
-          this->buffer.attachSecondaryTask("*completions*", this->completions);
+          buf->attachSecondaryTask("*completions*", this->completions);
       QObject::connect(this, &CommandLine::textChanged, this,
                        &CommandLine::hideCompletions);
     }
@@ -260,7 +280,7 @@ namespace tfel::gui {
     // the task is displayed through Buffer so that the secondary task registry
     // records it as visible: that registry is what restores the tab widget once
     // the buffer is current again, see Buffer::refreshSecondaryTaskTabWidget
-    this->buffer.showSecondaryTask(this->scompletions);
+    buf->showSecondaryTask(this->scompletions.data());
   }  // end of CommandLine::showCompletions
 
   void CommandLine::setLabel(const QString& l) {
@@ -369,7 +389,11 @@ namespace tfel::gui {
 
   CommandLine::~CommandLine() {
     if ((this->completions != nullptr) && (this->scompletions != nullptr)) {
-      this->buffer.removeSecondaryTask(this->scompletions);
+      // the buffer the input was raised in may be gone: one which outlived it
+      // has no secondary task left to remove from it
+      if (auto* const b = this->buffer.data()) {
+        b->removeSecondaryTask(this->scompletions.data());
+      }
     }
     // emitted here, and not through QObject::destroyed, so that the receiver
     // still finds a live QWidget: at this point the QWidget part of the object

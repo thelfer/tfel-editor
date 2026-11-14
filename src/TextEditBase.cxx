@@ -171,7 +171,7 @@ namespace tfel::gui {
                   .arg(f),
               p),
           textEdit(t),
-          kb(b),
+          kb(&b),
           file(f) {}  // end of KillOtherBufferAndWriteFile
 
     bool isBlocking() const override { return true; }  // end of isBlocking
@@ -179,13 +179,18 @@ namespace tfel::gui {
    protected:
     void treatUserInput() override {
       if (this->input->text() == "y") {
-        this->editor.closeBuffer(this->kb, false);
+        // the buffer to kill is held by pointer: this question is raised in
+        // another buffer than the one it names, and while it waits, the buffer
+        // it names can be killed by other means, which leaves nothing to close
+        if (auto* const k = this->kb.data()) {
+          this->editor.closeBuffer(*k, false);
+        }
         this->textEdit.writeFile(this->file);
       }
     }  // end of treatUserInput
 
     TextEditBase& textEdit;
-    Buffer& kb;
+    QPointer<Buffer> kb;
     QString file;
   };
 
