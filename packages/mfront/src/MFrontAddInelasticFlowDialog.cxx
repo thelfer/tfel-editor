@@ -26,6 +26,29 @@
 
 namespace tfel::gui {
 
+  namespace {
+
+    //! \brief select an option of a combo box
+    void select_option(QComboBox* const c, const QString& option) {
+      if (option.isEmpty()) {
+        return;
+      }
+      const auto i = c->findText(option);
+      if (i >= 0) {
+        c->setCurrentIndex(i);
+        return;
+      }
+      // the lists of the dialog are the registered bricks which are compatible
+      // with the behaviour, so a description names an option such a list holds.
+      // When it does not, the option is added and selected: an unknown option
+      // shown as nothing selected would be dropped by the first Ok without the
+      // user ever seeing that it was gone.
+      c->addItem(option);
+      c->setCurrentIndex(c->count() - 1);
+    }  // end of select_option
+
+  }  // end of namespace
+
   MFrontAddInelasticFlowDialog::MFrontAddInelasticFlowDialog(
       MFrontBehaviourWizard* const p)
       : QDialog(p),
@@ -140,6 +163,36 @@ namespace tfel::gui {
     this->setLayout(vl);
   }  // end of
      // MFrontAddInelasticFlowDialog::MFrontAddInelasticFlowDialog
+
+  void MFrontAddInelasticFlowDialog::setInelasticFlowDescription(
+      const InelasticFlowDescription& d) {
+    this->setWindowTitle(QObject::tr("Modify an inelastic flow"));
+    select_option(this->inelastic_flows, d.inelastic_flow);
+    select_option(this->stress_criteria, d.stress_criterion);
+    if (d.plastic_potential.isEmpty()) {
+      select_option(this->plastic_potentials, "Associated flow");
+    } else {
+      select_option(this->plastic_potentials, d.plastic_potential);
+    }
+    auto* ihrm = dynamic_cast<QStringListModel*>(
+        this->isotropic_hardening_rules_selected->model());
+    if (ihrm == nullptr) {
+      // same as for the "Add" button: the view borrows the model, the dialog
+      // owns it (issue #66)
+      ihrm = new QStringListModel(this);
+      this->isotropic_hardening_rules_selected->setModel(ihrm);
+    }
+    ihrm->setStringList(d.isotropic_hardening_rules);
+    auto* khrm = dynamic_cast<QStringListModel*>(
+        this->kinematic_hardening_rules_selected->model());
+    if (khrm == nullptr) {
+      // same as for the isotropic hardening rules
+      khrm = new QStringListModel(this);
+      this->kinematic_hardening_rules_selected->setModel(khrm);
+    }
+    khrm->setStringList(d.kinematic_hardening_rules);
+  }  // end of
+     // MFrontAddInelasticFlowDialog::setInelasticFlowDescription
 
   MFrontAddInelasticFlowDialog::InelasticFlowDescription
   MFrontAddInelasticFlowDialog::getInelasticFlowDescription() const {

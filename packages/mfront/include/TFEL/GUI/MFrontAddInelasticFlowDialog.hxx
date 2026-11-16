@@ -45,6 +45,18 @@ namespace tfel::gui {
      * \param[in] p: parent widget
      */
     MFrontAddInelasticFlowDialog(MFrontBehaviourWizard* const);
+    /*!
+     * \brief preselect the options of an inelastic flow which has already been
+     * chosen, so that the dialog is used to modify it and not to ask a new one
+     * \param[in] d: description of the inelastic flow to modify
+     *
+     * \note the window title becomes "Modify an inelastic flow"
+     *
+     * \note an option which the corresponding list does not hold is added to it
+     * and selected: a description names values such a list was built from, and
+     * a field left empty would silently drop one of them
+     */
+    void setInelasticFlowDescription(const InelasticFlowDescription&);
     //! \return the options selected by the user
     InelasticFlowDescription getInelasticFlowDescription() const;
     //! \brief destructor
