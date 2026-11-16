@@ -2092,6 +2092,139 @@ Traps, all paid for:
   first and switches away afterwards; and the wording of a refusal is seen by
   overriding `displayInformativeMessage`, which is virtual.
 
+### The rectangle commands answer GNU Emacs, column for column
+
+`Ctrl-X R` opens a blocking minibuffer input which waits for a single key —
+`t` inserts a string on every line of the rectangle the selection covers, `k`
+kills it, `y` pastes the last killed one — and the report which started this was
+that a rectangle is sometimes not inserted under the current position of the
+cursor. The defect was the loop which walks the lines: its guard was
+`(!b.atEnd())`, so it stopped **before** the last line whenever that line was
+the empty block a final newline opens, which is the normal shape of a file, and
+the cursor was then placed by walking a `QTextCursor` across the separators the
+rewrites had moved. What the three commands do now is driven by the **block
+numbers of the two ends of the selection, both of them included** —
+`getRectangle` takes those numbers and the two character columns from positions
+and `QTextDocument::findBlock`, and each command walks
+`findBlockByNumber(firstBlock..lastBlock)` and places its cursor at a position
+built from `block.position() + column`.
+
+The reference is GNU Emacs 27.1 driven through its own `rect.el`, and the
+harness of it (`/tmp/opencode/rect2/gen.py`) is the **single source of both
+sides**: `python3 gen.py el > measure.el` writes the Elisp which builds a shape,
+selects the region, presses the command and prints the buffer and the point, and
+`emacs -Q --batch -l measure.el > emacs.txt` runs it (`rect.el` itself is loaded
+from `/tmp/opencode/rect/rect.el`); `python3 gen.py cxx > probe.cxx` writes the
+C++ probe which does the same to a real `EditorWidget`, and
+`./probe > editor.txt` runs it offscreen. `python3 gen.py check emacs.txt
+editor.txt` prints the disagreements (76 shapes, 0 disagreements). Running it
+with no argument prints the rules of the record; `python3 expect.py <name>`
+prints the `QCOMPARE` lines of the shapes whose name it matches.
+**Every expectation of `tests/TestRectangleMode.cxx` comes from that record,
+never from reading the report by hand**: the test's `blocks()` lists *every*
+block of the document, the empty last one included, while the Emacs report drops
+it and says `--- final-newline: yes|no`, so a hand-copied expectation asserts a
+line the document does not have. A shape is edited in `gen.py` and both reports
+are regenerated; the shape lists of the harness and of the test are two
+different things on purpose, the second being what a regression needs.
+
+What Emacs says, measured rather than described (`t` = insert, `k` = kill,
+`y` = paste):
+
+- a line an end of the selection stands on **is** part of the rectangle, so a
+  selection dragged down to the beginning of the next line reaches that line,
+  and a buffer whose last block is empty has that block among the lines of a
+  selection which reaches it;
+- `t` pads a line which stops short of the left edge with blanks, keeps
+  `line.mid(right)` behind the string (the line is *split*, not overwritten),
+  and leaves the cursor behind the text written on the **last** line of the
+  rectangle. An answer of several lines goes **whole on every line** of the
+  rectangle — not one answer line per buffer line — which is why the rewrite
+  runs from the bottom of the rectangle upwards: numbering of the lines above a
+  rewritten line is nothing a lower line may depend on;
+- `k` stores each line's piece **right-padded to the width of the rectangle**
+  and never pads the line itself, so deleting what a line does not hold leaves
+  that line alone. The cursor keeps **its own** line — which need not be a line
+  of the rectangle at all, `k19` and `k20` — and goes back by the width of what
+  was deleted in front of it, stopping at the left edge when it stood inside;
+- `y` inserts at the cursor's own column, whatever the selection says; a line
+  shorter than that column is padded and the piece goes **behind** the blanks;
+  a line is opened only when a piece stands past a line which has no newline of
+  its own, which is why pasting on the empty last line of a file which ends with
+  a newline opens nothing;
+- a rectangle of no width (both ends in the same column) is a command of its
+  own: `t` inserts the string on every line it names; `k` takes nothing from the
+  lines and stores a piece of no width per line, which `y` writes as nothing, so
+  the buffer is left as it was and the paste only moves the cursor;
+- **the killed rectangle does not go on the kill ring**: `kill-rectangle` of
+  `rect.el` only sets `killed-rectangle`, so `Ctrl-Y` knows nothing about a
+  killed rectangle and `Ctrl-X R Y` is its only way back. Whatever an earlier
+  draft of this feature did with `EditorWidget::getKillRing`, it was a
+  divergence from the reference.
+
+Four Qt traps, all paid for:
+
+- **`QTextCursor::blockNumber()` asks the layout** and is only brought up to
+  date when the text is painted, so after a command which rewrote lines
+  programmatically it can still name the line the cursor stood on the last time
+  the buffer was drawn. The line of a cursor is `document->findBlock(position)`,
+  in the mode and in the test's `cursorWhere` alike.
+- `QTextDocument::findBlock(n)` reads its argument as a **position**, not a line
+  number: `findBlock(1)` is the first line, `findBlockByNumber(1)` the second.
+- a `QTextEdit` can not place a cursor past the end of a line at all, so the
+  right edge of a rectangle is bounded by the length of the line it is drawn
+  from. Emacs clamps the same way (`move-to-column`), which is why the 0
+  disagreements of the harness do not hide this.
+- writing on the empty last block leaves the buffer with text there and **no
+  final newline**, which is what the record says of the same shape
+  (`--- final-newline: no` for `t2` and `t11`): the field exists because the two
+  programs had to be compared on it, and they agree. The case which names the
+  defect itself is
+  `theRectangleReachesTheLineTheEndOfTheSelectionStandsOn`.
+
+Test traps:
+
+- `RectangleMode::killedRectangle` is a **static shared by every buffer and
+  nothing clears it**, so `pastingWithNoRectangleKilledSaysSo` must stay the
+  first slot of `TestRectangleMode`; a case which needs an empty register
+  anywhere else can not have one.
+- `Ctrl-X R` is a blocking input: the `t`/`k`/`y` key must be pressed into the
+  entry of that question (`liveInput` + `entryOf`, the `TestLspClient` shape —
+  the entry is a `LineEdit`, i.e. a `QTextEdit` shim, not a `QLineEdit`), and
+  `t` uncovers a **second** question, the string, whose answer is set with
+  `setText` because a newline of a multi-line answer is the `Return` of the
+  minibuffer.
+- `RectangleModeLineEdit::keyPressEvent` must chain to
+  `CommandLine::CustomLineEdit::keyPressEvent` for every key it does not claim
+  and guard its `userEditingFinished()`: the version which did neither ended the
+  command on any stray key — a space, a `z`, an arrow — with empty input.
+- `QTest::keyClick(widget, int)` selects the **`char`** overload, which maps its
+  argument through `QTest::asciiToKey`; key arguments are `Qt::Key` (the same
+  trap `TestPythonMode` carries).
+
+Two differences from Emacs are deliberate and are named in
+`docs/web/rectangle-editing.md`, where the commands are documented for users:
+the columns of a rectangle are **character** columns, not the screen columns
+Emacs measures — a tab is one character here and moves to the next tab stop
+there — and there is no `C-x SPC` (`rectangle-mark-mode`), so a rectangle is
+always what a linear selection spans. Both show up only on lines which hold a
+tab. A tab shape is deliberately **absent from the harness**: its Elisp side
+places a corner with `move-to-column` and its probe side with a character
+offset, and on a line which holds a tab those two answers are different
+characters, so such a shape measures the convention of the harness rather than
+what the command does. It is measured by hand instead
+(`/tmp/opencode/rect2/tab1.el`, whose region is named by characters as the
+editor names a selection), and the pair of answers the page quotes is that
+measurement: on `a<TAB>Hello World` / `bbbbbbb World`, a region whose point
+stands before the `o` of `Hello` and whose mark before the space of the second
+line answers `a<TAB>HellXY World` / `bbbbbbXY World` here and
+`a      XYo World` / `bbbbbbbXYd` in Emacs, which cuts at the screen columns 12
+and 7 the same two ends name.
+
+One pre-existing oddity was left alone: the history address of the insert
+question is misspelled `/rectangle-mode/insert/histroy`, which is what a user's
+settings file holds.
+
 ## Architecture
 
 - `include/TFEL/GUI/` — public headers of the core library. `.hxx` are

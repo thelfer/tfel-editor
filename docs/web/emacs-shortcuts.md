@@ -8,7 +8,10 @@ to the main frame of a buffer or to secondary tasks derived from
 # Editing
 
 - `Ctrl-X+P`: Print the main frame or the current secondary task.
-- `Ctrl-X+R`: Enter rectangle editing mode.
+- `Ctrl-X+R`: Enter rectangle editing mode, which waits for `t` to insert a
+  string on every line the selection covers, `k` to kill that rectangle and
+  `y` to insert the last killed one. See [the rectangle editing
+  page](rectangle-editing.html) for details.
 - `Ctrl-X+K`: From the main frame, kill the current buffer. Kill the
   current secondary task otherwise.
 - `Ctrl-X+H`: Select the whole text.

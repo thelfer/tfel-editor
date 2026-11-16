@@ -63,6 +63,7 @@ add_tfel_editor_test(test-shared-compilation-output
                      TestSharedCompilationOutput.cxx)
 add_tfel_editor_test(test-kill-buffer TestKillBuffer.cxx)
 add_tfel_editor_test(test-python-mode TestPythonMode.cxx)
+add_tfel_editor_test(test-rectangle-mode TestRectangleMode.cxx)
 
 # The grammar checker is a program of its own, and the cases which ask it anything
 # are skipped when it is not installed. The library of the `LaTeX` mode is needed

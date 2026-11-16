@@ -75,15 +75,28 @@ namespace tfel::gui {
      * \brief remove the rectangle the selection covers from the buffer and
      * remember it as the killed rectangle
      *
-     * The rectangle is the set of columns which lies between the two ends of
-     * the selection, on every line the selection touches; shorter lines are
-     * padded with blanks.
+     * The rectangle is the set of columns which lies between the two ends of the
+     * selection, on every line the selection touches: the lines the two ends
+     * stand on are part of it, which is what makes a selection dragged down to
+     * the beginning of the next line reach that line too, and the final newline
+     * of a file the empty last line it opens.
      *
-     * \note the editor's cursor is left on the column the rectangle starts on,
-     * at the last line it covers
+     * What a line held between the two edges of the rectangle is stored padded
+     * with blanks up to the width of the rectangle, so a line which stopped
+     * short of the right edge gives a piece as wide as the rest and a paste puts
+     * the rectangle back where it was taken from. The line itself is not padded:
+     * it only loses what the rectangle covered, which is why deleting what a
+     * line does not hold leaves that line alone.
      *
-     * \note nothing is killed when the cursor holds no selection or when both
-     * of its ends stand on the same column
+     * \note the cursor keeps the line it stands on and goes back by the width of
+     * the text deleted in front of it, stopping at the left edge of the rectangle
+     * when it stood inside of it. A cursor on a line the rectangle does not
+     * reach does not move.
+     *
+     * \note a rectangle of no width stores a piece of no text per line and
+     * leaves both the lines and the cursor where they are: killing nothing is a
+     * command of its own, as the rectangle one kills is what the columns say,
+     * not what the lines happen to hold.
      */
     void killRectangle();
 
@@ -91,9 +104,18 @@ namespace tfel::gui {
      * \brief insert the killed rectangle in the buffer, at the column the
      * editor's cursor stands on
      *
-     * The lines the rectangle covers are padded with blanks when they are
-     * shorter than that column, and new lines are added when the rectangle
-     * reaches past the end of the buffer.
+     * The column of the cursor is the column of every piece: the selection the
+     * cursor holds is nothing to this command, and what the lines hold from that
+     * column on is kept, so the rectangle is inserted, not written over the text.
+     * A line shorter than that column is padded with blanks up to it.
+     *
+     * A piece which stands past the last line of the buffer opens a line, except
+     * for the empty line the final newline of a file opens: that line already
+     * names a line and takes the pieces on its own place, so a rectangle of no
+     * width pasted there opens nothing.
+     *
+     * \note the cursor ends behind the last piece written, at the lower right
+     * corner of the pasted rectangle
      *
      * \note nothing is inserted and a message is reported in the minibuffer
      * when no rectangle has been killed yet

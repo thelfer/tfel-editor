@@ -39,6 +39,11 @@ the amazing abilities of the [`Qt` library](https://www.qt.io/).
   file, and a save never overwrites such a change without asking. See
   [the file modified on disk page](file-modified-on-disk.html) for
   details.
+- Editing by rectangles: inserting a string on every line of a block of
+  columns, killing such a block and putting it back somewhere else. The lines
+  and columns a rectangle covers and where the cursor stands afterwards follow
+  `GNU Emacs`, command by command. See [the rectangle editing
+  page](rectangle-editing.html) for details.
 - etc.
 
 The configuration of the editor, which is gathered by themes and can be
