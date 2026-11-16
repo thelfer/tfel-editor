@@ -6,11 +6,15 @@
  */
 
 #include <algorithm>
+#include <QtCore/QItemSelectionModel>
+#include <QtGui/QStandardItemModel>
 #include <QtGui/QValidator>
+#include <QtWidgets/QAbstractItemView>
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QGridLayout>
+#include <QtWidgets/QListView>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QPushButton>
 #include "MFront/AbstractBehaviourDSL.hxx"
@@ -75,6 +79,20 @@ namespace tfel::gui {
       return r.join("\n");
     }  // end of flow_details
 
+    /*!
+     * \brief the row of the flow the list selects, -1 when it selects none
+     *
+     * The enablement of the two buttons and the flow they work on are read with
+     * this one function, which is what keeps them naming the same flow.
+     */
+    int selected_flow_row(const QListView *const v) {
+      auto *const sm = v->selectionModel();
+      if ((sm == nullptr) || (!sm->hasSelection())) {
+        return -1;
+      }
+      return sm->selection().first().topLeft().row();
+    }  // end of selected_flow_row
+
   }  // end of namespace
 
   MFrontStandardElastoViscoPlasticityBrickPage::
@@ -82,11 +100,10 @@ namespace tfel::gui {
           EditorWidget &w, TextEditBase &cd, MFrontBehaviourWizard *const p)
       : QWizardPage(p),
         stress_potentials(new QComboBox),
-        inelastic_flows_list(new QComboBox),
-        modify_inelastic_flow(
-            new QPushButton(QObject::tr("Modify the selected flow"))),
-        remove_inelastic_flow(
-            new QPushButton(QObject::tr("Remove the selected flow"))),
+        inelastic_flows_model(new QStandardItemModel(this)),
+        inelastic_flows_list(new QListView),
+        modify_inelastic_flow(new QPushButton(QObject::tr("Modify"))),
+        remove_inelastic_flow(new QPushButton(QObject::tr("Remove"))),
         editor(w),
         d(cd) {
     this->setTitle(QObject::tr("The StandardElastoViscoPlasticity brick"));
@@ -116,26 +133,47 @@ namespace tfel::gui {
     l1->setFrameShape(QFrame::HLine);
     l1->setFrameShadow(QFrame::Sunken);
     gl->addWidget(l1, 2, 0, 1, 3);
-    auto *const ifb = new QPushButton(QObject::tr("Add an inelastic flow"));
+    // the inelastic flows which have been added are listed under the label
+    // which names them and above the three buttons which work on that list: a
+    // flow one can not see is one one can neither check nor take back
+    auto *const ifl = new QLabel(QObject::tr("Inelastic flows"));
+    gl->addWidget(ifl, 3, 0, 1, 3, Qt::AlignHCenter);
+    auto *const ifv = this->inelastic_flows_list;
+    // the page owns the model it hands to the view, which borrows the model
+    // (issue #66)
+    ifv->setModel(this->inelastic_flows_model);
+    // one flow at a time is what the two buttons below the list work on
+    ifv->setSelectionMode(QAbstractItemView::SingleSelection);
+    ifv->setSelectionBehavior(QAbstractItemView::SelectRows);
+    // an entry names a flow the page holds: typing into it would make the list
+    // and the page disagree, and write() answers what the page holds
+    ifv->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    // an empty list is the state the page starts in, and one as tall as a
+    // single row is a list nobody can see emptying
+    const auto rh = std::max(1, ifv->sizeHintForRow(0));
+    ifv->setMinimumHeight(6 * (rh + 2));
+    gl->addWidget(ifv, 4, 0, 1, 3);
+    auto *const ifb = new QPushButton(QObject::tr("Add"));
+    gl->addWidget(ifb, 5, 0);
+    gl->addWidget(this->modify_inelastic_flow, 5, 1);
+    gl->addWidget(this->remove_inelastic_flow, 5, 2);
     QObject::connect(ifb, &QPushButton::pressed, this,
                      &MFrontStandardElastoViscoPlasticityBrickPage::
                          addInelasticFlow);
-    gl->addWidget(ifb, 3, 0, 1, 2);
-    // the flows which have been added are listed below the button which adds
-    // them: a flow one can not see is one one can neither check nor take back
-    auto *const ifl = new QLabel(QObject::tr("Inelastic flows"));
-    gl->addWidget(ifl, 4, 0);
-    gl->addWidget(this->inelastic_flows_list, 4, 1, 1, 2);
-    gl->addWidget(this->modify_inelastic_flow, 5, 0);
-    gl->addWidget(this->remove_inelastic_flow, 5, 1);
     QObject::connect(this->modify_inelastic_flow, &QPushButton::pressed, this,
                      &MFrontStandardElastoViscoPlasticityBrickPage::
                          modifyInelasticFlow);
     QObject::connect(this->remove_inelastic_flow, &QPushButton::pressed, this,
                      &MFrontStandardElastoViscoPlasticityBrickPage::
                          removeInelasticFlow);
-    // the list is empty and the two buttons which act on the selected flow have
-    // nothing to act on
+    // a modification and a removal work on the selected flow, so it is the
+    // selection which decides whether they have anything to work on
+    QObject::connect(ifv->selectionModel(),
+                     &QItemSelectionModel::selectionChanged, this,
+                     &MFrontStandardElastoViscoPlasticityBrickPage::
+                         updateInelasticFlowsButtons);
+    // the list is empty and the two buttons which work on the selected flow
+    // have nothing to work on
     this->updateInelasticFlowsList(-1);
     this->setLayout(gl);
   }  // end of
@@ -143,23 +181,42 @@ namespace tfel::gui {
 
   void MFrontStandardElastoViscoPlasticityBrickPage::updateInelasticFlowsList(
       const int i) {
-    auto *const l = this->inelastic_flows_list;
-    l->clear();
+    auto *const m = this->inelastic_flows_model;
+    // clear() takes the rows and the selection with them, which is why the
+    // buttons are dealt with at the end of this function and not only by the
+    // signal of the selection
+    m->clear();
     for (const auto &f : this->inelastic_flows) {
-      const auto j = l->count();
-      l->addItem(flow_label(f));
-      // Qt 6 has no QComboBox::setItemToolTip: the tool tip of an entry is a
-      // piece of data of it
-      l->setItemData(j, flow_details(f), Qt::ToolTipRole);
+      auto *const item = new QStandardItem(flow_label(f));
+      // two flows can differ by their hardening rules only, which the name says
+      // nothing about: the whole description goes in the tool tip
+      item->setToolTip(flow_details(f));
+      // the model owns the item from here on
+      m->appendRow(item);
     }
-    l->setCurrentIndex(i);
-    // a modification and a removal act on the selected flow: an empty list,
-    // which is what a negative index selects, has nothing to act on
-    const auto selected = l->currentIndex() >= 0;
+    if (i >= 0) {
+      // the row is made current *and* selected: what the two buttons work on is
+      // the selection, so it is named rather than left to the default command a
+      // view answers a programmatic change of the current row with
+      const auto idx = m->index(i, 0);
+      this->inelastic_flows_list->selectionModel()->setCurrentIndex(
+          idx, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+      this->inelastic_flows_list->scrollTo(idx);
+    }
+    this->updateInelasticFlowsButtons();
+  }  // end of
+     // MFrontStandardElastoViscoPlasticityBrickPage::updateInelasticFlowsList
+
+  void MFrontStandardElastoViscoPlasticityBrickPage::
+      updateInelasticFlowsButtons() {
+    // a modification and a removal work on the selected flow: an empty list,
+    // and a list whose entries are all deselected, leaves them with nothing to
+    // do
+    const auto selected = selected_flow_row(this->inelastic_flows_list) >= 0;
     this->modify_inelastic_flow->setEnabled(selected);
     this->remove_inelastic_flow->setEnabled(selected);
   }  // end of
-     // MFrontStandardElastoViscoPlasticityBrickPage::updateInelasticFlowsList
+     // MFrontStandardElastoViscoPlasticityBrickPage::updateInelasticFlowsButtons
 
   void MFrontStandardElastoViscoPlasticityBrickPage::addInelasticFlow() {
     auto *const p = dynamic_cast<MFrontBehaviourWizard *const>(this->wizard());
@@ -179,13 +236,13 @@ namespace tfel::gui {
   }  // end of MFrontStandardElastoViscoPlasticityBrickPage::addInelasticFlow
 
   void MFrontStandardElastoViscoPlasticityBrickPage::modifyInelasticFlow() {
-    // the combo box and the vector are kept in step, so an entry of one is the
-    // same flow as the entry of the other of the same index
-    const auto i = this->inelastic_flows_list->currentIndex();
+    // the list and the vector are kept in step, so the row of one is the same
+    // flow as the entry of the other of the same index
+    const auto i = selected_flow_row(this->inelastic_flows_list);
     if ((i < 0) ||
         (static_cast<decltype(inelastic_flows.size())>(i) >=
          this->inelastic_flows.size())) {
-      // the button of the page is disabled when nothing is selected
+      // the button of the page is disabled when the list selects no flow
       return;
     }
     auto *const p = dynamic_cast<MFrontBehaviourWizard *const>(this->wizard());
@@ -207,11 +264,11 @@ namespace tfel::gui {
   }  // end of MFrontStandardElastoViscoPlasticityBrickPage::modifyInelasticFlow
 
   void MFrontStandardElastoViscoPlasticityBrickPage::removeInelasticFlow() {
-    const auto i = this->inelastic_flows_list->currentIndex();
+    const auto i = selected_flow_row(this->inelastic_flows_list);
     if ((i < 0) ||
         (static_cast<decltype(inelastic_flows.size())>(i) >=
          this->inelastic_flows.size())) {
-      // the button of the page is disabled when nothing is selected
+      // the button of the page is disabled when the list selects no flow
       return;
     }
     this->inelastic_flows.erase(this->inelastic_flows.begin() + i);

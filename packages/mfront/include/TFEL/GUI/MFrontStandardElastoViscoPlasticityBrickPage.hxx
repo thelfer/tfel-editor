@@ -12,9 +12,11 @@
 #include <QtWidgets/QWizard>
 #include "TFEL/GUI/MFrontAddInelasticFlowDialog.hxx"
 
-// forward declaration
+// forward declarations
 class QComboBox;
+class QListView;
 class QPushButton;
+class QStandardItemModel;
 
 namespace tfel::gui {
 
@@ -42,12 +44,12 @@ namespace tfel::gui {
      * \note the combo box lists the stress potentials registered in MFront and
      * preselects \c Hooke
      *
-     * \note the "Add an inelastic flow" button opens a
-     * \c MFrontAddInelasticFlowDialog, whose result is stored by the page when
-     * the user accepts it. The flows which have been added are listed by the
-     * combo box which stands below that button: one of them can be selected and
-     * modified, which reopens the dialog prefilled with what the page holds, or
-     * removed
+     * \note the inelastic flows which have been added are listed under the
+     * "Inelastic flows" label which names that list, and the three buttons
+     * below it work on it: "Add" asks a new flow through a
+     * \c MFrontAddInelasticFlowDialog and appends it, "Modify" reopens that
+     * dialog prefilled with the selected flow and "Remove" takes it out of the
+     * list. The last two are disabled while the list holds no selected flow
      */
     MFrontStandardElastoViscoPlasticityBrickPage(EditorWidget &,
                                                  TextEditBase &,
@@ -119,24 +121,41 @@ namespace tfel::gui {
 
    protected:
     /*!
-     * \brief rebuild the combo box which lists the inelastic flows
-     * \param[in] i: the entry to select, a negative value selecting none
+     * \brief rebuild the list of the inelastic flows from what the page holds
+     * \param[in] i: the flow to select, a negative value selecting none
      *
-     * The two buttons which modify and remove a flow are enabled by the same
-     * move: they act on the selected flow and have nothing to act on when the
-     * list is empty.
+     * The name of an entry tells the flow and the criterion it goes with, and
+     * its tool tip holds the whole description: two flows can differ by their
+     * hardening rules only.
+     *
+     * \note the buttons which work on the selected flow are enabled by the same
+     * move, through updateInelasticFlowsButtons
      */
     void updateInelasticFlowsList(const int);
+    /*!
+     * \brief enable the two buttons which work on the selected flow when the
+     * list selects a flow, disable them when it selects none
+     *
+     * They are connected to the selection of the list, which is what lets a
+     * click on the empty space below the entries take them back, and are called
+     * by updateInelasticFlowsList as well, which resets that selection.
+     */
+    void updateInelasticFlowsButtons();
     //! list of inelastic flows
     std::vector<MFrontAddInelasticFlowDialog::InelasticFlowDescription>
         inelastic_flows;
     //! \brief list of stress potentials
     QComboBox *const stress_potentials;
     /*!
+     * \brief model of the list of the inelastic flows, which the page owns: a
+     * \c QListView borrows the model it is given (issue #66)
+     */
+    QStandardItemModel *const inelastic_flows_model;
+    /*!
      * \brief list of the inelastic flows which have been added, which is also
      * the selection the two buttons below it act on
      */
-    QComboBox *const inelastic_flows_list;
+    QListView *const inelastic_flows_list;
     //! \brief button which reopens the dialog with the selected inelastic flow
     QPushButton *const modify_inelastic_flow;
     //! \brief button which takes the selected inelastic flow out of the list
