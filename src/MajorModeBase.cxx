@@ -12,7 +12,10 @@
 
 #include <QtGui/QTextBlock>
 
+#include <QtGui/QAction>
+
 #include "TFEL/GUI/MajorModeBase.hxx"
+#include "TFEL/GUI/SpellChecker.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
 
@@ -57,6 +60,67 @@ namespace tfel::gui {
 
   void MajorModeBase::completeContextMenu(QMenu* const, const QTextCursor&) {
   }  // end of MajorModeBase::completeContextMenu()
+
+  void MajorModeBase::addSpellCheckSuggestions(QMenu* const m,
+                                               SpellChecker& checker,
+                                               const QString& word,
+                                               const int first,
+                                               const int last) {
+    if ((word.isEmpty()) || (last <= first)) {
+      return;
+    }
+    // a buffer which can not be written to has nothing to answer with a menu
+    // entry: the freeze of a file modified on disk, or the output of a process,
+    // shows the underlines of the mode and none of the ways out of them
+    if (this->textEdit.isReadOnly()) {
+      return;
+    }
+    // the word is asked of the very checker which drew the underline, which is
+    // what keeps the entry and the underline from disagreeing: a word the
+    // dictionary knows is spelled well, and so is every word of a checker which
+    // was given no dictionary at all
+    if (checker.spell(word)) {
+      return;
+    }
+    const auto suggestions = checker.suggest(word);
+    if (suggestions.isEmpty()) {
+      return;
+    }
+    auto* const submenu = new QMenu(tr("Suggestions"), m);
+    // the name tests and whoever walks the menu single the entry out by
+    submenu->setObjectName(QStringLiteral("spell-suggestions"));
+    for (const auto& s : suggestions) {
+      auto* const a = submenu->addAction(s);
+      a->setStatusTip(tr("Replace %1 by %2").arg(word, s));
+      QObject::connect(
+          a, &QAction::triggered, this,
+          [this, first, last, s] { this->replaceTextOfBuffer(first, last, s); });
+    }
+    // the entry stands in front of the entries of the text edit it was raised
+    // from; addSeparator appends the separator at the end of the menu and
+    // insertAction brings it back in front of them, which is what the code
+    // which added the flat suggestions of the `LaTeX` mode did before this
+    // submenu existed
+    const auto entries = m->actions();
+    if (entries.isEmpty()) {
+      m->addMenu(submenu);
+    } else {
+      m->insertAction(entries.at(0), m->addSeparator());
+      m->insertAction(m->actions().at(0), submenu->menuAction());
+    }
+  }  // end of MajorModeBase::addSpellCheckSuggestions
+
+  void MajorModeBase::replaceTextOfBuffer(const int first,
+                                          const int last,
+                                          const QString& word) const {
+    auto tc = QTextCursor(this->textEdit.textCursor());
+    tc.beginEditBlock();
+    tc.setPosition(first);
+    tc.setPosition(last, QTextCursor::KeepAnchor);
+    tc.removeSelectedText();
+    tc.insertText(word);
+    tc.endEditBlock();
+  }  // end of MajorModeBase::replaceTextOfBuffer
 
   QMenu* MajorModeBase::getSpecificMenu() {
     return nullptr;
