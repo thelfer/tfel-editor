@@ -2045,10 +2045,96 @@ matches the `grep`/`pkill` command line itself.
 Finally, the case which loads the `Markdown` plugin must stay **last** in the list of
 slots: loading registers the mode for the rest of the run (`TestSettings` carries the
 same rule for `castem`), and `underlinedWords` is what a text mode's lints look like to
-a test — the `Markdown` mode's `completeContextMenu` returns early, so what the grammar
-checker leaves to hunspell is asserted on the `LaTeX` mode, the one packaged text mode
+a test — what the grammar checker leaves to hunspell is asserted on the `LaTeX` mode,
 whose context menu asks the spell checker anything: the suggestions of a misspelled
-word, counted before a session starts and after one answers about the same buffer.
+word, counted before a session starts and after one answers about the same buffer. (The
+`Markdown` mode answers that question too since the submenu existed, and
+`tests/TestSpellCheckSuggestions.cxx` is what asks it there.)
+
+### The suggestions of a misspelled word stand in a submenu of the context menu
+
+A word the dictionary underlines is right-clicked into a `Suggestions` entry which leads
+to one entry per correction the checker answers, a choice replacing the word. The entries
+are built in **one place of the core library**, `MajorModeBase::addSpellCheckSuggestions
+(m, checker, word, first, last)`, and `MajorModeBase::replaceTextOfBuffer` is the one way
+that menu writes into a document. What a mode still decides for itself is only *which
+part of a line is prose*:
+
+- the `LaTeX` mode asks `LaTeXSyntaxHighlighter::parseLine(line).plainText` which
+  portions of the line the highlighter reads as text, and `wordAt` (anonymous namespace
+  of the mode) which run of letters of that portion the place stands in;
+- the `Markdown` mode asks `MarkdownSyntaxHighlighter::spellCheckedWords(line)`, which is
+  the one split its highlighter draws the underlines with, so an underlined word is never
+  left unsuggested and a word which is not underlined is never suggested.
+
+Three shape facts, and a rule about places:
+
+- the submenu's `objectName` is `spell-suggestions`, the handle tests and whoever walks
+  the menu single it out by, as `spelling-languages` and `clangd-references` are; the
+  entry is inserted **in front of** the entries the menu already holds, and since
+  `addSeparator` appends, the separator behind it comes back in front through
+  `insertAction(entries.at(0), …)`;
+- nothing is added when the word is empty, when `last <= first`, when the frame is read
+  only (the freeze of a file modified on disk shows the underlines and none of the ways
+  out of them), when the checker spells the word well — which is also the answer of a
+  checker which was given no dictionary, so the off switch of the spell checker needs no
+  test of its own — and when the dictionary answers no suggestion;
+- the replacement keeps the positions it was built with: a `QMenu` is raised on a press
+  and answered on a release, and nothing has moved the document in between, so the lambda
+  of an entry captures `first` and `last` rather than asking the cursor where the word is;
+- **a position of a document is a place between two characters**, so *both* bounds of the
+  run of letters belong to the word: `p >= first && p <= last`. The click on the first
+  letter of a word is answered by the place which precedes it and the click on its last
+  letter by the place which follows it, and the only places which name no word are those
+  between two words. The assertion which pins this is one which aims at the **last**
+  character: an exclusive upper bound fails there and nowhere else.
+
+And one conversion trap the `Markdown` mode had been living with: the TFEL `CxxTokenizer`
+answers `offset` as a **byte offset into the UTF-8 encoding** of the line, while
+`setFormat`, `QTextDocument` and `QString::mid` count characters, so on a note whose line
+holds one accented word the underline of a misspelled word and the replacement of it were
+both drawn one character behind the word. `spellCheckedWords` brings the two answers back
+together through `characterAtByte`, in the one place a Markdown line is split for the
+spell checker. The `LaTeX` mode never had the problem: its splitter is a
+`QRegularExpression` run on the `QString` itself.
+
+What is deliberately **not** on that menu: the lints of `harper` and LanguageTool have no
+corrections to offer (`LspDiagnostic` holds the message, the rule and the range, and no
+support code parses the `data` or `changes` a server could carry with them), and although
+`hunspell` will add a word to a user dictionary (`SpellChecker::addToUserWordlist`, which
+writes a file under the data location of the application), an entry which writes a file
+behind the back of the person who owns that file is none of the editor's business.
+
+Test traps, all paid for:
+
+- **`QAction::trigger()` on the *menu* action emits no `triggered`**: it activates the
+  submenu, which for a menu nobody showed does nothing at all, and the case reads as a
+  replacement which silently failed to happen. A click reaches the leaves:
+  `submenu->actions().at(0)->trigger()`.
+- The menu is never raised: `QMenu::exec` at the end of `TextEditBase::handleMousePressEvent`
+  is a nested event loop no offscreen test returns from, so the cases call
+  `MajorMode::completeContextMenu(&menu, cursor)` directly, on a menu which already holds
+  a stock entry to stand for the undo, copy and paste entries a right click puts there
+  first — which is what makes "the suggestions stand in front of those" an assertion
+  rather than an intention.
+- What the submenu holds is compared to what a `SpellChecker` of the test's own answers
+  for the same word on `en_US`: right whatever dictionary the machine happens to hold, and
+  every case `QSKIP`s when that checker says nothing. `frame->setSpellCheckLanguage("en_US")`
+  names the dictionary of a buffer; handing the same frame an empty language is how the
+  case about holding no dictionary turns the answers off, and `setReadOnly(true)`, with the
+  language left alone, is how the case about a frozen buffer freezes only the writing.
+- This Qt has no `QtWidgets/QAction` header: include `<QtGui/QAction>`.
+- Whole texts are compared after `replace(QChar(0x2029), QChar('\n'))`, as elsewhere in the
+  suite (see the transcript of an interpreter session).
+
+What each half of the feature is worth is named by mutating it: dropping the read-only
+guard fires `aBufferWhichCanNotBeWrittenToIsOfferedNothing`, an exclusive upper bound on
+the word fires the either-end case, and taking the byte offsets of the tokenizer literally
+fires the `Markdown` case — the accented word in front of the misspelled one is what makes
+the shift visible. `tests/TestSpellCheckSuggestions.cxx` is the seventeenth executable and
+loads the `LaTeX` and `Markdown` plugins in `initTestCase`, which is harmless here because
+`TestSettings`, the suite which asserts the set of configuration themes, is a separate
+executable.
 
 ### Killing a buffer takes the pages of its tab widget with it (the `Ctrl-x b` segfaults)
 

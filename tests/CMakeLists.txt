@@ -66,6 +66,17 @@ add_tfel_editor_test(test-python-mode TestPythonMode.cxx)
 add_tfel_editor_test(test-latex-mode TestLaTeXMode.cxx)
 add_tfel_editor_test(test-rectangle-mode TestRectangleMode.cxx)
 
+# The suggestions of the spell checker are found on the context menu of a mode
+# of a packaged plugin, so the two modes which have one are built and their file
+# names handed in. The hunspell question is answered by the dictionaries of the
+# machine, and the cases skip when they have nothing to suggest.
+add_tfel_editor_test(test-spell-check-suggestions TestSpellCheckSuggestions.cxx)
+add_dependencies(test-spell-check-suggestions
+                 TFELEditorLaTeXMode TFELEditorMarkdownMode)
+target_compile_definitions(test-spell-check-suggestions PRIVATE
+  TFEL_EDITOR_LATEX_MODE="$<TARGET_FILE:TFELEditorLaTeXMode>"
+  TFEL_EDITOR_MARKDOWN_MODE="$<TARGET_FILE:TFELEditorMarkdownMode>")
+
 # The grammar checker is a program of its own, and the cases which ask it anything
 # are skipped when it is not installed. The library of the `LaTeX` mode is needed
 # by the last cases, which load those modes as plugins: the context menu of a text

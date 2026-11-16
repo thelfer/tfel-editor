@@ -18,6 +18,8 @@ namespace tfel::gui {
   struct EditorWidget;
   // forward declaration
   struct Buffer;
+  // forward declaration
+  struct SpellChecker;
   /*!
    * \brief a helper class to build major modes
    */
@@ -214,6 +216,54 @@ namespace tfel::gui {
      * \param[in] tc : text cursor
      */
     int positionInCurrentBlock(const QTextCursor&) const;
+    /*!
+     * \brief add to a context menu a `Suggestions` entry which leads to the
+     * suggestions the spell checker answers for a misspelled word
+     * \param[out] m       : menu to complete
+     * \param[in]  checker: spell checker of the mode, which is the one that
+     * underlined the word in the buffer
+     * \param[in]  word   : word the suggestions are asked for
+     * \param[in]  first  : position of the first character of \c word in the
+     * buffer
+     * \param[in]  last   : position of the character which follows the last
+     * character of \c word in the buffer
+     *
+     * The entry stands in front of the entries the menu already holds, with a
+     * separator behind it, and its submenu holds one entry per suggestion, in
+     * the order the checker answers them; triggering one of them replaces the
+     * word in the buffer by it.
+     *
+     * \note nothing is added when the checker spells the word well, when it
+     * answers no suggestion, when the word is empty and when the buffer can not
+     * be written to: a menu which offers to replace a word it can not replace
+     * is a menu which lies. A checker which was given no dictionary spells
+     * every word, so the entry of a buffer which holds no dictionary is none of
+     * the questions above
+     *
+     * \note the word is asked of the very checker which drew the underline, so
+     * that the underline and the entry cannot disagree about what a misspelled
+     * word is. It is up to the caller to hand over the word the way the
+     * highlighter of the mode read it: see \c
+     * LaTeXSyntaxHighlighter::parseLine and \c
+     * MarkdownSyntaxHighlighter::spellCheckedWords
+     */
+    void addSpellCheckSuggestions(QMenu* const m,
+                                  SpellChecker& checker,
+                                  const QString& word,
+                                  const int first,
+                                  const int last);
+    /*!
+     * \brief replace the text of the buffer between two positions by a word
+     * \param[in] first : position of the first character of the text to replace
+     * \param[in] last  : position of the character which follows that text
+     * \param[in] word  : text which replaces it
+     *
+     * \note the editor's cursor is left where it is: the replacement answers
+     * what the mouse asked, it is not a movement
+     */
+    void replaceTextOfBuffer(const int first,
+                             const int last,
+                             const QString& word) const;
     /*!
      * \return recursively search the given file in the given
      * directory

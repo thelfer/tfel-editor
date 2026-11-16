@@ -191,12 +191,16 @@ struct TestGrammarCheck : QObject {
    */
   static QMenu *languageSubmenu(QMenu &menu);
   /*!
-   * \brief the number of suggestions the spell checker answers for a word, or -1
-   * when the word is missing from the buffer
+   * \brief the number of suggestions the context menu offers for a word, 0 when
+   * it offers none, or -1 when the word is missing from the buffer
    *
    * \note the suggestions of the context menu are the one public face of hunspell
    * a test can see: the underlines of the misspelled words are drawn by the
    * highlighter of the mode and held by the document
+   *
+   * \note one entry named `Suggestions` leads to a submenu of the suggestions
+   * themselves: it is the entries of that submenu which are counted here, not
+   * the entries of the menu
    */
   static int suggestionsFor(tfel::gui::MajorMode &mode,
                             tfel::gui::TextEditBase &frame,
@@ -312,11 +316,19 @@ int TestGrammarCheck::suggestionsFor(tfel::gui::MajorMode &mode,
     return -1;
   }
   // the middle of the word: the suggestions are asked about the word the position
-  // stands in, and a position on its first character is not in it
+  // stands in, and a place between the first letter and the one which follows it
+  // is in the word wherever the mouse was
   cursor.setPosition(cursor.selectionStart() + 3);
   auto menu = QMenu();
   mode.completeContextMenu(&menu, cursor);
-  return static_cast<int>(menu.actions().size());
+  // what the dictionary answered is what the submenu of the `Suggestions` entry
+  // holds; a menu which offers no such entry says the word is spelled well
+  auto *const suggestions =
+      menu.findChild<QMenu *>(QStringLiteral("spell-suggestions"));
+  if (suggestions == nullptr) {
+    return 0;
+  }
+  return static_cast<int>(suggestions->actions().size());
 }  // end of TestGrammarCheck::suggestionsFor
 
 bool TestGrammarCheck::waitFor(const std::function<bool()> &predicate,

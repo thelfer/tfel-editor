@@ -89,8 +89,15 @@ namespace tfel::gui {
      * \param[in] c : text cursor at the position where the menu will
      * appear
      *
-     * \note nothing is added, not even the actions of \c MajorModeBase, so
-     * the misspelled words of the document are underlined but never suggested
+     * When the position of the cursor stands in a misspelled word of the line,
+     * the menu gains a `Suggestions` entry in front of the entries it already
+     * holds, which leads to one entry per suggestion the dictionary answers, as
+     * \c MajorModeBase::addSpellCheckSuggestions builds it.
+     *
+     * \note the word is the one the highlighter of the mode underlines, since
+     * both ask \c MarkdownSyntaxHighlighter::spellCheckedWords how the line is
+     * split: an underlined word is never left unsuggested and a word which is
+     * not underlined is never suggested
      */
     void completeContextMenu(QMenu *const, const QTextCursor &) override;
 
@@ -183,8 +190,9 @@ namespace tfel::gui {
      * words of the document
      *
      * \note the checker is a member of the mode, which owns it;
-     * \c MarkdownSyntaxHighlighter asks it for the words to underline, the mode
-     * itself never suggests a correction in the context menu
+     * \c MarkdownSyntaxHighlighter asks it for the words to underline and the
+     * context menu of the mode asks it the suggestions of the word under the
+     * cursor, which is the same checker and the same dictionary
      */
     SpellChecker &getSpellChecker();
 

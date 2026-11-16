@@ -16,19 +16,119 @@
 
 namespace tfel::gui {
 
+  namespace {
+
+    /*!
+     * \return the number of bytes the UTF-8 encoding of the character which
+     * starts at the given index of the given text takes
+     * \param[in] t : text
+     * \param[in] i : index of the character, which shall be a valid one
+     *
+     * \note a pair of surrogates is one character of four bytes, which is the
+     * only case where the number of bytes and the number of `QChar`s of a
+     * character disagree
+     */
+    int utf8SizeOfCharacter(const QString& t, const int i) {
+      const auto c = t[i].unicode();
+      if (QChar::isHighSurrogate(c) && ((i + 1) != t.size()) &&
+          QChar::isLowSurrogate(t[i + 1].unicode())) {
+        return 4;
+      }
+      if (c < 0x80) {
+        return 1;
+      }
+      if (c < 0x800) {
+        return 2;
+      }
+      return 3;
+    }  // end of utf8SizeOfCharacter()
+
+    /*!
+     * \return the index, in the given text, of the character which starts at
+     * the given byte of its UTF-8 encoding, the size of the text when that byte
+     * is what closes it, -1 when it stands inside a character
+     * \param[in] t    : text
+     * \param[in] byte : byte of the UTF-8 encoding of \c t
+     */
+    int characterAtByte(const QString& t, const int byte) {
+      if (byte < 0) {
+        return -1;
+      }
+      auto bytes = 0;
+      auto i = 0;
+      while (i != t.size()) {
+        if (bytes == byte) {
+          return i;
+        }
+        const auto n = utf8SizeOfCharacter(t, i);
+        if (bytes + n > byte) {
+          return -1;
+        }
+        bytes += n;
+        i += (n == 4) ? 2 : 1;
+      }
+      return (bytes == byte) ? t.size() : -1;
+    }  // end of characterAtByte()
+
+  }  // end of anonymous namespace
+
+  tfel::utilities::CxxTokenizerOptions
+  MarkdownSyntaxHighlighter::tokenizingOptions() {
+    auto o = tfel::utilities::CxxTokenizerOptions();
+    o.treatPreprocessorDirectives = false;
+    o.allowStrayBackSlash = true;
+    o.allowStrayHashCharacter = true;
+    o.treatNumbers = false;
+    o.treatStrings = false;
+    o.treatCComments = false;
+    o.treatCxxComments = false;
+    o.graveAccentAsSeparator = true;
+    o.joinCxxTwoCharactersSeparators = true;
+    return o;
+  }  // end of MarkdownSyntaxHighlighter::tokenizingOptions
+
+  std::vector<std::pair<int, int>>
+  MarkdownSyntaxHighlighter::spellCheckedWords(const QString& l) {
+    using namespace tfel::utilities;
+    auto words = std::vector<std::pair<int, int>>();
+    auto tokens = CxxTokenizer(tokenizingOptions());
+    try {
+      tokens.parseString(l.toStdString());
+    } catch (std::exception&) {
+      return words;
+    } catch (...) {
+      return words;
+    }
+    for (const auto& t : tokens) {
+      if (t.value.empty()) {
+        continue;
+      }
+      const auto first = characterAtByte(l, static_cast<int>(t.offset));
+      const auto last = characterAtByte(
+          l, static_cast<int>(t.offset) + static_cast<int>(t.value.size()));
+      if ((first < 0) || (last <= first)) {
+        // a token whose place the encoding of the line does not answer is
+        // nothing the checker is asked about
+        continue;
+      }
+      const auto word = l.mid(first, last - first);
+      // issue #71: isalpha() on the (signed) char of a UTF-8 byte is undefined
+      // behaviour and, on glibc, silently skips every word starting with a
+      // non-ASCII letter; QChar::isLetter on the decoded word is the test
+      // actually meant here
+      if (word.isEmpty() || !word[0].isLetter()) {
+        continue;
+      }
+      words.push_back({first, last});
+    }
+    return words;
+  }  // end of MarkdownSyntaxHighlighter::spellCheckedWords
+
   MarkdownSyntaxHighlighter::MarkdownSyntaxHighlighter(MarkdownMajorMode &m,
                                                        QTextDocument *p)
       : QSyntaxHighlighter(p), mode(m) {
     // parsing options
-    this->options.treatPreprocessorDirectives = false;
-    this->options.allowStrayBackSlash = true;
-    this->options.allowStrayHashCharacter = true;
-    this->options.treatNumbers = false;
-    this->options.treatStrings = false;
-    this->options.treatCComments = false;
-    this->options.treatCxxComments = false;
-    this->options.graveAccentAsSeparator = true;
-    this->options.joinCxxTwoCharactersSeparators = true;
+    this->options = tokenizingOptions();
     // formating options
     this->md.setForeground(Qt::red);
     this->md.setFontStretch(120);
@@ -86,28 +186,19 @@ namespace tfel::gui {
       return;
     }
     auto &sc = this->mode.getSpellChecker();
-    auto spell_check = [this, &sc](const Token &t, const QTextCharFormat &f) {
-      if (t.value.empty()) {
-        return;
-      }
-      // issue #71: isalpha() on the (signed) char of a UTF-8 byte is
-      // undefined behaviour and, on glibc, silently skips every word
-      // starting with a non-ASCII letter; QChar::isLetter on the decoded
-      // word is the test actually meant here
-      const auto w = QString::fromStdString(t.value);
-      if (w.isEmpty() || !w[0].isLetter()) {
-        return;
-      }
-      if (!sc.spell(w)) {
-        QTextCharFormat nf(f);
+    // the words of the line the checker is asked about, drawn over the face of
+    // the line they stand in: it is the one split \c spellCheckedWords answers,
+    // which the context menu of the mode asks its suggestions of too, so that
+    // the underline and the suggestions cannot disagree about what a misspelled
+    // word is
+    auto spell_check_all_tokens = [this, &sc, &l](const QTextCharFormat &f) {
+      for (const auto &w : MarkdownSyntaxHighlighter::spellCheckedWords(l)) {
+        if (sc.spell(l.mid(w.first, w.second - w.first))) {
+          continue;
+        }
+        auto nf = QTextCharFormat(f);
         nf.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
-        this->setFormat(t.offset, t.value.size(), nf);
-      }
-    };
-    auto spell_check_all_tokens = [&tokens,
-                                   &spell_check](const QTextCharFormat &f) {
-      for (const auto &t : tokens) {
-        spell_check(t, f);
+        this->setFormat(w.first, w.second - w.first, nf);
       }
     };
     // m is the current mode

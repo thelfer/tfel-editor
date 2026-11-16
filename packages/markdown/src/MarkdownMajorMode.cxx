@@ -111,8 +111,31 @@ namespace tfel::gui {
     this->setHighlighter(new MarkdownSyntaxHighlighter(*this, d));
   }  // end of setSyntaxHighlighter
 
-  void MarkdownMajorMode::completeContextMenu(QMenu *const,
-                                              const QTextCursor &) {
+  void MarkdownMajorMode::completeContextMenu(QMenu *const m,
+                                              const QTextCursor &tc) {
+    MajorModeBase::completeContextMenu(m, tc);
+    if (this->highlighter.isNull()) {
+      return;
+    }
+    // the words the highlighter of this mode asks the checker about, and the
+    // place of the cursor among them: the menu offers a word which is not
+    // underlined as little as it leaves an underlined word unsuggested
+    const auto &block = tc.block();
+    const auto column = tc.position() - block.position();
+    const auto text = block.text();
+    for (const auto &w : MarkdownSyntaxHighlighter::spellCheckedWords(text)) {
+      if ((column < w.first) || (column > w.second)) {
+        continue;
+      }
+      // a position of a document is a place between two characters: the click
+      // on the first letter of a word is answered by the place which precedes
+      // it, and the click on its last letter by the place which follows it, so
+      // both bounds of the word belong to it
+      this->addSpellCheckSuggestions(
+          m, this->spellChecker, text.mid(w.first, w.second - w.first),
+          block.position() + w.first, block.position() + w.second);
+      return;
+    }
   }  // end of completeContextMenu
 
   void MarkdownMajorMode::runPandoc() {
