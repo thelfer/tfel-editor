@@ -152,6 +152,41 @@ namespace tfel::gui {
       return cs;
     }  // end of interpreterChoices()
 
+    /*!
+     * \return the range of the word of the given text the given position stands
+     * in, as a pair of a first position and of a position past the last
+     * character, and `{-1, -1}` when the position stands on no word
+     * \param[in] t : text to scan, a line or a portion of a line
+     * \param[in] p : position in \c t
+     *
+     * A word is a run of letters, the same split \c SpellChecker::spellLine
+     * reports the misspelled words of a line with.
+     *
+     * \note a position of a document is a place between two characters, not a
+     * character: the click on the first letter of a word is answered by the
+     * place which precedes it and the click on its last letter by the place
+     * which follows it as likely as not, so both bounds of the run belong to
+     * the word. A position which stands between two words therefore names
+     * neither of them
+     */
+    std::pair<int, int> wordAt(const QString& t, const int p) {
+      auto pos = 0;
+      while (pos != t.size()) {
+        if (!t[pos].isLetter()) {
+          ++pos;
+          continue;
+        }
+        const auto first = pos;
+        while ((pos != t.size()) && (t[pos].isLetter())) {
+          ++pos;
+        }
+        if ((p >= first) && (p <= pos)) {
+          return {first, pos};
+        }
+      }
+      return {-1, -1};
+    }  // end of wordAt()
+
   }  // end of anonymous namespace
 
   static int countNumberOfCurlyBraces(const QString& s) {
@@ -432,14 +467,24 @@ namespace tfel::gui {
     const auto posl = tc.position() - bl.position();
     const auto text = tc.block().text();
     // a misspelled word can only be in a portion of the line which is neither
-    // a comment nor a LaTeX command
+    // a comment nor a LaTeX command: the very same split of the line is used
+    // here and in the highlighter, so that the menu and the underlining always
+    // agree on what a misspelled word may lie in
     for (const auto& p : LaTeXSyntaxHighlighter::parseLine(text).plainText) {
-      if ((posl < p.first) || (posl >= p.first + p.second)) {
+      if ((posl < p.first) || (posl > p.first + p.second)) {
         continue;
       }
-      this->completeContextMenuForMispelledWord(m, text.mid(p.first, p.second),
-                                                posl - p.first,
-                                                bl.position() + p.first);
+      const auto portion = text.mid(p.first, p.second);
+      const auto w = wordAt(portion, posl - p.first);
+      if (w.first < 0) {
+        continue;
+      }
+      // one position stands in one word: what follows cannot hold it too
+      this->addSpellCheckSuggestions(
+          m, this->spellChecker, portion.mid(w.first, w.second - w.first),
+          bl.position() + p.first + w.first,
+          bl.position() + p.first + w.second);
+      return;
     }
   }  // end of LaTeXMajorMode::completeContextMenu
 
@@ -505,74 +550,7 @@ namespace tfel::gui {
     return this->grammar;
   }  // end of LaTeXMajorMode::grammarCheckSession
 
-  void LaTeXMajorMode::completeContextMenuForMispelledWord(QMenu* m,
-                                                           const QString& l,
-                                                           const int p,
-                                                           const int ap) {
-    int pos = 0;
-    while (pos != l.size()) {
-      if (l[pos].isLetter()) {
-        int npos = pos;
-        ++pos;
-        while ((pos != l.size()) && (l[pos].isLetter())) {
-          ++pos;
-        }
-        if ((p > npos) && (p < pos)) {
-          // found !
-          this->bmwp = ap + npos;
-          this->emwp = ap + pos;
-          const QString w = l.mid(npos, pos - npos);
-          if (!this->spellChecker.spell(w)) {
-            for (auto& pa : this->suggestions) {
-              delete pa;
-            }
-            this->suggestions.clear();
-            const auto ss = this->spellChecker.suggest(w);
-            for (const auto& s : ss) {
-              auto* a = new QAction(s, this);
-              a->setData(s);
-              this->suggestions.push_back(a);
-            }
-            if (this->suggestions.size() != 0) {
-              auto cactions = m->actions();
-              if (!cactions.isEmpty()) {
-                m->insertAction(*(cactions.begin()), m->addSeparator());
-              }
-              for (int i = this->suggestions.size(); i > 0; --i) {
-                auto* a = this->suggestions[i - 1];
-                cactions = m->actions();
-                if (cactions.isEmpty()) {
-                  m->addAction(a);
-                } else {
-                  m->insertAction(*(cactions.begin()), a);
-                }
-              }
-              QObject::connect(
-                  m, &QMenu::triggered, this,
-                  &LaTeXMajorMode::replaceMispelledWordBySuggestion);
-            }
-          }
-        }
-      } else {
-        ++pos;
-      }
-    }
-  }  // end of LaTeXMajorMode::completeContextMenuForMispelledWord
-
   SpellChecker& LaTeXMajorMode::getSpellChecker() { return this->spellChecker; }
-
-  void LaTeXMajorMode::replaceMispelledWordBySuggestion(QAction* a) {
-    if (this->suggestions.indexOf(a) != -1) {
-      QTextCursor tc(this->textEdit.textCursor());
-      tc.beginEditBlock();
-      tc.setPosition(this->bmwp);
-      tc.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor,
-                      this->emwp - this->bmwp);
-      tc.removeSelectedText();
-      tc.insertText(a->data().toString());
-      tc.endEditBlock();
-    }
-  }  // end of LaTeXMajorMode::replaceMispelledWordBySuggestion
 
   bool LaTeXMajorMode::handleShortCut(const int k1,
                                       const Qt::KeyboardModifiers m,

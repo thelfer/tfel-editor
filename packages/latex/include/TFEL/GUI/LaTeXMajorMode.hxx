@@ -82,8 +82,10 @@ namespace tfel::gui {
      * \param[in] c : text cursor at the position where the menu will
      * appear
      *
-     * The suggestions of the spell checker are inserted in front of the
-     * menu when the cursor stands on a misspelled word.
+     * When the position of the cursor stands in a misspelled word of the line,
+     * the menu gains a `Suggestions` entry in front of the entries it already
+     * holds, which leads to one entry per suggestion the dictionary answers, as
+     * \c MajorModeBase::addSpellCheckSuggestions builds it.
      *
      * \note only the words of a portion of the line which is neither a
      * comment nor a LaTeX command may be misspelled: the very same split of
@@ -290,20 +292,6 @@ namespace tfel::gui {
      */
     virtual void startLaTeX();
 
-    /*!
-     * \brief replace the misspelled word the context menu was completed for
-     * by the suggestion the user chose
-     * \param[in] a : action of the menu the user triggered
-     *
-     * The word which lies between \c bmwp and \c emwp is replaced by the data
-     * the action holds.
-     *
-     * \note the slot is triggered by \c QMenu::triggered for any action of
-     * that menu: it does nothing when the action is not one of the
-     * \c suggestions it offered
-     */
-    virtual void replaceMispelledWordBySuggestion(QAction *);
-
    protected:
     /*!
      * \brief the minibuffer input which asks the name of the environment to
@@ -320,32 +308,6 @@ namespace tfel::gui {
      */
     struct LaTeXInsertBlock;
 
-    /*!
-     * \brief add the suggestions of the spell checker for the misspelled
-     * word the cursor is on in front of the given menu
-     * \param[out] m   : context menu
-     * \param[in]  t   : portion of text
-     * \param[in]  pos : position of the cursor relative to the
-     * beginning of the portion of text in the line
-     * \param[in] apos : abosolution position of the beginning of the
-     * portion of text in the line
-     *
-     * The portion of text is scanned word after word: the word which holds
-     * `pos` is looked up in the dictionary and, when it is misspelled, an
-     * action per suggestion is inserted in front of the menu, followed by a
-     * separator when the menu is not empty.
-     *
-     * \note the positions of the word are memorised in \c bmwp and \c emwp
-     * and the previous suggestions are destroyed; the menu is connected to
-     * \c replaceMispelledWordBySuggestion
-     *
-     * \note nothing is added when the word is spelled well, when it holds no
-     * letter or when the dictionary proposes no suggestion
-     */
-    virtual void completeContextMenuForMispelledWord(QMenu *,
-                                                     const QString &,
-                                                     const int,
-                                                     const int);
     /*!
      * compute indentation of the current line
      * \param[in]  tc : cursor of the line to compute the indentation of
@@ -417,24 +379,10 @@ namespace tfel::gui {
     GrammarCheckSession *grammar = nullptr;
     /*!
      * \brief the spell checker which underlines the misspelled words of the
-     * plain text of the document and proposes the suggestions of the context
-     * menu
+     * plain text of the document and answers the suggestions the context menu
+     * offers for them
      */
     SpellChecker spellChecker;
-
-    /*!
-     * \brief the suggestions the last context menu offered, kept so that
-     * \c replaceMispelledWordBySuggestion can tell its own actions from the
-     * other actions of that menu
-     *
-     * \note the mode owns them: they are destroyed as soon as a new set of
-     * suggestions is built
-     */
-    QVector<QAction *> suggestions;
-    //! absolute postion of the beginning of the mispelled word
-    int bmwp = 0;
-    //! absolute postion of the end of the mispelled word
-    int emwp = 0;
 
     /*!
      * \brief the frame the output of the process of the interpreter is
