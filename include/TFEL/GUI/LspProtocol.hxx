@@ -250,15 +250,36 @@ namespace tfel::gui {
     int character = 0;
   };  // end of struct LspDocumentSymbol
 
+  /*!\brief the character sequence which joins the name of a symbol to the scope
+   * it lives in, language by language
+   * \param[in] language_id: the `languageId` of the protocol, as \c
+   * LspClient::setLanguageId was told to send it
+   * \return `.` for the languages which spell a qualified name with a dot, `::`
+   * for the C family, which is what a server which names no language means
+   *
+   * \note the overview of a file names a symbol the way the language spells it:
+   * a reader who copies `Widget.paint` from the list pastes something Python
+   * reads, and `Widget::paint` is nothing of this language. What the servers
+   * answer is a name and the name of its container; joining the two is the
+   * editor's decision and nobody else's
+   */
+  TFEL_GUI_VISIBILITY_EXPORT QString scopeSeparatorOf(
+      const QString &language_id);
+
   /*!\brief the entries of the overview of a file out of either shape of answer
    * a `textDocument/documentSymbol` may take: the tree of `DocumentSymbol`s or
    * the flat list of `SymbolInformation`s
    * \param[in] result: the `result` of the answer
+   * \param[in] scope_separator: what joins the name of a symbol to the scope it
+   * lives in, which is `::` of the C family and `.` of Python: the overview
+   * names a symbol the way the language spells it, and a reader who types that
+   * name means it
    * \return the symbols in the order the file spells them, each qualified by
    * the scopes it lives in
    */
   TFEL_GUI_VISIBILITY_EXPORT QVector<LspDocumentSymbol> documentSymbolsOf(
-      const QJsonValue &result);
+      const QJsonValue &result,
+      const QString &scope_separator = QStringLiteral("::"));
 
   /*!\brief the kind of a symbol, spelled out
    * \param[in] kind: the `kind` the server sent, a `SymbolKind` of the protocol

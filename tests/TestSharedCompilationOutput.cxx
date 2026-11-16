@@ -6,10 +6,13 @@
  * \date   09/11/2026
  */
 
+#include <functional>
+
 #include <QtCore/QFileInfo>
 #include <QtCore/QLibrary>
 #include <QtCore/QTemporaryDir>
 #include <QtCore/QFile>
+#include <QtCore/QElapsedTimer>
 #include <QtTest/QtTest>
 #include <QtWidgets/QWidget>
 
@@ -30,6 +33,25 @@ namespace {
       QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     }
   }  // end of pump()
+
+  /*!
+   * \return true when the predicate holds before the timeout expires
+   *
+   * The output of a process reaches a document through the event loop, some
+   * time after the program wrote it: what a test waits for is the document,
+   * never the clock.
+   */
+  bool waitFor(const std::function<bool()> &f, int ms = 15000) {
+    QElapsedTimer clock;
+    clock.start();
+    while (clock.elapsed() < ms) {
+      if (f()) {
+        return true;
+      }
+      QTest::qWait(50);
+    }
+    return f();
+  }  // end of waitFor()
 
   /*!
    * \brief an editor of its own, shown with an empty buffer
@@ -149,6 +171,7 @@ struct TestSharedCompilationOutput : QObject {
   void aDirectorySharesNothing();
   void aBufferWithoutAMajorModeSharesNothing();
   void theTextModesShareNothing();
+  void theOutputOfACommandContinuesTheLineOfThePrompt();
 
  private:
   QTemporaryDir dir;
@@ -405,6 +428,71 @@ void TestSharedCompilationOutput::theTextModesShareNothing() {
   QCOMPARE(namesOfCategory(ed, Category::PROGRAMMING), QStringList()
                                                            << "text.cpp");
 }  // end of TestSharedCompilationOutput::theTextModesShareNothing
+
+void TestSharedCompilationOutput::
+    theOutputOfACommandContinuesTheLineOfThePrompt() {
+  // the contract of the frame itself, whatever the mode which drives it: the
+  // bytes of the pipe are appended as a *continuation* of the text, because a
+  // program ends a piece with what it has to say, not with a line break — an
+  // interpreter which wrote its `>>> ` and waits for a line has that line
+  // answered on the same row, and a cut at the read places of Qt draws the
+  // answer under the prompt, which reads as the answer being the input
+  Editor e;
+  auto& ed = e.ed;
+  auto& b = ed.getCurrentBuffer();
+  auto* const frame = new tfel::gui::ProcessOutputFrame(ed, b);
+  auto* const sh = &frame->getProcess();
+  // the pieces stand a third of a second apart: what matters is that they
+  // reach the document through distinct reads of the pipe, the third one
+  // arriving while the reader's cursor stands on the first line
+  sh->start("/bin/sh",
+            {"-c",
+             "printf '>>> '; sleep 0.3; printf 'toto\\n>>> '; "
+             "sleep 0.3; printf 'again\\n'"});
+  QVERIFY(sh->waitForStarted(5000));
+  const auto blocks = [frame]() {
+    // the document spells the end of its blocks with the paragraph separator,
+    // but a plain-text document of this Qt answers `toPlainText' with bare
+    // line feeds: what a reader cuts on has to be the one character the
+    // document of one build picks or the other
+    auto parts = frame->document()
+                     ->toPlainText()
+                     .replace(QChar(0x2029), QChar('\n'))
+                     .split(QLatin1Char('\n'));
+    for (auto i = parts.size() - 1; i >= 0; --i) {
+      if (parts.at(i).isEmpty()) {
+        parts.removeAt(i);
+      }
+    }
+    return parts;
+  };  // end of blocks()
+  QVERIFY2(waitFor([&]() { return blocks().size() >= 2; }),
+           qPrintable(blocks().join(" | ")));
+  // one exchange, not two rows: the answer stands *on* the line of its prompt,
+  // so the echo and its answer are one block, and the prompt waiting for the
+  // next line opens the block whatever is answered next will complete
+  QCOMPARE(blocks(),
+           (QStringList() << QStringLiteral(">>> toto")
+                          << QStringLiteral(">>> ")));
+  // the reader who moved the cursor into the scrollback — to jump to a file
+  // from a grep match — is not dragged to the end by the next piece, and the
+  // piece still reaches the document, at its end
+  auto c = frame->textCursor();
+  c.movePosition(QTextCursor::Start);
+  frame->setTextCursor(c);
+  QVERIFY2(waitFor(
+               [&]() {
+                 return frame->document()
+                     ->toPlainText()
+                     .contains(QStringLiteral("again"));
+               }),
+           qPrintable(blocks().join(" | ")));
+  QCOMPARE(frame->textCursor().position(), 0);
+  QCOMPARE(blocks(),
+           (QStringList() << QStringLiteral(">>> toto")
+                          << QStringLiteral(">>> again")));
+}  // end of TestSharedCompilationOutput::
+    // theOutputOfACommandContinuesTheLineOfThePrompt
 
 QTEST_MAIN(TestSharedCompilationOutput)
 

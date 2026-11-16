@@ -19,6 +19,13 @@ the amazing abilities of the [`Qt` library](https://www.qt.io/).
   go to definition and the hover provided by a
   [`clangd`](https://clangd.llvm.org) language server. See [the
   `clangd` support page](clangd-support.html) for details.
+- Editing and running `Python` files, with the diagnostics, the
+  completion, the go to definition, the rename and the formatting
+  provided by a [`pylsp`](https://python-lsp-server.readthedocs.io)
+  language server, a highlighter which reads a docstring as prose, an
+  indentation which follows the blocks of the file as `python.el` does, and
+  an interpreter the line, the region or the whole buffer are sent to. See
+  [the `Python` support page](python-support.html) for details.
 - Checking what the words of a buffer say: the spelling of a word no
   dictionary knows, and the way a sentence is written — the comments of a
   source file, a `LaTeX` document, a `Markdown` note. The proofreader is a

@@ -209,11 +209,15 @@ namespace tfel::gui {
      * append its entries, in the order the file spells them, to the overview
      * \param[out] symbols: the overview, in document order
      * \param[in] nodes: the entries of a level of the tree
-     * \param[in] scope: the names of the enclosing scopes, `::`-separated
+     * \param[in] scope: the names of the enclosing scopes, already joined by
+     * `separator`
+     * \param[in] separator: what joins a scope to the name it holds, see
+     * \c documentSymbolsOf
      */
     void collect_document_symbols(QVector<LspDocumentSymbol> &symbols,
                                   const QJsonArray &nodes,
-                                  const QString &scope) {
+                                  const QString &scope,
+                                  const QString &separator) {
       for (const auto &v : nodes) {
         const auto o = v.toObject();
         auto symbol = LspDocumentSymbol();
@@ -221,7 +225,7 @@ namespace tfel::gui {
         if (name.isEmpty()) {
           continue;
         }
-        symbol.name = scope.isEmpty() ? name : scope + "::" + name;
+        symbol.name = scope.isEmpty() ? name : scope + separator + name;
         symbol.detail = o.value("detail").toString();
         symbol.kind = o.value("kind").toInt();
         // the selection range is the name itself; the range of the whole symbol
@@ -232,13 +236,27 @@ namespace tfel::gui {
         symbol.character = start.value("character").toInt();
         symbols.append(symbol);
         collect_document_symbols(symbols, o.value("children").toArray(),
-                                 symbol.name);
+                                 symbol.name, separator);
       }
     }  // end of collect_document_symbols
 
   }  // end of anonymous namespace
 
-  QVector<LspDocumentSymbol> documentSymbolsOf(const QJsonValue &result) {
+  QString scopeSeparatorOf(const QString &language_id) {
+    // the languages which spell a qualified name with a dot: Python, and the
+    // languages of the JVM which read the same spelling. Everything the protocol
+    // otherwise names — `cpp`, the modes which send no name at all — is answered
+    // `::`, which is what the overview of a file was written with before this
+    // question existed
+    if ((language_id == QLatin1String("python")) ||
+        (language_id == QLatin1String("java"))) {
+      return QStringLiteral(".");
+    }
+    return QStringLiteral("::");
+  }  // end of scopeSeparatorOf
+
+  QVector<LspDocumentSymbol> documentSymbolsOf(
+      const QJsonValue &result, const QString &scope_separator) {
     auto symbols = QVector<LspDocumentSymbol>();
     const auto entries = result.toArray();
     if (entries.isEmpty()) {
@@ -257,7 +275,7 @@ namespace tfel::gui {
         }
         const auto container = o.value("containerName").toString();
         if (!container.isEmpty()) {
-          symbol.name = container + "::" + symbol.name;
+          symbol.name = container + scope_separator + symbol.name;
         }
         symbol.kind = o.value("kind").toInt();
         const auto start = o.value("location")
@@ -272,7 +290,7 @@ namespace tfel::gui {
       }
       return symbols;
     }
-    collect_document_symbols(symbols, entries, QString());
+    collect_document_symbols(symbols, entries, QString(), scope_separator);
     return symbols;
   }  // end of documentSymbolsOf
 

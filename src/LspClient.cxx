@@ -63,13 +63,22 @@ namespace tfel::gui {
   }  // end of endSession
 
   LspClient &LspClient::get(EditorWidget &w) {
+    return get(w, QStringLiteral("clangd"));
+  }  // end of LspClient::get
+
+  LspClient &LspClient::get(EditorWidget &w, const QString &name) {
     // by name, not just by type: the clients of the grammar checkers are
     // children of the same widget tree, and one of them is no answer to a call
     // which asks for `clangd`
-    if (auto *const c = w.findChild<LspClient *>(QLatin1String("clangd"))) {
+    if (auto *const c = w.findChild<LspClient *>(name)) {
       return *c;
     }
-    return *(new LspClient(&w, &w));
+    auto *const c = new LspClient(&w, &w);
+    // the name has to be given before anything looks the client up: a new
+    // client answers to `clangd` until it is told which server it speaks with,
+    // and a second call would find nothing and build a second one
+    c->setServerName(name);
+    return *c;
   }  // end of LspClient::get
 
   void LspClient::setServerName(const QString &name) {
@@ -81,6 +90,10 @@ namespace tfel::gui {
     this->language_id = id;
   }  // end of setLanguageId
 
+  void LspClient::setRootUri(const QString &directory) {
+    this->root_uri = directory;
+  }  // end of setRootUri
+
   void LspClient::setConfiguration(const QJsonValue &settings) {
     this->configuration = settings;
     this->connection->setConfigurationAnswer(settings);
@@ -89,6 +102,45 @@ namespace tfel::gui {
   void LspClient::setFullTextSync(const bool on) {
     this->full_text_sync = on;
   }  // end of setFullTextSync
+
+  void LspClient::setInitializationOptions(const QJsonValue &settings) {
+    this->initialization_options = settings;
+  }  // end of setInitializationOptions
+
+  bool LspClient::pushConfiguration() {
+    // a server which asks for its settings instead of listening for them reads
+    // them out of the answer of the next question, so that answer has to say
+    // what the settings are now, whether a session is running or not
+    this->connection->setConfigurationAnswer(this->configuration);
+    if (!this->isReady()) {
+      // nothing to tell: the settings were set for a session which is not
+      // running, and the handshake it starts with carries them, so this is the
+      // no case of the question, not a failure of it
+      return false;
+    }
+    // a running session is told in the ear: the settings themselves, then every
+    // document read again under them, which is what `recheckDocuments` does
+    recheckDocuments();
+    return true;
+  }  // end of pushConfiguration
+
+  void LspClient::didSaveDocument(const QString &file) {
+    syncDocument(file);
+    if (!isReady() || (!documents.contains(file))) {
+      return;
+    }
+    // `textDocument/didSave` is the only cue a server has that the file on disk
+    // says what the buffer says. A plugin which reads that file rather than the
+    // text it is handed — `pylint`, of `pylsp`, and it keeps the results it has
+    // while the buffer is dirty — reports about a saved file only, and would
+    // hold the same words forever if nothing ever said that one had been saved.
+    // The text is not sent with it: the server is reading the file the editor
+    // just wrote, and the notification means that it may
+    this->connection->notify(
+        QStringLiteral("textDocument/didSave"),
+        QJsonObject{{"textDocument",
+                     QJsonObject{{"uri", LspProtocol::uriOf(file)}}}});
+  }  // end of didSaveDocument
 
   void LspClient::recheckDocuments() {
     if (!this->isReady()) {
@@ -211,8 +263,19 @@ namespace tfel::gui {
               QJsonObject{
                   {"codeActionKind",
                    QJsonObject{
-                       {"valueSet", QJsonArray{QStringLiteral("quickfix"),
-                                               QStringLiteral("refactor")}}}}}},
+                       // the kinds of a change of the text, spelled as the
+                       // protocol spells them: a server is free to answer no
+                       // action of a kind the client did not list, so the two
+                       // `source` kinds a mode asks for on a key of its own —
+                       // sorting the imports of a file, applying every safe
+                       // fix — have to be listed for a server to answer them
+                       // at all
+                       {"valueSet",
+                        QJsonArray{QStringLiteral("quickfix"),
+                                    QStringLiteral("refactor"),
+                                    QStringLiteral("source"),
+                                    QStringLiteral("source.organizeImports"),
+                                    QStringLiteral("source.fixAll")}}}}}},
              {"isPreferredSupport", true}}},
         // the mode shows the parameter list of the call the cursor is inside
         // of, which wants the offsets of each parameter in the label of its
@@ -274,11 +337,22 @@ namespace tfel::gui {
                      {"window", QJsonObject{{"workDoneProgress", false}}}}},
         {"clientInfo", QJsonObject{{"name", QStringLiteral("tfel-editor")},
                                    {"version", QStringLiteral("1.1.0-dev")}}},
+        // what a server is configured with at the moment it is born: `pylsp`
+        // reads the plugins it runs — which linters, which formatter — out of
+        // this, and reads it *before* its first analysis, so a session which
+        // was not told would lint with its own defaults and be answered
+        // according to them. Empty for a server which configures none, which is
+        // what a C++ server and a proofreader are: they are given the settings
+        // of the editor on the questions they ask of the client
+        {"initializationOptions", this->initialization_options},
         {"processId", QCoreApplication::applicationPid()},
         // the server is left to take the working directory of the editor as its
         // root, and to look for a compilation database next to the files it is
-        // given, which is what a person editing a checkout expects
-        {"rootUri", QJsonValue()}};
+        // given, which is what a person editing a checkout expects; a client
+        // which names a root with `setRootUri` hands that directory over
+        {"rootUri", (this->root_uri.isEmpty())
+                        ? QJsonValue()
+                        : QJsonValue(LspProtocol::uriOf(this->root_uri))}};
     connection->request(
         QStringLiteral("initialize"), params,
         [this](const QJsonValue &result, const QString &error_message) {
@@ -610,7 +684,8 @@ namespace tfel::gui {
                                      const QTextDocument &doc,
                                      const int position,
                                      const int end,
-                                     const CodeActionsReply &reply) {
+                                     const CodeActionsReply &reply,
+                                     const QStringList &only) {
     syncDocument(file);
     if (!isReady() || (!documents.contains(file))) {
       reply(QVector<LspCodeAction>());
@@ -622,6 +697,18 @@ namespace tfel::gui {
     // the range, which decide what comes back
     auto context =
         QJsonObject{{"triggerKind", 1}, {"diagnostics", QJsonArray()}};
+    if (!only.isEmpty()) {
+      // the kinds the caller can use, which is how a request for the sorting of
+      // the imports of a file asks for that and nothing else. A server is free
+      // to ignore the list — `ruff` answers every action it has whatever the
+      // question named (measured) —, so a caller which wants one kind filters
+      // on the answer too
+      auto kinds = QJsonArray();
+      for (const auto &kind : only) {
+        kinds.append(kind);
+      }
+      context.insert(QStringLiteral("only"), kinds);
+    }
     auto published = QJsonArray();
     const auto it = diagnostics.constFind(file);
     if (it != diagnostics.constEnd()) {
@@ -684,8 +771,12 @@ namespace tfel::gui {
         QStringLiteral("textDocument/documentSymbol"),
         QJsonObject{
             {"textDocument", QJsonObject{{"uri", LspProtocol::uriOf(file)}}}},
-        [reply](const QJsonValue &result, const QString &) {
-          reply(documentSymbolsOf(result));
+        [reply, separator = scopeSeparatorOf(this->language_id)](
+            const QJsonValue &result, const QString &) {
+          // the answer names symbols one by one; how a qualified name of this
+          // language is spelled is the editor's decision, see
+          // `scopeSeparatorOf`
+          reply(documentSymbolsOf(result, separator));
         });
   }  // end of LspClient::requestDocumentSymbols
 
@@ -874,6 +965,49 @@ namespace tfel::gui {
           reply(parts.join(QStringLiteral("\n\n")), markdown);
         });
   }  // end of LspClient::requestHover
+
+  void LspClient::requestFormatting(const QString &file,
+                                    const QTextDocument &doc,
+                                    const int tab_size,
+                                    const bool insert_spaces,
+                                    const FormattingReply &reply) {
+    syncDocument(file);
+    if (!isReady() || (!documents.contains(file))) {
+      reply(QMap<QString, QVector<LspTextEdit>>(),
+            QStringLiteral("%1 is not answering").arg(server_name));
+      return;
+    }
+    connection->request(
+        QStringLiteral("textDocument/formatting"),
+        QJsonObject{
+            {"textDocument", QJsonObject{{"uri", LspProtocol::uriOf(file)}}},
+            {"options", QJsonObject{{"tabSize", tab_size},
+                                    {"insertSpaces", insert_spaces}}}},
+        [reply, file](const QJsonValue &result, const QString &error) {
+          // the answer is a list of edits of the one document asked about — the
+          // protocol has no workspace-wide shape for a format —, which is the
+          // map a workspace edit is read as
+          auto edits = QMap<QString, QVector<LspTextEdit>>();
+          auto of_one_file = QVector<LspTextEdit>();
+          for (const auto &v : result.toArray()) {
+            const auto edit = v.toObject();
+            const auto range = edit.value("range").toObject();
+            const auto start = range.value("start").toObject();
+            const auto end = range.value("end").toObject();
+            auto text_edit = LspTextEdit();
+            text_edit.startLine = start.value("line").toInt();
+            text_edit.startCharacter = start.value("character").toInt();
+            text_edit.endLine = end.value("line").toInt();
+            text_edit.endCharacter = end.value("character").toInt();
+            text_edit.text = edit.value("newText").toString();
+            of_one_file.append(text_edit);
+          }
+          if (!of_one_file.isEmpty()) {
+            edits.insert(file, of_one_file);
+          }
+          reply(edits, error);
+        });
+  }  // end of LspClient::requestFormatting
 
   QVector<LspDiagnostic> LspClient::diagnosticsFor(const QString &file) const {
     const auto it = diagnostics.find(file);

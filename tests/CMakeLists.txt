@@ -62,6 +62,7 @@ add_tfel_editor_test(test-castem-mode TestCastemMode.cxx)
 add_tfel_editor_test(test-shared-compilation-output
                      TestSharedCompilationOutput.cxx)
 add_tfel_editor_test(test-kill-buffer TestKillBuffer.cxx)
+add_tfel_editor_test(test-python-mode TestPythonMode.cxx)
 
 # The grammar checker is a program of its own, and the cases which ask it anything
 # are skipped when it is not installed. The library of the `LaTeX` mode is needed
@@ -112,6 +113,17 @@ add_dependencies(test-castem-mode TFELEditorCastemMode)
 target_compile_definitions(
   test-castem-mode PRIVATE
   TFEL_EDITOR_CASTEM_MODE="$<TARGET_FILE:TFELEditorCastemMode>")
+
+# The cases of `test-python-mode` drive the `Python` mode, whose class is not
+# exported: the mode is loaded as the editor loads it, and everything the cases
+# ask goes through the keys and the public API. The server the buffers talk to,
+# `pylsp`, is a program of its own installed with `pip`, so the cases which ask it
+# anything skip themselves when it is not there; the ones about the mode and its
+# faces need no server and run either way.
+add_dependencies(test-python-mode TFELEditorPythonMode)
+target_compile_definitions(
+  test-python-mode PRIVATE
+  TFEL_EDITOR_PYTHON_MODE="$<TARGET_FILE:TFELEditorPythonMode>")
 
 # The last case of `test-shared-compilation-output` asks the two text modes what
 # their category is. Those modes are plugins, and loading them registers them for

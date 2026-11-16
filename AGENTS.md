@@ -1028,6 +1028,435 @@ current. `docs/web/clangd-integration.md` keeps the same conclusion, and the one
 part of the idea that would still pay — watching the file to *report* a stale
 index, not to fix it.
 
+### One session per buffer and per server: `LspNavigationSession` (issue #135)
+
+The half of a mode which speaks the protocol is a core class of its own,
+`LspNavigationSession` (`src/LspNavigationSession.cxx`, 2019 lines), which
+`CxxMajorMode` (643 lines of clangd policy, down from 2285) and the `Python`
+mode both drive. It is a **composed `QObject` owned by the mode**, one per text
+edit — the `GrammarCheckSession` shape — not a base class of the mode: the
+questions and the answers are the protocol's, not the language's, and what a
+language adds is small enough to be a handful of overrides.
+
+A mode opts in by deriving, in the **anonymous namespace of its own `.cxx`**, a
+file-local session which answers the few questions the generic code cannot:
+
+- `menuName()` and `startCommandName()` — where a session is asked for, which is
+  what the message of a request with no session points at;
+- `declarationSupported()` — `pylsp` answers `-32601` to
+  `textDocument/declaration`, and asking a refused question per tracked word
+  makes every word the cursor rests on wait on nothing;
+- `semanticTokensWanted()` and `semanticFaceOf()` — which identifiers are asked
+  what they are and what the answer is drawn with;
+- `startSessionIfNeeded()` — the one place a mode may start something nobody
+  asked for;
+- `report()` — override for a message the generic wording cannot shape.
+
+Such a derived class has **no `Q_OBJECT`**: it declares no signal, slot or
+property of its own, and `qt_sources` mocs `<header-dir>/<name>.hxx` only, which
+a class of an anonymous namespace is not.
+
+Everything the session says and draws is keyed on the **server name** the
+constructor is given: the faces are the extra-selection keys `<name>`,
+`<name>-navigation` and `<name>-tokens`, the references menu is the object name
+`<name>-references`. That is what keeps the diagnostics of two servers, or a
+server's and a proofreader's, off one another, and it is what lets the `Python`
+mode draw under `pylsp` while every `clangd` string a test asserts on stays as
+it was.
+
+Two shape traps, both about the order things are built and destroyed:
+
+- **The constructor does not call `openOrRenameDocument()`.** That is what asks
+  `startSessionIfNeeded()`, a virtual, and a virtual call from a base
+  constructor reads the base answer — the C++ mode would never start clangd, and
+  no crash would say so. Each mode calls it as the **last statement of its own
+  constructor**.
+- **The destructor may not ask the text edit for its widget or document.** A
+  mode is destroyed as a child of the text edit, whose own `QWidget` is gone by
+  then. Hence the `QPointer<QTextDocument> document` member, and hence
+  `textEdit.widget()` is nowhere in `~LspNavigationSession`.
+
+The client is found through `LspClient::get(EditorWidget &, name)`: one client
+per editor widget **and per server**, since a `C++` buffer holds clangd and a
+proofreader at once. A *stop* uses `editor.findChild<LspClient *>(name)` instead
+of `get`, which would build the client of a server nobody ever started.
+
+`tests/TestLspClient.cxx` is the acceptance test of the extraction: every clangd
+behaviour the mode used to hold itself must answer the same through the session.
+
+### A whole-document edit is applied where it differs (issue #135)
+
+`jedi` renames a symbol by answering `textDocument/rename` with **one edit whose
+range is the whole file**, and `autopep8` reformats it the same way through
+`textDocument/formatting`. Applying such an answer as it comes is right and
+wasteful: the cursor goes to the end of the file, the buffer reads as modified
+down to its last line, and two letters changed is reported as one edit of a
+thousand. `documentChangesOf`, in the anonymous namespace of
+`src/LspNavigationSession.cxx`, is the one place that decides the shape of every
+edit of an `applyWorkspaceEdit`, and the rule is:
+
+- a range which does **not** name the whole document is applied as it came —
+  which is the shape of every clangd rename and every quick fix;
+- otherwise the text the two answers hold in common at their **ends** goes first
+  (`common_prefix` / `common_suffix`), and what is left is compared line by
+  line: when the old and the new text have the same number of lines, each
+  differing line becomes its own edit, trimmed to what differs within it, so the
+  text *between* the changed lines — which the answer repeats for nothing — is
+  left where it is;
+- when the line counts disagree, one edit is what it stays, trimmed at the ends;
+- when the trimmed texts are both empty, the answer says what the text already
+  says: **no edit at all**, which is what lets `formatDocument()` answer false
+  and the mode stay silent on an already-formatted buffer.
+
+Positions are the reason this is expressible at all: the places of a document and
+the indices of its `toPlainText()` are the same numbers, because a block separator
+is one character in both and no block of the editor holds a character
+`toPlainText` would write as more than one — the invariant
+`normalizeLineSeparators` keeps.
+
+### The overview names a symbol the way its language spells it (issue #135)
+
+`LspProtocol::scopeSeparatorOf(languageId)` answers `.` for `python` and the
+languages of the JVM and `::` for everything else, the empty name included —
+which is what the `C++` mode sends, so its overview is untouched.
+`documentSymbolsOf(result, separator)` takes it, and `LspClient::requestDocumentSymbols`
+captures it from the client's own `language_id` when the question goes out. A
+reader who copies `Widget.paint` out of the list pastes something Python reads,
+and `Widget::paint` is nothing of that language.
+
+**Both branches are qualified**, not only the tree: `pylsp` ignores
+`hierarchicalDocumentSymbolSupport` and answers the flat `SymbolInformation`
+list, whose `containerName` is filled, so the flat branch is where the Python
+overview is made.
+
+### The Python mode starts its server with the file (issue #135)
+
+The policy is the opposite of clangd's, and the reason is what the server needs:
+`pylsp` requires no compilation database to say what a name is, so there is no
+project to find first and no choice to make — a file of the language is enough.
+`PythonNavigationSession::startSessionIfNeeded` therefore starts a session when
+three things hold: the buffer visits a file (`*scratch*` and a process output are
+none of the server's business — the protocol identifies documents by name),
+`pylsp/start-by-default` (read on **every call**, so turning it off reaches the
+next file opened with no restart), and `client().isIdle()` (the root a session
+reads is chosen when it starts, and a buffer of another project is none to
+replace what somebody is working with). The client is told
+`setLanguageId("python")` and `setRootUri(<directory of that file>)`, and the
+report names what it reads: `pylsp started with project root <dir>`.
+
+Three string contracts tests assert on: `pylsp started with project root %1` for
+the automatic session, `pylsp restarted` when a session was running and the menu
+replaced it (`LspClient::launch` ends the running one and re-sends every document
+after the new handshake), and `pylsp stopped` / `pylsp is not started` for
+`stopPylsp`. A program which is not to be found is reported **once per mode**
+(`auto_start_failure_reported`) — the mistake is in the settings and every buffer
+of the project would repeat the line — while `Start pylsp` says it as often as it
+is asked. Requests never start a session, `Alt-Q` included: `PythonMajorMode::format`
+reports `pylsp is not started: …` **only** when the client `isIdle()`, because an
+already-formatted buffer is the common answer of that key and a message per press
+would make it unusable.
+
+### What `pylsp` answers, measured (issue #135)
+
+All of it read off `pylsp` 1.15.0 by hand in `/tmp/opencode/pylsp/`:
+
+- the handshake takes ~0.6 s and `textDocument/documentSymbol` is answered ~0.1 s
+  after it; `textDocumentSync` says `{change: 2}`;
+- `textDocument/declaration` is refused with `-32601`, the semantic tokens
+  provider is absent, and `textDocument/codeAction` answers the empty list — which
+  is why the three clangd features those answers feed (the declaration half of a
+  jump, the identifier colors, the `Fix:` entries of the menu) are asked of nobody
+  here, rather than asked and found empty on every buffer;
+- `textDocument/formatting` answers `[]` for a file which is already formatted;
+- the `autopep8` plugin fixes the spacing after a comma and around a parenthesis
+  and **not** `a+b` — `E226` is in its default-ignored list — so a test of the
+  format key formats `f(a,b)`, not `a+b`;
+- `jedi`, the completion library behind it, is what answers a rename as one
+  rewrite of the whole file, see the narrowing above.
+
+### The Python highlighter is a scanner, not a list of regular expressions (issue #135)
+
+`PythonSyntaxHighlighter` walks each block itself, because three decisions of
+this language are not matchable:
+
+- **A docstring is prose, the same three quotes elsewhere is a literal.** What
+  decides is `opens_a_statement(previous)`: walk the blocks back over the blanks
+  and the `#`-only lines, and the first statement above the line says whether the
+  string which opens the body of a `def`, a `class` or the module is prose.
+  **Block states** carry that across lines: `0` is nothing open, `1`/`2` are an
+  open `'''`/`"""` literal, `3`/`4` the same open as a docstring, which is why the
+  state names both the quote and the reading. A `previousBlockState()` outside
+  `0..4` is treated as `0`.
+- **A string prefix is part of the token**: at most two letters of `rRbBuUfF` and
+  a quote right after them, which is what tells `f"…"` from the tail of a name
+  ending in `f`. Inside the literal a backslash hides the next character **in the
+  raw forms too** (`r"\""` is a two-character string), and inside a triple-quoted
+  one a run of one or two quotes is prose and is walked over.
+- **A decorator is a statement.** An `@` at the start of a line is a decorator,
+  the same character mid-line is an operator and is left alone.
+
+The soft keywords — `match`, `case`, `type` — are deliberately **not** in the
+keyword set: coloring them by name inks over the variable a great many files call
+`case`. Faces: keywords dark magenta bold, strings dark green, docstrings dark
+green italic, numbers, comments and `True`/`False`/`None` dark red (the comment
+lightened), builtins, decorator and the name a `def` introduces dark cyan, the
+name a `class` introduces dark blue bold.
+
+### Test traps of the Python mode (issue #135)
+
+`tests/TestPythonMode.cxx` is the fourteenth executable; what it costs to test a
+mode whose class is not exported:
+
+- the mode is loaded **as a plugin**: `TFEL_EDITOR_PYTHON_MODE` is a
+  `target_compile_definitions` holding `$<TARGET_FILE:TFELEditorPythonMode>`,
+  with `add_dependencies`, and the case `QSKIP`s when `QLibrary::load` fails. Such
+  a load registers the mode for the rest of the run — the rule `TestSettings`
+  carries for `castem`; no other suite is affected because each test is its own
+  executable;
+- the faces of a highlighter are invisible to `charFormat` and to
+  `extraSelections()` (see "Auditing a mode without a test suite"), so
+  `countFaces` classifies the pixels of `widget()->grab()` by the shape of their
+  colour — the channels which stand for a face well above the third — which tells
+  the five faces apart and leaves black text, its antialiasing and the band of the
+  current line alone. **A zero-control is what makes that evidence**: a second
+  buffer of the same mode holding `qqqq qqqq` must count 0 of every face, or the
+  counts say nothing about the highlighter. `block.userState() != -1` is how a
+  test waits for "the highlighter has been through here";
+- the answers the `MajorMode` interface does not declare, `getCommentSyntax`
+  among them, are reached by casting the mode to the **exported base which
+  declares them**: `qobject_cast<MajorModeBase *>(mode)`;
+- `isolateSettings()` writes `pylsp/start-by-default=false` **and removes
+  `Python/compilation/history`**: the `Alt-m` prefill is the last answer, not the
+  default, and a case asserting the prefill is `python3 <name>` is answered by the
+  previous case otherwise. `cleanup()` re-applies the isolation, as a case which
+  failed on its way out would leave the switch on;
+- `pylsp` is a `pip` program, not one this machine is owed: `hasServer()` is
+  `QStandardPaths::findExecutable("pylsp")` non-empty, and every case which asks
+  it something skips otherwise (which is why `hasServer` is a plain predicate —
+  `QSKIP` only leaves the function it is written in, so a helper cannot skip for
+  its caller). Running the suite by hand needs `PATH` to hold the `bin` directory
+  `pip install --user` wrote to;
+- the live minibuffer question is found the `TestLspClient` way — `CommandLine` by
+  objectName (`rename-symbol`, `go-to-symbol`) which is **still laid out** — and
+  answered with `lineEditOf(q)->setText(…)` plus `q->userEditingFinished()`.
+
+The ABI of `CxxMajorMode` changed with the extraction (its members moved to the
+session), so a probe or a packaged mode built against the old layout is a crash
+far from the cause: rebuild the whole tree, not `--target TFELEditor`.
+
+### The Tab key walks the levels `python.el` computes (issue #135)
+
+The indentation of the language is a model of `python-indent-line-function` of
+`python.el`, **GNU Emacs 27.1**, measured press by press against the real thing:
+`/tmp/opencode/pylsp2/indent28.el` drives `emacs -Q --batch` on the extracted
+`python.el` of this machine and writes the cycles of fourteen shapes, which
+`/tmp/opencode/pylsp2/c28.txt` holds the engine answering the same shapes in
+C++ next to. A cycle is not a thing a description pins down; the numbers are the
+specification, and where the two lists differ the mode is wrong.
+
+Two questions are answered for a line, as by the real function: which
+indentation the file above allows it (`proper`, by the order the contexts are
+tried, in the header comment of the engine, `PythonMajorMode.cxx:755`), and which
+levels a run of presses walks it through (`Indentation::levels`). The rule of the
+presses:
+
+- a fresh press puts the line at `max(levels)`; each further press takes it to
+  the highest level **strictly below** the place it holds; the press which sits
+  at the lowest level goes back to `max(levels)`. So the cycle length is the
+  number of levels and the first shape of the user's report,
+  `print / if True: / if False: / print`, answers `8 4 0 8` from *whatever*
+  indentation its last line started at;
+- for a plain `proper`, the levels are the multiples of the level under it plus
+  `proper` itself (`ladderLevels`), which is how a continuation line of
+  `def f(a,` gets `6 4 0`: 6 is right behind the bracket, and is no multiple of
+  four;
+- a dedenter carries its own levels, the indentations of the blocks it closes,
+  and they are nowhere near a ladder. Measured: an `else` whose `if` is the body
+  of an `if` whose body already holds a line answers `4 4 4 4` (no press moves a
+  line already where the language puts it), an `else` of three nested `if`s
+  answers `8 4 0 8`, a line after the `return` of the block above answers
+  `0 0 0 0`;
+- a press continues the cycle only when it finds the line the previous press
+  indented standing at the place that press gave it — hence the members
+  `cycle_document`, `cycle_block`, `cycle_target`, and hence a fresh buffer per
+  shape in a test: a reused buffer inherits the cycle of the run before it.
+
+`Shift-Tab` is **the mode's own key**: 27.1 binds no `S-TAB` and has no
+`python-indent-shift-backwards`, so its behaviour is designed on the measured
+ladder — highest level below the current place, and it *stops* at the lowest
+level instead of wrapping, since a key which wrapped would put the line back in
+the block the other key takes it out of. It is claimed in
+`PythonMajorMode::keyPressEvent` before the text edit binds it to completing the
+previous item; completion is `Alt-Tab` here. With a selection over more than one
+line both keys call `shiftRegion` (one level right, one level left): the lines
+are **moved**, not reindented, and a blank line of the region is left blank —
+an empty line is how two functions are separated in this language. A selection
+inside one line is no region and falls back to `indentLine`.
+
+Three traps, all paid for:
+
+- **`QTest::keyClick` is overloaded on `char`, and an `int` key argument selects
+  that overload.** It maps its argument through `QTest::asciiToKey`, which
+  asserts on `Qt::Key_Tab`: `ASSERT: "false" in file ./src/testlib/qasciikey.cpp,
+  line 228`, in the *test*, not in the mode. What makes it costly is that
+  `build_probe.sh` compiles with `-DQT_NO_DEBUG`, where that assert is simply not
+  there and the answer is the key `0`: a press which does nothing at all, so the
+  hand-built probe which reproduced the report read "the engine never indents"
+  while the suite died on the first press. The parameters of a helper which
+  presses keys are `Qt::Key`, never `int`, and its comment says why.
+- A case which asserts that a **single-line selection indents its line** needs a
+  line with somewhere to go: the top lines of the shapes of the ladder all answer
+  `0 0 0 0`, so on them the assertion holds whatever the key does. `def f():` +
+  `q` in a buffer of its own is what gives the line a level to reach.
+- The mark which `shiftRegion` restores around the move **leaves no selection
+  behind**, so a test which presses the key twice has to select the region again
+  before each press.
+
+### The Python interpreter session, and the two shapes of a send (issue #135)
+
+`Ctrl-C Ctrl-L` / `Ctrl-C Ctrl-R` / `Ctrl-C Ctrl-B` send the line, the region and
+the buffer to an interpreter, modelled on `CastemMajorMode::startCastem` (read
+that pair of sections first, the shape is shared): a `ProcessInteractionFrame`
+with `WA_DeleteOnClose`, a `destroyed` connection which forgets the frame only if
+it is still that very frame, a write guard of `!= QProcess::NotRunning`, the text
+of the block taken with `block().text()`, the bytes handed over as `toUtf8`, and
+an `errorOccurred` handler connected *before* `attachSecondaryTask` which names
+the program on `FailedToStart` and takes the frame away through
+`detachPythonFrame`. The frame is titled `Python Output` and gets no
+`setMajorMode`. The program is `python/executable`, started `-i -u` in the
+directory of the file.
+
+Numbers and shapes, all measured over a pipe (`/tmp/opencode/pylsp2/probe*.cxx`):
+
+- `-i` keeps the interpreter up after what it was handed; without it the line
+  which started the session is the whole session. `-u` is what lets the banner
+  and the `>>> ` prompts reach the frame as they are made: without it the frame
+  reads as empty while the interpreter has been answering for a while. An error
+  inside what is sent does **not** end an `-i` process, which is what a session
+  wants: a traceback is an answer, not a reason to close the page.
+- **A line is written as it stands, plus an empty line when it opens a block**
+  (`sendStatement`, the same extra line Emacs sends); a text of several lines is
+  written to a `QTemporaryFile` and executed from it,
+  `exec(compile(open(<path>, encoding='utf-8').read(), <path>, 'exec'))`, because
+  the interactive parser ends an indented block at an empty line and a function
+  whose body holds a blank line comes back as `IndentationError` when written as
+  text. Two defects of that route hid as "the keys do nothing", and both were
+  found by hand, not by reading: the path was written **unquoted**, so the
+  interpreter read `open(/tmp/x.py, …)` — the division of a name by two names, a
+  `SyntaxError` — and the two parentheses which close `exec` and `compile` were
+  missing, which is not an error it prints and forgets but a line it waits for
+  the end of: the parser goes into continuation mode, the frame shows `...`, and
+  every send after it is swallowed as the tail of that one.
+- **The three keys are claimed whatever the outcome.** `handleShortCut` returns
+  the value of the send in the Cast3M mode, which is how an interpreter which was
+  simply not started became `unknown shortcut : Ctr-C - L`, a report about the
+  key bindings of the editor for a problem of a path. The Python mode claims the
+  keys outright and lets the slots report.
+
+Two facts of the settings, both asserted by a test:
+
+- the **declared default of `python/executable` is `python3`**, through the
+  constant `default_python_interpreter` that `pythonInterpreter()` falls back to,
+  as `castem/executable` does: the field shows the program the mode would run and
+  an answer equal to it is removed from the file instead of stored. With an empty
+  declared default, `theToolsOfTheDialogChooseRuffAndNoHistory` fails on
+  `program.default_value`;
+- the two `.../history` addresses the `Format with` and `Sort imports with`
+  questions write (`pylsp/formatter/history`, `pylsp/import-sorter/history`) are
+  deliberately **not** declared entries, the rule the configuration dialog
+  carries.
+
+### The transcript of a session shows the sends at their prompts (issue #135)
+
+A `QProcess` pipe is not a terminal: `python3 -i -u` echoes nothing, writes its
+`>>> ` without a line break *before* reading the line, and answers each send in
+one piece shaped `<answer>\n>>> ` (all measured over a pipe,
+`/tmp/opencode/pylsp2/stream.cxx`, `prompt.cxx`). Left to itself the frame shows
+`>>> toto` — the answer behind the prompt of the line it answers — with the sent
+line nowhere, the report's two symptoms. `ProcessOutputFrame::displayProcessOutput`
+therefore appends with a `QTextCursor` at `End` and not `appendPlainText`, which
+forces a new paragraph whatever came before and can never continue the prompt's
+line (a `follows = c.atEnd()` test keeps a reader who clicked into the scrollback
+— the grep mode navigates through `textCursor()` — from being dragged to the end
+by the next chunk; the frame's other consumers write nothing but process bytes).
+
+And the mode, not the frame, owns the conversation: `sendToPython` no longer
+writes — it queues a `PythonSend{text, whole_block}` and
+`PythonMajorMode::flushPythonSends` hands one send to the interpreter per prompt,
+writing `echoed(text)` at the end of the document (`insertBlock` between lines,
+never a `\n` into `insertText`) *before* the bytes. Prompt-gating the **bytes**
+is what makes the first send right: the banner and the answer of the first line
+can share one read of the pipe, so a line written at once was answered before any
+echo could be placed (`>>> toto` with the echo below it, measured). The temp file
+of the whole-block route is written at the flush, not at the enqueue — two queued
+sends share the file, and text written at the enqueue would be what the first
+exec line reads. `ends_at_prompt` accepts `>>>` and `...` with trailing spaces
+stripped; a program which prompts otherwise (an `In [1]:` shell) never reads the
+queue, the same trade `comint` makes.
+
+The connection trap, paid for in full: `displayProcessOutput` **disconnects and
+reconnects itself on every chunk**, which moves its own connection to the *back*
+of the signal's slot list — a directly connected judge added after the frame's
+constructor runs *before* the text is appended on every chunk after the first,
+and no send was ever placed (the flush log named the guard: "no prompt, last
+block `\"\"`" while the banner sat on screen). The flush connection is
+`Qt::QueuedConnection` instead, which is correct and not merely enough: a flush
+then always runs after `displayProcessOutput` of its chunk, and nothing can be
+in flight from the interpreter that a flush did not itself write, because the
+bytes wait behind the same prompt as the echo.
+
+The frame half of that fix is invisible to the Python transcript test — the
+mode's echo always ends its own line, so `appendPlainText` and the cursor
+append build the same document when every chunk boundary lands at a line break
+(a verified mutant of `displayProcessOutput` passed the transcript case). What
+pins the contract itself is
+`TestSharedCompilationOutput::theOutputOfACommandContinuesTheLineOfThePrompt`:
+a `sh -c` which writes `>>> `, waits, writes `toto\n>>> `, waits, writes
+`again\n` — and the assertions say the first two pieces are **one** block
+(`>>> toto`), that the reader who parked its cursor at `Start` is not dragged
+by the third piece, and that the third piece still completes the prompt's line
+(`>>> again`). Mutating the frame to `appendPlainText` fires it (3 blocks where
+2 were asked). Two traps of writing that case:
+
+- `QCoreApplication::processEvents()` **never delivers the bytes of a pipe** —
+  `QProcess` reads through a socket notifier, and plain event pumping does not
+  expire it: a wait loop built on `pump()` saw an empty document for the whole
+  timeout while `framedump` (the same shape, probing) showed every piece. What
+  works is `QTest::qWait`, which runs socket events — the `waitFor` helper of
+  that suite. (`waitForReadyRead` would expire the notifier too, but it spins
+  its own loop inside the slot and re-enters whatever judges the test connected.)
+- the reader of a frame's document cuts on **both** separators: this Qt 6.2
+  answers `document()->toPlainText()` of a plain-text-edit with bare `\n`
+  between the blocks, no U+2029 at all (a code-point scan of the whole text is
+  pure ASCII, `/tmp/opencode/pylsp2/framedump.cxx`), while other readings of
+  these documents spell the end of a block with U+2029 — `replace(0x2029, '\n')`
+  then `split('\n')` is what `receivedLines` of the Cast3M test already does and
+  what the frame case copies.
+
+### Test traps of the interpreter (issue #135)
+
+- A file which ends with a newline gives the document an **empty last block**, so
+  `movePosition(End)` then `StartOfBlock` puts the cursor on that empty block:
+  the send reaches the interpreter as an empty line, the frame gains one more
+  `>>> ` and nothing else, and the case reads as a session which is up and answers
+  nothing. The line is looked for by its **block number** and the text found there
+  is asserted before it is sent.
+- The text of the session is `qobject_cast<QPlainTextEdit *>(frame->widget())
+  ->toPlainText()`: `ProcessInteractionFrame` is a frame of the editor, not a text
+  edit, and `out->toPlainText()` does not exist.
+- `QTest::keyClick(frame.widget(), …)` reaches `indentLine` and `handleShortCut`
+  of the mode, and a report is waited for with the `RecordingEditor`'s
+  `told(…)`: `FailedToStart` arrives through the event loop, some ten
+  milliseconds after `start()` returned.
+- The three cases about the tools of the language —
+  `theMenuOffersTheToolsOfTheLanguage`,
+  `theToolsOfTheDialogChooseRuffAndNoHistory`,
+  `theFormatterChoiceDecidesWhoAnswers` — failed once together on a shared
+  `~/.config/tfel-editor-tests/test-python-mode.conf` of 77 KB and were green
+  again with the declared default above in place. If they fail in a group again,
+  re-run with `XDG_CONFIG_HOME=/tmp/opencode/pylsp2/cfg` before believing the
+  mode.
+
 ### The configuration dialog: entries are declared, never discovered (issue #127)
 
 `Options > Configuration` and `configure-tfel-editor` open a dialog built from
@@ -1304,6 +1733,46 @@ else and its submenu is expanded, a title changes no page, a caption names the m
 and only mode pages have one), and `theDialogShowsWhatIsDeclared` reads the themes as
 the **selectable** items of a depth-first walk (`readList`) — `getGroupsNames()` and
 `pages->count()` both disagree with `themes->topLevelItemCount()` now.
+
+### The check box of an entry stands at the end of the line of its name (issue #127)
+
+A boolean is a question with a yes or no answer, and a page of them is read as
+a list, so the name and the box stand on **one line** and the boxes of a theme
+stand in **one column**: `form->addRow(row)` with a spanning `QWidget` whose
+`QHBoxLayout` (margins 0) holds the name, then the box `Qt::AlignVCenter`, then
+a stretch. Every other kind keeps `WrapAllRows`, the name above a field the
+width of the page, because two columns starve the path of a program (187 px on
+the `clangd` page).
+
+- **A `QLabel` of a `QHBoxLayout` is stretched** to what the box leaves, so
+  without a pin the *widest label of the whole page* decides where every box of
+  the theme stands: a two-word name had its box 421 px away because a neighbour
+  names a `compile_commands.json`. The column is therefore
+  `max(sizeHint().width())` over the labels whose entry is a `BOOLEAN`, applied
+  as `setMinimumWidth` to each of them, which pins a label to the width of the
+  longest name a box answers. Measured: `clangd` 3 boxes at x=430 offscreen and
+  465 on `DISPLAY=:98` with metacity (page 476 px), `pylsp` 9 boxes at 257 and
+  278.
+- The labels are built by a **first loop over the entries**, before the fields,
+  since the column has to be known while the first row is laid out; the rows are
+  then built by a second loop which walks `labels` with `next_label` — `held` is
+  the tree item of the surrounding lambda.
+- `l->setBuddy(e)` names the `QCheckBox` itself, which is what makes a click on
+  the name toggle the box; `Field::widget` stays the box, so `valueOf`,
+  `setValueOf` and `restoreDefaults` read and write it as they did.
+- `TestSettings::theCheckBoxesOfAThemeStandInOneColumnOnTheirOwnLine` holds both
+  halves, and both were found by mutating the layout: `addRow(l, e)` for a
+  boolean fires the line assertion (and fires it on the *caption* three rows
+  above, since the box's parent is then the page and `findChild<QLabel*>` answers
+  its first label), and dropping `setMinimumWidth` fires the column assertion at
+  `x=430` against `x=137`.
+- Only the **shown** page has a geometry, so the test and the probe switch pages
+  (`setCurrentIndex`, or `setCurrentItem` on the list) and pump events. The
+  probe is `/tmp/opencode/pylsp2/boxes.cxx`, and it loads the built `.so` files
+  itself: `EditorWidget` reads no `TFEL_EDITOR_LOAD_PATH` — that is the
+  executable's — so a probe which does not `QLibrary::load` sees no `pylsp`
+  theme, which is nine of the twelve boxes, and a run of three boxes reads as
+  clean.
 
 ### The proofreader of a buffer: one choice, two programs (`harper-ls`, LanguageTool)
 
@@ -1695,6 +2164,17 @@ Modes also read runtime env vars for their example galleries: `MFMHOME`,
   `BinPackParameters: false`. Run `clang-format` on changed files only —
   `clang-format.sh` reformats every `*xx` under the cwd, including the vendored
   `include/TFEL/GUI/utf8/` copy.
+- **`clang-format` (the installed 14) joins a Doxygen block into one paragraph**:
+  the `\brief` line and the `\param`/`\note` lines under it come back as a single
+  run of prose, because `ReflowComments` is on by default and the tree's
+  `.clang-format` does not set it. The committed files of the recent issues keep
+  those blocks on their own lines and are not clean under the tool either —
+  `src/GrammarCheckSession.cxx` differs by 148 lines, `tests/TestGrammarCheck.cxx`
+  by 328 — so running it on a new file gives a file whose comments have a shape the
+  rest of the branch does not use. Hand-wrap the comments, keep the code lines
+  within 80 columns, and read a wrap back: wrapping the first argument of a
+  `connection->request(…)` once gave the call a JSON object where its method name
+  belongs, which the compiler caught and the eye had not.
 - `docs/` is the GitHub Pages source (jekyll `tactile` theme); `.md` files link
   to `.html` outputs and use pandoc fenced blocks (```` ~~~~{.bash} ````).
 - `QWebEngineViewWrapper.cxx` is dead code: the `WebEngine` `find_package` is

@@ -17,7 +17,26 @@ to the main frame of a buffer or to secondary tasks derived from
 - `Ctrl-X+Ctrl-C`: close `tfel-editor`
 - `Ctrl-X+Ctrl-W`: save the current frame as new file. TODO: if a
   secondary task, turn it into a new frame in a new buffer.
+- `Ctrl-C+Ctrl-C`: save the current frame. `Ctrl-C` is the prefix a
+  major mode uses for its own second keys and no mode asks for this one.
 
+# The `Ctrl-C` prefix
+
+The keys which follow `Ctrl-C` belong to the major mode of the buffer, and
+a mode which claims one of them says what went wrong itself when it can
+not do what the key asks. The modes which bind that prefix are the two
+which talk to an interpreter of their own, and they use the same three
+keys:
+
+- `Ctrl-C+Ctrl-L`: send the line the cursor stands on to the interpreter,
+  of the `Python` mode or of the `Cast3M` mode.
+- `Ctrl-C+Ctrl-R`: send the selected region to that interpreter.
+- `Ctrl-C+Ctrl-B`: send the whole buffer to that interpreter.
+
+What the interpreter answers is shown in a secondary task of the buffer.
+See [the `Python` support page](python-support.html) and
+[the configuration page](configuration.html), which tells what the `Cast3M`
+mode launches.
 
 # Display
 
