@@ -421,12 +421,48 @@ namespace tfel::gui {
       form->setRowWrapPolicy(QFormLayout::WrapAllRows);
       form->setLabelAlignment(Qt::AlignLeft | Qt::AlignTop);
       form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+      // The names are made before the fields, and the longest of the names which
+      // are answered by a check box is measured with them: every check box of the
+      // theme stands at the end of the line of the name it answers, in one column
+      // shared by the whole theme. A box under the name it belongs to reads as an
+      // orphan, and boxes placed at the end of each name of its own make a ragged
+      // edge which is not read as the list of yes and no questions it is.
+      auto labels = QVector<QLabel *>{};
+      labels.reserve(g.keys.size());
+      auto column = 0;
+      for (const auto &k : g.keys) {
+        auto *const l = new QLabel(k.label, page);
+        l->setToolTip(k.description);
+        if (k.type == SettingsKey::BOOLEAN) {
+          column = qMax(column, l->sizeHint().width());
+        }
+        labels.append(l);
+      }
+      auto next_label = labels.cbegin();
       for (const auto &k : g.keys) {
         auto *const e = buildEditor(k, page);
         e->setToolTip(k.description);
-        auto *const l = new QLabel(k.label, page);
-        l->setToolTip(k.description);
-        form->addRow(l, e);
+        auto *const l = *next_label;
+        ++next_label;
+        if (k.type == SettingsKey::BOOLEAN) {
+          // one line for the name and its box, the name held to the width of the
+          // longest name of the theme so the boxes of the theme line up; the
+          // stretch after the box keeps the name from being asked for the whole
+          // width of the page, which is what the other rows of the form do
+          auto *const row = new QWidget(page);
+          auto *const rl = new QHBoxLayout(row);
+          rl->setContentsMargins(0, 0, 0, 0);
+          l->setMinimumWidth(column);
+          // clicking the name toggles the box, which is what a line whose two
+          // halves are one question is worth
+          l->setBuddy(e);
+          rl->addWidget(l);
+          rl->addWidget(e, 0, Qt::AlignVCenter);
+          rl->addStretch(1);
+          form->addRow(row);
+        } else {
+          form->addRow(l, e);
+        }
         this->fields.push_back({k, e});
       }
       pl->addLayout(form);

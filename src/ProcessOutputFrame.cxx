@@ -6,9 +6,11 @@
  */
 
 #include <QtCore/QDebug>
+#include <QtGui/QTextCursor>
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/ProcessOutputMajorModeBase.hxx"
 #include "TFEL/GUI/ProcessOutputFrame.hxx"
+#include "TFEL/GUI/Utilities.hxx"
 
 namespace tfel::gui {
 
@@ -31,7 +33,24 @@ namespace tfel::gui {
     QObject::disconnect(this->process, &QProcess::readyReadStandardOutput, this,
                         &ProcessOutputFrame::displayProcessOutput);
     auto out = this->process->readAll();
-    this->appendPlainText(out);
+    // the bytes are appended as a *continuation* of the text, never as a new
+    // paragraph. A program writes what it has to say and the places Qt reads the
+    // pipe are none of its business: a program which ends a piece with something
+    // which has no line break — an interpreter which wrote its `>>> ' and waits
+    // for a line — says of that line that what comes next belongs to it. Cutting
+    // a paragraph there moves the answer of the next thing sent to a line of its
+    // own, under the prompt, which reads as the answer being the input.
+    // `appendPlainText' is a new paragraph whatever the text before ends with.
+    auto c = this->textCursor();
+    // a reader who moved the cursor to a line of the output, to jump to a file
+    // from a grep match for instance, is not dragged to the end by the next
+    // piece; a reader whom the end of the output had on screen keeps having it
+    const auto follows = c.atEnd();
+    c.movePosition(QTextCursor::End);
+    c.insertText(normalizeLineSeparators(QString::fromUtf8(out)));
+    if (follows) {
+      this->setTextCursor(c);
+    }
     QObject::connect(this->process, &QProcess::readyReadStandardOutput, this,
                      &ProcessOutputFrame::displayProcessOutput);
   }  // end of displayProcessOutput

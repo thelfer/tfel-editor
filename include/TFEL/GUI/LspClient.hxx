@@ -87,6 +87,20 @@ namespace tfel::gui {
      */
     static LspClient &get(EditorWidget &);
     /*!
+     * \return the client of the given server held by the given editor widget,
+     * creating it as a child of that widget on the first call
+     * \param[in] name : the name of the server, which is both what the messages
+     * of the conversation call it and the object name the search goes by; the
+     * one client of \c clangd is what the no-argument \c get answers
+     *
+     * \note one client per editor widget and per server: several buffers of one
+     * kind talk to a single server, which is what a server with a shared index
+     * or a shared project expects, and the two kinds of servers an editor may
+     * drive at once — the one of a programming language and the one which reads
+     * prose — are kept apart by that name
+     */
+    static LspClient &get(EditorWidget &, const QString &name);
+    /*!
      * \brief say what server this client speaks with: the name the
      * minibuffer messages of the conversation name, and the object name the
      * widget finds it by
@@ -101,6 +115,18 @@ namespace tfel::gui {
      * otherwise
      */
     void setLanguageId(const QString &id);
+    /*!
+     * \brief name the directory the server takes as the root of the project it
+     * reads, which is what a server looking for a project file, a configuration
+     * file or sources to complete starts from
+     * \param[in] directory : the directory itself; empty, the default, leaves
+     * the server to take the working directory of the editor as its root, which
+     * is what a person editing a checkout expects from `clangd`
+     *
+     * \note read when the session starts, like the arguments: a root decided
+     * after the handshake is a root the server has not been told about
+     */
+    void setRootUri(const QString &directory);
     /*!
      * \brief answer the settings the server asks for with \c settings
      * \param[in] settings : what a `workspace/configuration` question gets
@@ -128,6 +154,46 @@ namespace tfel::gui {
      * it stays set across the sessions of one client
      */
     void setFullTextSync(bool on);
+    /*!
+     * \brief hand the server its settings at the handshake itself
+     * \param[in] settings : the `initializationOptions` of the protocol, in the
+     * shape the server reads them
+     *
+     * \note a server which reads its configuration out of the handshake —
+     * `pylsp`, which decides from it which linters and which formatter it runs
+     * — reads it *before* its first analysis: a session which is only told
+     * afterwards answers its first lint with its own defaults. `clangd` and the
+     * proofreaders are given nothing here, since they read the settings of the
+     * editor out of the questions they ask of the client instead, and a server
+     * which is given neither is handed a null and reads nothing
+     */
+    void setInitializationOptions(const QJsonValue &settings);
+    /*!
+     * \brief hand the settings of \c setConfiguration to a session which is
+     * already running, and its documents to read again
+     * \return true when a session was up to be told
+     *
+     * \note the way to apply a choice the user just made without ending the
+     * session which answers under it: the answer of a server which is up and
+     * told is what the buffer is underlined with, and waiting for the next
+     * key to see what a menu entry just decided is a long wait
+     *
+     * \note false with no session running is no failure: the settings were set
+     * for the session which is yet to start, and its handshake carries them
+     */
+    bool pushConfiguration();
+    /*!
+     * \brief tell the server the file was written to disk, so that what it
+     * reads of the file is what the buffer says
+     * \param[in] file : the file the document visits, under the name the
+     * server knows it by
+     *
+     * \note a linter which runs the program of its own name over the file —
+     * `pylint`, of `pylsp` — reads no text at all and reports about a saved
+     * file only: it keeps the results it had while the buffer was dirty, so
+     * nothing but this says them stale
+     */
+    void didSaveDocument(const QString &file);
     /*!
      * \brief tell the server that its settings changed and send it the whole
      * text of every document it holds again, so that what it says of them
@@ -327,17 +393,25 @@ namespace tfel::gui {
      * \param[in] position: first offset of the range
      * \param[in] end: past the last offset of the range; the same as
      * \c position when the question is about the cursor, not about a selection
+     * \param[in] only: the kinds of change the caller can use, empty to ask
+     * what the server has to offer; the protocol calls them `context/only`
      *
      * \note the diagnostics the client holds for the file are handed to the
      * question: `clangd` answers the fixes of the diagnostics it is *given*,
      * not those it happens to have computed, and returns nothing at all when
      * the context is empty
+     *
+     * \note a server is bound by the list of kinds no more than it is bound by
+     * the range: `ruff`, of `pylsp`, answers every change it knows whatever the
+     * question names (measured), so a caller which wants one kind of change has
+     * to pick it out of the answer too
      */
     void requestCodeActions(const QString &file,
                             const QTextDocument &,
                             int position,
                             int end,
-                            const CodeActionsReply &);
+                            const CodeActionsReply &,
+                            const QStringList &only = QStringList());
     /*!
      * \brief the overview of a file: the symbols it holds, in the order the
      * file spells them
@@ -397,6 +471,37 @@ namespace tfel::gui {
                       const QTextDocument &,
                       int position,
                       const HoverReply &);
+    /*!
+     * \brief the files a reformat changes and the edits of each, in the shape of
+     * a workspace edit, so that the same code applies a rename and a reformat
+     */
+    using FormattingReply =
+        std::function<void(const QMap<QString, QVector<LspTextEdit>> &edits,
+                           const QString &error)>;
+    /*!
+     * \brief ask to reformat a document, the \c textDocument/formatting question
+     * of the protocol
+     * \param[in] file: the file to reformat
+     * \param[in] doc: its document, to turn the offsets into positions
+     * \param[in] tab_size: how wide an indentation step is
+     * \param[in] insert_spaces: true to indent with spaces, false with tabs
+     * \param[in] reply: what to do with the answer; an empty map says the server
+     * has nothing to change, \c error then tells whether it refused
+     *
+     * \note no client capability is advertised for this question: the servers
+     * this editor asks answer it whether or not the client says it can apply an
+     * edit, and the handshake of the servers already driven is left exactly as it
+     * was
+     *
+     * \note the answer is usually one edit over the whole file, which is the
+     * shape the mode narrows back to the lines which actually change, see
+     * \c LspNavigationSession::applyWorkspaceEdit
+     */
+    void requestFormatting(const QString &file,
+                           const QTextDocument &,
+                           int tab_size,
+                           bool insert_spaces,
+                           const FormattingReply &);
     //! \return the diagnostics the server last published for a file
     QVector<LspDiagnostic> diagnosticsFor(const QString &file) const;
    signals:
@@ -493,10 +598,22 @@ namespace tfel::gui {
      */
     QString language_id{QLatin1String("cpp")};
     /*!
+     * \brief the directory the server takes as the root of its project, as the
+     * `rootUri` of the protocol; undefined, which leaves the choice to the
+     * server, until \c setRootUri names one
+     */
+    QString root_uri;
+    /*!
      * \brief what a `workspace/configuration` question is answered with, as the
      * server reads it; undefined for a server which is asked no settings
      */
     QJsonValue configuration;
+    /*!
+     * \brief what the `initialize` of the session is handed as
+     * `initializationOptions`, as the server reads it; undefined, which sends
+     * nothing, for a server which configures itself
+     */
+    QJsonValue initialization_options;
     /*!
      * \brief true when the server says it synchronizes its documents with their
      * whole text, which is what is sent on every change then

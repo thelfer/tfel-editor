@@ -44,6 +44,7 @@ qt_sources(TFEL_EDITOR_SOURCES
   LspTransport
   LspConnection
   LspClient
+  LspNavigationSession
   LanguageToolClient
   GrammarCheckSession
   DirectoryMajorMode)

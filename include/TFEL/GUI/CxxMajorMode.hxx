@@ -8,17 +8,12 @@
 #ifndef LIB_TFEL_GUI_CXXMAJORMODE_HXX
 #define LIB_TFEL_GUI_CXXMAJORMODE_HXX
 
-#include <QtCore/QMap>
-#include <QtCore/QPointer>
-#include <QtCore/QPoint>
 #include <QtCore/QString>
-#include <QtCore/QTimer>
 #include <QtCore/QVector>
 
 #include "TFEL/GUI/Config.hxx"
 #include "TFEL/GUI/CMajorModeBase.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
-#include "TFEL/GUI/LspProtocol.hxx"
 #include "TFEL/GUI/SettingsKey.hxx"
 
 // forward declarations
@@ -30,11 +25,9 @@ namespace tfel::gui {
   // forward declaration
   struct TextEditBase;
   // forward declaration
-  struct LspClient;
-  // forward declaration
   struct GrammarCheckSession;
   // forward declaration
-  struct LspLocation;
+  struct LspNavigationSession;
 
   /*!
    * \brief major mode dedicated to the C++ language
@@ -44,17 +37,20 @@ namespace tfel::gui {
    * extensions. It is the only mode derived from \c CMajorModeBase in the
    * editor, and \c clang-format is always called with the C++ dialect
    *
-   * \note when the setting `clangd/enable` allows it, the mode talks to a
-   * language server, \c clangd, through the \c LspClient shared by the editor
-   * widget: the diagnostics of the server are drawn under the text, the
-   * \c Alt-Tab, \c Alt-. \c Alt-, \c Alt-R and \c Alt-? keys ask it for
-   * completions, definitions, references, renames and hover information; the
-   * parameter list of the call the cursor stands in is echoed by \c Alt-S and
-   * by the editor itself when a character is typed where a call is being
-   * typed, \c Alt-O asks which symbol of the file to go to, and the context
-   * menu offers to jump to the definition of the symbol it was opened on and to
-   * apply the fixes the server offers for the diagnostics of that line (issue
-   * #125)
+   * \note everything the mode asks a language server is done by a \c
+   * LspNavigationSession of its own: the mode holds that session, hands the
+   * keys, the clicks, the completion and the context menu over to it, and keeps
+   * for itself the policy of \c clangd — when a session is worth starting
+   * without being asked for, which menu and which commands start one, and which
+   * faces the identifiers of the file are drawn with. The session draws the
+   * diagnostics of the server under the text; the \c Alt-Tab, \c Alt-. \c Alt-,
+   * \c Alt-R and \c Alt-? keys ask it for completions, definitions, references,
+   * renames and hover information; the parameter list of the call the cursor
+   * stands in is echoed by \c Alt-S and by the editor itself when a character is
+   * typed where a call is being typed, \c Alt-O asks which symbol of the file to
+   * go to, and the context menu offers to jump to the definition of the symbol
+   * it was opened on and to apply the fixes the server offers for the
+   * diagnostics of that line (issue #125)
    *
    * \note what the identifiers of the file are is asked of the server and drawn
    * with the answer: a type, a function or a method, a macro, and a strike-out
@@ -73,7 +69,7 @@ namespace tfel::gui {
    * word is the jump itself, which is what the icon promised: the same jump
    * \c Alt-. does, to the declaration when nothing defines the symbol. Neither
    * asks the server on every keystroke or every pixel: one settling timer of
-   * the mode is shared by the cursor and the mouse, and the answers they get
+   * the session is shared by the cursor and the mouse, and the answers they get
    * are remembered by word, with the places they name, until the text or the
    * session changes
    *
@@ -144,21 +140,12 @@ namespace tfel::gui {
     bool keyPressEvent(QKeyEvent *const) override;
 
     /*!
-     * \brief watch the mouse moves and the mouse leaving the text, to track
-     * the word the pointer rests on
-     *
-     * \note the filter is installed on the viewport of the text edit by the
-     * constructor, and only when the \c clangd support is enabled
-     */
-    bool eventFilter(QObject *const, QEvent *const) override;
-
-    /*!
      * \brief jump to the definition, or to the declaration, of the symbol the
      * \c Ctrl-Left click was pressed on
      * \param[in] e : the mouse press the text edit is about to handle itself
      *
      * \note the click is the mouse's \c Alt-.: the icon of the jump which the
-     * mode put under the pointer promised a place to go, and a pointer which
+     * session put under the pointer promised a place to go, and a pointer which
      * promises and does nothing is worse than one which says nothing. Where the
      * symbol is nothing to jump to, the click is handed back to the text edit,
      * which places the cursor as it always does
@@ -205,19 +192,18 @@ namespace tfel::gui {
 
     /*!
      * \brief add a "Go to definition" entry to the context menu when the
-     * language server has a definition for the symbol the menu was opened on
+     * language server has a definition for the symbol the menu was opened on,
+     * and the entries which apply the fixes it offers for that line
      * \param[in] m : menu to complete
      * \param[in] tc : text cursor at the position where the menu appears
      *
-     * \note the entry is inserted at the top of the menu, before the entries
-     * of the text edit and separated from them, and jumps where the server
-     * says the symbol is defined, the file which holds it being opened if it
-     * is not visited yet
+     * \note the entries are inserted at the top of the menu, before the entries
+     * of the text edit and separated from them
      *
-     * \note the definition is asked for here, as it is the only way to know
-     * whether to offer the entry, and the answer is waited for a moment only:
-     * a server which is not up, or which is busy parsing, leaves the menu
-     * untouched rather than delaying it
+     * \note the two questions are asked by the session here, as that is the only
+     * way to know whether to offer anything, and their answer is waited for a
+     * moment only: a server which is not up, or which is busy parsing, leaves
+     * the menu untouched rather than delaying it
      */
     void completeContextMenu(QMenu *const, const QTextCursor &) override;
 
@@ -230,22 +216,11 @@ namespace tfel::gui {
      */
     void setSyntaxHighlighter(QTextDocument *const) override;
 
-    /*!\brief ask the server to rename the symbol at \c position in this
-     * buffer's document to \c name and apply the workspace edit it answers to
-     * every buffer it visits; the report of what changed, or of the refusal,
-     * goes to the minibuffer
-     *
-     * \note public because the answer of the minibuffer question comes from
-     * an input of its own, see \c renameSymbol, and that input is asked on a
-     * position which was the cursor's when the question was raised
-     */
-    void renameToAt(const QString &name, int position);
     /*!
-     * \brief place the cursor on one of the symbols of the overview of the
-     * file and say in the minibuffer which one it is
-     * \param[in] symbol: an entry of the overview this mode asked for
+     * \return the session which reads the prose of this buffer, that is the
+     * comments of a source file, whatever the choice of the proofreader is
      */
-    void goToDocumentSymbol(const LspDocumentSymbol &symbol);
+    GrammarCheckSession *grammarCheckSession() const override;
 
     //! destructor
     ~CxxMajorMode() override;
@@ -258,286 +233,24 @@ namespace tfel::gui {
      */
     QString getLanguageName() const override;
 
-   private slots:
-    /*!
-     * \brief the server published diagnostics: draw them when they are the
-     * ones of the file this buffer visits
-     */
-    void updateDiagnostics(const QString &);
-
    private:
     /*!
-     * \brief open the document of the file the buffer visits, following the
-     * renames of the buffer; the previous name is closed
-     */
-    void openOrRenameDocument();
-    /*!
-     * \brief start a session of \c clangd for the file this buffer visits, when
-     * nothing is running and the project of that file holds a compilation
-     * database
-     *
-     * \note what is started here is a session which reads the options the
-     * files of a project are compiled with: that is not a guess, and a buffer
-     * opened in a project which says how it is built was opened to be worked
-     * on with those options. Where no database is found, nothing is started: a
-     * session which guesses the compilation options of a file is a decision for
-     * the user, and the entries of the "C/C++" menu are where it is taken
-     *
-     * \note the setting `clangd/start-by-default` is read here, on every buffer
-     * which is opened, and a session which runs is left alone: which database a
-     * running session reads was decided when it started, and a buffer of
-     * another project is none to replace it
-     */
-    void startClangdIfNeeded();
-    /*!
-     * \brief underline the diagnostics the server last published, as the
-     * `clangd` contribution of the extra selections of the text edit
-     */
-    void applyDiagnostics();
-    /*!
-     * \brief what the server answers about one of the tracked words: the word
-     * the text cursor sits on, which gains an underline, and the word the
-     * mouse rests on, which gains the icon of the jump as its mouse cursor
-     *
-     * \c capabilities is \c -1 while the question is on its way or was never
-     * asked, \c 0 when the symbol answers to neither \c go-to-definition nor
-     * \c go-to-declaration, and the or-ing of the \c HasDefinition and
-     * \c HasDeclaration bits otherwise
-     */
-    struct TrackedWord {
-      //! the identifier itself, empty when no word is tracked
-      QString word;
-      //! where it starts in the document, \c -1 with no word
-      int start = -1;
-      //! the revision of the document it was read at
-      qint64 revision = -1;
-      //! what the server says of it, see above
-      int capabilities = -1;
-      /*!\brief where the server says the word is defined, empty when nothing
-       * was found: the places a \c Ctrl-Left click on the word jumps to, which
-       * is why the answers are kept and not only counted
-       */
-      QVector<LspLocation> definitions;
-      //! the same, for the declarations of the word
-      QVector<LspLocation> declarations;
-    };
-    //! the word under the text cursor, as far as it was resolved
-    TrackedWord cursor_word;
-    //! the word under the mouse, as far as it was resolved
-    TrackedWord hovered_word;
-    //! the viewport position the mouse last visited
-    QPoint hovered_point;
-    /*!\brief what was last echoed of a diagnostic, message and start of its
-     * range glued; empty when nothing stands under the cursor to be told
-     */
-    QString echoed_diagnostic;
-    //! the timer after which a settled position is asked about
-    QTimer *navigation_timer = nullptr;
-    /*!
-     * \brief the timer after which a typed trigger character asks for the
-     * signature of the call it belongs to
-     *
-     * Its own, and not the navigation one: a settling cursor asks about a
-     * word, which is a different question from the one a typed `(` asks, and
-     * the two answers belong in different places — an underline, and the
-     * minibuffer
-     */
-    QTimer *signature_timer = nullptr;
-    /*!\brief counts the signature questions, so that the answer of one which
-     * is still on its way cannot overwrite the message of a later one
-     */
-    int signature_request = 0;
-    //! true while the word under the cursor is to be asked for
-    bool cursor_tracking = false;
-    //! true while the word under the mouse is to be asked for
-    bool hover_tracking = false;
-    /*!
-     * \brief the timer after which the identifiers of the file are asked what
-     * they are, the semantic tokens of the protocol
-     *
-     * Its own, and much longer than the two others: the question is about the
-     * whole file, not about a word, so it is worth a pause the size of a
-     * keystroke, and the answer is the color of the file rather than anything
-     * the person typing waits to be told
-     */
-    QTimer *tokens_timer = nullptr;
-    /*!\brief counts the questions for the tokens of the file, so that the
-     * answer of one which is still on its way cannot color the buffer with
-     * what the server said of a text which is no longer on screen
-     */
-    int tokens_request = 0;
-    /*!
-     * \brief ask what the identifiers of the file are and color them with the
-     * answer, the semantic tokens of the protocol
-     *
-     * \note silent on every path: this is the editor coloring a buffer on its
-     * own, not answering a question somebody asked, and a minibuffer which
-     * talks about the colors of the text would talk over everything else
-     */
-    void refreshSemanticTokens();
-    /*!
-     * \brief draw the given tokens on the buffer, under the `clangd-tokens`
-     * contribution to the extra selections of the text edit
-     * \param[in] tokens: what the server said the identifiers are
-     * \param[in] revision: the revision the question was asked at, which the
-     * document has to still be at for the answer to describe its text
-     */
-    void applySemanticTokens(const QVector<LspSemanticToken> &,
-                             int sequence,
-                             qint64 revision);
-    /*!
-     * \brief forget the colors the server gave: another file, a session which
-     * is gone, or a person who asked not to have them
-     */
-    void clearSemanticTokens();
-    /*!
-     * \brief forget the tracked words, the underline and the mouse cursor:
-     * another file, or another session, knows nothing of them
-     */
-    void resetNavigation();
-    /*!
-     * \brief ask the new name of the symbol under the cursor in the
-     * minibuffer, and hand it to \c renameTo once it is answered
-     */
-    void renameSymbol();
-    /*!
-     * \brief apply the edits of a workspace edit to the documents they name,
-     * opening the files which are not visited yet and coming back to the
-     * buffer of this mode afterwards
-     * \return the number of edits applied
-     *
-     * \note what a rename answers and what a code action carries are the same
-     * `WorkspaceEdit` of the protocol, so the same code applies both, and a
-     * quick fix which touches three files is applied to three files exactly
-     * as a rename would be
-     */
-    int applyWorkspaceEdit(const QMap<QString, QVector<LspTextEdit>> &);
-    //! ask about the tracked words, once the position has settled
-    void refreshTrackedWords();
-    /*!
-     * \brief ask whether the word of one of the two tracked positions is
-     * defined or declared somewhere
-     * \param[in] track_cursor: ask for the word under the text cursor, else
-     * for the one under the mouse
-     */
-    void askTrackedWord(bool track_cursor);
-    //! the underline of the word under the cursor, once it is resolved
-    void applyTrackedCursor();
-    //! the mouse cursor over the word it rests on, once it is resolved
-    void applyTrackedHover();
-    /*!\brief jump to the definition of the symbol at the given position of the
-     * document, or to its declaration when nothing defines it, as the
-     * \c Ctrl-Left click of the mouse does
-     * \param[in] position: where the click was pressed, in the document
-     * \return true when the cursor went somewhere, false when the symbol has
-     * nowhere to go, in which case the click is a plain click
-     *
-     * \note the two questions are asked at once and waited for together, as the
-     * context menu asks its two, and the answers the tracking of the mouse
-     * already holds are used without asking again: the click which follows the
-     * icon of the jump is the common case and shall not wait on a server which
-     * is busy parsing the file
-     */
-    bool jumpFromMouse(const int position);
-    /*!\brief echo the message of the diagnostic the cursor stands on, if any
-     *
-     * \c report is called only when the diagnostic under the cursor differs
-     * from the one last echoed, so a settling timer restarted by editing in
-     * the middle of a reported line does not repeat the message
-     */
-    void echoDiagnosticAtCursor();
-    /*!\return the message of the diagnostic whose range visits the given
-     * document position, empty when none does; the text the minibuffer and
-     * the tooltip show, in the same words
-     */
-    QString diagnosticAt(const QTextDocument &, int position) const;
-    //! ask the server for the completions at the cursor, synchronously
-    void completeWithClangd();
-    //! ask the server where the symbol under the cursor is defined
-    void jumpToDefinition();
-    /*!\brief ask the server for every use of the symbol under the cursor and
-     * pop a menu of them to jump to, the references list of the protocol
-     */
-    void showReferences();
-    /*!
-     * \brief ask the overview of the file and ask in the minibuffer which of
-     * its symbols to go to, the document symbols of the protocol
-     *
-     * \note the overview is asked when the key is pressed, not kept from a
-     * previous press: the file is being edited, and a list of symbols which
-     * lost a function to a cut is worse than a round trip
-     */
-    void showDocumentSymbols();
-    /*!\brief ask the server what call the cursor is inside of and echo its
-     * parameter list in the minibuffer, the active argument picked out of it
-     * \param[in] asked_by_user: false when a typed character raised the
-     * question, which stays silent when the server sees no call there rather
-     * than reporting one on every keystroke
-     */
-    void showSignatureHelp(const bool asked_by_user);
-    /*!
-     * \brief start the signature question after a character the server says a
-     * call is typed around has been typed
-     * \param[in] e: the key event the base class is done with
-     */
-    void watchSignatureHelp(const QKeyEvent &e);
-    /*!
-     * \brief place the cursor on the given definition, opening the file which
-     * holds it when that file is not the one of this buffer
-     */
-    void jumpTo(const LspLocation &);
-    //! ask the server what the symbol under the cursor is
-    void showHover();
-    /*!\brief the grammar checker of this buffer, and the entries of the menu
-     * which steer it
-     *
-     * \note built before the gate on `clangd/enable`: what the comments of a C++
-     * file say in English is a question of grammar and none of that server's
-     * business, so a buffer whose C++ support is off is checked like any other
-     * buffer of the editor
+     * \brief the session which reads the words of the buffer, built whatever
+     * the \c clangd support says: what the comments of a source file say is a
+     * question of grammar and none of a compiler's
      */
     GrammarCheckSession *grammar = nullptr;
     /*!
-     * \brief the session above, which is what \c SpellingAndGrammar asks the
-     * buffers of this mode for: the choice of the proofreader is one for the
-     * editor and this is how it is said to a buffer of a C++ file
-     */
-    GrammarCheckSession *grammarCheckSession() const override;
-    //! the client of the editor widget, null when `clangd/enable` is false
-    QPointer<LspClient> client;
-    //! the file name the server knows this buffer by, empty if none
-    QString documentFile;
-    /*!\brief the document opened on the client under `documentFile`
+     * \brief the conversation of this buffer with \c clangd, null when the
+     * setting `clangd/enable` turns the whole support off
      *
-     * A \c QPointer, and not a call to `textEdit.document()`: the mode dies
-     * as a child of the text edit widget, at a point where that widget's own
-     * Qt widget is gone and the virtual `document()` would fall through a
-     * dangling pointer, the very trap of issue #20 in a new place
+     * \note the session is a child of the mode and is destroyed with it; it is
+     * what holds the client, the timers, the tracked words and the faces, which
+     * is why the mode has nothing left to hold but these two pointers
      */
-    QPointer<QTextDocument> document;
-    //! the completion popup fed by the server, created on the first request
-    QCompleter *lspCompleter = nullptr;
-    //! true while the server popup is up
-    bool lspCompletionActive = false;
-    /*!\brief true while the \c Ctrl-Left click the mode answered is held down
-     *
-     * The press is consumed by the jump, so the release of the same click has
-     * to be consumed too: left to the text edit, it would move the cursor to the
-     * place it was clicked on, after the jump had moved it elsewhere
-     */
-    bool mouse_press_consumed = false;
-    /*!\brief true once the failure of an automatic session has been reported
-     *
-     * A program which will not start is a mistake the settings hold, and every
-     * new buffer of the project would report it again; once is enough to find
-     * the address of the setting, and the entries of the menu say what the
-     * automatic start left unsaid.
-     */
-    bool auto_start_failure_reported = false;
-
-    Q_OBJECT
+    LspNavigationSession *clangd_session = nullptr;
   };  // end of struct CxxMajorMode
 
 }  // end of namespace tfel::gui
 
-#endif /* LIB_TFEL_GUI_CXXMAJORMODE_HXX */
+#endif

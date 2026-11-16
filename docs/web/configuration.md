@@ -18,8 +18,8 @@ title `Editor`, and the themes a major mode exports, under the title
 modes which are installed and are about a program a mode drives, not
 about the editor. A title is not a theme: it can not be chosen and shows
 nothing. The page of a theme of a mode says whose it is above the entries
-it holds, since `clangd` and `castem` are names of programs and say
-nothing of the mode which launches them.
+it holds, since `clangd`, `castem`, `pylsp` and `python` are names of
+programs and say nothing of the mode which launches them.
 
 A theme which is a corner of another one is a submenu of it: the entries
 of a proofreader — which program it is, which language it reads — are
@@ -31,6 +31,13 @@ The name of an entry stands
 above the field which edits it, which has the width of the page to
 itself — a path of a program is not something to read in a narrow box —
 and the sentence which says what the entry is for is the tool tip of both.
+A question answered by yes or no is the exception, because a page of them
+is read as a list: its name and its check box stand on one line, and the
+boxes of a theme stand in one column, at the place of the longest of the
+names a box answers. A box under the name it answers reads as an orphan,
+and a box at the end of each name of its own makes a ragged edge instead of
+a column. The name of such an entry is the buddy of its box, which is what
+makes a click on the name toggle it.
 Each entry is edited with the widget which suits the kind of value it
 holds: a check box for a boolean, a spin box for a number, a one line edit
 for a text, a multi line edit for a list of texts, a combo box for a
@@ -172,6 +179,76 @@ which has a `compile_commands.json` starts a session which reads it, and
 is read again on every file opened. The `Color identifiers` entry of the
 `C/C++` menu writes the same address as `clangd/semantic-tokens`.
 
+## pylsp
+
+| Entry                      | Widgets           | Takes effect              |
+|----------------------------|-------------------|---------------------------|
+| `pylsp/executable`         | a one line edit   | the next session          |
+| `pylsp/arguments`          | a list of strings | the next session          |
+| `pylsp/start-by-default`   | a check box       | the next file opened      |
+| `pylsp/linters/ruff`       | a check box       | the next session           |
+| `pylsp/linters/pyflakes`   | a check box       | the next session           |
+| `pylsp/linters/pycodestyle` | a check box      | the next session           |
+| `pylsp/linters/flake8`     | a check box       | the next session           |
+| `pylsp/linters/pylint`     | a check box       | the next session           |
+| `pylsp/linters/mccabe`     | a check box       | the next session           |
+| `pylsp/linters/pydocstyle` | a check box       | the next session           |
+| `pylsp/linters/pylsp_mypy` | a check box       | the next session           |
+| `pylsp/formatter`          | a choice          | the next session           |
+| `pylsp/import-sorter`      | a choice          | the next session           |
+
+What the `Python` mode asks the language server, what it asks it with, and
+which programs that server runs over the text of a buffer. See
+[the `Python` support page](python-support.html) for what each of them does.
+The program is `pylsp`, the `python-lsp-server` package; the default of the
+entry is empty, which is that name on the search path of the session, and a
+server installed in a virtual environment is named by the full path of its
+`pylsp` — which is what makes the answers of the buffers read that
+environment's packages. The two entries which name the program and its
+arguments are read when a session starts, so what is chosen here reaches the
+next `Start pylsp` and no session which runs. `pylsp/start-by-default` decides
+whether opening a file of this language starts a session of its own, and is
+read again on every file opened: turning it off is answered by the next file
+opened, not by the session a buffer is already attached to, since the project a
+session reads is chosen when it starts. Unlike `clangd`, the default of that
+entry is *on*: this server needs no compilation database to say what a name is.
+
+The eight check boxes are one question per program the server can run over a
+buffer, and several of them on at once is the norm, since each sees a mistake
+the others do not; only `Ruff` is on by default, as the plugin of that name is
+by its own account, and it reports what `Pyflakes` and `Pycodestyle` report in
+one program which is faster than either. The formatter and the sorter are one
+exclusive question each: every formatter of the server answers the same
+request and the server keeps the first answer which holds something, so two on
+at once is one answering and the other silent, and `None` is the choice of a
+person who formats outside the editor.
+
+The `Linters`, `Format with` and `Sort imports with` submenus of the `Python`
+menu write these same addresses and hand what the settings now say to the
+running session, which is what makes the underlines of the buffers follow a
+click at once. What is chosen in this dialog reaches the *next* session: a
+server which is already up reads the plugins it was started with until some-
+body tells it otherwise, and the menu is the one which tells it.
+
+## python
+
+| Entry               | Widgets         | Takes effect  |
+|---------------------|-----------------|---------------|
+| `python/executable` | a one line edit | the next session |
+
+The program an interactive session of the `Python` mode runs: the line, the
+region and the buffer are handed to it by the three keys of `Ctrl-C` and what
+it answers stands in a secondary task of the buffer, as
+[the `Python` support page](python-support.html) tells. A bare name is the one
+a terminal would find in the places the session searches; the full path of the
+interpreter of a virtual environment is what makes the session see the modules
+installed there, where the buffer's imports reach. The default of the entry is
+the program the mode would run with the address left empty, which is why the
+field shows `python3` and an answer equal to it is removed from the file rather
+than stored. The address is read on every launch, so what is chosen here is the
+program the next `Ctrl-C Ctrl-L` runs, with no restart asked for; a program
+which is not there is named by the message the minibuffer shows.
+
 ## Harper
 
 | Entry                        | Widgets           | Takes effect                        |
@@ -231,11 +308,13 @@ theme is a submenu of `Spelling and grammar`.
 
 Those themes — `Spelling and grammar`, with `Harper` and `LanguageTool`
 under it — are themes of the editor, and are there whatever plugins
-are loaded. Only `clangd` and `castem` are themes a major mode exports: the
-mode `C++` asks the language server those five entries and nothing else, the
-`Cast3M` mode launches one program, and every other mode of the editor reads
-nothing from the configuration file but the history of the command its prompt
-proposes, which is not an entry of the configuration.
+are loaded. Only `clangd`, `castem`, `pylsp` and `python` are themes a major
+mode exports: the mode `C++` asks the language server those five entries and
+nothing else, the `Cast3M` mode launches one program, the `Python` mode asks
+its server what reads the text and what rewrites it and launches one program
+of its own, and every other mode of the editor reads nothing from the
+configuration file but the history of the command its prompt proposes, which
+is not an entry of the configuration.
 
 An address is shown once, in the first theme which declared it: the modes
 which derive from the `C++` mode, such as `MTest` and `PipeTest`, use the

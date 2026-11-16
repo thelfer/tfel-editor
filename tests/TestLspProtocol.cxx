@@ -539,6 +539,27 @@ void TestLspProtocol::testDocumentSymbolsOf() {
   // begins: the selection range of a class starts at its `class` keyword
   QCOMPARE(flattened.at(1).line, 1);
   QCOMPARE(flattened.at(1).character, 2);
+  // the separator of the scopes is the language's own spelling, which is what a
+  // reader who copies a name from the overview and types it back means: the same
+  // answer read as Python names the method `Widget.paint`, and the flat shape is
+  // qualified the same way
+  const auto dotted = tfel::gui::documentSymbolsOf(tree, QStringLiteral("."));
+  QCOMPARE(dotted.size(), 3);
+  QCOMPARE(dotted.at(1).name, QStringLiteral("Widget.paint"));
+  QCOMPARE(dotted.at(2).name, QStringLiteral("Widget::paint"));
+  const auto python_flat =
+      tfel::gui::documentSymbolsOf(flat, QStringLiteral("."));
+  QCOMPARE(python_flat.at(1).name, QStringLiteral("Widget.paint"));
+  // which separator a language of the protocol is read with: `::` is the default
+  // and the answer for the C family, a `.` is what Python and the languages of
+  // the JVM spell a qualified name with
+  QCOMPARE(tfel::gui::scopeSeparatorOf(QString()), QStringLiteral("::"));
+  QCOMPARE(tfel::gui::scopeSeparatorOf(QStringLiteral("cpp")),
+           QStringLiteral("::"));
+  QCOMPARE(tfel::gui::scopeSeparatorOf(QStringLiteral("python")),
+           QStringLiteral("."));
+  QCOMPARE(tfel::gui::scopeSeparatorOf(QStringLiteral("java")),
+           QStringLiteral("."));
   // an answer which is nothing at all, and an answer which holds entries with
   // no name, are an overview with no entry
   QVERIFY(tfel::gui::documentSymbolsOf(QJsonValue()).isEmpty());

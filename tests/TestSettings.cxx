@@ -11,6 +11,7 @@
 #include <QtCore/QLibrary>
 #include <QtCore/QMap>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QCheckBox>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QMainWindow>
@@ -161,6 +162,7 @@ struct TestSettings : QObject {
   void theMajorModesExportTheEntriesTheyUse();
   void theDialogShowsWhatIsDeclared();
   void theThemesOfTheMajorModesAreSeparatedFromThoseOfTheEditor();
+  void theCheckBoxesOfAThemeStandInOneColumnOnTheirOwnLine();
   void writingAnEntryStoresItAndReadingItAgainAnswersTheSame();
   void anEntrySetBackToItsDefaultValueIsForgotten();
   void anUnknownAddressAndAValueOfAnotherKindAreLeftAlone();
@@ -692,6 +694,77 @@ void TestSettings::theThemesOfTheMajorModesAreSeparatedFromThoseOfTheEditor() {
   }
 }  // end of
    // TestSettings::theThemesOfTheMajorModesAreSeparatedFromThoseOfTheEditor
+
+// A check box answers the name which stands on its line, and the boxes of a theme
+// are a list of questions with a yes or no answer which is read column by column:
+// a box under its name, or a box placed at the end of each name of its own, makes
+// the page a list of orphans. What is asserted here is therefore the two shape
+// facts of the row of a boolean — the name and the box on one line, all the boxes
+// of a theme at one place — on the page which is shown, since only that page has a
+// geometry: the hidden pages of the stack are what a hidden window leaves its
+// widgets with, 100 x 30 pixels.
+void TestSettings::theCheckBoxesOfAThemeStandInOneColumnOnTheirOwnLine() {
+  forgetEverything();
+  Shell shell;
+  shell.show();
+  pump(8);
+  auto dialog = ConfigurationDialog(*shell.ed);
+  auto* const pages = dialog.findChild<QStackedWidget*>("configuration-pages");
+  QVERIFY(pages != nullptr);
+  dialog.show();
+  dialog.resize(760, 520);
+  pump(20);
+  auto seen = 0;
+  for (auto i = 0; i != pages->count(); ++i) {
+    pages->setCurrentIndex(i);
+    pump(6);
+    auto* const area = qobject_cast<QScrollArea*>(pages->widget(i));
+    auto* const page = (area != nullptr) ? area->widget() : nullptr;
+    QVERIFY2(page != nullptr, "a page of the dialog is not a scroll area");
+    auto column = -1;
+    for (auto* const box : page->findChildren<QCheckBox*>()) {
+      ++seen;
+      const auto x = box->mapTo(page, QPoint(0, 0)).x();
+      if (column < 0) {
+        column = x;
+      }
+      QVERIFY2(x == column,
+               qPrintable(QStringLiteral("a check box of the page %1 stands at "
+                                         "x=%2, another one at x=%3")
+                              .arg(i)
+                              .arg(x)
+                              .arg(column)));
+      // the name of the entry the box answers is held by the line of the box
+      // itself, and stands to its left on that same line
+      auto* const row = box->parentWidget();
+      QVERIFY2(row != nullptr, "a check box of the dialog has no line of its own");
+      auto* const name = row->findChild<QLabel*>();
+      QVERIFY2(name != nullptr,
+               "the line of a check box holds no name for it");
+      QVERIFY2((name->geometry().bottom() >= box->geometry().top()) &&
+                   (name->geometry().top() <= box->geometry().bottom()),
+               qPrintable(QStringLiteral("the name '%1' and its check box are "
+                                         "not on one line")
+                              .arg(name->text())));
+      QVERIFY2(box->geometry().left() > name->geometry().right() - 1,
+               qPrintable(QStringLiteral("the check box of '%1' stands on the "
+                                         "name it answers")
+                              .arg(name->text())));
+      // the name says what it belongs to, and gives it the click it receives
+      QVERIFY2(name->buddy() == box,
+               qPrintable(QStringLiteral("the name '%1' is not the buddy of its "
+                                         "check box")
+                              .arg(name->text())));
+    }
+  }
+  // the assertion above is about the boxes which exist: the `clangd' theme holds
+  // three of them in this process, where only the C++ mode is registered
+  QVERIFY2(seen >= 3,
+           qPrintable(QStringLiteral("the dialog of the configuration answers "
+                                     "%1 questions with a check box")
+                          .arg(seen)));
+}  // end of
+   // TestSettings::theCheckBoxesOfAThemeStandInOneColumnOnTheirOwnLine
 
 void TestSettings::writingAnEntryStoresItAndReadingItAgainAnswersTheSame() {
   forgetEverything();
