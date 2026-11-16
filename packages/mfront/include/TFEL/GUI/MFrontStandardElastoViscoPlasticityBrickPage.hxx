@@ -14,6 +14,7 @@
 
 // forward declaration
 class QComboBox;
+class QPushButton;
 
 namespace tfel::gui {
 
@@ -43,7 +44,10 @@ namespace tfel::gui {
      *
      * \note the "Add an inelastic flow" button opens a
      * \c MFrontAddInelasticFlowDialog, whose result is stored by the page when
-     * the user accepts it; the flows are not displayed once added
+     * the user accepts it. The flows which have been added are listed by the
+     * combo box which stands below that button: one of them can be selected and
+     * modified, which reopens the dialog prefilled with what the page holds, or
+     * removed
      */
     MFrontStandardElastoViscoPlasticityBrickPage(EditorWidget &,
                                                  TextEditBase &,
@@ -54,6 +58,38 @@ namespace tfel::gui {
 
     //! \return the identifier of the page which adds variables
     int nextId() const override;
+    /*!
+     * \brief ask a new inelastic flow and add it to the list of the page
+     *
+     * The flow is asked through a \c MFrontAddInelasticFlowDialog and, when the
+     * user accepts it, the answer is stored by the page and the entry which
+     * names it is selected.
+     *
+     * \note an internal error is reported when the page is not attached to a
+     * wizard, which is what the dialog needs to build the behaviour description
+     * the lists of its options are read from
+     */
+    void addInelasticFlow();
+    /*!
+     * \brief modify the inelastic flow which the list of the page selects
+     *
+     * The \c MFrontAddInelasticFlowDialog is reopened prefilled with the
+     * description the page holds and what the user answers replaces it, the
+     * selection of the list being kept.
+     *
+     * \note nothing happens when the list selects nothing, which the button of
+     * the page makes impossible: an empty list has nothing to modify
+     */
+    void modifyInelasticFlow();
+    /*!
+     * \brief remove the inelastic flow which the list of the page selects
+     *
+     * The entry which takes the place of the removed one is selected, the last
+     * entry of the list when the removed one was the last one.
+     *
+     * \note nothing happens when the list selects nothing, as for a modify
+     */
+    void removeInelasticFlow();
     /*!
      * \brief write the output of the wizard, that is the body of the
      * \c @Brick declaration of the brick: the stress potential followed by the
@@ -82,11 +118,29 @@ namespace tfel::gui {
     ~MFrontStandardElastoViscoPlasticityBrickPage() override;
 
    protected:
+    /*!
+     * \brief rebuild the combo box which lists the inelastic flows
+     * \param[in] i: the entry to select, a negative value selecting none
+     *
+     * The two buttons which modify and remove a flow are enabled by the same
+     * move: they act on the selected flow and have nothing to act on when the
+     * list is empty.
+     */
+    void updateInelasticFlowsList(const int);
     //! list of inelastic flows
     std::vector<MFrontAddInelasticFlowDialog::InelasticFlowDescription>
         inelastic_flows;
     //! \brief list of stress potentials
     QComboBox *const stress_potentials;
+    /*!
+     * \brief list of the inelastic flows which have been added, which is also
+     * the selection the two buttons below it act on
+     */
+    QComboBox *const inelastic_flows_list;
+    //! \brief button which reopens the dialog with the selected inelastic flow
+    QPushButton *const modify_inelastic_flow;
+    //! \brief button which takes the selected inelastic flow out of the list
+    QPushButton *const remove_inelastic_flow;
     //! \brief editor
     EditorWidget &editor;
     //!\brief document
