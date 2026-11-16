@@ -421,44 +421,33 @@ namespace tfel::gui {
       form->setRowWrapPolicy(QFormLayout::WrapAllRows);
       form->setLabelAlignment(Qt::AlignLeft | Qt::AlignTop);
       form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
-      // The names are made before the fields, and the longest of the names which
-      // are answered by a check box is measured with them: every check box of the
-      // theme stands at the end of the line of the name it answers, in one column
-      // shared by the whole theme. A box under the name it belongs to reads as an
-      // orphan, and boxes placed at the end of each name of its own make a ragged
-      // edge which is not read as the list of yes and no questions it is.
-      auto labels = QVector<QLabel *>{};
-      labels.reserve(g.keys.size());
-      auto column = 0;
+      // The name of an entry answered by a check box and the box itself stand
+      // on one line — a page of them is a list of yes and no questions, and a
+      // box under the name it belongs to reads as an orphan — and the box
+      // stands flush with the right edge of the page, which is where the boxes
+      // of the whole theme make one column. The column is the edge of the page
+      // rather than the place behind the longest name of the theme: a column of
+      // boxes in the middle of the line leaves the right half of every row
+      // empty, which reads as a field waiting for something.
       for (const auto &k : g.keys) {
         auto *const l = new QLabel(k.label, page);
         l->setToolTip(k.description);
-        if (k.type == SettingsKey::BOOLEAN) {
-          column = qMax(column, l->sizeHint().width());
-        }
-        labels.append(l);
-      }
-      auto next_label = labels.cbegin();
-      for (const auto &k : g.keys) {
         auto *const e = buildEditor(k, page);
         e->setToolTip(k.description);
-        auto *const l = *next_label;
-        ++next_label;
         if (k.type == SettingsKey::BOOLEAN) {
-          // one line for the name and its box, the name held to the width of the
-          // longest name of the theme so the boxes of the theme line up; the
-          // stretch after the box keeps the name from being asked for the whole
-          // width of the page, which is what the other rows of the form do
           auto *const row = new QWidget(page);
           auto *const rl = new QHBoxLayout(row);
           rl->setContentsMargins(0, 0, 0, 0);
-          l->setMinimumWidth(column);
           // clicking the name toggles the box, which is what a line whose two
           // halves are one question is worth
           l->setBuddy(e);
           rl->addWidget(l);
-          rl->addWidget(e, 0, Qt::AlignVCenter);
+          // the stretch is what pushes the box to the edge: a label of a box
+          // layout is stretched to what the box leaves, so without it every box
+          // of the theme stands at the end of its own name, a ragged edge which
+          // is not read as a column
           rl->addStretch(1);
+          rl->addWidget(e, 0, Qt::AlignRight | Qt::AlignVCenter);
           form->addRow(row);
         } else {
           form->addRow(l, e);

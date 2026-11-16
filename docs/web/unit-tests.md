@@ -29,7 +29,14 @@ What is covered:
 | `test-lsp-protocol`       | the shapes of the Language Server Protocol the client reads: framing, positions as UTF-16 code units, file uris, the answers of semantic tokens, document symbols and workspace edits |
 | `test-lsp-client`         | a real `clangd` session: the start and the handshake, the menu of the `C++` mode, the session a file of a project starts on its own and the setting which turns it off, the jumps — `Alt+.` and `Ctrl-Left click` —, the diagnostics, the rename, the signature help, the quick fixes, the compilation database the session is started with |
 | `test-grammar-check`      | the proofreader a buffer is read with: the four choices and the menu which offers them, the languages of each of them, a real `harper-ls` session and a real LanguageTool server, the lints and the face they are drawn in, what a mode which is gone leaves behind, the spell checker going off a text LanguageTool reads, and the reports the blanked markup of a mode must not produce |
+| `test-file-on-disk`       | the buffer which watches the file it visits: what a change on the disk is, the banner which says it, dismissing it, re-adopting the file, the two answers of the overwrite question, and the buffer frozen while the banner stands |
 | `test-settings`           | the entries of the configuration: what is declared, what the dialog shows, how it keeps the themes of the major modes apart, what writing it stores and what it applies live, what a packaged mode loaded as a plugin exports |
+| `test-castem-mode`        | the `Cast3M` mode: the program the configuration names, which is the one the session starts and the notice asks about, and the line which starts the solver reaching it |
+| `test-shared-compilation-output` | the output page the programming buffers share, and the line of a prompt the output of a command continues |
+| `test-kill-buffer`        | killing a buffer: the shared output page it takes with it, and the minibuffer question which named the buffer that is gone |
+| `test-python-mode`        | the `Python` mode: the faces of its scanner, the indentation levels `python.el` walks a line through, the region keys, the interpreter session and the prompts of its transcript, the tools of the language the menu offers |
+| `test-latex-mode`         | the program a document of `LaTeX` is compiled with: the entry of the configuration which names it, the `Interpreter` submenu which writes the same address and the tick which names the engine in use, and the process a compile of the buffer starts |
+| `test-rectangle-mode`     | the rectangle commands of `Ctrl-X R`, every expectation of which comes from a record GNU Emacs itself wrote |
 
 These encode the invariants fixed by
 [issue #121](https://github.com/thelfer/tfel-editor/issues/121);

@@ -1479,11 +1479,12 @@ its own account. A test asserts those addresses are not declared
 (`theRegistryDeclaresTheEntriesOfTheEditor`), which is what keeps the next person
 from putting them back. The themes that remain are `General` and `Spelling and
 grammar` (with the `Harper` and `LanguageTool` subthemes) from the core, `clangd`
-from the C++ mode and `castem` from the Cast3M mode; no other packaged mode
-exports anything today, because the only entry of the configuration those modes
-read is a history. The proofreader themes belong to the core, not to the C++
-mode: `harper-ls` and LanguageTool read prose, and prose is read in the three
-modes which hold a buffer of text and in none of them alone.
+from the C++ mode, `castem` from the Cast3M mode, `pylsp` and `python` from the
+`Python` mode, and `latex` from the `LaTeX` mode; a packaged mode which reads
+nothing but a history exports no theme of its own. The proofreader themes belong
+to the core, not to the C++ mode: `harper-ls` and LanguageTool read prose, and
+prose is read in the three modes which hold a buffer of text and in none of them
+alone.
 
 How a mode exports its entries, since that is the part another mode has to imitate:
 
@@ -1734,45 +1735,63 @@ and only mode pages have one), and `theDialogShowsWhatIsDeclared` reads the them
 the **selectable** items of a depth-first walk (`readList`) — `getGroupsNames()` and
 `pages->count()` both disagree with `themes->topLevelItemCount()` now.
 
-### The check box of an entry stands at the end of the line of its name (issue #127)
+### The check box of an entry stands at the right edge of the line of its name (issue #127)
 
 A boolean is a question with a yes or no answer, and a page of them is read as
 a list, so the name and the box stand on **one line** and the boxes of a theme
-stand in **one column**: `form->addRow(row)` with a spanning `QWidget` whose
-`QHBoxLayout` (margins 0) holds the name, then the box `Qt::AlignVCenter`, then
-a stretch. Every other kind keeps `WrapAllRows`, the name above a field the
-width of the page, because two columns starve the path of a program (187 px on
-the `clangd` page).
+stand in **one column, flush with the right edge of the page**:
+`form->addRow(row)` with a spanning `QWidget` whose `QHBoxLayout` (margins 0)
+holds the name, then a stretch, then the box
+`Qt::AlignRight | Qt::AlignVCenter`. Every other kind keeps `WrapAllRows`, the
+name above a field the width of the page, because two columns starve the path
+of a program (187 px on the `clangd` page).
 
-- **A `QLabel` of a `QHBoxLayout` is stretched** to what the box leaves, so
-  without a pin the *widest label of the whole page* decides where every box of
-  the theme stands: a two-word name had its box 421 px away because a neighbour
-  names a `compile_commands.json`. The column is therefore
-  `max(sizeHint().width())` over the labels whose entry is a `BOOLEAN`, applied
-  as `setMinimumWidth` to each of them, which pins a label to the width of the
-  longest name a box answers. Measured: `clangd` 3 boxes at x=430 offscreen and
-  465 on `DISPLAY=:98` with metacity (page 476 px), `pylsp` 9 boxes at 257 and
-  278.
-- The labels are built by a **first loop over the entries**, before the fields,
-  since the column has to be known while the first row is laid out; the rows are
-  then built by a second loop which walks `labels` with `next_label` — `held` is
-  the tree item of the surrounding lambda.
+- **The column is the edge of the page, not the place behind the longest name.**
+  What this replaced pinned every name to `max(sizeHint().width())` over the
+  entries of the theme which are a `BOOLEAN`, which gave a column of boxes in
+  the middle of the line and an empty right half reading as a field waiting for
+  something. The **stretch between the name and the box** is what makes the
+  column: a `QLabel` of a `QHBoxLayout` is stretched to what the box leaves, so
+  without it every box stands at the end of its own name, a ragged edge which is
+  not read as a column. Measured at 760 x 520: `clangd` 3 boxes at x=453
+  offscreen (page 476 px), `pylsp` 9 boxes at 439 offscreen where the pinned
+  column left them at 257 (page 462 px); on `DISPLAY=:97` with metacity the same
+  gives 465 and 439 against 465 and 278 — the `clangd` page lands on the same
+  pixel either way because its longest name is itself a boolean and the page is
+  at its minimum width there, which is why a live display is worth checking on
+  both pages and not one.
+- The row of a boolean is built in the **one loop over the entries**: nothing is
+  measured any more, and the first loop which only existed to know the column
+  with it.
 - `l->setBuddy(e)` names the `QCheckBox` itself, which is what makes a click on
   the name toggle the box; `Field::widget` stays the box, so `valueOf`,
   `setValueOf` and `restoreDefaults` read and write it as they did.
-- `TestSettings::theCheckBoxesOfAThemeStandInOneColumnOnTheirOwnLine` holds both
-  halves, and both were found by mutating the layout: `addRow(l, e)` for a
-  boolean fires the line assertion (and fires it on the *caption* three rows
-  above, since the box's parent is then the page and `findChild<QLabel*>` answers
-  its first label), and dropping `setMinimumWidth` fires the column assertion at
-  `x=430` against `x=137`.
+- `TestSettings::theCheckBoxesOfAThemeStandInOneColumnOnTheirOwnLine` holds the
+  three halves — one line, one column, that column the right edge of the line —
+  and each was found by mutating the layout: `addRow(l, e)` for a boolean fires
+  the line assertion (and fires it on the *caption* three rows above, since the
+  box's parent is then the page and `findChild<QLabel*>` answers its first
+  label), and a stretch *after* the box, the ragged shape, fires the flush one at
+  `x=141` against a line 457 pixels wide. The slack of three pixels the assertion
+  allows is what a style may leave between the last item of a line and its edge;
+  the pinned column this replaced stood 23 pixels away on the `clangd` page and
+  182 on the `pylsp` one, so no slack hides it.
 - Only the **shown** page has a geometry, so the test and the probe switch pages
   (`setCurrentIndex`, or `setCurrentItem` on the list) and pump events. The
-  probe is `/tmp/opencode/pylsp2/boxes.cxx`, and it loads the built `.so` files
-  itself: `EditorWidget` reads no `TFEL_EDITOR_LOAD_PATH` — that is the
-  executable's — so a probe which does not `QLibrary::load` sees no `pylsp`
-  theme, which is nine of the twelve boxes, and a run of three boxes reads as
-  clean.
+  probe is `/tmp/opencode/box127/boxes.cxx` — it prints the x of every box, the
+  width of the page and of the viewport, the gap between the widest name and its
+  box, and whether a horizontal scrollbar appeared, at two window widths — and
+  `/tmp/opencode/box127/shot.cxx` shows one theme by name for
+  `import -window root`. Both load the built `.so` files themselves:
+  `EditorWidget` reads no `TFEL_EDITOR_LOAD_PATH` — that is the executable's — so
+  a probe which does not load them sees no `pylsp` theme, which is nine of the
+  twelve boxes, and a run of three boxes reads as clean. `QLibrary::load` is **no
+  static** taking a file name: `setFileName` then `load()`.
+- A horizontal scrollbar on the `clangd` page of a live display, at 760 px wide,
+  is **not** this change: the name `Start clangd when the project of a file has a
+  compile_commands.json` is 450 px there and, with its box, the minimum of the
+  page, 488 px, over what the 476 px viewport gives. The pinned column asked for
+  the same minimum.
 
 ### The proofreader of a buffer: one choice, two programs (`harper-ls`, LanguageTool)
 
@@ -2224,6 +2243,83 @@ and 7 the same two ends name.
 One pre-existing oddity was left alone: the history address of the insert
 question is misspelled `/rectangle-mode/insert/histroy`, which is what a user's
 settings file holds.
+
+### Which TeX compiles a document (the `Interpreter` submenu of the `LaTeX` mode)
+
+`latex/interpreter` names the program `Alt+M` starts: `latex`, `pdflatex` or
+`xelatex`, in a theme named `latex` (the proxy fills `mode = "LaTeX"`, the
+description and the icon, as it does for `clangd` and `castem`, since the entry
+is about a program and not about the editor). `LaTeXMajorMode::declareSettings`
+declares the one `SettingsKey::choice`; the `Interpreter` submenu of the mode
+(`objectName` `latex-interpreter`, an exclusive `QActionGroup`) writes the same
+address and reports `compiling with %1`. The address is read by
+`chosenInterpreter()` **on every compile**, so a choice reaches the next compile
+with no restart, and a value which is none of the three answers `latex` — the
+program the mode ran before there was a choice to make, which is also the
+declared default and the answer of a configuration file which says nothing.
+`Alt+M` is spelled `Alt+M` in the strings of the tree and in the docs, not
+`Alt-m`.
+
+What the three engines are, measured on this machine (`/tmp/opencode/latexq`):
+
+- **The quoted `"\input"` in front of the file name is a `pdftex` trick and it
+  breaks `xelatex`**: handed the argument `"\input"`, XeTeX looks for a file
+  named `"'` and stops (`! I can't find file `'"'.'`, exit 1, "No pages of
+  output"). The file name alone reaches all three — absolute or relative, with
+  or without the extension, with or without a space in it — so the arguments are
+  now `-file-line-error -interaction=nonstopmode <file>`. The `-file-line-error`
+  option is what keeps the report of the three in the one shape the
+  `latex-output` mode of the frame reads; they are web2c programs.
+- `latex` writes a DVI, the other two a PDF, which is the sentence each entry of
+  the submenu and each tool tip of the combo box says.
+
+Traps, all paid for:
+
+- **A checkable entry of a `QMenu` is not ticked by the menu**: nothing sets
+  `checked` unless the code does. Drawing the tick only from `aboutToShow` leaves
+  a submenu whose entries are all unchecked until somebody opens it, and a test
+  which asks the freshly built menu which engine it names finds none. `redrawTick`
+  is called once when the submenu is built and again on every `aboutToShow` (the
+  dialog, another buffer's menu, or a hand in the configuration file answer the
+  question in between).
+- **`QProcess::terminate()` of a child which never left `Starting` is handled by
+  the test harness, not by the program it is aimed at.** `strace -f` names it
+  (`/tmp/opencode/latexq/probe4.cxx`, the shape of `startLaTeX` reproduced: a
+  `QProcess` with a parent, merged channels, a working directory, no write): the
+  call is `kill(child, SIGTERM)` and the child answers `SI_USER, si_pid=parent` —
+  but the child has not `exec`ed yet, so it still runs the code and the signal
+  handlers of its parent. Qt Test's handler therefore wakes up *inside the child*
+  and prints the whole confusion: `*** Received signal 15`, a stack trace,
+  `QFATAL : TestLaTeXMode::aCompileRunsTheEngineChosenAndNoOther() Received signal
+  15`, `FAIL! ... Received a fatal error` — while the parent finishes the case and
+  reports `PASS`, which is why a run can show a failure and a success for one and
+  the same case (`probe4` prints it and then keeps running: its second `start` on
+  the same `QProcess` succeeds). What ends a process of a test is the compile
+  itself — `waitForFinished` — and `terminate` is reached only by a state the
+  process really is in.
+- **The frame of a compile is reused, and a reused `QProcess` names the last
+  engine it started**: `startLaTeX` keeps `po` as a member and calls `start` again
+  on it, so a test which asserts the engine of the *second* compile must see the
+  first process end first, or `program()` answers what the previous compile ran
+  whatever the second one did.
+- **A frame a compile attaches is found among the secondary tasks, not as the
+  current one**: `startLaTeX` calls `attachSecondaryTask` and never shows it, so
+  `Buffer::getCurrentSecondaryTask()` answers nothing. What works is
+  `EditorWidget::getSecondaryTasks(&buffer)` and
+  `qobject_cast<ProcessOutputFrame *>(t.w.data())`, keyed on
+  `getProcess().program()`.
+- **`ctest` runs the binary which is on disk**: after a compile which failed, the
+  stale executable happily passes. Grep the build output for `error:` — and note
+  that `cmake --build . | grep error` answers exit 0 whatever it found, so the
+  build must be checked for what it printed, not for its status.
+- `test-latex-mode` is the fifteenth executable and loads the built `LaTeX`
+  plugin in `initTestCase` (`TFEL_EDITOR_LATEX_MODE`, `$<TARGET_FILE:...>` plus
+  `add_dependencies`), which registers the `latex` theme for the rest of *that*
+  executable's run only; `TestSettings`, which asserts the set of themes, is a
+  separate executable and is untouched.
+- A helper which answers something cannot use `QVERIFY` (it expands to a bare
+  `return`): the failure of `makeBuffer` and `frameRunning` is a null pointer the
+  caller asserts on.
 
 ## Architecture
 

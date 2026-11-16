@@ -18,8 +18,8 @@ title `Editor`, and the themes a major mode exports, under the title
 modes which are installed and are about a program a mode drives, not
 about the editor. A title is not a theme: it can not be chosen and shows
 nothing. The page of a theme of a mode says whose it is above the entries
-it holds, since `clangd`, `castem`, `pylsp` and `python` are names of
-programs and say nothing of the mode which launches them.
+it holds, since `clangd`, `castem`, `latex`, `pylsp` and `python` are names
+of programs and say nothing of the mode which launches them.
 
 A theme which is a corner of another one is a submenu of it: the entries
 of a proofreader — which program it is, which language it reads — are
@@ -32,12 +32,13 @@ above the field which edits it, which has the width of the page to
 itself — a path of a program is not something to read in a narrow box —
 and the sentence which says what the entry is for is the tool tip of both.
 A question answered by yes or no is the exception, because a page of them
-is read as a list: its name and its check box stand on one line, and the
-boxes of a theme stand in one column, at the place of the longest of the
-names a box answers. A box under the name it answers reads as an orphan,
-and a box at the end of each name of its own makes a ragged edge instead of
-a column. The name of such an entry is the buddy of its box, which is what
-makes a click on the name toggle it.
+is read as a list: its name and its check box stand on one line and the box
+is *flush with the right edge* of the page, which is the one column the boxes
+of a theme stand in. A box under the name it answers reads as an orphan, and
+a box at the end of each name of its own makes a ragged edge instead of a
+column; a column behind the longest name of the theme would leave the right
+half of every line empty. The name of such an entry is the buddy of its box,
+which is what makes a click on the name toggle it.
 Each entry is edited with the widget which suits the kind of value it
 holds: a check box for a boolean, a spin box for a number, a one line edit
 for a text, a multi line edit for a list of texts, a combo box for a
@@ -178,6 +179,29 @@ started; `clangd/start-by-default` decides whether a file of a project
 which has a `compile_commands.json` starts a session which reads it, and
 is read again on every file opened. The `Color identifiers` entry of the
 `C/C++` menu writes the same address as `clangd/semantic-tokens`.
+
+## latex
+
+| Entry               | Widgets  | Takes effect     |
+|---------------------|----------|------------------|
+| `latex/interpreter` | a choice | the next compile |
+
+Which program the `LaTeX` mode starts when a document is compiled
+(`Alt+M`): `latex`, which writes a DVI file, `pdflatex`, which
+writes a PDF file of the file it is given, or `xelatex`, the engine of
+Unicode and of the fonts of the system. The entry is named after the family
+of programs, as the theme of the `Cast3M` mode is named after `castem`: the
+three are programs a TeX distribution installs under those names, and the
+combo box offers them under those names and no other. `latex` is the default
+and is what a configuration file which says nothing answers with: it is the
+program the mode ran before there was a choice to make.
+
+The `Interpreter` submenu of the `LaTeX` menu writes the same address, and
+the address is read when a process is started, so the next compile uses what
+was chosen — no restart and no new buffer is asked for. A document whose
+class is unknown, or one which loads `fontspec`, is compiled with the engine
+it needs, and that is a decision of the document, not of the editor: the
+menu names the choice for the whole session.
 
 ## pylsp
 

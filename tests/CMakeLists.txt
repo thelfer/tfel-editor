@@ -63,6 +63,7 @@ add_tfel_editor_test(test-shared-compilation-output
                      TestSharedCompilationOutput.cxx)
 add_tfel_editor_test(test-kill-buffer TestKillBuffer.cxx)
 add_tfel_editor_test(test-python-mode TestPythonMode.cxx)
+add_tfel_editor_test(test-latex-mode TestLaTeXMode.cxx)
 add_tfel_editor_test(test-rectangle-mode TestRectangleMode.cxx)
 
 # The grammar checker is a program of its own, and the cases which ask it anything
@@ -125,6 +126,18 @@ add_dependencies(test-python-mode TFELEditorPythonMode)
 target_compile_definitions(
   test-python-mode PRIVATE
   TFEL_EDITOR_PYTHON_MODE="$<TARGET_FILE:TFELEditorPythonMode>")
+
+# The cases of `test-latex-mode` drive the `LaTeX` mode, whose class is not
+# exported: the mode is loaded as the editor loads it, which registers as well the
+# entry it declares, and everything the cases ask goes through the menu of the
+# mode, the settings registry, and the frame of the process a compile starts. A
+# document is compiled by the real program of the buffer, so the assertions name
+# the program and the arguments the process was asked to run: whether the machine
+# holds a TeX which makes a page of that file changes nothing to them.
+add_dependencies(test-latex-mode TFELEditorLaTeXMode)
+target_compile_definitions(
+  test-latex-mode PRIVATE
+  TFEL_EDITOR_LATEX_MODE="$<TARGET_FILE:TFELEditorLaTeXMode>")
 
 # The last case of `test-shared-compilation-output` asks the two text modes what
 # their category is. Those modes are plugins, and loading them registers them for

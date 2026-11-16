@@ -8,6 +8,8 @@
 #include <QtCore/QDebug>
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
+#include <QtCore/QSettings>
+#include <QtGui/QActionGroup>
 #include <QtWidgets/QMenu>
 #include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
@@ -22,6 +24,135 @@
 #include "TFEL/GUI/LaTeXMajorMode.hxx"
 
 namespace tfel::gui {
+
+  namespace {
+
+    /*!
+     * \brief one of the programs a document of LaTeX is compiled with
+     */
+    struct Interpreter {
+      //! name of the program, as it is started, and as the entry is named
+      const char *name;
+      //! sentence which says what that program does with the file
+      const char *tip;
+    };  // end of struct Interpreter
+
+    //! the address the choice of the interpreter is kept in
+    const char interpreter_address[] = "latex/interpreter";
+
+    /*!
+     * \return the programs a document is compiled with, in the order they are
+     * offered, which is the order both the `Interpreter` submenu of the mode
+     * and the combo box of the configuration dialog offer them in
+     *
+     * \note `latex` stands first and is the default: it is the program the mode
+     * ran before there was a choice to make, and the answer a configuration
+     * file which says nothing gives. The three are the engines of every TeX
+     * distribution; a fourth one, `lualatex`, is none of what was asked here
+     * and would be one entry more in this list, in the submenu and in the
+     * choices of the entry, with nothing else to change
+     */
+    QVector<Interpreter> interpreters() {
+      return QVector<Interpreter>()
+          << Interpreter{
+                 "latex",
+                 "The traditional engine. It writes a DVI file, which is no "
+                 "document one reads as it is: a step outside the editor, "
+                 "`dvips` or `dvipdfmx`, makes a PDF file of it. It takes no "
+                 "PNG nor JPEG image and only the fonts its map files name."}
+          << Interpreter{"pdflatex",
+                         "The engine which writes a PDF file of the file it is "
+                         "given: no DVI step, and the images of the document "
+                         "included as they are. What a document which is to be "
+                         "read on screen and asks for no font of the system is "
+                         "usually compiled with."}
+          << Interpreter{
+                 "xelatex",
+                 "The engine of Unicode and of the fonts of the system: it "
+                 "takes any font the session names, through the `fontspec` "
+                 "package, and writes a PDF file directly. Slower than "
+                 "`pdflatex`, and what a document which loads `fontspec` "
+                 "needs."};
+    }  // end of interpreters()
+
+    /*!
+     * \return the program a document is compiled with, from the address
+     * `latex/interpreter`
+     *
+     * \note `latex` is what nothing stored answers with, and what a name which
+     * is none of the three answers with too: the address is read on every
+     * compile, so what the `Interpreter` submenu or the configuration dialog
+     * chose reaches the next compile, and a name no TeX distribution has would
+     * otherwise be reported as a program which does not exist — which is a
+     * mistake in the configuration file, not a question to ask of a person
+     * working on a document
+     */
+    QString chosenInterpreter() {
+      const auto v = QSettings()
+                         .value(QLatin1String(interpreter_address),
+                                QStringLiteral("latex"))
+                         .toString();
+      for (const auto& i : interpreters()) {
+        if (v.compare(QLatin1String(i.name), Qt::CaseInsensitive) == 0) {
+          return QString::fromLatin1(i.name);
+        }
+      }
+      return QStringLiteral("latex");
+    }  // end of chosenInterpreter()
+
+    /*!
+     * \brief choose the program the documents of the editor are compiled with
+     * \param[in] editor : editor widget to report the choice in
+     * \param[in] name   : name of one of the three engines
+     *
+     * \note the choice is one for the editor and not for the buffer it was
+     * asked in: a document is compiled with the engine its person works with,
+     * wherever they happen to be standing when they say so. What is chosen is
+     * reported in the minibuffer and reaches the next compile, since the
+     * address is read when a process is started
+     */
+    void setInterpreter(EditorWidget& editor, const QString& name) {
+      QSettings().setValue(QLatin1String(interpreter_address), name);
+      editor.displayInformativeMessage(
+          QObject::tr("compiling with %1").arg(name));
+    }  // end of setInterpreter()
+
+    /*!
+     * \brief put the tick of the entries of \c group on the entry naming the
+     *        engine the settings hold
+     * \param[in] group : the three entries of the `Interpreter` submenu
+     *
+     * \note the tick is drawn when the submenu is built and again every time it
+     * is opened: the configuration dialog, or a configuration file edited by
+     * hand, answers the question differently between two builds of the menu, and
+     * a tick which stayed where the last click put it would name a program the
+     * next compile does not run
+     */
+    void redrawTick(const QActionGroup& group) {
+      const auto name = chosenInterpreter();
+      for (auto* const a : group.actions()) {
+        a->setChecked(a->text() == name);
+      }  // end of for
+    }  // end of redrawTick()
+
+    /*!
+     * \return the values the combo box of the configuration dialog offers, in
+     * the order \c interpreters answers them, the first one being the default
+     *
+     * \note the label of a choice is the name of the program: a person chooses
+     * the engine their distribution installs under that name, and no other
+     * spelling of it says anything one of the three does not
+     */
+    QVector<SettingsKey::Choice> interpreterChoices() {
+      auto cs = QVector<SettingsKey::Choice>();
+      for (const auto& i : interpreters()) {
+        cs << SettingsKey::Choice(QLatin1String(i.name),
+                                  QString::fromLatin1(i.name));
+      }
+      return cs;
+    }  // end of interpreterChoices()
+
+  }  // end of anonymous namespace
 
   static int countNumberOfCurlyBraces(const QString& s) {
     int n = 0;
@@ -221,11 +352,20 @@ namespace tfel::gui {
       p.setWorkingDirectory(QDir::current().absolutePath());
     }
     po->setMajorMode("latex-output");
+    // The three engines are web2c programs: they take the file to read as a plain
+    // argument, add the `.tex' extension when the name has none, and report the
+    // places of the file in one shape, which is what the `latex-output' mode of
+    // the frame reads. What the name is followed by used to be a quoted `\input'
+    // command, which is a trick of the way `pdftex' scans its command line and
+    // which `xelatex' does not know: handed the argument `"\input"', that program
+    // looked for a file named `"' and stopped (`I can't find file '..."'`,
+    // measured). The file name alone reaches the three of them, absolute or
+    // relative, with or without an extension, with or without a space in it
     QStringList args;
     args << "-file-line-error"
          << "-interaction=nonstopmode"
-         << "\"\\input\"" << m;
-    p.start("latex", args);
+         << m;
+    p.start(chosenInterpreter(), args);
   }  // end of LaTeXMajorMode::startLaTeX
 
   QMenu* LaTeXMajorMode::getSpecificMenu() {
@@ -233,19 +373,45 @@ namespace tfel::gui {
     if (t == nullptr) {
       return nullptr;
     }
-    // the menu of the mode is the grammar checker's, and nothing else: the mode
-    // has no other entry of its own, and a menu which would be empty on a
-    // machine which has no checker to launch is a menu nobody should see
-    if (!GrammarCheckSession::isAvailable()) {
-      return nullptr;
-    }
     auto* const m = new QMenu(QObject::tr("LaTeX"), t);
     m->setIcon(this->getIcon());
-    // the four choices of the proofreader and, under each of them, the languages
-    // that choice reads. The checker of harper says on its own name that it knows
-    // no word of French: a document of French is read by hunspell, by the
-    // spellings of the dictionary which is chosen for it, and by nothing else
-    this->grammar->addToMenu(*m);
+    // which TeX reads the file is one exclusive question, and its answers are
+    // programs, named as they are called: an engine is chosen by name, and no
+    // sentence dressed around `pdflatex` says anything the name does not
+    auto* const interpreter_menu = m->addMenu(QObject::tr("Interpreter"));
+    interpreter_menu->setObjectName(QStringLiteral("latex-interpreter"));
+    interpreter_menu->setToolTip(
+        QObject::tr("Which program compiles this document (Alt+M). The entry "
+                    "`Program which compiles a document` of the `latex` theme "
+                    "of the configuration writes the same address"));
+    auto* const group = new QActionGroup(interpreter_menu);
+    group->setExclusive(true);
+    for (const auto& i : interpreters()) {
+      const auto name = QString::fromLatin1(i.name);
+      auto* const a = interpreter_menu->addAction(name);
+      a->setCheckable(true);
+      a->setToolTip(QObject::tr(i.tip));
+      group->addAction(a);
+      QObject::connect(a, &QAction::triggered, this, [this, name] {
+        setInterpreter(this->editor, name);
+      });
+    }
+    // the tick is drawn when the submenu is built and again every time it is
+    // opened: the configuration dialog, the menu of another buffer, or a
+    // configuration file edited by hand can have changed the engine since, and a
+    // menu ticking the program which is not the one that compiles is a menu which
+    // lies about what the next `Alt+M` does
+    redrawTick(*group);
+    QObject::connect(interpreter_menu, &QMenu::aboutToShow, this,
+                     [group] { redrawTick(*group); });
+    if (GrammarCheckSession::isAvailable()) {
+      // the four choices of the proofreader and, under them, the languages that
+      // choice reads. The checker of harper says on its own name that it knows
+      // no word of French: a document of French is read by hunspell, by the
+      // spellings of the dictionary which is chosen for it, and by nothing else
+      m->addSeparator();
+      this->grammar->addToMenu(*m);
+    }
     return m;
   }  // end of LaTeXMajorMode::getSpecificMenu
 
@@ -839,6 +1005,44 @@ namespace tfel::gui {
   // `delete this->c` used to live here. Since c was never assigned, it was a
   // delete of a null pointer: a no-op, and dead code.
   LaTeXMajorMode::~LaTeXMajorMode() = default;
+
+  QVector<SettingsGroup> LaTeXMajorMode::declareSettings() {
+    // the one entry the mode reads is gathered in a theme named after the
+    // programs it launches, as the C++ mode does for `clangd` and the `Cast3M`
+    // mode for `castem`: a person who finds that the file which comes out of
+    // `Alt+M` is a DVI where they expected a PDF looks for the engine, and the
+    // family of programs which read a `.tex` file is named `latex`. The icon of
+    // the theme is the one of the mode, which is what the proxy of the mode adds
+    auto latex = SettingsGroup{};
+    latex.name = QStringLiteral("latex");
+    latex.description = QObject::tr(
+        "The program a document of this editor is compiled with. The address "
+        "is read when a document is compiled, so what is chosen here reaches "
+        "the next compile and leaves a compile which is running alone");
+    latex.keys =
+        QVector<SettingsKey>()
+        << SettingsKey::choice(
+               interpreter_address,
+               QObject::tr("Program which compiles a document"),
+               QObject::tr("Which TeX reads the file. `latex` writes a DVI "
+                           "file, which a step outside the editor turns into a "
+                           "PDF file; `pdflatex` writes a PDF file directly and "
+                           "takes the images of the document as they are; "
+                           "`xelatex` is the engine of a document written in "
+                           "Unicode and asking for the fonts of the system, "
+                           "through `fontspec`. The `Interpreter` submenu of the "
+                           "`LaTeX` menu writes this same address and the tick "
+                           "of its entries says which one a compile would use. "
+                           "Whichever ran, its report is shown in the "
+                           "secondary task of the buffer and read the same way, "
+                           "since the three are web2c programs writing one "
+                           "shape of report"),
+               interpreterChoices(), QStringLiteral("latex"));
+    // nothing else: the file the master document of a buffer is, and the name of
+    // the buffer being compiled, are facts of the document, not choices of the
+    // person using the editor, and the mode remembers nothing else of its own
+    return QVector<SettingsGroup>() << latex;
+  }  // end of LaTeXMajorMode::declareSettings
 
   static StandardMajorModeProxy<LaTeXMajorMode> proxy(
       "LaTeX",

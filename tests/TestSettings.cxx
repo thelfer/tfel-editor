@@ -698,11 +698,11 @@ void TestSettings::theThemesOfTheMajorModesAreSeparatedFromThoseOfTheEditor() {
 // A check box answers the name which stands on its line, and the boxes of a theme
 // are a list of questions with a yes or no answer which is read column by column:
 // a box under its name, or a box placed at the end of each name of its own, makes
-// the page a list of orphans. What is asserted here is therefore the two shape
-// facts of the row of a boolean — the name and the box on one line, all the boxes
-// of a theme at one place — on the page which is shown, since only that page has a
-// geometry: the hidden pages of the stack are what a hidden window leaves its
-// widgets with, 100 x 30 pixels.
+// the page a list of orphans. What is asserted here is therefore the three
+// shape facts of the row of a boolean — the name and the box on one line, all
+// of a theme at one place, that place the right edge of the page — on the page
+// which is shown, since only that page has a geometry: the hidden pages of the
+// stack are what a hidden window leaves its widgets with, 100 x 30 pixels.
 void TestSettings::theCheckBoxesOfAThemeStandInOneColumnOnTheirOwnLine() {
   forgetEverything();
   Shell shell;
@@ -750,6 +750,21 @@ void TestSettings::theCheckBoxesOfAThemeStandInOneColumnOnTheirOwnLine() {
                qPrintable(QStringLiteral("the check box of '%1' stands on the "
                                          "name it answers")
                               .arg(name->text())));
+      // the column of a theme is the right edge of the page: the box is flush
+      // with the end of its line, whatever the width of the name it answers.
+      // The three pixels of slack are what a style may leave between the last
+      // item of a line and its edge; a column set behind the longest name of
+      // the theme, the shape this replaces, stood 23 pixels away on the
+      // `clangd' page and 182 on the `pylsp' one, and the ragged edge of no
+      // stretch at all ends 316 pixels from it.
+      QVERIFY2((box->geometry().right() >= row->width() - 3) &&
+                   (box->geometry().right() <= row->width() - 1),
+               qPrintable(QStringLiteral("the check box of '%1' ends at x=%2 "
+                                         "while its line is %3 pixels wide: it "
+                                         "does not stand at the right edge")
+                              .arg(name->text())
+                              .arg(box->geometry().right())
+                              .arg(row->width() - 1)));
       // the name says what it belongs to, and gives it the click it receives
       QVERIFY2(name->buddy() == box,
                qPrintable(QStringLiteral("the name '%1' is not the buddy of its "

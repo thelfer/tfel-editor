@@ -10,8 +10,10 @@
 
 #include <QtCore/QPointer>
 #include <QtCore/QRegularExpression>
+#include <QtCore/QVector>
 #include <TFEL/GUI/SpellChecker.hxx>
 #include "TFEL/GUI/MajorModeBase.hxx"
+#include "TFEL/GUI/SettingsKey.hxx"
 
 namespace tfel::gui {
 
@@ -52,6 +54,18 @@ namespace tfel::gui {
 
     //! \return "major mode dedicated to the LaTeX"
     QString getDescription() const override;
+
+    /*!
+     * \return the entries of the configuration the mode uses: the program a
+     * document is compiled with, in a theme of its own named after that family
+     * of programs
+     *
+     * \note this static method is what \c StandardMajorModeProxy reports as the
+     * settings of the mode, see \c MajorModeProxy::getSettingsGroups. The
+     * address is the one \c chosenInterpreter reads when a document is compiled
+     * and the one the `Interpreter` submenu of the mode writes
+     */
+    static QVector<SettingsGroup> declareSettings();
 
     /*!
      * \brief install a `LaTeXSyntaxHighlighter` on the given document
@@ -96,8 +110,12 @@ namespace tfel::gui {
     /*!
      * \return a menu specific to this mode
      *
-     * \note a null pointer: the mode adds no menu of its own to the menu
-     * bar
+     * \note the menu is named `LaTeX` and holds the two questions the mode asks
+     * of the person using it: which program compiles the document, in the
+     * `Interpreter` submenu, and which proofreader reads its text, in the four
+     * choices of \c GrammarCheckSession::addToMenu. The first is always there;
+     * the second is only when a checker can be launched on this machine, which
+     * is the only case where the mode has nothing to add to the menu bar
      */
     QMenu *getSpecificMenu() override;
 
@@ -242,9 +260,10 @@ namespace tfel::gui {
    protected slots:
 
     /*!
-     * \brief run `latex` on the current buffer
+     * \brief run the interpreter of the mode on the current buffer
      *
-     * \note the file which is compiled is that of \c startLaTeX
+     * \note the file which is compiled is that of \c startLaTeX, and the
+     * program which compiles it is the one \c chosenInterpreter answers with
      *
      * \note the buffer is saved first, through the minibuffer, when it holds
      * unsaved changes; the compilation is then started as soon as the save
@@ -253,12 +272,18 @@ namespace tfel::gui {
     virtual void runLaTeX();
 
     /*!
-     * \brief start the `latex` process on the file of the buffer
+     * \brief start the process of the chosen interpreter on the file of the
+     * buffer
      *
      * The master file announced by the buffer is used when it holds one, the
-     * file of the buffer otherwise. The output of the process is displayed
-     * in a secondary task of the buffer titled "*LaTeX* ouput", with the
-     * "latex-output" major mode.
+     * file of the buffer otherwise. The program is the one the address
+     * `latex/interpreter` names — `latex`, `pdflatex` or `xelatex` — and is
+     * read here, on every compile, so a choice made in the `Interpreter`
+     * submenu or in the configuration dialog reaches the next compile with no
+     * restart of the editor. The three take the same two options and the
+     * output of whichever ran is displayed in a secondary task of the buffer
+     * titled "*LaTeX* ouput", with the "latex-output" major mode: that mode
+     * reads the report of a web2c engine, which all three are.
      *
      * \note nothing is run and a message is displayed in the minibuffer when
      * the file has no name or does not exist on the disk
@@ -412,8 +437,8 @@ namespace tfel::gui {
     int emwp = 0;
 
     /*!
-     * \brief the frame the output of the `latex` process is displayed in, a
-     * null pointer when the document was never compiled
+     * \brief the frame the output of the process of the interpreter is
+     * displayed in, a null pointer when the document was never compiled
      *
      * \note a \c QPointer: the frame is a secondary task of the buffer, which
      * the user may close at any time, and \c startLaTeX creates a new one

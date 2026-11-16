@@ -41,7 +41,7 @@ surface: a plain red underline and a tooltip.
 |-------|------|---------|
 | The editor | `Options > Orthograph/Grammar` | the four choices |
 | `C`/`C++` | `C/C++` | the four choices, beside the `clangd` entries |
-| `LaTeX` | `LaTeX` | the four choices, which is the whole menu |
+| `LaTeX` | `LaTeX` | the four choices, below the `Interpreter` submenu of the engine which compiles the document |
 | `Markdown` | `Markdown` | the four choices, which is the whole menu |
 
 One choice for the editor, wherever it is made: the underlines of a text are
