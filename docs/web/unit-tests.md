@@ -37,6 +37,7 @@ What is covered:
 | `test-python-mode`        | the `Python` mode: the faces of its scanner, the indentation levels `python.el` walks a line through, the region keys, the interpreter session and the prompts of its transcript, the tools of the language the menu offers |
 | `test-latex-mode`         | the program a document of `LaTeX` is compiled with: the entry of the configuration which names it, the `Interpreter` submenu which writes the same address and the tick which names the engine in use, and the process a compile of the buffer starts |
 | `test-rectangle-mode`     | the rectangle commands of `Ctrl-X R`, every expectation of which comes from a record GNU Emacs itself wrote |
+| `test-spell-check-suggestions` | the `Suggestions` entry of the context menu of a misspelled word: the submenu of the corrections the dictionary answers, which of two words of a line the place of the click names, and the replacement a choice makes, asked of the `LaTeX` and `Markdown` modes as the editor loads them |
 
 These encode the invariants fixed by
 [issue #121](https://github.com/thelfer/tfel-editor/issues/121);

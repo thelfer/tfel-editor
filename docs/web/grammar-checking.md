@@ -105,6 +105,46 @@ spelling only` when that entry is chosen there. In a `LaTeX` or a
 `harper-ls` needs no such difference: it is told what a comment is by the
 grammar of the language, and a `C++` buffer is sent to it whole.
 
+# The suggestions of the dictionary
+
+A word the dictionary does not know is underlined while it is read. Right
+clicking on such a word adds one entry to the menu of the buffer, named
+`Suggestions`, which leads to one entry per correction the dictionary
+answers, in its own order — the order in which it holds a correction likely,
+so the first row is what a reader would type. Choosing a row replaces the word
+by that correction; the rest of the line is left where it is, and the cursor
+of the buffer is not moved: the replacement answers what the mouse asked.
+
+- **Which word**: the one the position of the click stands in. A position of a
+  document is a place *between* two characters, so the click on the first
+  letter of a word and the click on its last both name that word, and the only
+  place which names nothing is the one between two words. A line which holds
+  two misspelled words is therefore asked about one of them, the one under the
+  mouse.
+- **Which words are asked at all**: those the highlighter of the mode reads as
+  text. A word of a LaTeX command or of a comment of a `LaTeX` file is not
+  underlined and is offered no suggestion, and the menu asks the very same
+  split of the line the underlines are drawn with, so the entry and the
+  underline can not disagree about what a misspelled word is.
+- **Which buffer**: the `LaTeX` and `Markdown` modes both answer the question,
+  and with the same helper of the editor, which is why the entry has the same
+  shape, and the same replacement, under either.
+- **When there is no entry**: when the word is spelled well, when the
+  dictionary answers nothing for it, when the buffer holds no dictionary —
+  which is what the choice of `LanguageTool` comes to for a source file — and
+  when the buffer can not be written to, as while the banner of a file
+  modified on disk freezes it. A menu which offers a replacement it can not
+  make is a menu which lies.
+
+The entry stands in front of the entries of the buffer itself — undo, copy,
+paste — with a separator behind it: the suggestions are what the click asked
+about.
+
+The suggestions are the corrections of the dictionary for one word of one
+buffer. Nothing here is remembered about the word: `hunspell` can add a word to
+a personal dictionary, and the editor leaves that to the person who owns the
+dictionary files.
+
 # The lints
 
 - **One face**: what a checker finds is underlined in the text, in a plain
@@ -122,9 +162,11 @@ grammar of the language, and a `C++` buffer is sent to it whole.
   who thinks the rule wrong looks up in the documentation of the checker, so
   it goes with the sentence and is not left out. Several lints of one run are
   said together, one per line.
-- **No entry in the context menu**: the checker says what is wrong with a
-  word and leaves the pen to the person who wrote the sentence, so the
-  message of a lint is read where it is written, as a tooltip.
+- **No entry in the context menu**: a lint says what is wrong with a run of
+  words and leaves the pen to the person who wrote the sentence, so its
+  message is read where it is written, as a tooltip. What a *dictionary* says
+  about a single word is another matter, and does have entries: see the
+  suggestions above.
 
 The lints are drawn as a contribution of their own, keyed `grammar`, to the
 extra selections of the text edit, the same mechanism the diagnostics, the
