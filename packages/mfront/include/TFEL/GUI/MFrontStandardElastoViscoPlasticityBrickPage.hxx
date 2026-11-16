@@ -50,6 +50,9 @@ namespace tfel::gui {
      * \c MFrontAddInelasticFlowDialog and appends it, "Modify" reopens that
      * dialog prefilled with the selected flow and "Remove" takes it out of the
      * list. The last two are disabled while the list holds no selected flow
+     *
+     * \note double-clicking an entry of the list is the same request as
+     * "Modify": the dialog of that flow is reopened
      */
     MFrontStandardElastoViscoPlasticityBrickPage(EditorWidget &,
                                                  TextEditBase &,
@@ -81,6 +84,9 @@ namespace tfel::gui {
      *
      * \note nothing happens when the list selects nothing, which the button of
      * the page makes impossible: an empty list has nothing to modify
+     *
+     * \sa modifyInelasticFlowAtRow, which is what a double-click on an entry
+     * reaches and names the row it was aimed at
      */
     void modifyInelasticFlow();
     /*!
@@ -141,6 +147,20 @@ namespace tfel::gui {
      * by updateInelasticFlowsList as well, which resets that selection.
      */
     void updateInelasticFlowsButtons();
+    /*!
+     * \brief reopen the dialog prefilled with the inelastic flow of the row
+     * \param[in] i: the row of the list which names the flow, counted as the
+     * entries of the vector the page holds
+     *
+     * What the user answers replaces that flow, the entry keeping its place and
+     * the selection.
+     *
+     * \note nothing happens when the row names no flow of the page: the button
+     * which modifies the selected flow is disabled when the list selects none
+     * and a double-click names the row it was aimed at, so a row out of the
+     * range of the vector means the list and the vector are out of step
+     */
+    void modifyInelasticFlowAtRow(const int);
     //! list of inelastic flows
     std::vector<MFrontAddInelasticFlowDialog::InelasticFlowDescription>
         inelastic_flows;

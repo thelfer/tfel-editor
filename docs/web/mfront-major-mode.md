@@ -58,10 +58,13 @@ list selects none, which is the state of an empty list and of a list whose
 entry has been clicked away. A modification keeps the place and the
 selection of the flow it rewrote; a removal selects the flow which takes its
 place, and the dialog refusing a modification leaves the flow exactly as it
-was. What the list holds is what the page writes: the behaviour description
-it generates carries one `inelastic_flow:` entry per flow of the list, in
-their order, so removing a flow here is the way to take it out of a file
-which already holds one.
+was. Double-clicking an entry is the same request as `Modify`: the dialog
+reopens with the flow of the entry the pointer was on, whether or not that
+entry was the selected one, and a double-click on the empty space below the
+entries asks nothing. What the list holds is what the page writes: the
+behaviour description it generates carries one `inelastic_flow:` entry per
+flow of the list, in their order, so removing a flow here is the way to take
+it out of a file which already holds one.
 
 # Shortcuts
 

@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <QtCore/QItemSelectionModel>
+#include <QtCore/QModelIndex>
 #include <QtGui/QStandardItemModel>
 #include <QtGui/QValidator>
 #include <QtWidgets/QAbstractItemView>
@@ -172,6 +173,13 @@ namespace tfel::gui {
                      &QItemSelectionModel::selectionChanged, this,
                      &MFrontStandardElastoViscoPlasticityBrickPage::
                          updateInelasticFlowsButtons);
+    // double-clicking an entry is the request to modify the flow it names: the
+    // signal carries the row, so a double-click on an entry which was not the
+    // selected one modifies that entry rather than the flow the buttons work on
+    QObject::connect(ifv, &QListView::doubleClicked, this,
+                     [this](const QModelIndex &i) {
+                       this->modifyInelasticFlowAtRow(i.row());
+                     });
     // the list is empty and the two buttons which work on the selected flow
     // have nothing to work on
     this->updateInelasticFlowsList(-1);
@@ -236,13 +244,20 @@ namespace tfel::gui {
   }  // end of MFrontStandardElastoViscoPlasticityBrickPage::addInelasticFlow
 
   void MFrontStandardElastoViscoPlasticityBrickPage::modifyInelasticFlow() {
+    this->modifyInelasticFlowAtRow(
+        selected_flow_row(this->inelastic_flows_list));
+  }  // end of MFrontStandardElastoViscoPlasticityBrickPage::modifyInelasticFlow
+
+  void MFrontStandardElastoViscoPlasticityBrickPage::modifyInelasticFlowAtRow(
+      const int i) {
     // the list and the vector are kept in step, so the row of one is the same
     // flow as the entry of the other of the same index
-    const auto i = selected_flow_row(this->inelastic_flows_list);
     if ((i < 0) ||
         (static_cast<decltype(inelastic_flows.size())>(i) >=
          this->inelastic_flows.size())) {
-      // the button of the page is disabled when the list selects no flow
+      // the button which modifies the selected flow is disabled when the list
+      // selects no flow and a double-click names the row it was aimed at, so a
+      // row out of the range of the vector means the two are out of step
       return;
     }
     auto *const p = dynamic_cast<MFrontBehaviourWizard *const>(this->wizard());
