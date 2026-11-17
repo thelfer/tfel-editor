@@ -273,10 +273,26 @@ void TestEditorWidget::informationLineStandsUnderTheBuffersAndNamesThem() {
   QVERIFY2(l->indexOf(shell.ed->minibuffer) == 2,
            "the minibuffer does not stand under the row of information lines");
   QVERIFY2(row->height() > 0, "the row of information lines is not drawn");
-  QVERIFY2(row->height() < 40,
-           qPrintable(QString("the row of information lines is %1 px tall")
-                        .arg(row->height())));
   QCOMPARE(row->width(), shell.ed->width());
+  // The row is exactly one line of labels tall, and nothing more. The line's
+  // layout stands on a widget of its own, which makes it a *top-level* layout,
+  // and such a layout takes the style's default contents margins -- 9 pixels
+  // top and bottom here -- where the nested layout of the buffer had none.
+  // With those margins the row would be nearly as tall as two lines and the
+  // text would have lost the height of a line whole, so the assertion is not
+  // a bound but an equality with the height the labels of the line ask for.
+  auto* const line = row->currentWidget();
+  QVERIFY2(line != nullptr, "the row of information lines holds no page");
+  auto tallest = 0;
+  for (const auto* const l : line->findChildren<QLabel *>()) {
+    tallest = qMax(tallest, l->sizeHint().height());
+  }
+  QVERIFY2(tallest > 0, "the information line holds no label to measure");
+  QVERIFY2(qAbs(row->height() - tallest) <= 2,
+           qPrintable(QString("the row of information lines is %1 px tall "
+                              "against the %2 px its labels ask for")
+                        .arg(row->height())
+                        .arg(tallest)));
   // One page per buffer, and the page on display is the line of the buffer on
   // the screen: `insertBuffer` feeds the two stacks in the one call and
   // `setCurrentBuffer` switches them together, which is the only way the row

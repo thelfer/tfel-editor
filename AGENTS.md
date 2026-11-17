@@ -2577,14 +2577,16 @@ What the panel is, and what the splitter keeps:
   itself; `MainWindow::selectFont` has no special case for it any more.
 
 Measured on both platforms (panel shown, `/tmp/opencode/explorer/geom.cxx`): the
-row of the panel and the buffers is 631 px tall offscreen and 625 px on Xvfb +
+row of the panel and the buffers is 649 px tall offscreen and 643 px on Xvfb +
 metacity, the panel 332 px of the editor's 1000 px on both (ratio 0.332), the
 handle 4 px, the buffer then 664 px wide at x=336; below that row the
-information line is 1000x32 offscreen and 1000x34 on the live display and the
-minibuffer 1000x18 and 1000x20, each beginning exactly where the row above it
-ends. The total is what the buffer and the minibuffer were before the line was
-hoisted out of the buffer (663+18 offscreen, 659+20 on the live display): the
-hoist moved the line, it did not grow it. The ratio is taken on the width of the
+information line is 1000x14 offscreen and 1000x16 on the live display — exactly
+what its labels ask, which is what a top-level layout with zeroed contents
+margins gives (see the section on `Buffer::infoLine`) — and the minibuffer is
+1000x18 and 1000x20, each beginning exactly where the row above it ends. The
+total is what the buffer and the minibuffer were before the line was hoisted
+out of the buffer (663+18 offscreen, 659+20 on the live display): the hoist
+moved the line, it did not grow it. The ratio is taken on the width of the
 **editor**, which is the same number on both platforms; the window is not
 (metacity's own decoration moves the client area, and `w.width()` is the client
 width).
@@ -2730,6 +2732,16 @@ Two shapes of the row are load-bearing:
 - the labels have a `Maximum` **horizontal** policy, which inside the 664 px of
   a buffer next to a panel could not be relieved and clamped the row; at the
   whole width of the window there is always room for what they name.
+- the layout of the line has **zeroed contents margins**, because installed on
+  a widget it is a *top-level* layout and takes the style's defaults — 9 px top
+  and bottom, so a 14 px line of labels would stand in a 32 px row and the
+  text would lose a line of height to nothing. The `setContentsMargins` of the
+  **widget** does not help: a layout with unset margins reads the style, not
+  the widget. Nested in the buffer with `addLayout`, the same layout had no
+  margins at all — this is the whole of why the hoist first came out taller.
+  `informationLineStandsUnderTheBuffersAndNamesThem` asserts the row's height
+  equals the tallest label's `sizeHint` (±2 px), which a dropped
+  `setContentsMargins` fires on both platforms.
 
 ## Architecture
 

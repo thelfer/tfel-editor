@@ -113,6 +113,13 @@ namespace tfel::gui {
     // is shown, and the buffer keeps redrawing them as it always did.
     this->infoLine->setContentsMargins(0, 0, 0, 0);
     this->info = new QHBoxLayout;
+    // A layout installed on a widget is a *top-level* layout and takes the
+    // style's default contents margins, 9 pixels all around here; nested in
+    // the buffer with addLayout, the very same layout had none. Zeroing them
+    // is what keeps the row of the editor exactly one line of labels tall, as
+    // the line was while it stood inside the buffer; the margins of the
+    // widget above do not help, a layout with unset margins reads the style.
+    this->info->setContentsMargins(0, 0, 0, 0);
     this->timer = new QTimer(this);
     this->bni = new QLabel(this->infoLine);
     this->rpi = new QLabel(this->infoLine);
