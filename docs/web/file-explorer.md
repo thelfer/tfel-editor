@@ -2,14 +2,15 @@ The left hand side of the buffers can hold a tree of the file system: the
 directories around the file you are working on, and the files of those
 directories. It is brought on screen and taken away with
 `Display > Hide/Show Explorer Panel`, the entry of a menu which stands between
-`Edit` and `Buffers` — and the panel is hidden until it is asked for.
+`Edit` and `Buffers` — and a new window shows the panel only if the window
+before it was closed with the panel open.
 
 ![The explorer panel on the left of the buffers, with the file its double click
-opened on the screen](img/explorer-panel.png "The explorer panel, about a third
-of the width given to the buffers, with notes.txt opened by a double click on
-its name. The line of the buffer — name, position in the file, major mode, time
-— and the line which reports what the editor did stand below it, across the
-whole width of the window")
+opened on the screen](img/explorer-panel.png "The explorer panel, about a
+quarter of the width given to the buffers, with notes.txt opened by a double
+click on its name. The line of the buffer — name, position in the file, major
+mode, time — and the line which reports what the editor did stand below it,
+across the whole width of the window")
 
 # What the panel holds
 
@@ -23,8 +24,8 @@ line holds the two ways out of the directory it shows:
 
 Below that line stand the sub-directories of the directory, in alphabetical
 order, then its files, in the same order. Only the name of an entry is drawn:
-the panel is a third of a window wide, and the size, the type and the date of a
-file are none of its business. A directory names its own children once it is
+the panel is a fraction of a window wide, and the size, the type and the date of
+a file are none of its business. A directory names its own children once it is
 opened — a double click on its name, or on the arrow beside it — and an entry
 created, renamed or removed on disk reaches the tree by itself, without asking.
 Files whose name begins with a dot are not among the entries.
@@ -41,19 +42,27 @@ blank space below the entries opens nothing at all.
 
 # How wide it is
 
-The first time the panel is shown it takes about a third of the width and the
+The first time the panel is shown it takes about a quarter of the width and the
 buffers get the rest. The handle between the two halves drags like any other: a
-panel pulled to half the width stays there, and when it is hidden and brought back
-it comes back **the width you left it**, not the third it was given the first
-time. It can be shrunk to the two buttons of its header and widened as far as the
-buffers allow.
+panel pulled to half the width stays there, and when it is hidden and brought
+back it comes back **the width you left it**, not the quarter it was given the
+first time. It can be shrunk to the two buttons of its header and widened as far
+as the buffers allow.
+
+And what you leave is what the next window finds. The panel is shown closed or
+open as the window before it was closed — open in the last one, open in the new
+one; and the width the handle was last left at is the width the new window
+restores, not the default quarter. This remembering is the state of your last
+session, not a setting: neither the open nor the width appears in the
+configuration dialog, and there is nothing to configure — drag the handle, hide
+or show the panel, and the next window obeys.
 
 The panel is as tall as the buffers and ends where the text of the buffer on the
 screen ends. **Below** it stand the two lines of the window, each across its
 whole width: the line of the buffer, which names that buffer and says where the
 cursor stands in it and what its major mode and the time are, and the line which
 reports what the editor did and asks the questions of the minibuffer in it. The
-third of the width is therefore taken out of the row of the text alone, and a
+width of the panel is therefore taken out of the row of the text alone, and a
 long message is never cut by a panel which has nothing to say about it — nor is
 the name of the buffer you are reading, which stays as wide as the window even
 when half of that window shows the file system. The height of the buffers is

@@ -456,11 +456,18 @@ namespace tfel::gui {
      *
      * The panel is built hidden and rooted at the working directory. The first
      * show roots it at the directory of the file the current buffer visits, the
-     * working directory when it visits none, and gives it a third of the width
-     * of the editor: a panel which followed the current buffer would jump out
-     * of the directory the user walked to, and the width the user gave the
-     * panel is what the next show owes them, which a `QSplitter` keeps for a
-     * hidden child.
+     * working directory when it visits none, and gives it the width the address
+     * `explorer/panel-width` holds, a quarter of the editor when it names
+     * nothing: a panel which followed the current buffer would jump out of the
+     * directory the user walked to, and the width the user gave the panel is
+     * what the next show owes them, which a `QSplitter` keeps for a hidden
+     * child and the settings keep for the next window. Whether the panel
+     * stands open when a window is built is the address `explorer/panel-shown`
+     * says, written by every show and hide of this method and by every close
+     * of a window which holds the panel open, and read back by `showEvent`.
+     * Neither address is an entry of the configuration dialog:
+     * what the editor remembers from the last session is not a setting one
+     * configures.
      *
      * \note the panel stands on the left of the buffers, above the minibuffer:
      * it is as tall as the buffers and ends where they do, so the informative
@@ -472,6 +479,19 @@ namespace tfel::gui {
     //! \return whether the file explorer panel is shown
     bool isExplorerPanelVisible() const;
 
+   protected:
+    /*!
+     * \brief on the first show, restore the file explorer panel the settings
+     * say the previous window left open
+     *
+     * The first show is the moment the widget tree knows its width: asked
+     * earlier, the splitter holding the panel still answers the 100 pixels a
+     * child of no layout has, and the panel would be restored at a quarter of
+     * nothing.
+     */
+    void showEvent(QShowEvent *) override;
+
+   public:
    signals:
 
     //! signal launched when this widget has been closed (see closeEvent)
@@ -665,6 +685,14 @@ namespace tfel::gui {
     QSplitter *explorerSplitter;
     //! whether the explorer panel has been shown at least once
     bool explorerStarted;
+    /*!
+     * \brief whether the panel of this window still has to be restored
+     *
+     * Set from the address `explorer/panel-shown` when the editor is built and
+     * spent on the first show, where the width needed to restore the panel is
+     * finally known.
+     */
+    bool explorer_restore_pending;
     /*!
      * \brief the minibuffer: a container holding the informative message area,
      * the empty area and the user inputs, of which only one is shown at a time

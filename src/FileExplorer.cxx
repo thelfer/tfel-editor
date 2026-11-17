@@ -35,8 +35,8 @@ namespace tfel::gui {
     this->model->setFilter(QDir::AllEntries | QDir::NoDotAndDotDot);
     this->tree->setModel(this->model);
     // The model names five columns; only the name of an entry is of any use in
-    // a panel whose whole width is a third of a window, and there is no header
-    // to name a column the entries are not sorted by
+    // a panel whose whole width is a fraction of a window, and there is no
+    // header to name a column the entries are not sorted by
     for (int c = 1; c != this->model->columnCount(); ++c) {
       this->tree->setColumnHidden(c, true);
     }

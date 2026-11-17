@@ -1471,11 +1471,15 @@ like `CommandFactory` and `MajorModeFactory`.
 
 **What is shown is what one chooses, never what the editor remembers.** Every
 `.../history` address (the commands of `Alt+X`, `Alt+!`, `grep`, `Alt+%`, the
-compilation command `Alt+M` proposes per mode), the `recent files` list, and the
-`.../last-interface` addresses of the `MFront` mode are deliberately **not**
+compilation command `Alt+M` proposes per mode), the `recent files` list, the
+`.../last-interface` addresses of the `MFront` mode, and the `explorer/panel-shown`
+and `explorer/panel-width` addresses which carry the file explorer panel from one
+window to the next are deliberately **not**
 entries: a `CommandLine` is given an address and writes it back when its answer is
 taken, so such a field shows a stale list and is overwritten by the next prompt on
-its own account. A test asserts those addresses are not declared
+its own account, and a panel's open state and dragged width are the same kind of
+memory — the window writes them on its own, whatever the dialog says.
+A test asserts those addresses are not declared
 (`theRegistryDeclaresTheEntriesOfTheEditor`), which is what keeps the next person
 from putting them back. The themes that remain are `General` and `Spelling and
 grammar` (with the `Harper` and `LanguageTool` subthemes) from the core, `clangd`
@@ -2561,9 +2565,37 @@ What the panel is, and what the splitter keeps:
 
 - Built by the constructor of the editor and **hidden**; the first show roots it
   at the directory of the file the current buffer visits (`QDir::current()` when
-  it visits none, the choice `Ctrl-X Ctrl-F` makes) and hands it a third of the
-  width. Later shows change nothing, because the splitter remembers the width a
-  hidden child was last given: a drag to 400 px comes back at 398 px.
+  it visits none, the choice `Ctrl-X Ctrl-F` makes) and gives it the width the
+  address `explorer/panel-width` holds, a quarter of the editor when it names
+  nothing. Later shows in the same window change nothing, because the splitter
+  remembers the width a hidden child was last given: a drag to 400 px comes back
+  at 398 px.
+- **Both the state and the width survive the window** through two plain
+  `QSettings` addresses — `explorer/panel-shown` (the absence is the default
+  "closed") and `explorer/panel-width` — deliberately **not declared entries**
+  of the configuration dialog (`TestSettings` asserts their absence): what the
+  last session left open is state, not something one configures. The editor's
+  constructor reads the first into `explorer_restore_pending`, and
+  `EditorWidget::showEvent` — new — spends it on the **first show**: asked
+  earlier, the splitter still answers the stale 640 px of an unshown window
+  (`/tmp/opencode/explorer/restoretiming.cxx`), and a `QTimer::singleShot(0)`
+  from the constructor fires before the window shows. A saved width is used only
+  within `40 <= w <= total - 100`, the quarter otherwise.
+- **`QSplitter::splitterMoved` is drag-only**: it fires 0 times for a
+  programmatic `setSizes`, a window resize, and a child's hide or show
+  (`/tmp/opencode/explorer/splittermoved.cxx`), so it cannot keep the width
+  address current while the hand drags. The width is written at the three
+  moments the panel provably has one: the first show (the applied width), a hide
+  (what the handle was left at), and `~EditorWidget` when the panel is open.
+  The predicate at the last two is **`isHidden()`, not `isVisible()`**: by the
+  time the destructor runs, the window which made the panel visible is being
+  destroyed, `isVisible` answers false whatever the user left open, and the
+  close silently saves nothing (measured: the next window restored the first
+  show's quarter instead of the dragged 350 px).
+- A probe which triggers the menu entry **before the first `show()`** computes
+  the quarter — or restores the saved width — against the stale splitter, and
+  `QSplitter`'s slack redistribution then draws a wide panel: no hand can do
+  that, so `shot.cxx` shows after `show()` and clears the two addresses first.
 - **`QSplitter::setSizes` resizes the splitter itself** to the sum it is handed,
   so the two sizes given add up to `explorerSplitter->width()`; a `QMainWindow`
   layout wins over an oversized call (measured: `setSizes({100, 2000})` left the
@@ -2578,8 +2610,9 @@ What the panel is, and what the splitter keeps:
 
 Measured on both platforms (panel shown, `/tmp/opencode/explorer/geom.cxx`): the
 row of the panel and the buffers is 649 px tall offscreen and 643 px on Xvfb +
-metacity, the panel 332 px of the editor's 1000 px on both (ratio 0.332), the
-handle 4 px, the buffer then 664 px wide at x=336; below that row the
+metacity, the panel 249 px offscreen and 248 px on the live display of the
+editor's 1000 px (a quarter, ratio ~0.249), the handle 4 px, the buffer then
+747 px wide at x=253; below that row the
 information line is 1000x14 offscreen and 1000x16 on the live display — exactly
 what its labels ask, which is what a top-level layout with zeroed contents
 margins gives (see the section on `Buffer::infoLine`) — and the minibuffer is
@@ -2651,13 +2684,21 @@ named the menu and every command is one more name in the `Alt-X` list.
 
 `tests/TestFileExplorer.cxx` is the twentieth executable: the menu between
 `Edit` and `Buffers` and its two entries, the panel hidden until the entry is
-triggered and the buffers keeping the whole width until then, the third of the
+triggered and the buffers keeping the whole width until then, the quarter of the
 editor a shown panel takes, the mode line and the message line it ends above
 keeping that whole width, a dragged width kept across a hide and a show, the
-ticks of both entries, the root of the panel and `goUp`, the buffer change which
+width and the open state coming back to a second window — through a hide for the
+first, through the close for both —, the ticks of both entries, the root of the
+panel and `goUp`, the buffer change which
 leaves the root and the width where they are, a double click which opens a file
 (and reuses the buffer of a file already visited), a double click on a directory
 which opens nothing, and the auxiliary tasks entry hiding and showing a frame.
+The two addresses are removed in `initTestCase` and after **every** case: the
+conf file outlives the run, and a session left open would open every later
+window with the panel — which is exactly the state half the cases are about.
+A case which needs the tick of an entry whose panel the *editor* restored on its
+own asks `aboutToShow` first: the restoration is not a trigger, and the tick of
+the entry follows the screen when the menu opens.
 Geometry assertions of it hold on both platforms (offscreen and Xvfb +
 metacity). Four traps of measuring that geometry:
 
@@ -2729,7 +2770,7 @@ Two shapes of the row are load-bearing:
   text, and `installingAUserInputLeavesTheEditorHeightToTheWindow` accounts
   for the row for the same reason — a growing input takes its second line out
   of the buffers, as it did before the row existed.
-- the labels have a `Maximum` **horizontal** policy, which inside the 664 px of
+- the labels have a `Maximum` **horizontal** policy, which inside the 747 px of
   a buffer next to a panel could not be relieved and clamped the row; at the
   whole width of the window there is always room for what they name.
 - the layout of the line has **zeroed contents margins**, because installed on

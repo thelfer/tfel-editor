@@ -17,6 +17,7 @@
 #include <QtCore/QSettings>
 #include <QtCore/QTextStream>
 #include <QtGui/QCloseEvent>
+#include <QtGui/QShowEvent>
 #include <QtWidgets/QCompleter>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QFileDialog>
@@ -283,6 +284,11 @@ namespace tfel::gui {
         explorer(new FileExplorer(*this)),
         explorerSplitter(new QSplitter(Qt::Horizontal)),
         explorerStarted(false),
+        // What the last window left open comes back: the flag is spent on the
+        // first show, where the width of the splitter -- the thing the restored
+        // width is a fraction of or a share against -- is finally known.
+        explorer_restore_pending(
+            QSettings().value("explorer/panel-shown", false).toBool()),
         minibuffer(new QWidget),
         minibufferLayout(new QVBoxLayout),
         um(new LineEdit(*this)),
@@ -340,11 +346,24 @@ namespace tfel::gui {
   }  // end of Wigdet::Wigdet
 
   void EditorWidget::setExplorerPanelVisible(const bool shown) {
+    QSettings settings;
     if (not shown) {
+      // the width the panel is left at is the width the next window owes it,
+      // and it has to be written while the panel still has one: the panel's own
+      // `isHidden` flag is the question, `isVisible` would also ask about the
+      // window and skip the write on a hidden one. What the splitter itself
+      // keeps is what the next show of this window comes back at; the address
+      // is what survives the window.
+      if (not this->explorer->isHidden()) {
+        settings.setValue("explorer/panel-width", this->explorer->width());
+      }
+      settings.remove("explorer/panel-shown");
       this->explorer->hide();
       return;
     }
+    settings.setValue("explorer/panel-shown", true);
     this->explorer->show();
+    this->explorer_restore_pending = false;
     if (this->explorerStarted) {
       return;
     }
@@ -364,14 +383,33 @@ namespace tfel::gui {
       }
     }
     this->explorer->setRootDirectory(directory);
-    // A third of the width the editor has, and the rest to the buffers. The two
-    // sizes add up to the width of the splitter on purpose:
-    // QSplitter::setSizes resizes the splitter itself to the sum it is given,
-    // which would otherwise make the window wider than the screen.
+    // A quarter of the width the editor has, unless the last window left the
+    // panel at a width of its own: a size the user dragged to outlives the
+    // window it was dragged in. It is clamped to leave the buffers something
+    // to live in, and the two sizes add up to the width of the splitter on
+    // purpose: QSplitter::setSizes resizes the splitter itself to the sum it is
+    // given, which would otherwise make the window wider than the screen.
     const auto total = qMax(1, this->explorerSplitter->width());
-    const auto w = total / 3;
+    auto w = settings.value("explorer/panel-width", 0).toInt();
+    if ((w < 40) || (w > total - 100)) {
+      w = total / 4;
+    }
     this->explorerSplitter->setSizes({w, total - w});
+    settings.setValue("explorer/panel-width", w);
   }  // end of EditorWidget::setExplorerPanelVisible
+
+  void EditorWidget::showEvent(QShowEvent *const e) {
+    QWidget::showEvent(e);
+    if (not this->explorer_restore_pending) {
+      return;
+    }
+    // The first show is where a restored panel can finally be shown: the
+    // splitter must have its width for a quarter of it, or a share against it,
+    // to mean anything. The flag is spent either way, so a panel the user hid
+    // in this window does not come back on a later show of the same one.
+    this->explorer_restore_pending = false;
+    this->setExplorerPanelVisible(true);
+  }  // end of EditorWidget::showEvent
 
   bool EditorWidget::isExplorerPanelVisible() const {
     return this->explorer->isVisible();
@@ -1360,6 +1398,16 @@ namespace tfel::gui {
 
   EditorWidget::~EditorWidget() {
     this->removeUserInputs();
+    // a window closed with the panel open owes the next one the width the user
+    // dragged to: `explorer/panel-shown` already says `true` from the show, but
+    // only a hide writes the width, so this is the other moment the panel still
+    // has one. The question is the panel's own `isHidden` flag, not
+    // `isVisible`: by the time this destructor runs, the window which made the
+    // panel visible is itself being destroyed, and `isVisible` then answers
+    // false whatever the user left open -- measured, the write is simply lost.
+    if (not this->explorer->isHidden()) {
+      QSettings().setValue("explorer/panel-width", this->explorer->width());
+    }
     // the SecondaryTaskManager base is destroyed before the QWidget base
     // (reverse declaration order), so the Buffer::~Buffer unregistration
     // hook would otherwise run on a destroyed map and abort the shutdown

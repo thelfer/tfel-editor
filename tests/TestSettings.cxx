@@ -330,13 +330,16 @@ void TestSettings::theRegistryDeclaresTheEntriesOfTheEditor() {
   // histories of the prompts, the compilation commands and the recent files are
   // written by the very act of working, and an address nothing declares has no
   // field in the dialog, see `CoreSettings.cxx`
-  const auto forgotten = QStringList() << "recent files"
-                                       << "command/history"
-                                       << "command/shell/history"
-                                       << "command/grep/history"
-                                       << "user input/query replace/history"
-                                       << "C++/compilation/history"
-                                       << "make/compilation/history";
+  const auto forgotten = QStringList()
+                         << "recent files"
+                         << "command/history"
+                         << "command/shell/history"
+                         << "command/grep/history"
+                         << "user input/query replace/history"
+                         << "C++/compilation/history"
+                         << "make/compilation/history"
+                         << "explorer/panel-shown"
+                         << "explorer/panel-width";
   for (const auto& key : forgotten) {
     QVERIFY2(!r.hasSettingsKey(key),
              qPrintable("the entry '" + key +

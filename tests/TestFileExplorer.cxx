@@ -10,6 +10,7 @@
 #include <QtCore/QDir>
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
+#include <QtCore/QSettings>
 #include <QtCore/QTemporaryDir>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QMenuBar>
@@ -34,11 +35,16 @@ struct TestFileExplorer : QObject {
 
  private slots:
   void initTestCase();
+  //! \brief take the two addresses back, so the next window starts as if
+  //! nothing had been shown in any other one
+  void cleanup();
   void theDisplayMenuStandsBetweenEditAndBuffers();
   void thePanelIsHiddenUntilTheEntryIsTriggered();
-  void aShownPanelIsAboutAThirdOfTheEditor();
+  void aShownPanelIsAboutAQuarterOfTheEditor();
   void thePanelEndsAboveTheInformationLineAndTheMinibuffer();
   void thePanelKeepsTheWidthTheUserGaveIt();
+  void theWidthTheUserGaveThePanelOutlivesTheWindow();
+  void thePanelOfAWindowLeftOpenComesBackOpen();
   void theTicksOfTheEntriesNameWhatIsOnTheScreen();
   void thePanelIsRootedAtTheDirectoryOfTheBuffer();
   void aBufferChangeLeavesThePanelWhereItIs();
@@ -88,7 +94,22 @@ struct TestFileExplorer : QObject {
 void TestFileExplorer::initTestCase() {
   QCoreApplication::setOrganizationName("tfel-editor-tests");
   QCoreApplication::setApplicationName("test-file-explorer");
+  // the file of the test application outlives the run: a session which ended
+  // with the panel open would otherwise make every window of every later run
+  // open with it, and the cases about the panel standing hidden at the start
+  // would answer what the previous run left on disk
+  QSettings().remove("explorer/panel-shown");
+  QSettings().remove("explorer/panel-width");
 }  // end of TestFileExplorer::initTestCase
+
+void TestFileExplorer::cleanup() {
+  // the same isolation between the cases of one run: each case ends with the
+  // state it found, and a case which failed on its way out — with the panel
+  // open and its address written — does not decide what the next window of the
+  // next case does
+  QSettings().remove("explorer/panel-shown");
+  QSettings().remove("explorer/panel-width");
+}  // end of TestFileExplorer::cleanup
 
 void TestFileExplorer::pump(int n) {
   for (int k = 0; k != n; ++k) {
@@ -254,7 +275,7 @@ void TestFileExplorer::thePanelIsHiddenUntilTheEntryIsTriggered() {
   QCOMPARE(ed->width(), editor_width);
 }  // end of TestFileExplorer::thePanelIsHiddenUntilTheEntryIsTriggered
 
-void TestFileExplorer::aShownPanelIsAboutAThirdOfTheEditor() {
+void TestFileExplorer::aShownPanelIsAboutAQuarterOfTheEditor() {
   tfel::gui::MainWindow w;
   w.resize(1000, 700);
   w.show();
@@ -275,7 +296,7 @@ void TestFileExplorer::aShownPanelIsAboutAThirdOfTheEditor() {
   // live display the window holds the border the window manager gave it, which
   // the editor has nothing to do with.
   const auto ratio = double(ex->width()) / double(ed->width());
-  QVERIFY2((ratio > 0.28) && (ratio < 0.39),
+  QVERIFY2((ratio > 0.20) && (ratio < 0.31),
            qPrintable(QString("the panel is %1 px of %2: %3")
                         .arg(ex->width())
                         .arg(ed->width())
@@ -291,12 +312,12 @@ void TestFileExplorer::aShownPanelIsAboutAThirdOfTheEditor() {
                         .arg(buffer_width)
                         .arg(ed->width())));
   // the height of the window is the business of the window, not of the panel:
-  // showing it takes a third of the width and nothing of the height, which is
+  // showing it takes a quarter of the width and nothing of the height, which is
   // what the minibuffer of issue #121 rests on
   QCOMPARE(w.height(), window_height);
   QCOMPARE(ed->height(), editor_height);
   QCOMPARE(ed->width(), editor_width);
-}  // end of TestFileExplorer::aShownPanelIsAboutAThirdOfTheEditor
+}  // end of TestFileExplorer::aShownPanelIsAboutAQuarterOfTheEditor
 
 void TestFileExplorer::
     thePanelEndsAboveTheInformationLineAndTheMinibuffer() {
@@ -340,7 +361,7 @@ void TestFileExplorer::
   QCOMPARE(line->geometry().top(), row->geometry().bottom() + 1);
   QCOMPARE(mini->geometry().top(), line->geometry().bottom() + 1);
   // and the two lines keep the whole width of the editor, as they do when no
-  // panel is shown: the third is taken out of the row of the buffers only
+  // panel is shown: the width is taken out of the row of the buffers only
   QCOMPARE(line->width(), ed->width());
   QCOMPARE(mini->width(), ed->width());
   const auto left_of_the_line = line->mapTo(ed, QPoint(0, 0));
@@ -379,6 +400,113 @@ void TestFileExplorer::thePanelKeepsTheWidthTheUserGaveIt() {
            qPrintable(QString("after a hide and a show: %1 px")
                         .arg(ex->width())));
 }  // end of TestFileExplorer::thePanelKeepsTheWidthTheUserGaveIt
+
+void TestFileExplorer::theWidthTheUserGaveThePanelOutlivesTheWindow() {
+  // The shape of a session which ends with the panel closed: the hide writes
+  // the width the handle was dragged to — the splitter's own memory dies with
+  // the window — and takes the open address away, so the next window opens
+  // hidden and, when the entry is triggered, stands at the saved width.
+  {
+    tfel::gui::MainWindow w;
+    w.resize(1000, 700);
+    w.show();
+    pump(8);
+    auto *const ex = w.findChild<tfel::gui::FileExplorer *>();
+    auto *const m = menu(w, "Display");
+    auto *const splitter = qobject_cast<QSplitter *>(ex->parentWidget());
+    QVERIFY((ex != nullptr) && (m != nullptr) && (splitter != nullptr));
+    auto *const show = entry(m, "Explorer Panel");
+    QVERIFY(show != nullptr);
+    show->trigger();
+    pump(4);
+    const auto total = splitter->width();
+    splitter->setSizes({400, total - 400});
+    pump(4);
+    // the answer of the entry, and the address of an open panel
+    QVERIFY(QSettings().value("explorer/panel-shown", false).toBool());
+    // the hide is the moment the width is written: a programmatic `setSizes`,
+    // like a window resize, emits no `splitterMoved`, so nothing earlier could
+    // have noticed the drag
+    show->trigger();
+    pump(4);
+    QVERIFY(QSettings().value("explorer/panel-shown", false).toBool() == false);
+    const auto saved = QSettings().value("explorer/panel-width", 0).toInt();
+    QVERIFY2(qAbs(saved - 400) <= 4,
+             qPrintable(QString("the settings hold %1 px").arg(saved)));
+  }
+  // the next window: hidden at the start — the address names nothing — and the
+  // saved width, not a quarter, when the entry is triggered
+  tfel::gui::MainWindow w;
+  w.resize(1000, 700);
+  w.show();
+  pump(8);
+  auto *const ex = w.findChild<tfel::gui::FileExplorer *>();
+  auto *const m = menu(w, "Display");
+  QVERIFY((ex != nullptr) && (m != nullptr));
+  QVERIFY2(ex->isVisible() == false,
+           "a window left closed opened with the panel");
+  auto *const show = entry(m, "Explorer Panel");
+  show->trigger();
+  pump(6);
+  QVERIFY2(ex->isVisible(), "the entry did not show the panel");
+  QVERIFY2(qAbs(ex->width() - 400) <= 4,
+           qPrintable(QString("the next window restored %1 px")
+                        .arg(ex->width())));
+}  // end of TestFileExplorer::theWidthTheUserGaveThePanelOutlivesTheWindow
+
+void TestFileExplorer::thePanelOfAWindowLeftOpenComesBackOpen() {
+  // The shape of a session which ends with the panel open: the address written
+  // by the show survives, so the next window shows the panel on its own, at the
+  // first show and with no entry triggered. The width the user had dragged to
+  // is written by the close itself — only a hide notices it otherwise.
+  {
+    tfel::gui::MainWindow w;
+    w.resize(1000, 700);
+    w.show();
+    pump(8);
+    auto *const ex = w.findChild<tfel::gui::FileExplorer *>();
+    auto *const m = menu(w, "Display");
+    auto *const splitter = qobject_cast<QSplitter *>(ex->parentWidget());
+    QVERIFY((ex != nullptr) && (m != nullptr) && (splitter != nullptr));
+    auto *const show = entry(m, "Explorer Panel");
+    QVERIFY(show != nullptr);
+    show->trigger();
+    pump(4);
+    const auto total = splitter->width();
+    splitter->setSizes({350, total - 350});
+    pump(4);
+  }
+  QVERIFY(QSettings().value("explorer/panel-shown", false).toBool());
+  const auto saved = QSettings().value("explorer/panel-width", 0).toInt();
+  QVERIFY2(qAbs(saved - 350) <= 4,
+           qPrintable(QString("the close left %1 px").arg(saved)));
+  tfel::gui::MainWindow w;
+  w.resize(1000, 700);
+  w.show();
+  pump(8);
+  auto *const ex = w.findChild<tfel::gui::FileExplorer *>();
+  auto *const ed = w.findChild<tfel::gui::EditorWidget *>();
+  QVERIFY((ex != nullptr) && (ed != nullptr));
+  // nothing was triggered in this window: the show of the editor is what
+  // restored the panel, at the width of the window before it
+  QVERIFY2(ex->isVisible(), "the panel of the open window did not come back");
+  QVERIFY2(qAbs(ex->width() - 350) <= 4,
+           qPrintable(QString("the panel came back at %1 px")
+                        .arg(ex->width())));
+  // and the entry of this window knows the panel it already restored: nothing
+  // ticks a checkable entry but the code, and the restoration is the editor's
+  // own show, not a trigger — so it is the opening of the menu which asks what
+  // is on the screen, which is what `aboutToShow` is for
+  auto *const m = menu(w, "Display");
+  auto *const show = entry(m, "Explorer Panel");
+  QVERIFY(show != nullptr);
+  QMetaObject::invokeMethod(m, "aboutToShow");
+  pump(2);
+  QVERIFY2(show->isChecked(), "the entry ignored the panel it restored");
+  show->trigger();
+  pump(4);
+  QVERIFY(QSettings().value("explorer/panel-shown", false).toBool() == false);
+}  // end of TestFileExplorer::thePanelOfAWindowLeftOpenComesBackOpen
 
 void TestFileExplorer::theTicksOfTheEntriesNameWhatIsOnTheScreen() {
   tfel::gui::MainWindow w;

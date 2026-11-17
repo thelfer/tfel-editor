@@ -234,10 +234,10 @@ namespace tfel::gui {
       return;
     }
     // The panel, the splitter which holds it beside the buffers, the directory
-    // it is rooted at when it is first shown and the third of the width it is
-    // then given are all the editor's: the panel must end above the informative
-    // bar and the line the user types in, which is the shape of the editor, not
-    // of the window which holds it.
+    // it is rooted at when it is first shown and the width the settings say it
+    // was last left at are all the editor's: the panel must end above the
+    // informative bar and the line the user types in, which is the shape of the
+    // editor, not of the window which holds it.
     this->editor->setExplorerPanelVisible(
         not this->editor->isExplorerPanelVisible());
     this->updateDisplayMenu();
