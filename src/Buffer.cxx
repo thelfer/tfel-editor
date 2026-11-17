@@ -20,6 +20,7 @@
 #include "TFEL/GUI/Debug.hxx"
 #include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/GitSupport.hxx"
 #include "TFEL/GUI/PlainTextEdit.hxx"
 #include "TFEL/GUI/MajorMode.hxx"
 #ifdef TFEL_GUI_HAVE_WEBENGINE
@@ -122,18 +123,27 @@ namespace tfel::gui {
     this->info->setContentsMargins(0, 0, 0, 0);
     this->timer = new QTimer(this);
     this->bni = new QLabel(this->infoLine);
+    this->gi = new QLabel(this->infoLine);
     this->rpi = new QLabel(this->infoLine);
     this->api = new QLabel(this->infoLine);
     this->ii = new QLabel(this->infoLine);
     this->mi = new QLabel(this->infoLine);
     this->ti = new QLabel(this->infoLine);
+    // the git indicator is found by name by whoever wants to know what the line
+    // says about the visited file: the tests of it, and a user of `findChild`
+    this->gi->setObjectName("git-indicator");
     setQLabelFontSizeAndMargins(this->bni);
+    setQLabelFontSizeAndMargins(this->gi);
     setQLabelFontSizeAndMargins(this->rpi);
     setQLabelFontSizeAndMargins(this->api);
     setQLabelFontSizeAndMargins(this->mi);
     setQLabelFontSizeAndMargins(this->ti);
     this->info->addStretch();
     this->info->addWidget(this->bni);
+    // the git indicator stands right beside the name it qualifies, with no
+    // stretch in between: it says what the file the name names is, and a name
+    // and its qualification read as one item
+    this->info->addWidget(this->gi);
     this->info->addStretch();
     this->info->addWidget(this->rpi);
     this->info->addStretch();
@@ -203,6 +213,7 @@ namespace tfel::gui {
     qs.setHorizontalPolicy(QSizePolicy::Maximum);
     qs.setVerticalPolicy(QSizePolicy::Maximum);
     this->bni->setSizePolicy(qs);
+    this->gi->setSizePolicy(qs);
     this->rpi->setSizePolicy(qs);
     this->api->setSizePolicy(qs);
     this->mi->setSizePolicy(qs);
@@ -258,6 +269,13 @@ namespace tfel::gui {
                      &Buffer::updateBufferName);
     QObject::connect(this->e, &PlainTextEdit::majorModeChanged, this,
                      [this] { emit mainFrameMajorModeChanged(); });
+    // what the visited file is to git follows the name of the visited file and
+    // nothing else, so the indicator is redrawn here and by
+    // `updateBufferInformations`, which is what draws it before a name has ever
+    // changed: a save under a new name, and the first display of the line, are
+    // the two moments the answer is worth asking for
+    QObject::connect(this->e, &PlainTextEdit::fileNameChanged, this,
+                     &Buffer::updateGitInformation);
     QObject::connect(this->stw, &SecondaryTaskTabWidget::tabCloseRequested,
                      this, &Buffer::closeSecondaryTask);
     QObject::connect(this->stw, &SecondaryTaskTabWidget::currentChanged, this,
@@ -280,7 +298,8 @@ namespace tfel::gui {
     // the icon of the information line is the only label which is not given the
     // font of the text edits when the buffer is built: it holds a pixmap, which
     // Qt draws with the application font anyway
-    for (auto *l : {this->bni, this->rpi, this->api, this->mi, this->ti}) {
+    for (auto *l :
+         {this->bni, this->gi, this->rpi, this->api, this->mi, this->ti}) {
       l->setFont(f);
     }
     // the banner of a file modified on disk reads with the same font as the
@@ -415,6 +434,28 @@ namespace tfel::gui {
                        QString::number(c.position() - b.position()) + ")");
   }
 
+  void Buffer::updateGitInformation() {
+    // The question is about the name of the visited file and about nothing else,
+    // so it is asked when that name is set and when the line is drawn, never on
+    // a keystroke. A buffer which visits no file — a `*scratch*` buffer, the
+    // output of a process — names no path a repository could hold, and the empty
+    // name is answered like the name of a file of no repository: with nothing.
+    if (GitSupport::repositoryRootOf(this->e->getFileName()).isEmpty()) {
+      this->gi->clear();
+      this->gi->hide();
+      return;
+    }
+    // `(git)`, and neither the name of the repository nor the state of the file:
+    // what the first step of the git support says is that the visited file is a
+    // working file of a repository, and nothing more.
+    //
+    // The leading space is the gap to the name the indicator qualifies: the line
+    // lays its labels with no spacing at all, which is why the name of the major
+    // mode carries one too
+    this->gi->setText(" (git)");
+    this->gi->show();
+  }  // end of updateGitInformation
+
   void Buffer::updateBufferInformations() {
     // getBufferName() holds the suffix which distinguishes the buffers
     // visiting files with the same name, so it shall not be appended once
@@ -429,6 +470,7 @@ namespace tfel::gui {
     // name is displayed with no suffix at all, so that all the buffers
     // visiting files with the same name look alike
     this->bni->setText("<b>" + this->getBufferName().toHtmlEscaped() + "</b>");
+    this->updateGitInformation();
     this->updatePosition();
     const auto ic = this->e->getIcon();
     if (!ic.isNull()) {

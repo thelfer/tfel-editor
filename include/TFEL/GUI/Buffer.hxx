@@ -374,9 +374,29 @@ namespace tfel::gui {
     virtual void updateDate();
 
     /*!
+     * \brief redraw the indicator of the visited file being a working file of a
+     * git repository: `(git)` stands beside the name of the buffer while the
+     * file it visits belongs to a repository, and nothing stands there when it
+     * belongs to none
+     *
+     * The question is asked of `GitSupport::repositoryRootOf`, which answers it
+     * by looking for the `.git` entry of a repository up the hierarchy of the
+     * directories of the visited file: no `git` program is run, and the state of
+     * the file — tracked or new, unchanged or modified — is not asked, which is
+     * what keeps this indicator free of a subprocess.
+     *
+     * \note connected to `PlainTextEdit::fileNameChanged`, which is what makes
+     * the indicator follow a save under a new name, and called by
+     * `updateBufferInformations`, which is what draws it the first time the line
+     * is shown.
+     */
+    virtual void updateGitInformation();
+
+    /*!
      * \brief redraw the information line of this buffer: name in bold (html
-     * escaped), positions, icon (hidden if the buffer has none), name of the
-     * major mode (hidden if the main frame has none) and time
+     * escaped), the git indicator of the visited file (hidden when the file
+     * belongs to no repository), positions, icon (hidden if the buffer has
+     * none), name of the major mode (hidden if the main frame has none) and time
      */
     virtual void updateBufferInformations();
 
@@ -484,6 +504,20 @@ namespace tfel::gui {
     QHBoxLayout *info;
     //! buffer name
     QLabel *bni;
+    /*!
+     * \brief the git indicator: `(git)` beside the name of the buffer while the
+     * file it visits is a working file of a repository, nothing when it is not
+     *
+     * A label of its own, and not a text appended to the name, on purpose: the
+     * name of the buffer is what identifies it — in the tabs, in the list of the
+     * buffers of `Ctrl-X b`, in the `bufferNameChanged` signal — and what the
+     * file it happens to visit is has no business there.
+     *
+     * \note a member added to an exported class, hence an ABI break for the
+     * packaged modes: the whole tree has to be rebuilt, not `--target
+     * TFELEditor`
+     */
+    QLabel *gi;
     //! relative position
     QLabel *rpi;
     //! absolute position

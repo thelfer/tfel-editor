@@ -407,6 +407,88 @@ which carries one, and `MultiLineLineEdit` — the input's `text()` and its numb
 blocks. Run against a library which normalizes nothing, five of its seven cases
 fail; the assertions are what the defect is, not an echo of the fix.
 
+### The `(git)` of the information line (`GitSupport`)
+
+The first step of the git support is one word in the line of the buffer, and it
+is deliberately the cheapest answer that can be given: `GitSupport::repositoryRootOf(path)`
+(`src/GitSupport.cxx`, exported, no `Q_OBJECT`, **no subprocess**) ascends
+lexically from the directory the path names looking for a `.git` entry, asks its
+existence with `QFileInfo::exists` — so the directory of a regular checkout and
+the *file* of a linked working tree or of a submodule both answer — and answers
+that directory, or nothing. The rules of it, each a case of the suite:
+
+- a path naming a **directory** is asked about itself: the root of a repository
+  is a working directory of it, and a buffer visiting a directory shows the
+  indicator as one visiting a file of it does;
+- the `.git` entry and anything under it answer **empty**: `HEAD`, `config` and
+  a name under `refs` are the bookkeeping of the program, not working files of
+  the repository whose entry they are. The guard is
+  `QDir(current).dirName() == QLatin1String(".git")` — **`QFileInfo` has no
+  `dirName()`**, that is a `QDir` method, so writing it on the `QFileInfo` at
+  hand is a compile error and not a wrong answer;
+- a file which **does not exist yet** is answered from its directory, because
+  the ascent is made of `QDir::cleanPath` and `QFileInfo::path`, both lexical,
+  which is what lets it go over a directory holding nothing yet: a new file of a
+  project is one of the project before it is written;
+- the ascent ends when `QFileInfo::path` answers the directory itself, which is
+  `/`, so "no repository" is a decision and not a walk that never stops.
+
+`Buffer` gained a `QLabel *gi` (objectName `git-indicator`) added to the layout
+**immediately after `bni` with no stretch between the two**, with the same
+`Maximum` policy, in the list `changeFont` hands the font to, and the text
+`" (git)"` — **the leading space is the gap**, since the line lays its labels
+with no spacing at all, which is why the name of the major mode carries one too.
+It is **not a suffix of the name**: the name is what identifies the buffer — the
+tabs, the list of `Ctrl-X b`, `bufferNameChanged` — and what the visited file
+*happens to be* has no business in it, apart from the fact that the suffix
+machinery (`assignSuffixes`) chooses suffixes to tell buffers apart and would
+move a `(git)` into a name nobody typed.
+
+`updateGitInformation()` is a protected slot connected to
+`PlainTextEdit::fileNameChanged` **and** called from `updateBufferInformations`
+(which runs in `initialize` and in `setBufferNameSuffix`). Those are all the
+moments the answer can change, and nothing watches the file system for it: a
+`git init` beside a buffer already open is named the next time one of those
+moments comes. There is no settings key and no menu entry, because there is no
+choice to make.
+
+Adding a member to the exported `Buffer` is an **ABI break**: the whole tree is
+rebuilt, not `--target TFELEditor` (the rule the note on `SettingsGroup`
+carries).
+
+`tests/TestGitSupport.cxx` is the newest executable of `tests/`. Its traps:
+
+- the negative cases are only evidence if the temporary directory they build
+  their repositories in stands in **no repository of somebody else**:
+  `initTestCase` asserts `repositoryRootOf(directory.path())` is empty as a
+  precondition of the whole run;
+- a relative name is exercised with `QDir::setCurrent`, which the case has to
+  put back;
+- the case which pins the shape the user asked for asserts three things at once:
+  that neither `getBufferName()` nor the label of the name holds `git`, that the
+  indicator has the same `y()` as the name, and that its `x()` is within a few
+  pixels of where the name ends. The last is what a stretch between the two
+  fires (the name is centred and the indicator lands far away); the two cases
+  about showing nothing are what an indicator shown for every named file fires,
+  and they are the only reason the first draft of `updateGitInformation` — which
+  never asked `GitSupport` — did not survive;
+- a test ends with `QTEST_MAIN(Name)` **above** its `#include "<Name>.moc"`:
+  without the macro the link fails with `undefined reference to 'main'`, which is
+  nowhere near the cause; and a shell calling `menuBar()->addMenu` needs
+  `<QtWidgets/QMenuBar>`, `QMainWindow` only forward-declares it;
+- `cmake .` must be re-run after editing `tests/CMakeLists.txt` before the new
+  target exists: `No rule to make target 'test-git-support'`.
+
+The two images of `docs/web/git-support.md` come from
+`/tmp/opencode/gitshot/shot.cxx`, which renders `Buffer::getInformationLine()->grab()`
+and the whole window with `QWidget::grab()` — **not** `import -window root`,
+which is what made leftover probe windows of earlier runs appear in the shot and
+read as a stale line. Both were rendered on `DISPLAY=:99`. And a probe which
+calls no `setOrganizationName` writes `~/.config/Unknown
+Organization/<binary>.conf`: the `explorer/panel-shown=true` an earlier probe
+left there is what made the first screenshots show the explorer panel, so remove
+that file for a clean shot.
+
 ## Tests / CI
 
 Tests exist (issue #123, Qt Test based) but are **not built by default**: they

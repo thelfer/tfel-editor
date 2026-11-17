@@ -68,6 +68,7 @@ add_tfel_editor_test(test-rectangle-mode TestRectangleMode.cxx)
 add_tfel_editor_test(test-search-pattern TestSearchPattern.cxx)
 add_tfel_editor_test(test-query-replace TestQueryReplace.cxx)
 add_tfel_editor_test(test-find-replace-dialog TestFindReplaceDialog.cxx)
+add_tfel_editor_test(test-git-support TestGitSupport.cxx)
 add_tfel_editor_test(test-file-explorer TestFileExplorer.cxx)
 
 # The suggestions of the spell checker are found on the context menu of a mode

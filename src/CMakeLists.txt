@@ -66,6 +66,7 @@ tfel_editor_library(TFELEditor
   LspCxxSupport.cxx
   LspHarperSupport.cxx
   LanguageToolSupport.cxx
+  GitSupport.cxx
   SpellingAndGrammar.cxx
   Utilities.cxx
   SpellChecker.cxx

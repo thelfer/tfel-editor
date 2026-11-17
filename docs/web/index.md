@@ -57,6 +57,12 @@ the amazing abilities of the [`Qt` library](https://www.qt.io/).
   did — both of which keep the whole width of the window — and whose open state
   and width come back to the window you open next. See [the
   file explorer page](file-explorer.html) for details.
+- Knowing that the file a buffer visits stands in the working tree of a
+  [`git`](https://git-scm.com) repository and saying so in the line of that
+  buffer, where a short `(git)` stands beside the name of the file. The answer
+  is read off the directories above the file, so no `git` is started, nothing is
+  waited for, and there is nothing to configure. See [the `git` support
+  page](git-support.html) for details.
 - etc.
 
 The configuration of the editor, which is gathered by themes and can be
