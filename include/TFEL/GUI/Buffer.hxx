@@ -103,6 +103,21 @@ namespace tfel::gui {
 
     //! \return the main widget of this buffer
     virtual PlainTextEdit &getMainFrame();
+
+    /*!
+     * \return the information line of this buffer: the row of labels which
+     * names the buffer, says where the cursor stands in it, and shows the icon
+     * and the name of its major mode and the time
+     *
+     * \note the line is built by the buffer and redrawn by it
+     * (`updatePosition`, `updateDate`, `updateBufferInformations`) as it was
+     * when it stood inside the buffer, but it is shown by
+     * `EditorWidget::insertBuffer`, which puts it in the row under the file
+     * explorer panel and the buffers, at the whole width of the editor. The
+     * labels are children of the line, so they follow it wherever it is shown
+     */
+    QWidget &getInformationLine() const;
+
     //! \return the current SecondaryTask if any, nullptr otherwise
     virtual QWidget *getCurrentSecondaryTask();
 
@@ -412,6 +427,24 @@ namespace tfel::gui {
     QSplitter *splitter;
     //! SecondaryTask widgets
     SecondaryTaskTabWidget *stw;
+    /*!
+     * \brief the information line: the row of labels naming the buffer, its
+     * positions, the icon and name of its major mode and the time
+     *
+     * The line is a widget of its own, and not a layout of this buffer, because
+     * it is shown by the editor: `EditorWidget::insertBuffer` adds it to the
+     * row of lines standing under the file explorer panel and the buffers,
+     * which makes it a child of that row. The buffer keeps the pointer, which
+     * is what `getInformationLine` answers and what `removeBuffer` takes out of
+     * the row again when the buffer is killed.
+     *
+     * \note built in the member-initializer list, and declared above the main
+     * frame on that account, the same one the banner pointers below carry: a
+     * pointer declared lower is not initialized yet when the main frame is
+     * being built, and the line is a widget the editor may ask for at any
+     * moment of the buffer's life
+     */
+    QWidget *infoLine;
     /*!
      * \brief warning banner displayed above the main frame while the
      * visited file was modified on disk by another process; its buttons

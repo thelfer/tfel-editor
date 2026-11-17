@@ -2,8 +2,9 @@
  * \file   tests/TestEditorWidget.cxx
  * \brief  tests of the editor widget: one height per minibuffer page, the
  *         prompt on the first line of its entry, the height propagation
- *         stopping at the widget the window sizes, and a font change reaching
- *         every widget which read the setting.
+ *         stopping at the widget the window sizes, the row of information lines
+ *         standing under the buffers and naming the buffer on the screen, and a
+ *         font change reaching every widget which read the setting.
  * \author Thomas Helfer
  * \date   04/11/2026
  */
@@ -26,13 +27,16 @@
 
 namespace {
 
-  // the tests look at the pages of the minibuffer and at the stack of buffers,
-  // which the editor widget holds as protected members: handing them out with
-  // `using` is what the probes did, and what a friend declaration would spare
+  // the tests look at the pages of the minibuffer, at the stack of buffers and
+  // at the row of information lines below them, which the editor widget holds
+  // as protected members: handing them out with `using` is what the probes did,
+  // and what a friend declaration would spare
   struct ExposedEditorWidget : tfel::gui::EditorWidget {
     using EditorWidget::buffers;
     using EditorWidget::eui;
+    using EditorWidget::infos;
     using EditorWidget::minibuffer;
+    using EditorWidget::removeBuffer;
     using EditorWidget::um;
   };  // end of struct ExposedEditorWidget
 
@@ -79,6 +83,35 @@ namespace {
     return nullptr;
   }  // end of currentInput()
 
+  // what the row of information lines shows: the text of the labels of the page
+  // on display, joined. The row holds one page per buffer, and only the current
+  // one is visible, so what is readable there is what the mode line of the
+  // buffer on the screen says — never what the line of another buffer holds,
+  // hidden in another page of the row.
+  QString shownInformation(ExposedEditorWidget& ed) {
+    auto* const page = ed.infos->currentWidget();
+    if (page == nullptr) {
+      return {};
+    }
+    QString t;
+    for (auto* const l : page->findChildren<QLabel*>()) {
+      t += l->text();
+    }
+    return t;
+  }  // end of shownInformation()
+
+  // a file of the given directory, holding the given text
+  QString writeFile(const QTemporaryDir& dir, const QString& name,
+                    const QString& text) {
+    const auto path = dir.filePath(name);
+    QFile f(path);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+      return {};
+    }
+    f.write(text.toUtf8());
+    return path;
+  }  // end of writeFile()
+
   bool sameFont(const QFont& got, const QFont& want) {
     // the style strategy and the style name Qt resolves are not what the code
     // asked for, so only the family and the size are compared
@@ -96,6 +129,8 @@ struct TestEditorWidget : QObject {
   void minibufferPagesHaveTheSameSingleLineHeight();
   void promptSitsOnTheFirstLineOfItsEntry();
   void installingAUserInputLeavesTheEditorHeightToTheWindow();
+  void informationLineStandsUnderTheBuffersAndNamesThem();
+  void aKilledBufferTakesItsInformationLineWithIt();
   void changeFontReachesTheWidgetsWhichReadTheSetting();
 
  private:
@@ -192,18 +227,133 @@ void TestEditorWidget::installingAUserInputLeavesTheEditorHeightToTheWindow() {
   // what its own layout asks for, when it is stuck to the bottom edge, moved
   // it down and left the gray background of the window above it
   QVERIFY2(editor_height > 400, "the editor was not given the window");
-  const auto leftover = shell.ed->height() - (shell.ed->buffers->height() +
-                                              shell.ed->minibuffer->height());
+  // what the editor holds under the buffers, between them and the minibuffer:
+  // the row of information lines, which is one line tall and is not what a
+  // growing input is owed. Accounting for it is what leaves the leftover what
+  // it was.
+  const auto leftover =
+      shell.ed->height() - (shell.ed->buffers->height() +
+                            shell.ed->infos->height() +
+                            shell.ed->minibuffer->height());
+  const auto line_height = shell.ed->infos->height();
   shell.ed->openFile();
   shell.pump(6);
   QVERIFY(currentInput(shell) != nullptr);
   QCOMPARE(shell.ed->height(), editor_height);
-  // and nothing new appeared above the buffers or below the minibuffer
-  QCOMPARE(shell.ed->height() -
-               (shell.ed->buffers->height() + shell.ed->minibuffer->height()),
+  // and nothing new appeared above the buffers or below the minibuffer: the
+  // input took its second line out of the buffers, as it did before the row of
+  // lines existed, and the row of lines stayed one line tall
+  QCOMPARE(shell.ed->height() - (shell.ed->buffers->height() +
+                                 shell.ed->infos->height() +
+                                 shell.ed->minibuffer->height()),
            leftover);
+  QCOMPARE(shell.ed->infos->height(), line_height);
 }  // end of
    // TestEditorWidget::installingAUserInputLeavesTheEditorHeightToTheWindow
+
+void TestEditorWidget::informationLineStandsUnderTheBuffersAndNamesThem() {
+  QTemporaryDir dir;
+  QVERIFY(dir.isValid());
+  const auto a = writeFile(dir, "alpha.txt", "first buffer\n");
+  const auto b = writeFile(dir, "beta.txt", "second buffer\n");
+  QVERIFY((!a.isEmpty()) && (!b.isEmpty()));
+  Shell shell(QSize(1000, 700));
+  shell.show();
+  shell.pump(8);
+  // The row of information lines is the second thing the editor lays out,
+  // between the row of the file explorer panel and the buffers and the
+  // minibuffer. It is one line tall and as wide as the editor: the mode line
+  // names the buffer on the screen across the whole window, and the height the
+  // window has over that is the text's, not the mode line's.
+  auto* const row = shell.ed->infos;
+  auto* const l = shell.ed->layout();
+  QVERIFY2((row != nullptr) && (l != nullptr), "the editor has no layout");
+  QVERIFY2(l->indexOf(row) == 1,
+           "the row of information lines does not stand under the buffers");
+  QVERIFY2(l->indexOf(shell.ed->minibuffer) == 2,
+           "the minibuffer does not stand under the row of information lines");
+  QVERIFY2(row->height() > 0, "the row of information lines is not drawn");
+  QVERIFY2(row->height() < 40,
+           qPrintable(QString("the row of information lines is %1 px tall")
+                        .arg(row->height())));
+  QCOMPARE(row->width(), shell.ed->width());
+  // One page per buffer, and the page on display is the line of the buffer on
+  // the screen: `insertBuffer` feeds the two stacks in the one call and
+  // `setCurrentBuffer` switches them together, which is the only way the row
+  // under the buffers can name the buffer which stands over them.
+  shell.ed->openFile(a);
+  shell.pump(4);
+  auto& first = shell.ed->getCurrentBuffer();
+  QCOMPARE(row->count(), shell.ed->buffers->count());
+  QVERIFY2(row->currentWidget() == &first.getInformationLine(),
+           "the line on display is not the line of the current buffer");
+  QVERIFY2(shownInformation(*shell.ed).contains("alpha.txt"),
+           qPrintable(shownInformation(*shell.ed)));
+  shell.ed->openFile(b);
+  shell.pump(4);
+  auto& second = shell.ed->getCurrentBuffer();
+  QVERIFY2(&second != &first, "opening the second file reused a buffer");
+  QCOMPARE(row->count(), shell.ed->buffers->count());
+  QVERIFY2(row->currentWidget() == &second.getInformationLine(),
+           "changing the buffer did not change the line on display");
+  QVERIFY2(shownInformation(*shell.ed).contains("beta.txt"),
+           qPrintable(shownInformation(*shell.ed)));
+  // and the way back: the line of the first buffer names it again, which is
+  // what a line held inside the buffer could not do at the whole width of the
+  // window
+  shell.ed->changeBuffer(first.getBufferName());
+  shell.pump(4);
+  QVERIFY2(row->currentWidget() == &first.getInformationLine(),
+           "the line on display did not follow the buffer back");
+  QVERIFY2(shownInformation(*shell.ed).contains("alpha.txt"),
+           qPrintable(shownInformation(*shell.ed)));
+}  // end of TestEditorWidget::informationLineStandsUnderTheBuffersAndNamesThem
+
+void TestEditorWidget::aKilledBufferTakesItsInformationLineWithIt() {
+  QTemporaryDir dir;
+  QVERIFY(dir.isValid());
+  const auto a = writeFile(dir, "alpha.txt", "first buffer\n");
+  const auto b = writeFile(dir, "beta.txt", "second buffer\n");
+  const auto c = writeFile(dir, "gamma.txt", "third buffer\n");
+  QVERIFY((!a.isEmpty()) && (!b.isEmpty()) && (!c.isEmpty()));
+  Shell shell(QSize(1000, 700));
+  shell.show();
+  shell.pump(8);
+  auto* const row = shell.ed->infos;
+  shell.ed->openFile(a);
+  shell.pump(2);
+  shell.ed->openFile(b);
+  shell.pump(2);
+  auto* const victim = &(shell.ed->getCurrentBuffer());
+  shell.ed->openFile(c);
+  shell.pump(2);
+  QCOMPARE(row->count(), shell.ed->buffers->count());
+  // Killing a buffer which is not the one on screen: its line stands in the row
+  // under the buffers as a page of its own, and the kill has to take it out
+  // there. A line left behind would keep naming `beta.txt` on the screen under
+  // whatever buffer the editor makes current next, and the row would hold one
+  // page more than the editor holds buffers.
+  shell.ed->removeBuffer(victim);
+  shell.pump(4);
+  QCOMPARE(row->count(), shell.ed->buffers->count());
+  QVERIFY2(row->currentWidget() ==
+               &shell.ed->getCurrentBuffer().getInformationLine(),
+           "the line on display is no longer the line of the current buffer");
+  QVERIFY2(!shownInformation(*shell.ed).contains("beta.txt"),
+           qPrintable(shownInformation(*shell.ed)));
+  // and the killed buffer's line is gone from the row, not merely hidden: no
+  // page of it names the file any more
+  for (int i = 0; i != row->count(); ++i) {
+    QString t;
+    for (auto* const l : row->widget(i)->findChildren<QLabel*>()) {
+      t += l->text();
+    }
+    QVERIFY2(!t.contains("beta.txt"),
+             qPrintable(QString("page %1 still names beta.txt: %2")
+                          .arg(i)
+                          .arg(t)));
+  }
+}  // end of TestEditorWidget::aKilledBufferTakesItsInformationLineWithIt
 
 void TestEditorWidget::changeFontReachesTheWidgetsWhichReadTheSetting() {
   Shell shell(QSize(800, 600));
@@ -224,10 +374,12 @@ void TestEditorWidget::changeFontReachesTheWidgetsWhichReadTheSetting() {
   QVERIFY(sameFont(shell.ed->um->font(), big));
   QVERIFY(sameFont(shell.ed->eui->font(), big));
   int labels = 0;
-  for (auto* l : b.findChildren<QLabel*>()) {
-    // the mode line shows its height of the tallest of its labels: a stale
-    // label is a mode line the height of two lines. `ii` holds a pixmap and
-    // no text, and is not meant to change font.
+  // the mode line is not a child of the buffer any more: the editor shows it in
+  // the row under the buffers, so the labels are looked for in the line itself.
+  // The mode line shows its height of the tallest of its labels: a stale label
+  // is a mode line the height of two lines. `ii` holds a pixmap and no text,
+  // and is not meant to change font.
+  for (auto* l : b.getInformationLine().findChildren<QLabel*>()) {
     if (l->text().isEmpty()) {
       continue;
     }

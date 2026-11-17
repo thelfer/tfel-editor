@@ -279,6 +279,7 @@ namespace tfel::gui {
   EditorWidget::EditorWidget(QWidget* const p)
       : QWidget(p),
         buffers(new QStackedWidget),
+        infos(new QStackedWidget),
         explorer(new FileExplorer(*this)),
         explorerSplitter(new QSplitter(Qt::Horizontal)),
         explorerStarted(false),
@@ -291,15 +292,18 @@ namespace tfel::gui {
     ModeRessourceLoader loader;
     auto* vl = new QVBoxLayout;
     this->buffers->setFocusPolicy(Qt::NoFocus);
+    this->infos->setFocusPolicy(Qt::NoFocus);
     this->setFocusPolicy(Qt::NoFocus);
     this->um->setReadOnly(true);
     this->eui->setReadOnly(true);
     setQLineEditFont(this->um);
     setQLineEditFont(this->eui);
     // The panel and the buffers share the width of the editor: the splitter
-    // holds the two of them and the minibuffer stands below, at the whole
-    // width, so that the informative message area and the line the user types
-    // in are as wide as the editor is, whether the panel is shown or hidden.
+    // holds the two of them, and the row of information lines and the
+    // minibuffer stand below it, at the whole width, so that the mode line of
+    // the buffer on the screen names it across the window and the informative
+    // message area and the line the user types in keep the whole width too,
+    // whether the panel is shown or hidden.
     this->explorerSplitter->addWidget(this->explorer);
     this->explorerSplitter->addWidget(this->buffers);
     this->explorer->hide();
@@ -320,9 +324,16 @@ namespace tfel::gui {
     s.setHorizontalPolicy(QSizePolicy::Minimum);
     s.setVerticalPolicy(QSizePolicy::Maximum);
     this->minibuffer->setSizePolicy(s);
+    // the row of information lines is one line tall, as the minibuffer is: both
+    // stand under the row of the panel and the buffers, and a Preferred policy
+    // would make them share with the text the height the window gave to that
+    // text. Maximum is the answer of the minibuffer itself: as tall as its
+    // tallest label, never taller.
+    this->infos->setSizePolicy(s);
     //    vl->setMargin(0);
     vl->setContentsMargins(0, 0, 0, 0);
     vl->addWidget(this->explorerSplitter);
+    vl->addWidget(this->infos);
     vl->addWidget(this->minibuffer);
     vl->setSpacing(0);
     this->setLayout(vl);
@@ -433,7 +444,7 @@ namespace tfel::gui {
     }
     auto* b = this->createNewBuffer(f);
     if (this->buffers->indexOf(b) == -1) {
-      this->buffers->addWidget(b);
+      this->insertBuffer(b);
       emit bufferAdded();
     }
     // the suffix of the name of a buffer depends on the file it visits and on
@@ -461,7 +472,7 @@ namespace tfel::gui {
 
   void EditorWidget::createEmptyBuffer() {
     auto* b = this->createNewBuffer();
-    this->buffers->addWidget(b);
+    this->insertBuffer(b);
     // the suffix of the name of the buffers which do not visit any file is a
     // counter which depends on how many such buffers exist
     this->updateBufferNameSuffixes();
@@ -516,6 +527,20 @@ namespace tfel::gui {
     return b;
   }  // end of EditorWidget::createNewBuffer
 
+  void EditorWidget::insertBuffer(Buffer* const b) {
+    if (b == nullptr) {
+      return;
+    }
+    this->buffers->addWidget(b);
+    // The information line of the buffer joins the row under the buffers, in
+    // the one call which adds the buffer itself: the two stacks are fed in the
+    // same order, which is what lets setCurrentBuffer name the line of the
+    // buffer on the screen by the index of that buffer. A line added on its own
+    // account, or a buffer added without its line, is a row with a page too
+    // many or a mode line naming the wrong buffer.
+    this->infos->addWidget(&b->getInformationLine());
+  }  // end of EditorWidget::insertBuffer
+
   bool EditorWidget::hasUserInputWaitingOn(const Buffer& b) const {
     for (const auto& e : this->ui) {
       if ((e.first != nullptr) && (e.first->isWaitingForAnAnswer()) &&
@@ -551,6 +576,15 @@ namespace tfel::gui {
     // lonely task
     SecondaryTaskManager::removeBuffer(b);
     this->buffers->removeWidget(b);
+    // The information line of this buffer is a page of the row below the
+    // buffers, and the buffer does not own it any more since `insertBuffer`
+    // added it there: the kill takes it out of that row too, or the mode line
+    // of a buffer which is gone keeps naming it on the screen. Like the buffer
+    // itself it is only scheduled for removal, as the name it holds may still
+    // be read this turn of the event loop.
+    auto* const il = &(b->getInformationLine());
+    this->infos->removeWidget(il);
+    il->deleteLater();
     // the suffix of the name of the other buffers may be made useless by the
     // removal of this buffer: it shall be re-chosen before the buffers history
     // is used again as it holds the names of the buffers
@@ -1141,6 +1175,11 @@ namespace tfel::gui {
       return;
     }
     this->buffers->setCurrentWidget(b);
+    // the row of information lines holds the line of every buffer, in the order
+    // the buffers were added: the line of this buffer is the page of its index,
+    // and a mode line which names another buffer than the one it stands under
+    // is worse than no mode line at all
+    this->infos->setCurrentIndex(this->buffers->indexOf(b));
     b->refreshSecondaryTaskTabWidget();
     b->setFocus();
     const auto n = b->getBufferName();

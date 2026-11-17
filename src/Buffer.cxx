@@ -74,6 +74,7 @@ namespace tfel::gui {
         editor(w),
         splitter(nullptr),
         stw(new SecondaryTaskTabWidget(this)),
+        infoLine(new QWidget(this)),
         e(new PlainTextEdit(w, *this)),
         id(i) {
     this->initialize();
@@ -84,6 +85,7 @@ namespace tfel::gui {
         editor(w),
         splitter(nullptr),
         stw(new SecondaryTaskTabWidget(this)),
+        infoLine(new QWidget(this)),
         e(new PlainTextEdit(f, w, *this)),
         id(i) {
     this->initialize();
@@ -103,14 +105,21 @@ namespace tfel::gui {
     if (this->stw->count() == 0) {
       this->stw->hide();
     }
+    // The information line is a widget of its own, not a layout of this buffer:
+    // `EditorWidget::insertBuffer` shows it in the row under the file explorer
+    // panel and the buffers, at the whole width of the editor, which a layout
+    // of this buffer could not do -- the buffers share that width with the
+    // panel. The labels are its children, so they follow the line wherever it
+    // is shown, and the buffer keeps redrawing them as it always did.
+    this->infoLine->setContentsMargins(0, 0, 0, 0);
     this->info = new QHBoxLayout;
     this->timer = new QTimer(this);
-    this->bni = new QLabel(this);
-    this->rpi = new QLabel(this);
-    this->api = new QLabel(this);
-    this->ii = new QLabel(this);
-    this->mi = new QLabel(this);
-    this->ti = new QLabel(this);
+    this->bni = new QLabel(this->infoLine);
+    this->rpi = new QLabel(this->infoLine);
+    this->api = new QLabel(this->infoLine);
+    this->ii = new QLabel(this->infoLine);
+    this->mi = new QLabel(this->infoLine);
+    this->ti = new QLabel(this->infoLine);
     setQLabelFontSizeAndMargins(this->bni);
     setQLabelFontSizeAndMargins(this->rpi);
     setQLabelFontSizeAndMargins(this->api);
@@ -128,6 +137,7 @@ namespace tfel::gui {
     this->info->addStretch();
     this->info->addWidget(this->ti);
     this->info->addStretch();
+    this->infoLine->setLayout(this->info);
     // the warning shown when the file visited by this buffer is modified
     // by another process: a line above the text naming the file, a button
     // which reloads the file and a button which dismisses the warning, as
@@ -202,7 +212,10 @@ namespace tfel::gui {
     //    vl->addWidget(this->e);
     //    vl->addWidget(this->stw);
     vl->addLayout(hl);
-    vl->addLayout(this->info);
+    // the information line is not part of this layout: it is shown by the
+    // editor, below the row of the file explorer panel and the buffer, so that
+    // it names the buffer on the screen across the whole width of the window.
+    // What the buffer keeps is the drawing of it, see updateBufferInformations
     // the information of the buffer is displayed now, the suffix of its name
     // being chosen once the buffer is added to the stack of buffers, as the
     // suffix depends on the files visited by all the buffers (see
@@ -433,6 +446,10 @@ namespace tfel::gui {
   PlainTextEdit &Buffer::getMainFrame() {
     return *(this->e);
   }  // end of getTextEdit
+
+  QWidget &Buffer::getInformationLine() const {
+    return *(this->infoLine);
+  }  // end of getInformationLine
 
   QWidget *Buffer::getCurrentSecondaryTask() {
     if (this->stw->isVisible()) {

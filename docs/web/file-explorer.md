@@ -7,7 +7,9 @@ directories. It is brought on screen and taken away with
 ![The explorer panel on the left of the buffers, with the file its double click
 opened on the screen](img/explorer-panel.png "The explorer panel, about a third
 of the width given to the buffers, with notes.txt opened by a double click on
-its name")
+its name. The line of the buffer — name, position in the file, major mode, time
+— and the line which reports what the editor did stand below it, across the
+whole width of the window")
 
 # What the panel holds
 
@@ -46,11 +48,16 @@ it comes back **the width you left it**, not the third it was given the first
 time. It can be shrunk to the two buttons of its header and widened as far as the
 buffers allow.
 
-The panel is as tall as the buffers and ends where they do, **above** the bar
-which reports what the editor did and the line the minibuffer asks its questions
-in: those two keep the whole width of the window, as they do when no panel is
-shown. A long message is therefore never cut by a panel which has nothing to say
-about it, and the height of the buffers is untouched by showing or hiding it.
+The panel is as tall as the buffers and ends where the text of the buffer on the
+screen ends. **Below** it stand the two lines of the window, each across its
+whole width: the line of the buffer, which names that buffer and says where the
+cursor stands in it and what its major mode and the time are, and the line which
+reports what the editor did and asks the questions of the minibuffer in it. The
+third of the width is therefore taken out of the row of the text alone, and a
+long message is never cut by a panel which has nothing to say about it — nor is
+the name of the buffer you are reading, which stays as wide as the window even
+when half of that window shows the file system. The height of the buffers is
+untouched by showing or hiding the panel.
 
 The directory the panel is rooted at is the one which holds the file the buffer
 on the screen visits — the working directory when that buffer visits no file —

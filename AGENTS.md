@@ -2530,22 +2530,27 @@ nothing clears.
 ### The file explorer panel and the `Display` menu
 
 The panel beside the buffers is a `QTreeView` of a `QFileSystemModel`, in a
-class of the core library (`FileExplorer`, exported, `Q_OBJECT`, so a test reaches
-it with `findChild`). It is a **child of `EditorWidget`, not of the window**: the
-editor's vertical layout holds a horizontal `QSplitter` of `[panel, buffers]` and
-the minibuffer below it, so the panel is as tall as the buffers and ends **above
-the informative message area and the line the user types in**, which keep the
-whole width of the window. `centralWidget()` therefore answers the editor and the
-height walk of issue #121 runs the same chain it ran before the panel existed —
-the splitter is a *sibling* of the minibuffer, never a parent on the way up.
-`MainWindow` keeps only the menu and delegates to
-`EditorWidget::setExplorerPanelVisible` / `isExplorerPanelVisible`.
+class of the core library (`FileExplorer`, exported, `Q_OBJECT`, so a test
+reaches it with `findChild`). It is a **child of `EditorWidget`, not of the
+window**: the editor's vertical layout holds **three rows** — a horizontal
+`QSplitter` of `[panel, buffers]`, then the information line of the buffer on
+the screen, then the minibuffer — so the panel is as tall as the text of the
+buffer and ends **above the mode line, the informative message area and the line
+the user types in**, all three of which keep the whole width of the window.
+`centralWidget()` therefore answers the editor and the height walk of issue #121
+runs the same chain it ran before the panel existed — neither the splitter nor
+the row of lines is a parent of the minibuffer on the way up. `MainWindow` keeps
+only the menu and delegates to `EditorWidget::setExplorerPanelVisible` /
+`isExplorerPanelVisible`.
 
-That shape is a correction, and the wrong one is worth remembering: the first
-version split the *window* between the panel and the editor, which cut the
-informative bar to two thirds of the window and made a long report read as
-truncated. A `QDockWidget` was rejected too: it brings a title bar, a float and a
-close button of its own, which is not the shape of this window.
+That shape is a correction, twice over: the first version split the *window*
+between the panel and the editor, which cut the informative bar to two thirds of
+the window and made a long report read as truncated; the second left the mode
+line inside the buffer, so the line which names the file on the screen stopped
+at the edge of the panel and named a buffer across only two thirds of the window
+while the panel ran all the way down beside it. A `QDockWidget` was rejected
+too: it brings a title bar, a float and a close button of its own, which is not
+the shape of this window.
 
 `request.md` names `QFileModelView`: **Qt has no such class**. The pair which
 shows the file system through a model is `QFileSystemModel` — since Qt 6 in the
@@ -2563,22 +2568,26 @@ What the panel is, and what the splitter keeps:
   so the two sizes given add up to `explorerSplitter->width()`; a `QMainWindow`
   layout wins over an oversized call (measured: `setSizes({100, 2000})` left the
   window at 901 px and the panel squeezed to its 43 px minimum).
-- **The three members `EditorWidget` gained are an ABI break**: a packaged mode
-  built against the old layout reads the minibuffer pointers out of the wrong
-  places, so the whole tree is rebuilt, not `--target TFELEditor` (the rule the
-  note on `SettingsGroup` carries).
+- **The members `EditorWidget` and `Buffer` gained are an ABI break**: a
+  packaged mode built against the old layout reads the minibuffer pointers out
+  of the wrong places, so the whole tree is rebuilt, not `--target TFELEditor`
+  (the rule the note on `SettingsGroup` carries).
 - The panel wears `font/textedit` from its constructor and is handed the new font
   by `EditorWidget::changeFont`, like every other widget which read the setting
   itself; `MainWindow::selectFont` has no special case for it any more.
 
 Measured on both platforms (panel shown, `/tmp/opencode/explorer/geom.cxx`): the
-row of the panel and the buffers is 663 px tall offscreen and 659 px on
-Xvfb + metacity, the panel 332 px of the editor's 1000 px on both (ratio 0.332),
-the handle 4 px, the buffer then 664 px wide at x=336; the minibuffer 1000x18
-offscreen and 1000x20 on the live display, its top edge exactly the bottom edge
-of the panel. The ratio is taken on the width of the **editor**, which is the
-same number on both platforms; the window is not (metacity's own decoration
-moves the client area, and `w.width()` is the client width).
+row of the panel and the buffers is 631 px tall offscreen and 625 px on Xvfb +
+metacity, the panel 332 px of the editor's 1000 px on both (ratio 0.332), the
+handle 4 px, the buffer then 664 px wide at x=336; below that row the
+information line is 1000x32 offscreen and 1000x34 on the live display and the
+minibuffer 1000x18 and 1000x20, each beginning exactly where the row above it
+ends. The total is what the buffer and the minibuffer were before the line was
+hoisted out of the buffer (663+18 offscreen, 659+20 on the live display): the
+hoist moved the line, it did not grow it. The ratio is taken on the width of the
+**editor**, which is the same number on both platforms; the window is not
+(metacity's own decoration moves the client area, and `w.width()` is the client
+width).
 
 Four facts of `QFileSystemModel`, all measured in `/tmp/opencode/explorer/`
 (`sort.cxx`, `filter.cxx`, `dclick.cxx`, `tasks.cxx`):
@@ -2638,39 +2647,89 @@ being a child of the editor no longer prevents — a `StandardFunctionCommandPro
 of a free `void showExplorerPanel(EditorWidget &)` would do it — but the request
 named the menu and every command is one more name in the `Alt-X` list.
 
-`tests/TestFileExplorer.cxx` is the twentieth executable: the menu between `Edit`
-and `Buffers` and its two entries, the panel hidden until the entry is triggered
-and the buffers keeping the whole width until then, the third of the editor a
-shown panel takes, the bar it ends above keeping that whole width, a dragged
-width kept across a hide and a show, the ticks of both entries, the root of the
-panel and `goUp`, a double click which opens a file (and reuses the buffer of a
-file already visited), a double click on a directory which opens nothing, and the
-auxiliary tasks entry hiding and showing a frame. Geometry assertions of it hold
-on both platforms (offscreen and Xvfb + metacity). Four traps of measuring that
-geometry:
+`tests/TestFileExplorer.cxx` is the twentieth executable: the menu between
+`Edit` and `Buffers` and its two entries, the panel hidden until the entry is
+triggered and the buffers keeping the whole width until then, the third of the
+editor a shown panel takes, the mode line and the message line it ends above
+keeping that whole width, a dragged width kept across a hide and a show, the
+ticks of both entries, the root of the panel and `goUp`, the buffer change which
+leaves the root and the width where they are, a double click which opens a file
+(and reuses the buffer of a file already visited), a double click on a directory
+which opens nothing, and the auxiliary tasks entry hiding and showing a frame.
+Geometry assertions of it hold on both platforms (offscreen and Xvfb +
+metacity). Four traps of measuring that geometry:
 
 - The splitter of the panel is `ex->parentWidget()`, **not**
   `w.findChild<QSplitter *>()`: a `Buffer` holds a splitter of its own between its
   main frame and the pages of its secondary tasks, and whatever `findChild`
   happens to reach first is an accident of depth.
-- The minibuffer is reached as `ed->layout()->itemAt(1)->widget()`, and the row of
-  the panel as `itemAt(0)`. A subclass exposing the protected members of
-  `EditorWidget` — the `ExposedEditorWidget` idiom — is no help here: `MainWindow`
-  builds the editor itself, so the object on the screen is not of that subclass.
+- The three rows of the editor are reached by index: the splitter of the panel
+  is `ed->layout()->itemAt(0)->widget()`, the row of information lines
+  `itemAt(1)`, the minibuffer `itemAt(2)`. A subclass exposing the protected
+  members of `EditorWidget` — the `ExposedEditorWidget` idiom — is no help
+  here: `MainWindow` builds the editor itself, so the object on the screen is
+  not of that subclass. What distinguishes the two rows under the splitter
+  without a member is what they hold: the line of labels holds a `QLabel` and
+  no `LineEdit`, the minibuffer is the row which holds the read-only
+  `LineEdit` of the messages.
 - Two widgets whose parents differ have nothing to compare: the geometry of the
-  panel is in the coordinates of the splitter and the geometry of the bar in those
-  of the minibuffer. What "the panel ends above the bar" means is then
-  `ex->mapTo(ed, QPoint(0, ex->height())).y() == bar->mapTo(ed, QPoint(0, 0)).y()`,
-  both edges in the coordinates of the editor.
+  panel is in the coordinates of the splitter and the geometry of the line
+  below it in those of that line. What "the panel ends above the line" means
+  is then `ex->mapTo(ed, QPoint(0, ex->height())).y() == line->mapTo(ed,
+  QPoint(0, 0)).y()`, both edges in the coordinates of the editor.
 - The width the panel takes is measured on the buffer
   (`ed->getCurrentBuffer().getMainFrame().width()`), never on the editor: the
   editor's own width is what showing the panel must *not* change, so it is the
   control of the assertion, not its subject.
 
-`docs/web/file-explorer.md` is the user-facing page, with a screenshot of a shown
-panel and a message in the bar below it — the one evidence that **only the name
-column is drawn**, since `hideColumn` of the four others is invisible to every
-selection API, and the second look at what the panel leaves the bar alone with.
+`docs/web/file-explorer.md` is the user-facing page, with a screenshot of a
+shown panel, the mode line of the buffer below it and a message in the line
+under that — the one evidence that **only the name column is drawn**, since
+`hideColumn` of the four others is invisible to every selection API, and the
+look at what the panel leaves both lines alone with.
+
+### The mode line of a buffer is a page of the editor (`Buffer::infoLine`)
+
+The row of labels which names the buffer, says where the cursor stands and shows
+the icon and name of the major mode and the time (`bni`, `rpi`, `api`, `ii`,
+`mi`, `ti`) is a widget of its own, `Buffer::infoLine`, built in the **member
+initializer list and declared above the main frame** — the same trap issue #121
+names for the banner pointers, since a pointer declared lower is not initialized
+yet while the `PlainTextEdit` is being built. `EditorWidget::insertBuffer` puts
+the buffer into `buffers` and its line into `infos`, one `QStackedWidget` per
+row, in the one call and in the same order, which is what lets
+`setCurrentBuffer` show the line of the buffer it makes current by index:
+`infos->setCurrentIndex(buffers->indexOf(b))`. `removeBuffer` takes the page out
+of `infos` and `deleteLater`s it, because `addWidget` made the stack the parent
+of a widget the buffer used to own — a line left behind keeps naming a killed
+buffer under whatever comes next (`aKilledBufferTakesItsInformationLineWithIt`,
+and `/tmp/opencode/explorer/lines.cxx` outside the suite).
+
+Why one line per buffer rather than the single shared line `GNU Emacs` draws:
+the drawing is `Buffer::updatePosition`, `updateDate` and
+`updateBufferInformations`, each of which writes the labels of *its* buffer on a
+timer and on a signal, and a shared line would have to ask every one of them
+whether its buffer is the main frame, the trap the file-on-disk banner had to
+avoid with `isMainFrame()`. As it is, the labels are children of the line and
+nothing about the drawing changed but their parent — `Buffer::changeFont`
+reaches them by the same explicit `setFont` it always used, and the four
+functions which draw them (`updatePosition`, `updateDate`,
+`updateBufferInformations`, `changeFont`) are otherwise untouched, as is the
+rest of the tree: outside `Buffer.cxx` and the header which declares them, no
+file names one of the six. `getInformationLine()` is **not virtual**: the
+vtable of an exported class is not ours to shuffle.
+
+Two shapes of the row are load-bearing:
+
+- `infos` wears the **vertical policy of the minibuffer** (`Maximum`, as tall as
+  its tallest label, never taller): with a `Preferred` policy the row and the
+  minibuffer would share with the text the height the window gave to that
+  text, and `installingAUserInputLeavesTheEditorHeightToTheWindow` accounts
+  for the row for the same reason — a growing input takes its second line out
+  of the buffers, as it did before the row existed.
+- the labels have a `Maximum` **horizontal** policy, which inside the 664 px of
+  a buffer next to a panel could not be relieved and clamped the row; at the
+  whole width of the window there is always room for what they name.
 
 ## Architecture
 

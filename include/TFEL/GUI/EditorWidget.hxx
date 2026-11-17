@@ -67,14 +67,16 @@ namespace tfel::gui {
     /*!
      * \param[in] p : parent widget
      *
-     * \note the buffers are stacked in a `QStackedWidget` above a minibuffer
-     * made of a message line and of an empty read only line edit; no buffer is
-     * created: this is the responsibility of the caller, see MainWindow and
-     * createEmptyBuffer
+     * \note the buffers are stacked in a `QStackedWidget` above the row of
+     * information lines and a minibuffer made of a message line and of an empty
+     * read only line edit; no buffer is created: this is the responsibility of
+     * the caller, see MainWindow and createEmptyBuffer
      *
      * \note the stacked widget stands in a horizontal splitter, on the right of
-     * the file explorer panel, so that the panel is as tall as the buffers and
-     * the minibuffer keeps the whole width of the window
+     * the file explorer panel, so that the panel is as tall as the text of the
+     * buffer on the screen and ends above the information line, which names
+     * that buffer across the whole width, and above the minibuffer, which keeps
+     * the whole width too
      */
     EditorWidget(QWidget *const = nullptr);
 
@@ -579,6 +581,23 @@ namespace tfel::gui {
     virtual Buffer *createNewBuffer(const QString & = "");
 
     /*!
+     * \brief add the given buffer to this widget: the buffer to the stack of
+     * buffers, its information line to the stack of lines below the row of the
+     * file explorer panel and the buffers
+     *
+     * The two stacks are fed in the one call because the row of lines names the
+     * buffer it belongs to and has to follow it: a line added without its
+     * buffer, or a buffer without its line, is a row with a page too many or a
+     * mode line which names the wrong buffer.
+     *
+     * \note the page takes the buffer's line as its own child, which is what
+     * `Buffer::getInformationLine` warns of: after this call the buffer does
+     * not own the row it shows any more, and `removeBuffer` is what takes it
+     * back out
+     */
+    void insertBuffer(Buffer *const);
+
+    /*!
      * set the current buffer, add it at the top of history, emit
      * the currentBufferChanged signal, and give it the focus
      *
@@ -613,6 +632,18 @@ namespace tfel::gui {
 
     //! buffers
     QStackedWidget *buffers;
+    /*!
+     * \brief the information line of each buffer, shown under the row of the
+     * file explorer panel and the buffers
+     *
+     * One page per buffer, added by `insertBuffer` in the same order as the
+     * buffers themselves, so that `setCurrentBuffer` can show the line of the
+     * buffer it makes current by index. The row is as wide as the editor, which
+     * is the point: the mode line names the buffer on the screen across the
+     * whole window, whether the panel is shown or not, and it stands above the
+     * minibuffer, which keeps the whole width as well.
+     */
+    QStackedWidget *infos;
     //! buffer history
     QStringList bHistory;
     /*!

@@ -53,7 +53,8 @@ the amazing abilities of the [`Qt` library](https://www.qt.io/).
 - Walking the file system beside the buffers: a panel on the left of them,
   shown by `Display > Hide/Show Explorer Panel`, rooted at the directory of the
   file on the screen, where a double click opens a file in a buffer, and which
-  ends above the informative bar. See [the
+  ends above the mode line of the buffer and the line which reports what the
+  editor did — both of which keep the whole width of the window. See [the
   file explorer page](file-explorer.html) for details.
 - etc.
 

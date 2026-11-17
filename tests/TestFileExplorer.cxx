@@ -11,6 +11,7 @@
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
 #include <QtCore/QTemporaryDir>
+#include <QtWidgets/QLabel>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QSplitter>
 #include <QtWidgets/QTreeView>
@@ -36,10 +37,11 @@ struct TestFileExplorer : QObject {
   void theDisplayMenuStandsBetweenEditAndBuffers();
   void thePanelIsHiddenUntilTheEntryIsTriggered();
   void aShownPanelIsAboutAThirdOfTheEditor();
-  void thePanelEndsAboveTheInformativeBarAndTheInput();
+  void thePanelEndsAboveTheInformationLineAndTheMinibuffer();
   void thePanelKeepsTheWidthTheUserGaveIt();
   void theTicksOfTheEntriesNameWhatIsOnTheScreen();
   void thePanelIsRootedAtTheDirectoryOfTheBuffer();
+  void aBufferChangeLeavesThePanelWhereItIs();
   void goingUpRootsThePanelAtTheParentDirectory();
   void aDoubleClickOpensTheFileItNames();
   void aDoubleClickOnADirectoryOpensNothing();
@@ -296,7 +298,8 @@ void TestFileExplorer::aShownPanelIsAboutAThirdOfTheEditor() {
   QCOMPARE(ed->width(), editor_width);
 }  // end of TestFileExplorer::aShownPanelIsAboutAThirdOfTheEditor
 
-void TestFileExplorer::thePanelEndsAboveTheInformativeBarAndTheInput() {
+void TestFileExplorer::
+    thePanelEndsAboveTheInformationLineAndTheMinibuffer() {
   tfel::gui::MainWindow w;
   w.resize(1000, 700);
   w.show();
@@ -308,33 +311,44 @@ void TestFileExplorer::thePanelEndsAboveTheInformativeBarAndTheInput() {
   m->actions().at(0)->trigger();
   pump(6);
   // The row of the panel is the row of the buffers: the two stand in one
-  // `QSplitter`, the first thing the layout of the editor holds, and the
-  // minibuffer — the informative message area and the line the user types in —
-  // is the second, as wide as the editor. The panel therefore ends where the
-  // buffers do, above the minibuffer, and not beside the whole editor.
+  // `QSplitter`, the first thing the layout of the editor holds. Under it
+  // stands the information line of the buffer on the screen, and under that the
+  // minibuffer, which holds the informative message area and the line the user
+  // types in. The panel therefore ends where the text of the buffer does, above
+  // the two lines of the window, and not beside the whole editor.
   auto *const row = ex->parentWidget();
   auto *const l = ed->layout();
   QVERIFY2((row != nullptr) && (l != nullptr), "the editor has no layout");
   QVERIFY2(l->indexOf(row) == 0,
            "the row of the panel is not what the editor lays out first");
-  auto *const below = l->itemAt(1)->widget();
-  QVERIFY2(below != nullptr, "nothing stands under the row of the panel");
-  auto *const bar = below->findChild<tfel::gui::LineEdit *>();
-  QVERIFY2(bar != nullptr, "the widget under the panel is no minibuffer");
+  auto *const line = l->itemAt(1)->widget();
+  auto *const mini = l->itemAt(2)->widget();
+  QVERIFY2((line != nullptr) && (mini != nullptr),
+           "the editor does not lay out three rows");
+  // the information line is the row of labels, the minibuffer the row which
+  // holds what the user reads and types: nothing else is on their two places
+  QVERIFY2(line->findChild<QLabel *>() != nullptr,
+           "the row under the buffers holds no label");
+  QVERIFY2(line->findChild<tfel::gui::LineEdit *>() == nullptr,
+           "the row under the buffers is no information line");
+  auto *const bar = mini->findChild<tfel::gui::LineEdit *>();
+  QVERIFY2(bar != nullptr, "the last row of the editor is no minibuffer");
   QVERIFY2(bar->isReadOnly(), "the informative message area is editable");
-  // the panel is as tall as the row it stands in, and that row ends above the
-  // minibuffer: the two edges meet, which is what "above" means here
+  // the panel is as tall as the row it stands in, and that row ends where the
+  // information line begins: the two edges meet, which is what "above" means
   QCOMPARE(ex->height(), row->height());
-  QCOMPARE(below->geometry().top(), row->geometry().bottom() + 1);
-  // and the minibuffer keeps the whole width of the editor, as it does when no
+  QCOMPARE(line->geometry().top(), row->geometry().bottom() + 1);
+  QCOMPARE(mini->geometry().top(), line->geometry().bottom() + 1);
+  // and the two lines keep the whole width of the editor, as they do when no
   // panel is shown: the third is taken out of the row of the buffers only
-  QCOMPARE(below->width(), ed->width());
-  const auto left_of_the_bar = bar->mapTo(ed, QPoint(0, 0));
+  QCOMPARE(line->width(), ed->width());
+  QCOMPARE(mini->width(), ed->width());
+  const auto left_of_the_line = line->mapTo(ed, QPoint(0, 0));
   const auto bottom_of_the_panel = ex->mapTo(ed, QPoint(0, ex->height()));
-  QCOMPARE(left_of_the_bar.x(), 0);
+  QCOMPARE(left_of_the_line.x(), 0);
   QCOMPARE(bar->width(), ed->width());
-  QCOMPARE(bottom_of_the_panel.y(), left_of_the_bar.y());
-}  // end of TestFileExplorer::thePanelEndsAboveTheInformativeBarAndTheInput
+  QCOMPARE(bottom_of_the_panel.y(), left_of_the_line.y());
+}  // end of TestFileExplorer::thePanelEndsAboveTheInformationLineAnd...
 
 void TestFileExplorer::thePanelKeepsTheWidthTheUserGaveIt() {
   tfel::gui::MainWindow w;
@@ -444,6 +458,41 @@ void TestFileExplorer::thePanelIsRootedAtTheDirectoryOfTheBuffer() {
   QCOMPARE(QDir(ex->rootDirectory()).absolutePath(),
            QFileInfo(path).absolutePath());
 }  // end of TestFileExplorer::thePanelIsRootedAtTheDirectoryOfTheBuffer
+
+void TestFileExplorer::aBufferChangeLeavesThePanelWhereItIs() {
+  QTemporaryDir dir;
+  QVERIFY(dir.isValid());
+  const auto first = write(dir, "first.txt", "the first file\n");
+  const auto second = write(dir, "second.txt", "the second file\n");
+  QVERIFY((not first.isEmpty()) && (not second.isEmpty()));
+  tfel::gui::MainWindow w(QStringList() << first);
+  w.resize(1000, 700);
+  w.show();
+  pump(8);
+  auto *const ex = w.findChild<tfel::gui::FileExplorer *>();
+  auto *const ed = w.findChild<tfel::gui::EditorWidget *>();
+  auto *const m = menu(w, "Display");
+  QVERIFY((ex != nullptr) && (ed != nullptr) && (m != nullptr));
+  m->actions().at(0)->trigger();
+  pump(6);
+  const auto root = ex->rootDirectory();
+  const auto width = ex->width();
+  const auto name = ed->getCurrentBuffer().getBufferName();
+  // The panel is what the user pointed at, not what the buffers are going
+  // through: nothing connects it to the current buffer, and opening a file of
+  // another directory, then coming back, leaves the root, the width and the
+  // visibility of the panel exactly as they were.
+  ed->openFile(second);
+  pump(6);
+  QCOMPARE(ex->rootDirectory(), root);
+  QCOMPARE(ex->width(), width);
+  QVERIFY2(ex->isVisible(), "opening a file hid the panel");
+  ed->changeBuffer(name);
+  pump(6);
+  QCOMPARE(ex->rootDirectory(), root);
+  QCOMPARE(ex->width(), width);
+  QVERIFY2(ex->isVisible(), "changing the buffer hid the panel");
+}  // end of TestFileExplorer::aBufferChangeLeavesThePanelWhereItIs
 
 void TestFileExplorer::goingUpRootsThePanelAtTheParentDirectory() {
   QTemporaryDir dir;
