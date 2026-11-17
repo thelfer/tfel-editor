@@ -9,6 +9,8 @@
 #include <algorithm>
 
 #include <QtCore/QFile>
+#include <QtCore/QDir>
+#include <QtCore/QFileInfo>
 #include <QtCore/QMap>
 #include <QtCore/QTimer>
 #include <QtCore/QDebug>
@@ -25,6 +27,7 @@
 #include "TFEL/GUI/Command.hxx"
 #include "TFEL/GUI/CommandFactory.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/FileExplorer.hxx"
 #include "TFEL/GUI/LineEdit.hxx"
 #include "TFEL/GUI/CommandLine.hxx"
 #include "TFEL/GUI/PlainTextEdit.hxx"
@@ -276,6 +279,9 @@ namespace tfel::gui {
   EditorWidget::EditorWidget(QWidget* const p)
       : QWidget(p),
         buffers(new QStackedWidget),
+        explorer(new FileExplorer(*this)),
+        explorerSplitter(new QSplitter(Qt::Horizontal)),
+        explorerStarted(false),
         minibuffer(new QWidget),
         minibufferLayout(new QVBoxLayout),
         um(new LineEdit(*this)),
@@ -290,6 +296,13 @@ namespace tfel::gui {
     this->eui->setReadOnly(true);
     setQLineEditFont(this->um);
     setQLineEditFont(this->eui);
+    // The panel and the buffers share the width of the editor: the splitter
+    // holds the two of them and the minibuffer stands below, at the whole
+    // width, so that the informative message area and the line the user types
+    // in are as wide as the editor is, whether the panel is shown or hidden.
+    this->explorerSplitter->addWidget(this->explorer);
+    this->explorerSplitter->addWidget(this->buffers);
+    this->explorer->hide();
     this->minibufferLayout->setContentsMargins(0, 0, 0, 0);
     this->minibufferLayout->setSpacing(0);
     this->minibufferLayout->addWidget(this->um);
@@ -309,11 +322,49 @@ namespace tfel::gui {
     this->minibuffer->setSizePolicy(s);
     //    vl->setMargin(0);
     vl->setContentsMargins(0, 0, 0, 0);
-    vl->addWidget(this->buffers);
+    vl->addWidget(this->explorerSplitter);
     vl->addWidget(this->minibuffer);
     vl->setSpacing(0);
     this->setLayout(vl);
   }  // end of Wigdet::Wigdet
+
+  void EditorWidget::setExplorerPanelVisible(const bool shown) {
+    if (not shown) {
+      this->explorer->hide();
+      return;
+    }
+    this->explorer->show();
+    if (this->explorerStarted) {
+      return;
+    }
+    this->explorerStarted = true;
+    // The panel is rooted at the directory of the file the buffer on the screen
+    // visits, or at the working directory when it visits none, which is the
+    // same choice the question of `Ctrl-X Ctrl-F` makes when it proposes a name
+    // to open. It is rooted when it is first shown, not before: the buffers the
+    // editor was given are known by then, and a panel which followed the
+    // current buffer would jump out of the directory the user walked to.
+    auto directory = QDir::current().absolutePath();
+    if (not this->getBuffersNames().isEmpty()) {
+      const auto f =
+          this->getCurrentBuffer().getMainFrame().getCompleteFileName();
+      if (not f.isEmpty()) {
+        directory = QFileInfo(f).absolutePath();
+      }
+    }
+    this->explorer->setRootDirectory(directory);
+    // A third of the width the editor has, and the rest to the buffers. The two
+    // sizes add up to the width of the splitter on purpose:
+    // QSplitter::setSizes resizes the splitter itself to the sum it is given,
+    // which would otherwise make the window wider than the screen.
+    const auto total = qMax(1, this->explorerSplitter->width());
+    const auto w = total / 3;
+    this->explorerSplitter->setSizes({w, total - w});
+  }  // end of EditorWidget::setExplorerPanelVisible
+
+  bool EditorWidget::isExplorerPanelVisible() const {
+    return this->explorer->isVisible();
+  }  // end of EditorWidget::isExplorerPanelVisible
 
   QStringList& EditorWidget::getRecentFiles() {
     static QStringList files;
@@ -356,6 +407,9 @@ namespace tfel::gui {
         u.first->changeFont(f);
       }
     }
+    // the explorer panel reads the setting when it is built and wears an
+    // explicit font afterwards, which Qt never replaces with the inherited one
+    this->explorer->changeFont(f);
   }  // end of EditorWidget::changeFont
 
   Buffer* EditorWidget::getBufferVisitingFile(const QString& f) {

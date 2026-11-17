@@ -17,6 +17,7 @@
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QStackedWidget>
+#include <QtWidgets/QSplitter>
 #include <QtGui/QAction>
 #include "TFEL/GUI/Config.hxx"
 #include "TFEL/GUI/MajorMode.hxx"
@@ -30,6 +31,8 @@ namespace tfel::gui {
   struct LineEdit;
   //! forward declaration
   struct CommandLine;
+  //! forward declaration
+  struct FileExplorer;
 
   //! \brief a wigdet providing an emacs-inspired editor
   //
@@ -68,6 +71,10 @@ namespace tfel::gui {
      * made of a message line and of an empty read only line edit; no buffer is
      * created: this is the responsibility of the caller, see MainWindow and
      * createEmptyBuffer
+     *
+     * \note the stacked widget stands in a horizontal splitter, on the right of
+     * the file explorer panel, so that the panel is as tall as the buffers and
+     * the minibuffer keeps the whole width of the window
      */
     EditorWidget(QWidget *const = nullptr);
 
@@ -441,6 +448,28 @@ namespace tfel::gui {
      */
     virtual void setSecondaryTasksOrientation(const Qt::Orientation);
 
+    /*!
+     * \brief show or hide the file explorer panel
+     * \param[in] v : whether the panel stands beside the buffers
+     *
+     * The panel is built hidden and rooted at the working directory. The first
+     * show roots it at the directory of the file the current buffer visits, the
+     * working directory when it visits none, and gives it a third of the width
+     * of the editor: a panel which followed the current buffer would jump out
+     * of the directory the user walked to, and the width the user gave the
+     * panel is what the next show owes them, which a `QSplitter` keeps for a
+     * hidden child.
+     *
+     * \note the panel stands on the left of the buffers, above the minibuffer:
+     * it is as tall as the buffers and ends where they do, so the informative
+     * message area and the line the user types in keep the whole width of the
+     * window, as they do when no panel is shown.
+     */
+    virtual void setExplorerPanelVisible(const bool);
+
+    //! \return whether the file explorer panel is shown
+    bool isExplorerPanelVisible() const;
+
    signals:
 
     //! signal launched when this widget has been closed (see closeEvent)
@@ -586,6 +615,25 @@ namespace tfel::gui {
     QStackedWidget *buffers;
     //! buffer history
     QStringList bHistory;
+    /*!
+     * \brief the file explorer panel, which stands on the left of the buffers
+     *
+     * Built by the constructor and hidden: a window whose job is to show
+     * buffers does not open showing something else. `MainWindow` shows it
+     * through `setExplorerPanelVisible`, the entry of the `Display` menu.
+     */
+    FileExplorer *explorer;
+    /*!
+     * \brief the explorer panel and the buffers, side by side
+     *
+     * The splitter stands above the minibuffer, not beside the whole editor, so
+     * that the panel is as tall as the buffers and ends where they do: the
+     * informative message area and the line the user types in keep the whole
+     * width of the window.
+     */
+    QSplitter *explorerSplitter;
+    //! whether the explorer panel has been shown at least once
+    bool explorerStarted;
     /*!
      * \brief the minibuffer: a container holding the informative message area,
      * the empty area and the user inputs, of which only one is shown at a time

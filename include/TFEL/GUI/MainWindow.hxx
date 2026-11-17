@@ -10,15 +10,12 @@
 
 #include <QtCore/QStringList>
 #include <QtWidgets/QMainWindow>
-#include <QtWidgets/QSplitter>
 #include "TFEL/GUI/Config.hxx"
 
 namespace tfel::gui {
 
   //! forward declaration
   struct EditorWidget;
-  //! forward declaration
-  struct FileExplorer;
 
   /*!
    * \brief main window of the editor: holds an EditorWidget as central
@@ -38,12 +35,13 @@ namespace tfel::gui {
      * rebuilt when the current buffer or its major mode changes and the list
      * of recent files is updated when a buffer starts visiting a file
      *
-     * \note the central widget is a horizontal splitter holding the file
-     * explorer panel and the editor widget. The panel starts hidden and is
-     * shown by the `Display` menu entry `Hide/Show Explorer Panel`; the first
-     * time it is shown it takes a third of the width of the window, which the
-     * user then changes by dragging the handle of the splitter, and it keeps
-     * that width across the later hides and shows
+     * \note the central widget is the editor itself: the file explorer panel is
+     * one of its children, which is what keeps the panel above the informative
+     * bar and the line the user types in. The panel starts hidden and is shown
+     * by the `Display` menu entry `Hide/Show Explorer Panel`; the first time it
+     * is shown it takes a third of the width of the editor, which the user then
+     * changes by dragging the handle of the splitter the editor holds, and it
+     * keeps that width across the later hides and shows
      */
     MainWindow(const QStringList & = QStringList(), QWidget *const = nullptr);
 
@@ -114,12 +112,13 @@ namespace tfel::gui {
      * \brief show the file explorer panel, or hide it when it is already shown,
      * which is the `Display` menu entry `Hide/Show Explorer Panel`
      *
-     * The panel is built by the constructor and hidden: what this slot does the
-     * first time it is called is to root it at the directory of the file the
-     * current buffer visits, or at the working directory when it visits none,
-     * which is the same choice the question of `Ctrl-X Ctrl-F` makes, and to
-     * give it a third of the width of the window. Any later call leaves
-     * both the directory and the width where the user left them
+     * \note the panel belongs to the editor, which stands on the left of the
+     * buffers and above the minibuffer: what this slot does the first time the
+     * panel is shown is left to `EditorWidget::setExplorerPanelVisible`, which
+     * roots it at the directory of the file the current buffer visits, or at
+     * the working directory when it visits none, and gives it a third of the
+     * width. Any later call leaves both the directory and the width where the
+     * user left them
      */
     virtual void toggleExplorerPanel();
 
@@ -321,27 +320,14 @@ namespace tfel::gui {
     QMenu *hm;
 
     /*!
-     * \brief editor holding the buffers, which is the right hand side of the
-     * splitter below
+     * \brief editor holding the buffers, the central widget of this window
      *
      * \note what the window shows is held here and not read back from
-     * `centralWidget` because the central widget of this window is the
-     * splitter, not the editor: the panel is its other half, and a panel
-     * which is hidden is still there
+     * `centralWidget` because the cast would answer the same question in a
+     * window which was built differently, and the menu actions, the buffers
+     * menu and the `Display` entries all need the editor by name
      */
     EditorWidget *editor = nullptr;
-    //! horizontal splitter holding the explorer panel and the editor
-    QSplitter *splitter = nullptr;
-    /*!
-     * \brief panel showing the file system, hidden until the `Display` menu
-     * asks for it
-     */
-    FileExplorer *explorer = nullptr;
-    /*!
-     * \brief true once the panel has been given its initial width and
-     * directory
-     */
-    bool explorer_started = false;
 
    private:
     Q_OBJECT

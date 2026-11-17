@@ -2529,13 +2529,23 @@ nothing clears.
 
 ### The file explorer panel and the `Display` menu
 
-The left-hand panel of the window is a `QTreeView` of a `QFileSystemModel`, in a
+The panel beside the buffers is a `QTreeView` of a `QFileSystemModel`, in a
 class of the core library (`FileExplorer`, exported, `Q_OBJECT`, so a test reaches
-it with `findChild`), and the window is split horizontally between it and the
-editor. `QMainWindow` therefore keeps the editor in a member: **`centralWidget()`
-answers the splitter now**, not the editor, and every cast of the old code became
-`this->editor`. A `QDockWidget` was rejected on purpose: it brings a title bar, a
-float and a close button of its own, which is not the shape of this window.
+it with `findChild`). It is a **child of `EditorWidget`, not of the window**: the
+editor's vertical layout holds a horizontal `QSplitter` of `[panel, buffers]` and
+the minibuffer below it, so the panel is as tall as the buffers and ends **above
+the informative message area and the line the user types in**, which keep the
+whole width of the window. `centralWidget()` therefore answers the editor and the
+height walk of issue #121 runs the same chain it ran before the panel existed —
+the splitter is a *sibling* of the minibuffer, never a parent on the way up.
+`MainWindow` keeps only the menu and delegates to
+`EditorWidget::setExplorerPanelVisible` / `isExplorerPanelVisible`.
+
+That shape is a correction, and the wrong one is worth remembering: the first
+version split the *window* between the panel and the editor, which cut the
+informative bar to two thirds of the window and made a long report read as
+truncated. A `QDockWidget` was rejected too: it brings a title bar, a float and a
+close button of its own, which is not the shape of this window.
 
 `request.md` names `QFileModelView`: **Qt has no such class**. The pair which
 shows the file system through a model is `QFileSystemModel` — since Qt 6 in the
@@ -2544,23 +2554,31 @@ shows the file system through a model is `QFileSystemModel` — since Qt 6 in th
 
 What the panel is, and what the splitter keeps:
 
-- Built by the constructor and **hidden**; the first show roots it at the
-  directory of the file the current buffer visits (`QDir::current()` when it
-  visits none, the choice `Ctrl-X Ctrl-F` makes) and hands it a third of the
+- Built by the constructor of the editor and **hidden**; the first show roots it
+  at the directory of the file the current buffer visits (`QDir::current()` when
+  it visits none, the choice `Ctrl-X Ctrl-F` makes) and hands it a third of the
   width. Later shows change nothing, because the splitter remembers the width a
   hidden child was last given: a drag to 400 px comes back at 398 px.
 - **`QSplitter::setSizes` resizes the splitter itself** to the sum it is handed,
-  so the two sizes given add up to `splitter->width()`; a `QMainWindow` layout
-  wins over an oversized call (measured: `setSizes({100, 2000})` left the window
-  at 901 px and the panel squeezed to its 43 px minimum).
-- **The height walk of the minibuffer stops at the editor as it did before**:
-  measured across a toggle, the window stays 901x700 and the editor 681 tall;
-  only its width changes. A `QSplitter` parent is one more reason for
-  `propagateHeightToLayout` to stop where it already stopped.
+  so the two sizes given add up to `explorerSplitter->width()`; a `QMainWindow`
+  layout wins over an oversized call (measured: `setSizes({100, 2000})` left the
+  window at 901 px and the panel squeezed to its 43 px minimum).
+- **The three members `EditorWidget` gained are an ABI break**: a packaged mode
+  built against the old layout reads the minibuffer pointers out of the wrong
+  places, so the whole tree is rebuilt, not `--target TFELEditor` (the rule the
+  note on `SettingsGroup` carries).
 - The panel wears `font/textedit` from its constructor and is handed the new font
-  by `MainWindow::selectFont`, which is not a parent of it — the rule every widget
-  that read the setting itself needs (`EditorWidget::changeFont` reaches none of
-  them, the panel is not a child of the editor either).
+  by `EditorWidget::changeFont`, like every other widget which read the setting
+  itself; `MainWindow::selectFont` has no special case for it any more.
+
+Measured on both platforms (panel shown, `/tmp/opencode/explorer/geom.cxx`): the
+row of the panel and the buffers is 663 px tall offscreen and 659 px on
+Xvfb + metacity, the panel 332 px of the editor's 1000 px on both (ratio 0.332),
+the handle 4 px, the buffer then 664 px wide at x=336; the minibuffer 1000x18
+offscreen and 1000x20 on the live display, its top edge exactly the bottom edge
+of the panel. The ratio is taken on the width of the **editor**, which is the
+same number on both platforms; the window is not (metacity's own decoration
+moves the client area, and `w.width()` is the client width).
 
 Four facts of `QFileSystemModel`, all measured in `/tmp/opencode/explorer/`
 (`sort.cxx`, `filter.cxx`, `dclick.cxx`, `tasks.cxx`):
@@ -2615,21 +2633,44 @@ apply to it: **the titles of the menu bar carry no `&` mnemonic** (`tr("File")`,
 `tr("Edit")`, `tr("Display")`, …), and **nothing ticks a checkable entry but the
 code**, so `updateDisplayMenu` runs when the menu is built and on `aboutToShow`;
 `Ctrl-X 1` hiding the tasks is a transition the entry must survive telling the
-truth about. There is deliberately **no `Alt-X` command** for either entry: the
-commands of `CommandFactory` are members of `EditorWidget` and the panel is a
-child of the *window*, so a command would need the editor to ask its window.
+truth about. There is **no `Alt-X` command** for either entry, which the panel
+being a child of the editor no longer prevents — a `StandardFunctionCommandProxy`
+of a free `void showExplorerPanel(EditorWidget &)` would do it — but the request
+named the menu and every command is one more name in the `Alt-X` list.
 
-`tests/TestFileExplorer.cxx` is the twentieth executable: the panel hidden until
-the entry is triggered, the menu between `Edit` and `Buffers` and its two entries,
-the third of the window, a dragged width kept across a hide and a show, the ticks
-of both entries, the root of the panel and `goUp`, a double click which opens a
-file (and reuses the buffer of a file already visited), a double click on a
-directory which opens nothing, and the auxiliary tasks entry hiding and showing a
-frame. Geometry assertions of it hold on both platforms (offscreen 299/901, on
-Xvfb + metacity 332/1000, both 0.332). `docs/web/file-explorer.md` is the
-user-facing page, with a screenshot of a shown panel — the one evidence that
-**only the name column is drawn**, since `hideColumn` of the four others is
-invisible to every selection API.
+`tests/TestFileExplorer.cxx` is the twentieth executable: the menu between `Edit`
+and `Buffers` and its two entries, the panel hidden until the entry is triggered
+and the buffers keeping the whole width until then, the third of the editor a
+shown panel takes, the bar it ends above keeping that whole width, a dragged
+width kept across a hide and a show, the ticks of both entries, the root of the
+panel and `goUp`, a double click which opens a file (and reuses the buffer of a
+file already visited), a double click on a directory which opens nothing, and the
+auxiliary tasks entry hiding and showing a frame. Geometry assertions of it hold
+on both platforms (offscreen and Xvfb + metacity). Four traps of measuring that
+geometry:
+
+- The splitter of the panel is `ex->parentWidget()`, **not**
+  `w.findChild<QSplitter *>()`: a `Buffer` holds a splitter of its own between its
+  main frame and the pages of its secondary tasks, and whatever `findChild`
+  happens to reach first is an accident of depth.
+- The minibuffer is reached as `ed->layout()->itemAt(1)->widget()`, and the row of
+  the panel as `itemAt(0)`. A subclass exposing the protected members of
+  `EditorWidget` — the `ExposedEditorWidget` idiom — is no help here: `MainWindow`
+  builds the editor itself, so the object on the screen is not of that subclass.
+- Two widgets whose parents differ have nothing to compare: the geometry of the
+  panel is in the coordinates of the splitter and the geometry of the bar in those
+  of the minibuffer. What "the panel ends above the bar" means is then
+  `ex->mapTo(ed, QPoint(0, ex->height())).y() == bar->mapTo(ed, QPoint(0, 0)).y()`,
+  both edges in the coordinates of the editor.
+- The width the panel takes is measured on the buffer
+  (`ed->getCurrentBuffer().getMainFrame().width()`), never on the editor: the
+  editor's own width is what showing the panel must *not* change, so it is the
+  control of the assertion, not its subject.
+
+`docs/web/file-explorer.md` is the user-facing page, with a screenshot of a shown
+panel and a message in the bar below it — the one evidence that **only the name
+column is drawn**, since `hideColumn` of the four others is invisible to every
+selection API, and the second look at what the panel leaves the bar alone with.
 
 ## Architecture
 

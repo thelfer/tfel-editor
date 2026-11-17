@@ -50,9 +50,10 @@ the amazing abilities of the [`Qt` library](https://www.qt.io/).
   time, as `GNU Emacs` does. The replacement of an expression may name the
   groups it matched. See [the searching page](searching.html) and [the find and
   replace page](find-replace.html) for details.
-- Walking the file system beside the buffers: a panel on the left of the window,
+- Walking the file system beside the buffers: a panel on the left of them,
   shown by `Display > Hide/Show Explorer Panel`, rooted at the directory of the
-  file on the screen, where a double click opens a file in a buffer. See [the
+  file on the screen, where a double click opens a file in a buffer, and which
+  ends above the informative bar. See [the
   file explorer page](file-explorer.html) for details.
 - etc.
 

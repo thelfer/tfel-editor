@@ -84,7 +84,7 @@ namespace tfel::gui {
     this->setRootDirectory(QDir::current().absolutePath());
     // the tree wears the font of the text edits, as the widgets which read
     // that setting themselves do, and follows it afterwards through
-    // changeFont, which is what MainWindow::selectFont hands the new font to
+    // changeFont, which is what EditorWidget::changeFont hands the new font to
     QSettings settings;
     if (settings.contains("font/textedit")) {
       auto f = settings.value("font/textedit").value<QFont>();

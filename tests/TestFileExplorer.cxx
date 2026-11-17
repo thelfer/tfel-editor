@@ -1,7 +1,7 @@
 /*!
  * \file   tests/TestFileExplorer.cxx
- * \brief  tests of the file explorer panel of the main window and of the
- *         `Display` menu which shows it
+ * \brief  tests of the file explorer panel of the editor and of the `Display`
+ *         menu which shows it
  * \author Thomas Helfer
  * \date   17/11/2026
  */
@@ -18,6 +18,7 @@
 #include "TFEL/GUI/Buffer.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/FileExplorer.hxx"
+#include "TFEL/GUI/LineEdit.hxx"
 #include "TFEL/GUI/MainWindow.hxx"
 #include "TFEL/GUI/PlainTextEdit.hxx"
 #include "TFEL/GUI/ProcessOutputFrame.hxx"
@@ -34,7 +35,8 @@ struct TestFileExplorer : QObject {
   void initTestCase();
   void theDisplayMenuStandsBetweenEditAndBuffers();
   void thePanelIsHiddenUntilTheEntryIsTriggered();
-  void aShownPanelIsAboutAThirdOfTheWindow();
+  void aShownPanelIsAboutAThirdOfTheEditor();
+  void thePanelEndsAboveTheInformativeBarAndTheInput();
   void thePanelKeepsTheWidthTheUserGaveIt();
   void theTicksOfTheEntriesNameWhatIsOnTheScreen();
   void thePanelIsRootedAtTheDirectoryOfTheBuffer();
@@ -226,23 +228,31 @@ void TestFileExplorer::thePanelIsHiddenUntilTheEntryIsTriggered() {
   QVERIFY((ex != nullptr) && (ed != nullptr) && (m != nullptr));
   auto *const show = entry(m, "Explorer Panel");
   QVERIFY(show != nullptr);
-  // hidden at the start, and the editor has the whole width: the request asks
-  // for a panel which is not there until it is asked for
+  // hidden at the start, and the buffers have the whole width: the request asks
+  // for a panel which is not there until it is asked for. What the panel takes
+  // its width from is the buffers, not the window: the editor keeps its own
+  // width whatever the entry does, which the two last assertions say of the
+  // editor as a whole.
+  auto &b = ed->getCurrentBuffer();
   QVERIFY2(ex->isVisible() == false, "the panel is shown at the start");
-  const auto whole = ed->width();
-  QVERIFY2(whole > 800, qPrintable(QString("the editor is %1 px wide")
-                                     .arg(whole)));
+  const auto whole = b.getMainFrame().width();
+  const auto editor_width = ed->width();
+  QVERIFY2(whole > 800,
+           qPrintable(QString("the buffer is %1 px wide").arg(whole)));
   show->trigger();
   pump(4);
   QVERIFY2(ex->isVisible(), "the entry did not show the panel");
-  QVERIFY2(ed->width() < whole, "the panel took nothing from the editor");
+  QVERIFY2(b.getMainFrame().width() < whole,
+           "the panel took nothing from the buffers");
+  QCOMPARE(ed->width(), editor_width);
   show->trigger();
   pump(4);
   QVERIFY2(ex->isVisible() == false, "the entry did not hide the panel");
-  QCOMPARE(ed->width(), whole);
+  QCOMPARE(b.getMainFrame().width(), whole);
+  QCOMPARE(ed->width(), editor_width);
 }  // end of TestFileExplorer::thePanelIsHiddenUntilTheEntryIsTriggered
 
-void TestFileExplorer::aShownPanelIsAboutAThirdOfTheWindow() {
+void TestFileExplorer::aShownPanelIsAboutAThirdOfTheEditor() {
   tfel::gui::MainWindow w;
   w.resize(1000, 700);
   w.show();
@@ -250,34 +260,81 @@ void TestFileExplorer::aShownPanelIsAboutAThirdOfTheWindow() {
   auto *const ex = w.findChild<tfel::gui::FileExplorer *>();
   auto *const ed = w.findChild<tfel::gui::EditorWidget *>();
   auto *const m = menu(w, "Display");
-  auto *const splitter = w.findChild<QSplitter *>();
+  auto *const splitter = qobject_cast<QSplitter *>(ex->parentWidget());
   QVERIFY((ex != nullptr) && (ed != nullptr) && (m != nullptr) &&
           (splitter != nullptr));
   const auto window_height = w.height();
   const auto editor_height = ed->height();
+  const auto editor_width = ed->width();
   m->actions().at(0)->trigger();
   pump(6);
-  const auto ratio = double(ex->width()) / double(w.width());
+  // The ratio is that of the panel to the editor it stands in, not to the
+  // window: the panel shares the width of the editor with the buffers, and on a
+  // live display the window holds the border the window manager gave it, which
+  // the editor has nothing to do with.
+  const auto ratio = double(ex->width()) / double(ed->width());
   QVERIFY2((ratio > 0.28) && (ratio < 0.39),
            qPrintable(QString("the panel is %1 px of %2: %3")
                         .arg(ex->width())
-                        .arg(w.width())
-                        .arg(ratio)));
-  // the two halves of the splitter and its handle do not exceed the window:
-  // the sizes handed to `QSplitter::setSizes` add up to the width of the
-  // splitter on purpose, since that call resizes the splitter itself to their
-  // sum
-  QVERIFY2(ex->width() + ed->width() + splitter->handleWidth() <= w.width() + 2,
-           qPrintable(QString("%1 + %2 px of a %3 px window")
-                        .arg(ex->width())
                         .arg(ed->width())
-                        .arg(w.width())));
+                        .arg(ratio)));
+  // the two sides of the splitter and its handle do not exceed the editor: the
+  // sizes handed to `QSplitter::setSizes` add up to the width of the splitter,
+  // since that call resizes the splitter itself to their sum
+  const auto buffer_width = ed->getCurrentBuffer().getMainFrame().width();
+  QVERIFY2(ex->width() + buffer_width + splitter->handleWidth() <=
+                   ed->width() + 2,
+           qPrintable(QString("%1 + %2 px of a %3 px editor")
+                        .arg(ex->width())
+                        .arg(buffer_width)
+                        .arg(ed->width())));
   // the height of the window is the business of the window, not of the panel:
-  // the minibuffer of issue #121 rests on the height walk stopping at the
-  // editor, which is what the new splitter now holds
+  // showing it takes a third of the width and nothing of the height, which is
+  // what the minibuffer of issue #121 rests on
   QCOMPARE(w.height(), window_height);
   QCOMPARE(ed->height(), editor_height);
-}  // end of TestFileExplorer::aShownPanelIsAboutAThirdOfTheWindow
+  QCOMPARE(ed->width(), editor_width);
+}  // end of TestFileExplorer::aShownPanelIsAboutAThirdOfTheEditor
+
+void TestFileExplorer::thePanelEndsAboveTheInformativeBarAndTheInput() {
+  tfel::gui::MainWindow w;
+  w.resize(1000, 700);
+  w.show();
+  pump(8);
+  auto *const ex = w.findChild<tfel::gui::FileExplorer *>();
+  auto *const ed = w.findChild<tfel::gui::EditorWidget *>();
+  auto *const m = menu(w, "Display");
+  QVERIFY((ex != nullptr) && (ed != nullptr) && (m != nullptr));
+  m->actions().at(0)->trigger();
+  pump(6);
+  // The row of the panel is the row of the buffers: the two stand in one
+  // `QSplitter`, the first thing the layout of the editor holds, and the
+  // minibuffer — the informative message area and the line the user types in —
+  // is the second, as wide as the editor. The panel therefore ends where the
+  // buffers do, above the minibuffer, and not beside the whole editor.
+  auto *const row = ex->parentWidget();
+  auto *const l = ed->layout();
+  QVERIFY2((row != nullptr) && (l != nullptr), "the editor has no layout");
+  QVERIFY2(l->indexOf(row) == 0,
+           "the row of the panel is not what the editor lays out first");
+  auto *const below = l->itemAt(1)->widget();
+  QVERIFY2(below != nullptr, "nothing stands under the row of the panel");
+  auto *const bar = below->findChild<tfel::gui::LineEdit *>();
+  QVERIFY2(bar != nullptr, "the widget under the panel is no minibuffer");
+  QVERIFY2(bar->isReadOnly(), "the informative message area is editable");
+  // the panel is as tall as the row it stands in, and that row ends above the
+  // minibuffer: the two edges meet, which is what "above" means here
+  QCOMPARE(ex->height(), row->height());
+  QCOMPARE(below->geometry().top(), row->geometry().bottom() + 1);
+  // and the minibuffer keeps the whole width of the editor, as it does when no
+  // panel is shown: the third is taken out of the row of the buffers only
+  QCOMPARE(below->width(), ed->width());
+  const auto left_of_the_bar = bar->mapTo(ed, QPoint(0, 0));
+  const auto bottom_of_the_panel = ex->mapTo(ed, QPoint(0, ex->height()));
+  QCOMPARE(left_of_the_bar.x(), 0);
+  QCOMPARE(bar->width(), ed->width());
+  QCOMPARE(bottom_of_the_panel.y(), left_of_the_bar.y());
+}  // end of TestFileExplorer::thePanelEndsAboveTheInformativeBarAndTheInput
 
 void TestFileExplorer::thePanelKeepsTheWidthTheUserGaveIt() {
   tfel::gui::MainWindow w;
@@ -286,7 +343,7 @@ void TestFileExplorer::thePanelKeepsTheWidthTheUserGaveIt() {
   pump(8);
   auto *const ex = w.findChild<tfel::gui::FileExplorer *>();
   auto *const m = menu(w, "Display");
-  auto *const splitter = w.findChild<QSplitter *>();
+  auto *const splitter = qobject_cast<QSplitter *>(ex->parentWidget());
   QVERIFY((ex != nullptr) && (m != nullptr) && (splitter != nullptr));
   auto *const show = entry(m, "Explorer Panel");
   QVERIFY(show != nullptr);

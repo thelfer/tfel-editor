@@ -26,7 +26,6 @@
 #include "TFEL/GUI/ShortCutStyle.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/Buffer.hxx"
-#include "TFEL/GUI/FileExplorer.hxx"
 #include "TFEL/GUI/PlainTextEdit.hxx"
 #include "TFEL/GUI/MajorModeFactory.hxx"
 #include "TFEL/GUI/ConfigurationDialog.hxx"
@@ -136,18 +135,7 @@ namespace tfel::gui {
     auto &s = ShortCutStyle::getShortCutStyle();
     // this->setAttribute(Qt::WA_TranslucentBackground);
     this->editor = new EditorWidget(this);
-    // The window is split between the file explorer and the editor. The panel
-    // is created now and hidden: a window whose job is to show buffers does
-    // not open showing something else, and the splitter keeps the width a
-    // hidden child was last given, which is what lets the user hide the panel
-    // and get it back the way they left it.
-    this->splitter = new QSplitter(Qt::Horizontal, this);
-    this->splitter->addWidget(this->editor);
-    this->explorer = new FileExplorer(*this->editor);
-    // the panel is the left hand side of the window
-    this->splitter->insertWidget(0, this->explorer);
-    this->explorer->hide();
-    this->setCentralWidget(this->splitter);
+    this->setCentralWidget(this->editor);
     // the menu bar is created here, and the style is owned by it afterwards
     this->menuBar()->setStyle(new MenuBarIconAndTextProxyStyle);
     this->createMainMenu();
@@ -237,54 +225,21 @@ namespace tfel::gui {
         f.setStyleStrategy(QFont::PreferAntialias);
         s.setValue("font/textedit", f);
         e->changeFont(f);
-        // the explorer panel wears that font too, and it is not a child of the
-        // editor: it is the other half of the splitter the window is split
-        // between
-        if (this->explorer != nullptr) {
-          this->explorer->changeFont(f);
-        }
       }
     }
   }  // end of MainWindow::selectFont
 
   void MainWindow::toggleExplorerPanel() {
-    if (this->explorer == nullptr) {
+    if (this->editor == nullptr) {
       return;
     }
-    if (this->explorer->isVisible()) {
-      this->explorer->hide();
-      this->updateDisplayMenu();
-      return;
-    }
-    this->explorer->show();
-    if (not this->explorer_started) {
-      this->explorer_started = true;
-      // The panel is rooted at the directory of the file the buffer on the
-      // screen visits, or at the working directory when it visits none, which
-      // is the same choice the question of `Ctrl-X Ctrl-F` makes when it
-      // proposes a name to open. It is rooted when it is first shown, not
-      // before: the buffers the window was given are known by then, and a
-      // panel which follows the current buffer would jump out of the directory
-      // the user walked to.
-      auto directory = QDir::current().absolutePath();
-      if ((this->editor != nullptr) and
-          (not this->editor->getBuffersNames().isEmpty())) {
-        const auto f = this->editor->getCurrentBuffer().getMainFrame()
-                           .getCompleteFileName();
-        if (not f.isEmpty()) {
-          directory = QFileInfo(f).absolutePath();
-        }
-      }
-      this->explorer->setRootDirectory(directory);
-      // A third of the width the window has, and the rest to the buffers. The
-      // two sizes add up to the width of the splitter on purpose:
-      // QSplitter::setSizes resizes the splitter itself to the sum of what it
-      // is given, which a panel would otherwise pay for by making the window
-      // wider than the screen.
-      const auto total = qMax(1, this->splitter->width());
-      const auto w = total / 3;
-      this->splitter->setSizes({w, total - w});
-    }
+    // The panel, the splitter which holds it beside the buffers, the directory
+    // it is rooted at when it is first shown and the third of the width it is
+    // then given are all the editor's: the panel must end above the informative
+    // bar and the line the user types in, which is the shape of the editor, not
+    // of the window which holds it.
+    this->editor->setExplorerPanelVisible(
+        not this->editor->isExplorerPanelVisible());
     this->updateDisplayMenu();
   }  // end of MainWindow::toggleExplorerPanel
 
@@ -309,8 +264,8 @@ namespace tfel::gui {
 
   void MainWindow::updateDisplayMenu() {
     if (this->epa != nullptr) {
-      this->epa->setChecked((this->explorer != nullptr) &&
-                            (this->explorer->isVisible()));
+      this->epa->setChecked((this->editor != nullptr) &&
+                            (this->editor->isExplorerPanelVisible()));
     }
     if (this->ataa != nullptr) {
       auto shown = false;
@@ -482,7 +437,7 @@ namespace tfel::gui {
     // two answers the entry holds
     this->epa = new QAction(QObject::tr("Hide/Show &Explorer Panel"), this);
     this->epa->setStatusTip(QObject::tr(
-        "Show the file explorer panel on the left of the window, or hide it"));
+        "Show the file explorer panel on the left of the buffers, or hide it"));
     this->epa->setIcon(QIcon::fromTheme("system-file-manager"));
     this->epa->setIconVisibleInMenu(true);
     this->epa->setCheckable(true);

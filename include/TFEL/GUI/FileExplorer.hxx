@@ -25,14 +25,18 @@ namespace tfel::gui {
   struct EditorWidget;
 
   /*!
-   * \brief panel showing the contents of a directory, on the left of the main
-   * window, which opens in a new buffer the file it is double clicked on
+   * \brief panel showing the contents of a directory, on the left of the
+   * buffers, which opens in a new buffer the file it is double clicked on
    *
    * The panel is a `QTreeView` showing a `QFileSystemModel`: the model is the
    * one Qt provides for the file system, so the entries come with the icon the
    * desktop gives them, they appear and disappear as they are created or
    * removed on disk, and the order they are read in is the model's own, which
    * puts the directories before the files and both in alphabetical order.
+   *
+   * \note the panel stands in the `QSplitter` the editor holds above its
+   * minibuffer, which is what makes it as tall as the buffers and what keeps it
+   * clear of the informative message area and the line the user types in.
    *
    * \note Qt has no class named `QFileModelView`: the pair which shows the file
    * system through a model is `QFileSystemModel` — in the `QtGui` module since
@@ -91,7 +95,7 @@ namespace tfel::gui {
      * directory the panel is rooted at
      * \param[in] f : new font
      *
-     * \note called by `MainWindow::selectFont`: the tree wears the font of
+     * \note called by `EditorWidget::changeFont`: the tree wears the font of
      * the text edits from its constructor on, and Qt never replaces an
      * explicit font with the inherited one.
      */
