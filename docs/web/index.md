@@ -44,6 +44,16 @@ the amazing abilities of the [`Qt` library](https://www.qt.io/).
   and columns a rectangle covers and where the cursor stands afterwards follow
   `GNU Emacs`, command by command. See [the rectangle editing
   page](rectangle-editing.html) for details.
+- Searching and replacing, from a dialog which stays on screen while the buffer
+  is read — with the three options a reader wants, the letter case, the whole
+  words and the regular expression — or from the minibuffer, one match at a
+  time, as `GNU Emacs` does. The replacement of an expression may name the
+  groups it matched. See [the searching page](searching.html) and [the find and
+  replace page](find-replace.html) for details.
+- Walking the file system beside the buffers: a panel on the left of the window,
+  shown by `Display > Hide/Show Explorer Panel`, rooted at the directory of the
+  file on the screen, where a double click opens a file in a buffer. See [the
+  file explorer page](file-explorer.html) for details.
 - etc.
 
 The configuration of the editor, which is gathered by themes and can be

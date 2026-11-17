@@ -65,6 +65,10 @@ add_tfel_editor_test(test-kill-buffer TestKillBuffer.cxx)
 add_tfel_editor_test(test-python-mode TestPythonMode.cxx)
 add_tfel_editor_test(test-latex-mode TestLaTeXMode.cxx)
 add_tfel_editor_test(test-rectangle-mode TestRectangleMode.cxx)
+add_tfel_editor_test(test-search-pattern TestSearchPattern.cxx)
+add_tfel_editor_test(test-query-replace TestQueryReplace.cxx)
+add_tfel_editor_test(test-find-replace-dialog TestFindReplaceDialog.cxx)
+add_tfel_editor_test(test-file-explorer TestFileExplorer.cxx)
 
 # The suggestions of the spell checker are found on the context menu of a mode
 # of a packaged plugin, so the two modes which have one are built and their file

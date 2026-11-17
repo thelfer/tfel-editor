@@ -10,9 +10,15 @@
 
 #include <QtCore/QStringList>
 #include <QtWidgets/QMainWindow>
+#include <QtWidgets/QSplitter>
 #include "TFEL/GUI/Config.hxx"
 
 namespace tfel::gui {
+
+  //! forward declaration
+  struct EditorWidget;
+  //! forward declaration
+  struct FileExplorer;
 
   /*!
    * \brief main window of the editor: holds an EditorWidget as central
@@ -31,6 +37,13 @@ namespace tfel::gui {
      * \note the EditorWidget signals are connected so that the menu bar is
      * rebuilt when the current buffer or its major mode changes and the list
      * of recent files is updated when a buffer starts visiting a file
+     *
+     * \note the central widget is a horizontal splitter holding the file
+     * explorer panel and the editor widget. The panel starts hidden and is
+     * shown by the `Display` menu entry `Hide/Show Explorer Panel`; the first
+     * time it is shown it takes a third of the width of the window, which the
+     * user then changes by dragging the handle of the splitter, and it keeps
+     * that width across the later hides and shows
      */
     MainWindow(const QStringList & = QStringList(), QWidget *const = nullptr);
 
@@ -66,6 +79,72 @@ namespace tfel::gui {
     //! \brief paste the clipboard into the main frame of the current buffer
     virtual void paste();
 
+    /*!
+     * \brief delete the rectangle the selection of the main frame covers and
+     * keep it, which is the `cut-rectangle` command
+     *
+     * \note what is taken goes in the register of `RectangleEditing`, which the
+     * kill ring knows nothing of: `Ctrl-Y` does not bring a rectangle back
+     */
+    virtual void cutRectangle();
+
+    /*!
+     * \brief keep the rectangle the selection of the main frame covers without
+     * taking it from the buffer, which is the `copy-rectangle` command
+     */
+    virtual void copyRectangle();
+
+    /*!
+     * \brief write the last killed rectangle at the cursor of the main frame,
+     * one line at a time, which is the `paste-rectangle` command
+     */
+    virtual void pasteRectangle();
+
+    /*!
+     * \brief show the dialog which searches for a text or a regular expression
+     * and replaces it, the `Edit` menu entry `Find/Replace...` and the
+     * `find-replace` command
+     *
+     * \note an editor holds one such dialog and reuses it: what was typed in it
+     * is kept, and the buffers stay editable while it is shown
+     */
+    virtual void showFindReplace();
+
+    /*!
+     * \brief show the file explorer panel, or hide it when it is already shown,
+     * which is the `Display` menu entry `Hide/Show Explorer Panel`
+     *
+     * The panel is built by the constructor and hidden: what this slot does the
+     * first time it is called is to root it at the directory of the file the
+     * current buffer visits, or at the working directory when it visits none,
+     * which is the same choice the question of `Ctrl-X Ctrl-F` makes, and to
+     * give it a third of the width of the window. Any later call leaves
+     * both the directory and the width where the user left them
+     */
+    virtual void toggleExplorerPanel();
+
+    /*!
+     * \brief hide the auxiliary tasks of the current buffer, or show them when
+     * they are hidden, which is the `Display` menu entry `Hide/Show Auxiliary
+     * Tasks`
+     *
+     * \note what is shown or hidden is the tab widget of the secondary tasks
+     * of the buffer on the screen, the same one `Ctrl-X 1` hides and
+     * `Ctrl-X 2` and `Ctrl-X 3` show with the orientation they name. A buffer
+     * with no auxiliary task says so, as `Buffer::showSecondaryTasks` does.
+     */
+    virtual void toggleAuxiliaryTasks();
+
+    /*!
+     * \brief tick the two entries of the `Display` menu to what they would
+     * show
+     *
+     * Called when the menu is built and before it is opened, since the state
+     * they name can change between the two, by a key of the keyboard or by a
+     * buffer switch
+     */
+    virtual void updateDisplayMenu();
+
     //! \brief select the whole text of the main frame of the current buffer
     virtual void selectAll();
 
@@ -89,8 +168,8 @@ namespace tfel::gui {
 
     /*!
      * \brief rebuild the whole menu bar: create the actions, then the File,
-     * Edit, Buffers, Editor, mode specific, Options and Help menus; called
-     * when the current buffer or its major mode changes
+     * Edit, Display, Buffers, Editor, mode specific, Options and Help menus;
+     * called when the current buffer or its major mode changes
      */
     virtual void createMainMenu();
 
@@ -187,6 +266,21 @@ namespace tfel::gui {
     //! action selecting all the text
     QAction *sea = nullptr;
 
+    /*!\brief action showing the dialog which searches a buffer and replaces
+     * what it finds
+     *
+     * \note the four actions below this one are added to the `Edit` menu, as
+     * the others above are, which is what lets `clearMenuBar` take them back
+     * when the menu bar is rebuilt
+     */
+    QAction *fra = nullptr;
+    //! action cutting the rectangle the selection covers
+    QAction *rca = nullptr;
+    //! action copying the rectangle the selection covers
+    QAction *rca2 = nullptr;
+    //! action writing the last killed rectangle at the cursor
+    QAction *rpa = nullptr;
+
     //! action selecting the font of the main frames
     QAction *fa = nullptr;
     //! action opening the dialog of the configuration
@@ -200,18 +294,54 @@ namespace tfel::gui {
     //! action showing the Qt about message box
     QAction *aa2 = nullptr;
 
+    /*!
+     * \brief action showing or hiding the file explorer panel
+     *
+     * \note this action and the next one are added to the `Display` menu, as
+     * the others above are, which is what lets `clearMenuBar` take them back
+     * when the menu bar is rebuilt
+     */
+    QAction *epa = nullptr;
+    //! action showing or hiding the auxiliary tasks of the current buffer
+    QAction *ataa = nullptr;
+
     //! the "File" menu
     QMenu *fm;
     //! the "Editor" menu, holding the commands and the major modes
     QMenu *cm;
     //! the "Edit" menu, holding the edition actions
     QMenu *em;
+    //! the "Display" menu, holding the two panels which can be hidden
+    QMenu *dm;
     //! the "Options" menu
     QMenu *om;
     //! the "Buffers" menu, listing the open buffers
     QMenu *bm;
     //! the "Help" menu
     QMenu *hm;
+
+    /*!
+     * \brief editor holding the buffers, which is the right hand side of the
+     * splitter below
+     *
+     * \note what the window shows is held here and not read back from
+     * `centralWidget` because the central widget of this window is the
+     * splitter, not the editor: the panel is its other half, and a panel
+     * which is hidden is still there
+     */
+    EditorWidget *editor = nullptr;
+    //! horizontal splitter holding the explorer panel and the editor
+    QSplitter *splitter = nullptr;
+    /*!
+     * \brief panel showing the file system, hidden until the `Display` menu
+     * asks for it
+     */
+    FileExplorer *explorer = nullptr;
+    /*!
+     * \brief true once the panel has been given its initial width and
+     * directory
+     */
+    bool explorer_started = false;
 
    private:
     Q_OBJECT

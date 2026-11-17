@@ -1364,7 +1364,25 @@ namespace tfel::gui {
                ((m ==
                  (Qt::AltModifier | Qt::ControlModifier | Qt::ShiftModifier)) &&
                 (k == Qt::Key_Percent))) {
-      this->editor.setUserInput(new TextEditQueryReplace(*this, this->editor));
+      /* the query replace of a regular expression: the same three questions as
+         `Alt-%` asks, the first one read as an expression instead of as a text,
+         and `\\1` to `\\9` in the answer of the second one. On a keyboard where
+         `%` needs the shift key, as it does on the US layout, the modifier
+         combination which reaches this branch is Alt+Shift+Ctrl+2, which is the
+         other half of the test below. */
+      /* a buffer which is frozen by a file modified on disk, and a buffer which
+         is read-only for any other reason, takes no replacement: the walk would
+         ask its three questions, move a selection and then write over the
+         freeze. The search of such a buffer is its own business, so only this
+         command which writes is refused, as the other editing commands of this
+         function are. */
+      if (this->isReadOnly()) {
+        this->editor.displayInformativeMessage(QObject::tr("read only buffer"));
+      } else {
+        this->editor.setUserInput(
+            new TextEditQueryReplace(*this, this->editor, true));
+      }
+      return true;
 
     } else if ((m == Qt::AltModifier) && (k == Qt::Key_Q)) {
       if (this->isReadOnly()) {
@@ -1444,7 +1462,13 @@ namespace tfel::gui {
     } else if (((m == Qt::AltModifier) && (k == Qt::Key_Percent)) ||
                ((m == (Qt::AltModifier | Qt::ShiftModifier)) &&
                 (k == Qt::Key_Percent))) {
-      this->editor.setUserInput(new TextEditQueryReplace(*this, this->editor));
+      // the same refusal as the query replace of a regular expression
+      if (this->isReadOnly()) {
+        this->editor.displayInformativeMessage(QObject::tr("read only buffer"));
+      } else {
+        this->editor.setUserInput(
+            new TextEditQueryReplace(*this, this->editor, false));
+      }
     } else if ((m == Qt::AltModifier) && (k == Qt::Key_G)) {
       this->editor.setUserInput(new GotoLine(*this, this->editor));
     } else if ((m == Qt::AltModifier) && (k == Qt::Key_Y)) {

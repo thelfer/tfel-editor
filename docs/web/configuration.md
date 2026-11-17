@@ -70,9 +70,10 @@ show what the editor *remembers* by itself:
 
 - the histories of the prompts, which are the answers the minibuffer
   proposes again — the commands of `Alt+X`, the shell commands of `Alt+!`,
-  the expressions of the `grep` command, the strings of `Alt+%`, and the
-  compilation command `Alt+M` proposes in a buffer of a mode which
-  compiles;
+  the expressions of the `grep` command, the two answers of `Alt+%` and of
+  the query replace of a regular expression, which the two commands keep
+  apart, and the compilation command `Alt+M` proposes in a buffer of a mode
+  which compiles;
 - the list of recent files `File > Open Recent` offers;
 - the interface the dialog of `Run MFront` proposes for the next file of
   each kind.

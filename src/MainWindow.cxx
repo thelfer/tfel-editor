@@ -6,6 +6,7 @@
  */
 
 #include <QtCore/QDebug>
+#include <QtCore/QFileInfo>
 #include <QtCore/QSettings>
 #include <QtGui/QAction>
 #include <QtGui/QPainter>
@@ -25,10 +26,13 @@
 #include "TFEL/GUI/ShortCutStyle.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/FileExplorer.hxx"
 #include "TFEL/GUI/PlainTextEdit.hxx"
 #include "TFEL/GUI/MajorModeFactory.hxx"
 #include "TFEL/GUI/ConfigurationDialog.hxx"
+#include "TFEL/GUI/FindReplaceDialog.hxx"
 #include "TFEL/GUI/MainWindow.hxx"
+#include "TFEL/GUI/RectangleEditing.hxx"
 
 namespace tfel::gui {
 
@@ -131,33 +135,45 @@ namespace tfel::gui {
       : QMainWindow(p) {
     auto &s = ShortCutStyle::getShortCutStyle();
     // this->setAttribute(Qt::WA_TranslucentBackground);
-    auto *e = new EditorWidget(this);
-    this->setCentralWidget(e);
+    this->editor = new EditorWidget(this);
+    // The window is split between the file explorer and the editor. The panel
+    // is created now and hidden: a window whose job is to show buffers does
+    // not open showing something else, and the splitter keeps the width a
+    // hidden child was last given, which is what lets the user hide the panel
+    // and get it back the way they left it.
+    this->splitter = new QSplitter(Qt::Horizontal, this);
+    this->splitter->addWidget(this->editor);
+    this->explorer = new FileExplorer(*this->editor);
+    // the panel is the left hand side of the window
+    this->splitter->insertWidget(0, this->explorer);
+    this->explorer->hide();
+    this->setCentralWidget(this->splitter);
     // the menu bar is created here, and the style is owned by it afterwards
     this->menuBar()->setStyle(new MenuBarIconAndTextProxyStyle);
     this->createMainMenu();
     QObject::connect(&s, &ShortCutStyle::shortCutStyleChanged, this,
                      &MainWindow::updateOptionsMenu);
-    QObject::connect(e, &EditorWidget::closed, this, &MainWindow::close);
-    QObject::connect(e, &EditorWidget::bufferNameChanged, this,
+    QObject::connect(this->editor, &EditorWidget::closed, this,
+                     &MainWindow::close);
+    QObject::connect(this->editor, &EditorWidget::bufferNameChanged, this,
                      &MainWindow::updateBuffersMenu);
-    QObject::connect(e, &EditorWidget::bufferAdded, this,
+    QObject::connect(this->editor, &EditorWidget::bufferAdded, this,
                      &MainWindow::updateBuffersMenu);
-    QObject::connect(e, &EditorWidget::bufferRemoved, this,
+    QObject::connect(this->editor, &EditorWidget::bufferRemoved, this,
                      &MainWindow::updateBuffersMenu);
-    QObject::connect(e, &EditorWidget::currentBufferChanged, this,
+    QObject::connect(this->editor, &EditorWidget::currentBufferChanged, this,
                      &MainWindow::createMainMenu);
-    QObject::connect(e, &EditorWidget::currentBufferMajorModeChanged, this,
+    QObject::connect(this->editor, &EditorWidget::currentBufferMajorModeChanged,
+                     this, &MainWindow::createMainMenu);
+    QObject::connect(this->editor, &EditorWidget::updatedMenu, this,
                      &MainWindow::createMainMenu);
-    QObject::connect(e, &EditorWidget::updatedMenu, this,
-                     &MainWindow::createMainMenu);
-    QObject::connect(e, &EditorWidget::newTreatedFile, this,
+    QObject::connect(this->editor, &EditorWidget::newTreatedFile, this,
                      &MainWindow::addToRecentFiles);
     if (f.empty()) {
-      e->createEmptyBuffer();
+      this->editor->createEmptyBuffer();
     } else {
       for (const auto &fn : f) {
-        e->openFile(fn);
+        this->editor->openFile(fn);
       }
     }
   }  // end of MainWindow::MainWindow
@@ -189,7 +205,7 @@ namespace tfel::gui {
   }  // end of MainWindow::addToRecentFiles
 
   void MainWindow::closeEvent(QCloseEvent *ev) {
-    auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
+    auto *e = this->editor;
     if (e != nullptr) {
       QObject::disconnect(e, &EditorWidget::closed, this, &MainWindow::close);
       if (e->close()) {
@@ -202,7 +218,7 @@ namespace tfel::gui {
   }  // end of MainWindow::close
 
   void MainWindow::openFile() {
-    auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
+    auto *e = this->editor;
     const auto &f = QFileDialog::getOpenFileName(this, tr("Open File"));
     if (f.isEmpty()) {
       return;
@@ -211,7 +227,7 @@ namespace tfel::gui {
   }  // end of MainWindow::openFile
 
   void MainWindow::selectFont() {
-    auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
+    auto *e = this->editor;
     if (e != nullptr) {
       QSettings s;
       QFontDialog fd;
@@ -221,12 +237,93 @@ namespace tfel::gui {
         f.setStyleStrategy(QFont::PreferAntialias);
         s.setValue("font/textedit", f);
         e->changeFont(f);
+        // the explorer panel wears that font too, and it is not a child of the
+        // editor: it is the other half of the splitter the window is split
+        // between
+        if (this->explorer != nullptr) {
+          this->explorer->changeFont(f);
+        }
       }
     }
   }  // end of MainWindow::selectFont
 
+  void MainWindow::toggleExplorerPanel() {
+    if (this->explorer == nullptr) {
+      return;
+    }
+    if (this->explorer->isVisible()) {
+      this->explorer->hide();
+      this->updateDisplayMenu();
+      return;
+    }
+    this->explorer->show();
+    if (not this->explorer_started) {
+      this->explorer_started = true;
+      // The panel is rooted at the directory of the file the buffer on the
+      // screen visits, or at the working directory when it visits none, which
+      // is the same choice the question of `Ctrl-X Ctrl-F` makes when it
+      // proposes a name to open. It is rooted when it is first shown, not
+      // before: the buffers the window was given are known by then, and a
+      // panel which follows the current buffer would jump out of the directory
+      // the user walked to.
+      auto directory = QDir::current().absolutePath();
+      if ((this->editor != nullptr) and
+          (not this->editor->getBuffersNames().isEmpty())) {
+        const auto f = this->editor->getCurrentBuffer().getMainFrame()
+                           .getCompleteFileName();
+        if (not f.isEmpty()) {
+          directory = QFileInfo(f).absolutePath();
+        }
+      }
+      this->explorer->setRootDirectory(directory);
+      // A third of the width the window has, and the rest to the buffers. The
+      // two sizes add up to the width of the splitter on purpose:
+      // QSplitter::setSizes resizes the splitter itself to the sum of what it
+      // is given, which a panel would otherwise pay for by making the window
+      // wider than the screen.
+      const auto total = qMax(1, this->splitter->width());
+      const auto w = total / 3;
+      this->splitter->setSizes({w, total - w});
+    }
+    this->updateDisplayMenu();
+  }  // end of MainWindow::toggleExplorerPanel
+
+  void MainWindow::toggleAuxiliaryTasks() {
+    if ((this->editor == nullptr) ||
+        (this->editor->getBuffersNames().isEmpty())) {
+      // the current buffer of an editor which holds none is created: what a
+      // window with no buffer has no auxiliary task to show is not an answer to
+      // ask that question for
+      return;
+    }
+    auto &b = this->editor->getCurrentBuffer();
+    if (b.areSecondaryTasksVisible()) {
+      b.hideSecondaryTasks();
+    } else {
+      // a buffer with no auxiliary task reports it, which is what the entry of
+      // the menu is worth when there is nothing to show
+      b.showSecondaryTasks();
+    }
+    this->updateDisplayMenu();
+  }  // end of MainWindow::toggleAuxiliaryTasks
+
+  void MainWindow::updateDisplayMenu() {
+    if (this->epa != nullptr) {
+      this->epa->setChecked((this->explorer != nullptr) &&
+                            (this->explorer->isVisible()));
+    }
+    if (this->ataa != nullptr) {
+      auto shown = false;
+      if ((this->editor != nullptr) &&
+          (not this->editor->getBuffersNames().isEmpty())) {
+        shown = this->editor->getCurrentBuffer().areSecondaryTasksVisible();
+      }
+      this->ataa->setChecked(shown);
+    }
+  }  // end of MainWindow::updateDisplayMenu
+
   void MainWindow::openConfigurationDialog() {
-    auto *const e = qobject_cast<EditorWidget *>(this->centralWidget());
+    auto *const e = this->editor;
     if (e == nullptr) {
       return;
     }
@@ -247,7 +344,7 @@ namespace tfel::gui {
     if (this->qsca != nullptr) {
       this->qsca->deleteLater();
     }
-    auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
+    auto *e = this->editor;
     this->na = new QAction(QObject::tr("N&ew"), this);
     this->na->setStatusTip(QObject::tr("New buffer"));
     this->na->setIcon(QIcon::fromTheme("document-new"));
@@ -316,6 +413,36 @@ namespace tfel::gui {
     this->pa->setIcon(QIcon::fromTheme("edit-paste"));
     this->pa->setIconVisibleInMenu(true);
     QObject::connect(this->pa, &QAction::triggered, this, &MainWindow::paste);
+    // the rectangle commands, which work on the columns the selection covers
+    this->rca = new QAction(QObject::tr("Cu&t Rectangle"), this);
+    this->rca->setStatusTip(
+        QObject::tr("Delete the rectangle the selection covers and keep it"));
+    this->rca->setIcon(QIcon::fromTheme("edit-cut"));
+    this->rca->setIconVisibleInMenu(true);
+    QObject::connect(this->rca, &QAction::triggered, this,
+                     &MainWindow::cutRectangle);
+    this->rca2 = new QAction(QObject::tr("Cop&y Rectangle"), this);
+    this->rca2->setStatusTip(
+        QObject::tr("Keep the rectangle the selection covers, without deleting "
+                    "it from the buffer"));
+    this->rca2->setIcon(QIcon::fromTheme("edit-copy"));
+    this->rca2->setIconVisibleInMenu(true);
+    QObject::connect(this->rca2, &QAction::triggered, this,
+                     &MainWindow::copyRectangle);
+    this->rpa = new QAction(QObject::tr("Paste R&ectangle"), this);
+    this->rpa->setStatusTip(QObject::tr(
+        "Write the last killed rectangle at the cursor, one line at a time"));
+    this->rpa->setIcon(QIcon::fromTheme("edit-paste"));
+    this->rpa->setIconVisibleInMenu(true);
+    QObject::connect(this->rpa, &QAction::triggered, this,
+                     &MainWindow::pasteRectangle);
+    this->fra = new QAction(QObject::tr("&Find/Replace..."), this);
+    this->fra->setStatusTip(QObject::tr(
+        "Search for a text or a regular expression and replace it"));
+    this->fra->setIcon(QIcon::fromTheme("edit-find"));
+    this->fra->setIconVisibleInMenu(true);
+    QObject::connect(this->fra, &QAction::triggered, this,
+                     &MainWindow::showFindReplace);
     // exit actions
     this->ea = new QAction(QObject::tr("E&xit"), this);
     this->ea->setStatusTip(QObject::tr("Exit editor"));
@@ -349,6 +476,27 @@ namespace tfel::gui {
     this->qsca->setIcon(QIcon::fromTheme("preferences-desktop-keyboard"));
     QObject::connect(this->qsca, &QAction::triggered, this,
                      &MainWindow::useQtShortCuts);
+    // display actions: the two panels a window is more than its buffers. Both
+    // entries are one question -- is the panel shown, are the auxiliary tasks
+    // shown -- so both are checkable and `updateDisplayMenu` says which of the
+    // two answers the entry holds
+    this->epa = new QAction(QObject::tr("Hide/Show &Explorer Panel"), this);
+    this->epa->setStatusTip(QObject::tr(
+        "Show the file explorer panel on the left of the window, or hide it"));
+    this->epa->setIcon(QIcon::fromTheme("system-file-manager"));
+    this->epa->setIconVisibleInMenu(true);
+    this->epa->setCheckable(true);
+    QObject::connect(this->epa, &QAction::triggered, this,
+                     &MainWindow::toggleExplorerPanel);
+    this->ataa = new QAction(QObject::tr("Hide/Show Auxiliary &Tasks"), this);
+    this->ataa->setStatusTip(
+        QObject::tr("Show the auxiliary tasks of the current buffer, or hide "
+                    "them"));
+    this->ataa->setIcon(QIcon::fromTheme("view-list-tree"));
+    this->ataa->setIconVisibleInMenu(true);
+    this->ataa->setCheckable(true);
+    QObject::connect(this->ataa, &QAction::triggered, this,
+                     &MainWindow::toggleAuxiliaryTasks);
     // help actions
     this->aa = new QAction(QObject::tr("&About"), this);
     this->aa->setStatusTip(QObject::tr("Show the application's About box"));
@@ -382,7 +530,7 @@ namespace tfel::gui {
     // that the choice is one choice wherever it is made. What the buffer on
     // the screen is changes only what the entry of LanguageTool has to say
     // about itself, see `SpellingAndGrammar::addToMenu`
-    if (auto *const e = qobject_cast<EditorWidget *>(this->centralWidget());
+    if (auto *const e = this->editor;
         e != nullptr) {
       // the buffers are counted before the current one is asked for: asking
       // for it when the editor holds none would create a buffer of the menu
@@ -411,7 +559,7 @@ namespace tfel::gui {
 
   void MainWindow::updateBuffersMenu() {
     clearMenu(this->bm);
-    auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
+    auto *e = this->editor;
     if (e != nullptr) {
       const auto &bnames = e->getBuffersNames();
       const auto &bicons = e->getBuffersIcons();
@@ -429,7 +577,7 @@ namespace tfel::gui {
           a->setIconVisibleInMenu(true);
         }
         QObject::connect(a, &QAction::triggered, this, [this, id]() {
-          auto *qw = qobject_cast<EditorWidget *>(this->centralWidget());
+          auto *qw = this->editor;
           if (qw != nullptr) {
             qw->changeBuffer(id);
           }
@@ -451,7 +599,7 @@ namespace tfel::gui {
   }  // end of MainWindow::useQtShortCuts
 
   void MainWindow::createMainMenu() {
-    auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
+    auto *e = this->editor;
     QSettings settings;
     clearMenuBar(this->menuBar());
     this->createActions();
@@ -488,6 +636,28 @@ namespace tfel::gui {
     this->em->addAction(this->ca2);
     this->em->addAction(this->pa);
     this->em->addAction(this->sea);
+    this->em->addAction(this->fra);
+    // the three rectangle commands stand in a submenu of their own: they work
+    // on the columns the selection covers and keep what they take in their own
+    // register, not in the kill ring, which is not what the entries above them
+    // do
+    this->em->addSeparator();
+    auto* const rm = this->em->addMenu(QObject::tr("Rectangle Edit"));
+    rm->addAction(this->rca);
+    rm->addAction(this->rca2);
+    rm->addAction(this->rpa);
+    // display menu: the two panels which stand beside the buffers. The entries
+    // are checkable, so the menu says what doing nothing would leave on the
+    // screen; the tick is drawn when the menu is built and again before it is
+    // opened, because a key of the keyboard (`Ctrl-X 1` hides the auxiliary
+    // tasks, `Ctrl-X 2` and `Ctrl-X 3` show them) or a buffer switch answers
+    // the question in between
+    this->dm = this->menuBar()->addMenu(QObject::tr("Display"));
+    this->dm->addAction(this->epa);
+    this->dm->addAction(this->ataa);
+    QObject::connect(this->dm, &QMenu::aboutToShow, this,
+                     &MainWindow::updateDisplayMenu);
+    this->updateDisplayMenu();
     // buffer menu
     this->bm = this->menuBar()->addMenu(QObject::tr("Buffers"));
     this->updateBuffersMenu();
@@ -537,7 +707,7 @@ namespace tfel::gui {
         rf->setIcon(mf.getMajorModeIcon(mn));
         const auto path = fi.absoluteFilePath();
         QObject::connect(rf, &QAction::triggered, this, [this, path] {
-          auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
+          auto *e = this->editor;
           if (e != nullptr) {
             e->openFile(path);
           }
@@ -553,7 +723,7 @@ namespace tfel::gui {
   }  // end of MainWindow::about()
 
   void MainWindow::cut() {
-    auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
+    auto *e = this->editor;
     if (e != nullptr) {
       auto &t = e->getCurrentBuffer().getMainFrame();
       t.cut();
@@ -561,7 +731,7 @@ namespace tfel::gui {
   }  // end of MainWindow::cut
 
   void MainWindow::undo() {
-    auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
+    auto *e = this->editor;
     if (e != nullptr) {
       auto &t = e->getCurrentBuffer().getMainFrame();
       t.undo();
@@ -569,7 +739,7 @@ namespace tfel::gui {
   }  // end of MainWindow::undo
 
   void MainWindow::redo() {
-    auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
+    auto *e = this->editor;
     if (e != nullptr) {
       auto &t = e->getCurrentBuffer().getMainFrame();
       t.redo();
@@ -577,7 +747,7 @@ namespace tfel::gui {
   }  // end of MainWindow::redo
 
   void MainWindow::selectAll() {
-    auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
+    auto *e = this->editor;
     if (e != nullptr) {
       auto &t = e->getCurrentBuffer().getMainFrame();
       t.selectAll();
@@ -585,7 +755,7 @@ namespace tfel::gui {
   }  // end of MainWindow::selectAll
 
   void MainWindow::copy() {
-    auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
+    auto *e = this->editor;
     if (e != nullptr) {
       auto &t = e->getCurrentBuffer().getMainFrame();
       t.copy();
@@ -593,15 +763,44 @@ namespace tfel::gui {
   }  // end of MainWindow::copy
 
   void MainWindow::paste() {
-    auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
+    auto *e = this->editor;
     if (e != nullptr) {
       auto &t = e->getCurrentBuffer().getMainFrame();
       t.paste();
     }
   }  // end of MainWindow::paste
 
+  void MainWindow::cutRectangle() {
+    auto *e = this->editor;
+    if (e != nullptr) {
+      RectangleEditing::killRectangle(e->getCurrentBuffer().getMainFrame(), *e);
+    }
+  }  // end of MainWindow::cutRectangle
+
+  void MainWindow::copyRectangle() {
+    auto *e = this->editor;
+    if (e != nullptr) {
+      RectangleEditing::copyRectangleAsKill(
+          e->getCurrentBuffer().getMainFrame(), *e);
+    }
+  }  // end of MainWindow::copyRectangle
+
+  void MainWindow::pasteRectangle() {
+    auto *e = this->editor;
+    if (e != nullptr) {
+      RectangleEditing::yankRectangle(e->getCurrentBuffer().getMainFrame(), *e);
+    }
+  }  // end of MainWindow::pasteRectangle
+
+  void MainWindow::showFindReplace() {
+    auto *e = this->editor;
+    if (e != nullptr) {
+      FindReplaceDialog::showFor(*e);
+    }
+  }  // end of MainWindow::showFindReplace
+
   void MainWindow::print() {
-    auto *e = qobject_cast<EditorWidget *>(this->centralWidget());
+    auto *e = this->editor;
     if (e != nullptr) {
       e->print();
     }

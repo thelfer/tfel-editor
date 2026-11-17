@@ -171,11 +171,13 @@ namespace {
   }  // end of select()
 
   /*!
-   * \brief presses `C-x r t`, `C-x r k` or `C-x r y`
+   * \brief presses `C-x r t`, `C-x r k`, `C-x r w` or `C-x r y`
    *
    * `C-x r` is itself a question of the minibuffer, which waits for the single
    * key of the command, so the key is typed into its entry and not into the
-   * buffer. `t` uncovers a second question, the string to insert.
+   * buffer. `t` uncovers a second question, the string to insert. `w` is
+   * `copy-rectangle-as-kill`: the same register as `k`, with the buffer left
+   * alone.
    *
    * \note the string is set on the entry rather than typed: a newline of a
    * multi-line answer is the `Return` of the minibuffer, which is what a paste
@@ -191,8 +193,9 @@ namespace {
     pump();
     auto* const mode = liveInput(ed);
     QVERIFY2(mode != nullptr, "`C-x r` opened no question in the minibuffer");
-    press(entryOf(*mode), command == 't'   ? Qt::Key_T
-                          : (command == 'k') ? Qt::Key_K
+    press(entryOf(*mode), command == 't'    ? Qt::Key_T
+                          : (command == 'k')  ? Qt::Key_K
+                          : (command == 'w') ? Qt::Key_W
                                              : Qt::Key_Y,
           Qt::NoModifier);
     pump();
@@ -271,6 +274,10 @@ struct TestRectangleMode : QObject {
   void aYankBelowTheLastLineOfAFileWithoutAFinalNewlineOpensLines();
   void aRectangleOfNoWidthYankedOnTheEmptyLastLineOpensNothing();
   void aRectangleKilledInOneBufferIsPastedInAnother();
+
+  // ---- copy rectangle (C-x r w, `copy-rectangle-as-kill`) ----------
+  void theCopyOfARectangleLeavesTheBufferAndWritesTheSameRegister();
+  void theCopyOfARectangleMovesNeitherTextNorCursor();
 
  private:
   QTemporaryDir dir;
@@ -660,6 +667,62 @@ void TestRectangleMode::aRectangleKilledInOneBufferIsPastedInAnother() {
            (QStringList() << "twaaa" << "thbbb" << "ccc" << ""));
   QCOMPARE(cursorWhere(frame), QStringLiteral("1 2"));
 }  // end of aRectangleKilledInOneBufferIsPastedInAnother()
+
+/*!\brief `C-x r w` writes the register `C-x r k` writes, and takes nothing
+ *
+ * The register and the paste are what `rect.el` answers for this shape, read off
+ * GNU Emacs 27.1 (`/tmp/opencode/frd/copyrect.el`): the register is
+ * `("cdef" "    " "efgh")`, the short line padded as a kill pads it, and the
+ * document below is that register pasted at column 0 of a buffer the copy never
+ * cut. A copy which kept a register of its own shape — one which did not pad a
+ * short line, say — answers the paste with a different document.
+ */
+void TestRectangleMode::theCopyOfARectangleLeavesTheBufferAndWritesTheSameRegister() {
+  Editor e;
+  e.ed.openFile(writeFile(dir, "copy-register.txt", "abcdefgh\nab\ncdefgh\n"));
+  pump();
+  auto& frame = e.ed.getCurrentBuffer().getMainFrame();
+  select(frame, 0, 2, 2, 9);
+  pressRectangle(e.ed, frame, 'w');
+  // the columns are read and kept, and the buffer is left as it stood
+  QCOMPARE(blocks(frame), (QStringList() << "abcdefgh"
+                                         << "ab"
+                                         << "cdefgh"
+                                         << ""));
+  gotoWhere(frame, 0, 0);
+  pressRectangle(e.ed, frame, 'y');
+  QCOMPARE(blocks(frame), (QStringList() << "cdefabcdefgh"
+                                         << "    ab"
+                                         << "efghcdefgh"
+                                         << ""));
+  QCOMPARE(cursorWhere(frame), QStringLiteral("2 4"));
+}  // end of theCopyOfARectangleLeavesTheBufferAndWritesTheSameRegister()
+
+/*!\brief the copy moves neither a character of the buffer nor the cursor
+ *
+ * \note the cursor is the half which distinguishes the copy from a kill followed
+ * by an undo: a kill puts the cursor back by the width of what it took, and a
+ * command which reached the same document by writing and rewinding would leave the
+ * cursor of the kill behind. The kill ring is the other half: `copy-rectangle-as-kill`
+ * of `rect.el` sets `killed-rectangle` and nothing else, so `Ctrl-y` after the copy
+ * knows nothing about it, as it knows nothing after a kill.
+ */
+void TestRectangleMode::theCopyOfARectangleMovesNeitherTextNorCursor() {
+  Editor e;
+  e.ed.openFile(writeFile(dir, "copy-cursor.txt", "one\ntwo\nthree\n"));
+  pump();
+  auto& frame = e.ed.getCurrentBuffer().getMainFrame();
+  select(frame, 1, 0, 2, 2);
+  pressRectangle(e.ed, frame, 'w');
+  QCOMPARE(blocks(frame),
+           (QStringList() << "one" << "two" << "three" << ""));
+  QCOMPARE(cursorWhere(frame), QStringLiteral("2 2"));
+  QVERIFY2(e.ed.getKillRing().isEmpty(),
+           qPrintable(QStringLiteral("the copy of a rectangle pushed %1 entry/-"
+                                      "entries on the kill ring: %2")
+                          .arg(e.ed.getKillRing().size())
+                          .arg(e.ed.getKillRing().join(QStringLiteral(" | ")))));
+}  // end of theCopyOfARectangleMovesNeitherTextNorCursor()
 
 QTEST_MAIN(TestRectangleMode)
 

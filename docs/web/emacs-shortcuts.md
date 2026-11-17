@@ -9,9 +9,9 @@ to the main frame of a buffer or to secondary tasks derived from
 
 - `Ctrl-X+P`: Print the main frame or the current secondary task.
 - `Ctrl-X+R`: Enter rectangle editing mode, which waits for `t` to insert a
-  string on every line the selection covers, `k` to kill that rectangle and
-  `y` to insert the last killed one. See [the rectangle editing
-  page](rectangle-editing.html) for details.
+  string on every line the selection covers, `k` to kill that rectangle, `w` to
+  keep it without deleting it, and `y` to insert the last kept one. See [the
+  rectangle editing page](rectangle-editing.html) for details.
 - `Ctrl-X+K`: From the main frame, kill the current buffer. Kill the
   current secondary task otherwise.
 - `Ctrl-X+H`: Select the whole text.
@@ -22,6 +22,19 @@ to the main frame of a buffer or to secondary tasks derived from
   secondary task, turn it into a new frame in a new buffer.
 - `Ctrl-C+Ctrl-C`: save the current frame. `Ctrl-C` is the prefix a
   major mode uses for its own second keys and no mode asks for this one.
+
+# Searching and replacing
+
+- `Alt+%`: Query replace: asks a text and its replacement in the minibuffer,
+  then walks the matches of the buffer and asks `y`, `n` or `!` for each one.
+- `Ctrl-Alt+%`: The same three questions, the first answer read as a regular
+  expression, whose groups the replacement may name as `\1` to `\9`.
+
+Both are described on [the searching page](searching.html), together with the
+dialog of `Edit > Find/Replace...` which asks no key of the buffer and stands
+modeless while the buffer is read. The histories of the two questions are
+written as the commands are used and are not entries of the configuration
+dialog.
 
 # The `Ctrl-C` prefix
 

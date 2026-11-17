@@ -2407,6 +2407,230 @@ Traps, all paid for:
   `return`): the failure of `makeBuffer` and `frameRunning` is a null pointer the
   caller asserts on.
 
+### Finding and replacing: one search primitive, three surfaces
+
+`Edit > Find/Replace...`, `Alt-%` and `Ctrl-Alt-%` all walk a buffer looking
+for a text, and all three now ask the **same object** what a match is:
+`SearchPattern` (`src/SearchPattern.cxx`) holds the pattern, the three options
+(`Match case`, `Whole words`, `Regular expression`), the replacement and the
+compiled expression, and answers `find(document, from, backward)` and
+`startingAt(document, position)`. Its positions are places of the document
+*and* of `document.toPlainText()` — the same numbers, because a block separator
+is one character of each and no block holds a character `toPlainText` would
+write as more than one, the invariant `normalizeLineSeparators` keeps. That is
+what lets a `QRegularExpression` be matched against the whole text and its
+answer applied to the document with no conversion.
+
+The three surfaces are: the modeless `FindReplaceDialog` (`showFor(editor)`
+reuses the one dialog of the window and prefills it from the buffer on screen,
+`objectName` `find-replace`, its widgets `find-field`, `replace-field`,
+`match-case`, `whole-words`, `regular-expression`, `find-next`,
+`find-previous`, `replace`, `replace-all`, `close`, and `status` for the line
+it reports on); and the two minibuffer walks of `TextEditQueryReplace`, which
+differ in one flag, `regexp`. The dialog reports in **its own** `QLabel` and
+never in the minibuffer: it is modeless, so a message there would land under a
+hand on a button, and the minibuffer belongs to whoever is waiting for an answer.
+
+Numbers and rules, all measured:
+
+- **`QTextDocument::find` is case-INsensitive unless `FindCaseSensitively` is
+  passed** — the option's absence is not "as written". Verified: `abc` is found
+  in `ABC` by default and not found with the flag (`/tmp/opencode/frd/qtsemantics`).
+- **The whole-word rule is `isLetterOrNumber`, the underscore included as a
+  *boundary*, which is Qt's rule and is not `\b`.** The rule is `standsAlone`
+  and it is used for the plain and the expression path alike, because
+  `QRegularExpression`'s `\w` counts `_` as a word character and `\b` would
+  therefore answer a different question from the one `FindWholeWords` asks.
+  Measured on `abc_def abc` (`/tmp/opencode/frd/word.cxx`): Qt's
+  `FindWholeWords` answers `0..3` — the `_` is a boundary, so the leading `abc`
+  is a whole word — while `(?:\b)abc(?:\b)` answers `8..11`, the *second* one;
+  and on a document which is `abc` alone, `\b…\b` finds **nothing** where Qt
+  finds `0..3`. A `(?<![\w])…(?![\w])` lookaround is wrong the same way. The
+  parity between the hand-rolled rule and Qt's is asserted by
+  `TestSearchPattern`.
+- **An empty match is never returned**: a pattern like `^[[:space:]]*$` matches
+  at a place with no character, and a replacement of nothing is not what a
+  reader means; `findNextMatch` retries one character further, which is also how
+  a match the whole-words rule rejects is passed over.
+- **`\0`–`\9` in a replacement, one digit only**: `\12` is group 1 then a `2`
+  (two-digit group numbers are not what QRegularExpression's own `\12` would
+  mean here); a backslash before anything else stands for that character, so
+  `\\1` writes `\1` and a trailing backslash writes nothing; a group an
+  alternative left unfilled writes nothing. The plain command expands **nothing**:
+  its replacement is the text it was given, backslashes included.
+
+Four traps, all paid for:
+
+- **`QTest::keyClick` sends the *press* of the modifier before the key of the
+  chord**, so `Ctrl-G` reaches the walk of the query replace as a bare
+  `Qt::Key_Control` press first. `TextEditReplaceFilter::filterKeyPressEvent`
+  consumed every key and answered the stray ones with `type either 'y', 'n' or
+  '!'`, which is how the reader was told they were wrong at the moment they
+  asked to stop. The filter now returns early on a bare Shift/Ctrl/Alt/Meta
+  press, the rule `handleKeyPressEventWithEmacsShortCuts` already had.
+- **Offscreen, `QTest::keyClick(…, Qt::Key_Percent, Qt::AltModifier)` adds no
+  Shift**, nor any for `Qt::Key_Exclam`: the text of the event is `%` and `!`.
+  The `Ctrl-Alt-%` branch therefore accepts the modifier pair with and without
+  `Qt::ShiftModifier`, which is the US-layout spelling where `%` needs the
+  shift; a test which passed only the shifted form would answer nothing at all.
+- **`CommandLine::setLabel` stores `"<font color=blue> " + label + " </font>"`**,
+  so a test which asks what a question reads must use `contains`, never equality
+  on the text of the prompt.
+- **A position on a line boundary belongs to the block behind it**: after a
+  replacement, the walk's selection of `8..11` in `abc abc\nabc` is reported by
+  `document->findBlock(selectionStart()).blockNumber()` as line **1**, not 0.
+  A test which names where the walk stands asserts that reading.
+- **A read-only text edit stops a key and nothing else**: a `QTextCursor` of a
+  program writes straight through it (measured, `/tmp/opencode/frd/rocheck.cxx`:
+  `insertText` on a `QPlainTextEdit` with `setReadOnly(true)` changes the
+  document). The freeze of a file modified on disk is therefore only as wide as
+  the `isReadOnly()` gate each writing command asks for itself — which the
+  dialog's two buttons which write and the two query replaces now do, each
+  reported `read only buffer`, and `aBufferWhichIsFrozenIsRefusedBothCommands`
+  and `aBufferWhichCanNotBeWrittenToIsRefusedBothButtonsWhichWrite` are what
+  say so. The two buttons which only search are answered: walking a frozen
+  buffer writes nothing.
+- **No replacement is the plural of English**: the report of a walk is built on
+  `nb == 1`, not on `nb < 2`, which answered a walk ended before the first `y`
+  with "replaced 0 occurrence" — a line a reader who skimmed it took for a
+  success. The dialog already read `count == 1` the same way.
+
+`RectangleEditing` (`src/RectangleEditing.cxx`) is the same story on the other
+axis: the four rectangle operations moved out of `RectangleMode` — which is a
+`CommandLine`, and a `Q_OBJECT` change of its layout would be an ABI break for
+every packaged mode — into an exported non-`Q_OBJECT` struct of statics which
+`RectangleMode` delegates to and the three entries of the `Rectangle Edit`
+submenu of `MainWindow`'s `Edit` menu and the commands `cut-rectangle`,
+`copy-rectangle` and `paste-rectangle` call directly, without the `Ctrl-X R`
+question in the way. `kill-rectangle` — the name GNU Emacs gives the first of
+them — is an **alias**, which `CommandFactory` has no notion of: an alias is a
+second `StandardFunctionCommandProxy` of the same function under another name,
+and since `Alt-X` completion lists `getAvailableCommandsNames()`, the alias name
+shows up there, which is the point of registering it. `addCommand` keeps the
+**first** of two clashing names and says so only through `qDebug`, so an alias
+must be registered under a name nothing else claims.
+`copyRectangleAsKill` is
+`C-x r w`: the same register as the kill, the buffer and the cursor left alone,
+and the kill ring untouched — `copy-rectangle-as-kill` of `rect.el` sets
+`killed-rectangle` and nothing else, which `TestRectangleMode` asserts by
+pasting the register a copy wrote and reading the document Emacs answers with it
+(`/tmp/opencode/frd/copyrect.el`, GNU Emacs 27.1: the register of
+`abcdefgh`/`ab`/`cdefgh` over columns 2..9 is `("cdef" "    " "efgh")`).
+`yankRectangle` **inserts** and never replaces the selection: `yank-rectangle`
+inserts, and the command which replaces a selection is `clear-rectangle`. The
+three commands report nothing in the minibuffer, so the case which pins the
+kill ring being untouched asserts the ring, not a message.
+
+The three new suites are `test-search-pattern` (the primitive, no GUI),
+`test-find-replace-dialog` and `test-query-replace`; the rectangle register and
+`C-x r w` are cases of `test-rectangle-mode`, which must keep
+`pastingWithNoRectangleKilledSaysSo` first because the register is one static
+nothing clears.
+
+### The file explorer panel and the `Display` menu
+
+The left-hand panel of the window is a `QTreeView` of a `QFileSystemModel`, in a
+class of the core library (`FileExplorer`, exported, `Q_OBJECT`, so a test reaches
+it with `findChild`), and the window is split horizontally between it and the
+editor. `QMainWindow` therefore keeps the editor in a member: **`centralWidget()`
+answers the splitter now**, not the editor, and every cast of the old code became
+`this->editor`. A `QDockWidget` was rejected on purpose: it brings a title bar, a
+float and a close button of its own, which is not the shape of this window.
+
+`request.md` names `QFileModelView`: **Qt has no such class**. The pair which
+shows the file system through a model is `QFileSystemModel` — since Qt 6 in the
+**`QtGui`** module, not in `QtWidgets` where its forwarding header used to live
+(`#include <QtGui/QFileSystemModel>`) — and one of the views of `QtWidgets`.
+
+What the panel is, and what the splitter keeps:
+
+- Built by the constructor and **hidden**; the first show roots it at the
+  directory of the file the current buffer visits (`QDir::current()` when it
+  visits none, the choice `Ctrl-X Ctrl-F` makes) and hands it a third of the
+  width. Later shows change nothing, because the splitter remembers the width a
+  hidden child was last given: a drag to 400 px comes back at 398 px.
+- **`QSplitter::setSizes` resizes the splitter itself** to the sum it is handed,
+  so the two sizes given add up to `splitter->width()`; a `QMainWindow` layout
+  wins over an oversized call (measured: `setSizes({100, 2000})` left the window
+  at 901 px and the panel squeezed to its 43 px minimum).
+- **The height walk of the minibuffer stops at the editor as it did before**:
+  measured across a toggle, the window stays 901x700 and the editor 681 tall;
+  only its width changes. A `QSplitter` parent is one more reason for
+  `propagateHeightToLayout` to stop where it already stopped.
+- The panel wears `font/textedit` from its constructor and is handed the new font
+  by `MainWindow::selectFont`, which is not a parent of it — the rule every widget
+  that read the setting itself needs (`EditorWidget::changeFont` reaches none of
+  them, the panel is not a child of the editor either).
+
+Four facts of `QFileSystemModel`, all measured in `/tmp/opencode/explorer/`
+(`sort.cxx`, `filter.cxx`, `dclick.cxx`, `tasks.cxx`):
+
+- **The model sorts by itself**: directories before files, both in alphabetical
+  order, whether the view asks for sorting or not. **No
+  `QSortFilterProxyModel` is needed.**
+- **`setRootPath` is mandatory**: an index asked for a directory the model was
+  never rooted at is *valid* and has **no row**, which reads as an empty
+  directory rather than as a model which looked at nothing.
+  `setRootDirectory` is the one place the path of the model and the root index of
+  the view are both set, and it refuses an empty name and a name which is no
+  directory: a panel which went blank on a typo is worse than one which stayed
+  where it was.
+- **The filter decides what a hidden file is**: `QDir::AllEntries` names no
+  hidden entries, so with `AllEntries | NoDotAndDotDot` a directory of
+  `visible.txt`, `.hidden` and `Beta` answers `Beta visible.txt`; adding
+  `QDir::Hidden` answers `Beta .hidden visible.txt`. The two dot entries are what
+  `NoDotAndDotDot` is for — the panel has a button of its own for the parent.
+- **The listing of a directory arrives through a socket notifier**, which
+  `QCoreApplication::processEvents()` never expires: a test waits with
+  `QTest::qWait` (the same trap a pipe carries). `isDirectoryLoaded` **does not
+  exist in this Qt 6.2.4**, so the wait is on `rowCount(root) > 0`.
+
+The double click is the requested gesture, and the shape of it is:
+`FileExplorer::openFileAt` refuses an invalid index and a directory, and the view's
+own `expandsOnDoubleClick` (left at its default) does the expanding of a directory.
+**A double click on the *name* of a directory expands it just as the branch
+decoration does** — measured both ways, label centre and decoration.
+
+Two test traps, both paid for:
+
+- **`QTest::mouseDClick` alone reaches nothing in an inactive window**, which is
+  what every window of an offscreen run is: the file stays unopened and the
+  directory unexpanded, with no warning of any kind. A `QTest::mouseClick` at the
+  same place first — the press a real double click always begins with — makes both
+  the open and the expand happen, offscreen and on `DISPLAY=:99`. `setFocus` and
+  `QApplication::setActiveWindow` do **not** substitute for it.
+- `QTreeView::visualRect` of a row the view has not laid out is an **empty**
+  rectangle, and a click at its centre is a click on the blank part of the
+  viewport; the wait is on `height() > 0`.
+- And outside the panel: **`Buffer::attachSecondaryTask(QWidget *)` does nothing
+  at all, silently, for a widget the registry does not already hold** — that is the
+  overload a mode re-shows a registered task with. A test which wants a page on a
+  buffer uses the title form, `attachSecondaryTask("*output*", frame)`, which
+  registers it, adds the tab and shows it.
+
+The `Display` menu stands between `Edit` and `Buffers` and holds two checkable
+entries, neither a submenu (an entry which carries a submenu can not be clicked —
+the trap issue #131 names for the spelling menu). Two conventions of this window
+apply to it: **the titles of the menu bar carry no `&` mnemonic** (`tr("File")`,
+`tr("Edit")`, `tr("Display")`, …), and **nothing ticks a checkable entry but the
+code**, so `updateDisplayMenu` runs when the menu is built and on `aboutToShow`;
+`Ctrl-X 1` hiding the tasks is a transition the entry must survive telling the
+truth about. There is deliberately **no `Alt-X` command** for either entry: the
+commands of `CommandFactory` are members of `EditorWidget` and the panel is a
+child of the *window*, so a command would need the editor to ask its window.
+
+`tests/TestFileExplorer.cxx` is the twentieth executable: the panel hidden until
+the entry is triggered, the menu between `Edit` and `Buffers` and its two entries,
+the third of the window, a dragged width kept across a hide and a show, the ticks
+of both entries, the root of the panel and `goUp`, a double click which opens a
+file (and reuses the buffer of a file already visited), a double click on a
+directory which opens nothing, and the auxiliary tasks entry hiding and showing a
+frame. Geometry assertions of it hold on both platforms (offscreen 299/901, on
+Xvfb + metacity 332/1000, both 0.332). `docs/web/file-explorer.md` is the
+user-facing page, with a screenshot of a shown panel — the one evidence that
+**only the name column is drawn**, since `hideColumn` of the four others is
+invisible to every selection API.
+
 ## Architecture
 
 - `include/TFEL/GUI/` — public headers of the core library. `.hxx` are

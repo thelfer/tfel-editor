@@ -13,10 +13,12 @@ qt_sources(TFEL_EDITOR_SOURCES
   "${PROJECT_SOURCE_DIR}/include/TFEL/GUI"
   EditorWidget
   MainWindow
+  FileExplorer
   ConfigurationDialog
   LineEdit
   MultiLineLineEdit
   FileDownloader
+  FindReplaceDialog
   ShortCutStyle
   Command
   CommandLine
@@ -70,6 +72,8 @@ tfel_editor_library(TFELEditor
   StandardFunctionCommand.cxx
   HunspellDictionariesManager.cxx
   RectangleMode.cxx
+  RectangleEditing.cxx
+  SearchPattern.cxx
   GrepCommand.cxx
   MajorModeChangeCommand.cxx
   CommandFactory.cxx

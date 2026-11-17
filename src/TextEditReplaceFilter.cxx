@@ -5,7 +5,12 @@
  * \date   06/08/2012
  */
 
-#include <QtCore/QDebug>
+#include <QtCore/QObject>
+#include <QtCore/QtGlobal>
+
+#include <QtGui/QKeyEvent>
+#include <QtGui/QTextCursor>
+#include <QtGui/QTextDocument>
 
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/TextEditBase.hxx"
@@ -17,14 +22,12 @@ namespace tfel::gui {
   TextEditReplaceFilter::TextEditReplaceFilter(EditorWidget& w,
                                                TextEditBase& t,
                                                TextEditQueryReplace& qr_,
-                                               const QString& s1_,
-                                               const QString& s2_)
+                                               const SearchPattern& p)
       : TextEditKeyPressEventFilter(t),
         editor(w),
         textEdit(t),
         qr(qr_),
-        s1(s1_),
-        s2(s2_) {
+        pattern(p) {
     const auto tc = this->textEdit.textCursor();
     if (tc.hasSelection()) {
       this->hasSelection = true;
@@ -40,40 +43,75 @@ namespace tfel::gui {
       this->bc.clearSelection();
       this->ec.clearSelection();
       this->textEdit.setTextCursor(this->bc);
+    } else {
+      this->hasSelection = false;
     }
     this->bOK = this->findNext();
     if (!this->bOK) {
       this->editor.displayInformativeMessage(
-          QObject::tr("'%1' not found").arg(this->s1));
+          QObject::tr("'%1' not found").arg(this->pattern.pattern()));
     }
-  }
+  }  // end of TextEditReplaceFilter::TextEditReplaceFilter
 
   bool TextEditReplaceFilter::isOk() const {
     return this->bOK;
   }  // end of TextEditReplaceFilter::isOk
 
   bool TextEditReplaceFilter::isInsideWorkingRegion(
-      const QTextCursor& nc) const {
-    if (nc.isNull()) {
+      const SearchMatch& m) const {
+    if (m.isNull()) {
       return false;
     }
     if (this->hasSelection) {
-      return nc.position() <= this->ec.position();
+      return m.start <= this->ec.position();
     }
     return true;
   }  // end of TextEditReplaceFilter::isInsideWorkingRegion
 
-  bool TextEditReplaceFilter::findNext() {
+  int TextEditReplaceFilter::searchFrom() const {
     const auto tc = this->textEdit.textCursor();
-    const auto nc = this->textEdit.document()->find(this->s1, tc, this->opts);
-    if (!this->isInsideWorkingRegion(nc)) {
+    return qMax(tc.position(), tc.selectionEnd());
+  }  // end of TextEditReplaceFilter::searchFrom
+
+  bool TextEditReplaceFilter::findNext() {
+    auto* const document = this->textEdit.document();
+    if (document == nullptr) {
       return false;
     }
+    const auto m = this->pattern.find(*document, this->searchFrom());
+    if (!this->isInsideWorkingRegion(m)) {
+      return false;
+    }
+    auto nc = QTextCursor(document);
+    nc.setPosition(m.start);
+    nc.setPosition(m.end, QTextCursor::KeepAnchor);
     this->textEdit.setTextCursor(nc);
+    this->current = m;
     return true;
   }  // end of TextEditReplaceFilter::findNext
 
+  QString TextEditReplaceFilter::replaceCurrentMatch() {
+    auto* const document = this->textEdit.document();
+    const auto written = this->pattern.replacementOf(this->current);
+    auto tc = QTextCursor(document);
+    tc.setPosition(this->current.start);
+    tc.setPosition(this->current.end, QTextCursor::KeepAnchor);
+    tc.removeSelectedText();
+    tc.insertText(written);
+    this->textEdit.setTextCursor(tc);
+    return written;
+  }  // end of TextEditReplaceFilter::replaceCurrentMatch
+
   bool TextEditReplaceFilter::filterKeyPressEvent(QKeyEvent* const ev) {
+    if ((ev->key() == Qt::Key_Shift) || (ev->key() == Qt::Key_Control) ||
+        (ev->key() == Qt::Key_Alt) || (ev->key() == Qt::Key_Meta)) {
+      /* a modifier pressed on its own is no answer to anything: it is what a
+         chord reaches the editor as before the key of the chord does, and a walk
+         which reported `type either 'y', 'n' or '!'` on the Control of a
+         `Ctrl-G` would tell the reader they are wrong at the moment they ask to
+         stop. The shortcut handler of the editor has the same rule. */
+      return true;
+    }
     if ((ev->modifiers() == Qt::ControlModifier) && (ev->key() == Qt::Key_G)) {
       QTextCursor tc = this->textEdit.textCursor();
       tc.clearSelection();
@@ -87,17 +125,8 @@ namespace tfel::gui {
          (ev->key() == Qt::Key_Exclam))) {
       if ((ev->key() == Qt::Key_Y) || (ev->key() == Qt::Key_N)) {
         if (ev->key() == Qt::Key_Y) {
-          QTextCursor tc = this->textEdit.textCursor();
-          tc.beginEditBlock();
-          tc.movePosition(QTextCursor::NoMove, QTextCursor::MoveAnchor);
-          tc.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor,
-                          -s1.size());
-          tc.removeSelectedText();
-          tc.insertText(s2);
-          tc.endEditBlock();
-          tc.clearSelection();
-          this->textEdit.setTextCursor(tc);
-          ++nb;
+          this->replaceCurrentMatch();
+          ++this->nb;
         }
         if (!this->findNext()) {
           QTextCursor tc = this->textEdit.textCursor();
@@ -108,27 +137,29 @@ namespace tfel::gui {
         }
       }
       if (ev->key() == Qt::Key_Exclam) {
-        bool c = true;
         auto tc = this->textEdit.textCursor();
-        auto* const document = this->textEdit.document();
         tc.beginEditBlock();
-        while (c) {
-          tc.movePosition(QTextCursor::NoMove, QTextCursor::MoveAnchor);
-          tc.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor,
-                          -s1.size());
-          tc.removeSelectedText();
-          tc.insertText(s2);
-          auto nc = document->find(s1, tc, this->opts);
-          c = this->isInsideWorkingRegion(nc);
-          if (c) {
-            tc = nc;
-          }
-          ++nb;
+        /* the match on the screen is replaced first: the 'y' and 'n' answers
+           have been bringing the walk to it one key at a time and '!' takes it
+           and the ones behind it at once, the one it replaced nothing on yet
+           included. */
+        if (!this->current.isNull()) {
+          this->replaceCurrentMatch();
+          ++this->nb;
+        }
+        while (this->findNext()) {
+          this->replaceCurrentMatch();
+          ++this->nb;
         }
         tc.endEditBlock();
-        tc.clearSelection();
-        this->textEdit.setTextCursor(tc);
+        /* the cursor of the text edit stands behind the last text written, and
+           only the selection of the match it no longer holds is dropped: a
+           cursor built from the document would start at its first character */
+        auto ended = this->textEdit.textCursor();
+        ended.clearSelection();
+        this->textEdit.setTextCursor(ended);
         this->textEdit.setMoveMode(QTextCursor::MoveAnchor);
+        // the destructor reports how many times the pattern was replaced
         this->textEdit.removeKeyPressEventFilter();
       }
     } else {
@@ -136,17 +167,18 @@ namespace tfel::gui {
           QObject::tr("type either 'y', 'n' or '!'"));
     }
     return true;
-  }
+  }  // end of TextEditReplaceFilter::filterKeyPressEvent
 
   TextEditReplaceFilter::~TextEditReplaceFilter() {
     this->editor.removeUserInput(&qr);
-    if ((this->nb == 0) || (this->nb == 1)) {
-      this->editor.displayInformativeMessage(
-          QObject::tr("replaced %1 occurrence").arg(QString::number(nb)));
-    } else {
-      this->editor.displayInformativeMessage(
-          QObject::tr("replaced %1 occurrences").arg(QString::number(nb)));
-    }
-  }
+    /* one occurrence is the singular, and no occurrence is the plural of
+       English, which is not the reading `nb < 2` gives: the walk which was
+       ended before the first `y` answers 'replaced 0 occurrences', and a
+       reader who reads that as a success is reading the report wrongly. */
+    this->editor.displayInformativeMessage(
+        (this->nb == 1)
+            ? QObject::tr("replaced %1 occurrence").arg(this->nb)
+            : QObject::tr("replaced %1 occurrences").arg(this->nb));
+  }  // end of TextEditReplaceFilter::~TextEditReplaceFilter
 
 }  // end of namespace tfel::gui

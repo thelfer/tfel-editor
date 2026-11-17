@@ -3,14 +3,24 @@ characters: the lines between the two ends of the selection, and the columns
 between the columns of those two ends. Three commands of `tfel-editor` act on
 such a block, all under `Ctrl-X R`:
 
-| Shortcut | What it does |
-|----------|--------------|
-| `Ctrl-X R T` | asks a string and writes it on every line of the rectangle |
-| `Ctrl-X R K` | removes the rectangle from the lines it covers and keeps it |
-| `Ctrl-X R Y` | writes back what was killed, at the cursor |
+| Shortcut | Command | What it does |
+|----------|---------|--------------|
+| `Ctrl-X R T` | | asks a string and writes it on every line of the rectangle |
+| `Ctrl-X R K` | `cut-rectangle` | removes the rectangle from the lines it covers and keeps it |
+| `Ctrl-X R W` | `copy-rectangle` | keeps the rectangle the same way, without taking it from the buffer |
+| `Ctrl-X R Y` | `paste-rectangle` | writes back what was kept, at the cursor |
+
+The three commands which take or keep a rectangle are also the three entries
+`Cut Rectangle`, `Copy Rectangle` and `Paste Rectangle` of the `Rectangle Edit`
+submenu of the `Edit` menu, and the commands `cut-rectangle`, `copy-rectangle`
+and `paste-rectangle` of `Alt-X`, which run on the buffer on the screen.
+`kill-rectangle`, the name `GNU Emacs` gives to the first of them, is registered
+as an alias of `cut-rectangle` and answers the same command. A rectangle is what
+a selection says it is, so a menu entry needs no argument: the selection of the
+buffer is the rectangle.
 
 `Ctrl-X R` opens a minibuffer input of its own, which shows `Ctrl-X r ` and
-waits for a single key: `t`, `k` or `y` runs its command at once, without
+waits for a single key: `t`, `k`, `w` or `y` runs its command at once, without
 `Return`, and `Ctrl-G` cancels. The buffers do not answer any other key while
 that input stands, so a mistyped key costs nothing. `t` then asks the string in
 the minibuffer.
@@ -62,6 +72,14 @@ written on the last line of the rectangle.
 killed rectangle is **not** put on the kill ring: `Ctrl-Y` knows nothing about
 it, `Ctrl-X R Y` is the only way to put it back, and what that puts back is the
 rectangle, whatever was killed or copied since.
+
+`Ctrl-X R W` keeps the rectangle **without taking it from the buffer**: the
+lines are read and kept and nothing is written, so the buffer holds what it held
+and the cursor stays where it stood, which is the one thing that tells this
+command apart from a kill the reader undid themselves. What it keeps is the same
+rectangle the kill keeps, padded the same way, so a paste answers the two
+alike — `copy-rectangle-as-kill` of `rect.el` writes `killed-rectangle` and
+nothing else, and the command does the same.
 
 Two things the command does on its own account are worth knowing, because both
 are what `Emacs` does and neither is what a first guess gives:
