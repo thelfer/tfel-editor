@@ -683,6 +683,29 @@ Traps, all paid for:
   by the panel of its directory alike. The case needs no repository of the program
   (`mkpath(root/.git)` is enough for the file to be of a repository) and so runs
   where no `git` is installed.
+- **`strings` on the installed `libTFELEditor.so` says which steps an install
+  carries**: `porcelain` (the question of the states) and `git-status` (the object
+  name of the client) are in the library of steps 2 and 3; a library which holds
+  `(git)` and neither of them is step 1 only, where the indicator can not change by
+  construction. That is how a *"I installed the sources and nothing changed"* report
+  was read in one command: the tree the person installed from stood at the commit
+  **before** the states, with step 1 carried as uncommitted changes — so the install
+  they tested had nothing of the states or of the save in it. Their own checkout held
+  byte-identical copies of step 1 (`cmp` against the commit of it said 14 of 14),
+  which made bringing the three commits in a `git merge --ff-only` of the branch.
+- **A refresh a save is supposed to cause is checked by typing into the real
+  window**: `/tmp/opencode/gitfix/type_keys.py` drives the *installed* executable on
+  `DISPLAY=:99` through ctypes XTEST (the rules of the note above: `Display*` as
+  `c_void_p`, `argtypes` on every `XTestFake*`; and the id `import -window` names is
+  metacity's **frame**, whose single child is the client to focus and click in), and
+  `/tmp/opencode/gitfix/gui_save.sh` commits a clean tree, launches the editor, types
+  a character, presses `Ctrl-X Ctrl-S`, and shoots the information line 0.7 s later.
+  Two traps of doing it: the character which is meant to modify the buffer must carry
+  **no** modifier — typing `Ctrl-Z` is the undo, and the save then reports `(no
+  changes need to be saved)` while the indicator stays `(git)`, which reads as the
+  defect again — and the client's five seconds start when the window is built, so the
+  save has to land in the first seconds of the run for the screenshot to name the save
+  and not the timer.
 - Doc images: `/tmp/opencode/gitstep2/shot.cxx` on `DISPLAY=:99` over the
   repository of `/tmp/opencode/gitdocs/repo`. **A hidden page of the stack of
   information lines grabs at the 100×30 of an unshown widget** — only the line of
