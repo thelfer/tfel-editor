@@ -82,7 +82,8 @@ case would say what the program does not say.
 
 # What the editor runs, and when
 
-One program, one question, on a timer:
+One program, one question, asked on a timer and at the moments the editor
+knows the tree changed:
 
 ~~~~{.bash}
 git status --porcelain -z --untracked-files=normal
@@ -101,6 +102,13 @@ does not silence the new files this is about.
   repositories of the files the buffers visit, and that of the directory the
   panel is rooted at. One question at a time per repository: a tree which is
   slow to answer costs one process, not a new one on every tick.
+- **And at the moment a buffer writes one of its files**: saving a file, writing
+  it under a new name, and reloading a file another program wrote all ask the
+  repository of that file again at once. A save is the moment you look at the
+  line to see what the change made, and five seconds is long enough for that
+  wait to read as a save which went unnoticed. A question asked while a run is
+  going is kept and spent when that run ends, so a save which lands in the
+  middle of a poll is not a save which was not noticed either.
 - **About whole repositories, never one file at a time**: one run says what every
   file of the tree is, which is what lets the buffers of the same repository
   share an answer, and the panel color its entries from.
@@ -109,11 +117,12 @@ does not silence the new files this is about.
   repository nobody looks at any more — its buffers killed, the panel rooted
   elsewhere — is no longer asked and its answer is dropped.
 
-Nothing else refreshes the states: typing in a buffer does not ask the question
-again, so the state of a file you are editing follows the edits when the next
-question reaches the tree, within five seconds of them. What changing a file
-does to the state of a file was decided by saving it, which is what `git` looks
-at and not the text the buffer holds.
+Typing in a buffer asks nothing: the state is what the file *on the disk* is to
+the repository, which is what `git` reads and not the text the buffer holds. The
+state of a file you are editing therefore follows your edits when you save them,
+and not one keystroke before. A save which does not reach the disk — the buffer
+frozen behind the banner of a file modified on disk, an answer of `n` to the
+overwrite question — asks nothing either, and changes no state.
 
 # The two entries of the configuration
 

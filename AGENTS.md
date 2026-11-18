@@ -544,6 +544,32 @@ them read off a live `git status -z` of a constructed tree, not off the manual):
   This is why the step-1 indicator cases keep asserting `(git)`: their repository
   is that fake directory, and the client refuses what it says.
 
+The poll is not the only moment a question is asked. `TextEditBase::save()` (the
+branch which reached the disk) and `TextEditBase::reloadFile()` reach
+`askRepositoryAboutAFileTheEditorTouched` (anonymous namespace of
+`src/TextEditBase.cxx`), which asks the repository of the file the editor just
+wrote, or just read back, at once. The report this answers is *"I modified a file,
+saved it, waited 5s. The git indicator did not changed, neither did the color of
+the file in the file panel"*: a save is the moment a person looks at the line, and
+up to five seconds of timer is what made the save look unnoticed. A save which is
+refused — the freeze of a file modified on disk, the `n` of the overwrite question
+— asks nothing, because nothing was written. `writeFile(f)` is deliberately no
+third call site: it ends in `setFileName` and `save`, so those two cover the write
+under a new name too.
+
+That hook needs the second half of the change to work at all, and the reason is
+`poll(root)` refusing a question while a run of that root is on its way. The
+answer of a run speaks only of the tree as its program found it, so a save landing
+during a poll used to be answered by a program which read the file *before* the
+save, and the next question was five seconds off. `poll` now records such a
+question in `pending_questions` (a `QSet<QString>`: two questions asked in the
+middle of one run need spending once, together) and the `finished` handler asks
+that root again at the end of the run it ends. The order inside that handler is the
+whole of the point: the run is taken out of `runs`, the answer of the run which
+read the old tree is applied, and only then does the kept question start a run
+which reads the new one, so what the save asked for is the last word about the
+file.
+
 The rule of the states is one line each: `??` is **Untracked**; any other record
 (`M `, `MM`, `A `, `D `, `R `, `T `, the `UU`/`AA` of a conflict) is **Modified**,
 because all of them say the path is not what the commit the branch names holds;
@@ -622,6 +648,41 @@ Traps, all paid for:
   `answeredRepositories().contains(root)`: the bytes of the pipe arrive through a
   socket notifier that plain `processEvents()` never expires (the rule the Cast3M
   and explorer sections carry).
+- **A case which asserts that an action of the editor *asked* something must first
+  wait for the client to go quiet** (`quiescent`, of the same test). A buffer asks
+  about the repository of its own file as long as nothing was answered about it
+  (`Buffer::updateGitInformation`), and a question asked while a run is going is
+  kept and spent when that run ends: a case which opens a buffer, changes the tree,
+  and acts then sees an answer from a run its own buffer asked, and that run read
+  the tree *after* the change. Three of the four cases of the save passed against a
+  reverted hook until this settle was added, which is the shape of a case which
+  asserts nothing. Six samples of the same state, a tenth of a second apart, name a
+  client with no question left; what each case waits for afterwards is bounded at
+  1000 ms.
+- **The window belongs to a case, not to the run**: `init` builds the `Shell` and
+  `cleanup` takes it away, and the client of the states is a child of that window.
+  Built once for the whole suite, its 5 s timer is a question which lands in the
+  middle of a case and answers the very thing the case is about to assert — so
+  every bound the cases wait on is measured from the client's own construction, and
+  a tick is five seconds past all of them. A shared window also lets the answers of
+  one case answer another.
+- **A stand-in program talks through names relative to its own working directory**,
+  which the client sets to the root the run is asked about (`poll` calls
+  `setWorkingDirectory(root)`). The program is one for every repository of the
+  window — the directory of a visible panel is a watched root too — so absolute
+  names let a run about another tree write the markers of the case, and a marker
+  which another root wrote says nothing about the run waited for.
+- **What pins a question asked in the middle of a run is a gate, not a duration**:
+  the stand-in of `aQuestionAskedWhileARunIsGoingIsNotLost` copies the answer it is
+  given, marks that it did, and waits for a file the case writes. `QVERIFY(readBytes
+  (held) == old_answer)` is what makes "the run which is going holds the bytes of
+  before" a fact, and the marker of the *next* run is what the loss of a question
+  takes away. A `sleep 1` in the program answers the changed answer file and passes
+  on the mutant, and the run numbering after the first `open()` is not predictable
+  anyway: the file of an opened buffer is watched by the buffer's own question and
+  by the panel of its directory alike. The case needs no repository of the program
+  (`mkpath(root/.git)` is enough for the file to be of a repository) and so runs
+  where no `git` is installed.
 - Doc images: `/tmp/opencode/gitstep2/shot.cxx` on `DISPLAY=:99` over the
   repository of `/tmp/opencode/gitdocs/repo`. **A hidden page of the stack of
   information lines grabs at the 100×30 of an unshown widget** — only the line of

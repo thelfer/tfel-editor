@@ -318,7 +318,15 @@ namespace tfel::gui {
     if (this->runs.contains(root)) {
       // a question about this tree is on its way: a repository which is slow to
       // answer, or a program which hangs, costs one process, not a new one every
-      // five seconds
+      // five seconds.
+      //
+      // The question is kept and not dropped, because the run which is going
+      // does not answer it: that program read the tree before this question was
+      // asked, so the answer it brings is silent about whatever happened since —
+      // which is exactly the case of the editor writing a file while its
+      // repository happens to be asked. The run which ends the question spent is
+      // what asks again, at the end of this method's own handler.
+      this->pending_questions.insert(root);
       return;
     }
     if (!launchedByDefault()) {
@@ -390,17 +398,24 @@ namespace tfel::gui {
               this->answers.remove(root);
               emit repositoryStatusesChanged(root);
             }
-            return;
+          } else {
+            const auto answer = GitStatusClient::answerOf(
+                process->readAllStandardOutput());
+            if ((!before.answered) || (before.entries != answer.entries)) {
+              this->answers.insert(root, answer);
+              emit repositoryStatusesChanged(root);
+            }
+            // nothing changed: a repository whose files stand where the
+            // previous poll said they stood gets no redraw of the buffers and
+            // of the panel which look at it
           }
-          const auto answer = GitStatusClient::answerOf(
-              process->readAllStandardOutput());
-          if ((before.answered) && (before.entries == answer.entries)) {
-            // nothing changed: a repository whose files stand where they were
-            // gets no redraw of the buffers and of the panel which look at it
-            return;
+          // A question which was asked while this run was going is spent here,
+          // and asks the tree again at once rather than at the next tick: what
+          // was asked of the tree is something this run could not answer, since
+          // its program read the tree before the question was made.
+          if (this->pending_questions.remove(root) > 0) {
+            this->poll(root);
           }
-          this->answers.insert(root, answer);
-          emit repositoryStatusesChanged(root);
         });
     QObject::connect(
         process, &QProcess::errorOccurred, this,

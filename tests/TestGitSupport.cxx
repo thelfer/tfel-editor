@@ -199,7 +199,21 @@ struct TestGitSupport : QObject {
 
   void initTestCase();
 
+  /*
+   * The window — hence the client of the states, hence the timer which asks the
+   * repositories every five seconds — belongs to a case and not to the run.
+   * Built once for the whole suite, that timer is a question which lands in the
+   * middle of a case and answers the very thing the case is about to assert: a
+   * case which waits for a state the *save* of a buffer is supposed to have
+   * asked for would then be answered by a tick of the poll instead, whatever the
+   * code of the save does. Built per case, the timer rings five seconds after
+   * the case began, which is past every bound the cases wait on, so what answers
+   * them is the question they asked.
+   */
+  void init();
+
   //! put back what the cases of the program of a working tree may have written
+  //! and take the window of the case away
   void cleanup();
 
   void theRepositoryOfAFileIsTheDirectoryHoldingItsGitEntry();
@@ -248,6 +262,19 @@ struct TestGitSupport : QObject {
 
   void theExplorerColorsWhatTheStatusClientAnswers();
 
+  // when the question is asked: the poll is five seconds apart, and the moments
+  // the editor writes or reads a file are moments it knows the tree changed
+
+  void savingAFileAsksItsRepositoryAtOnce();
+
+  void writingAFileUnderANewNameAsksItsRepositoryAtOnce();
+
+  void reloadingAFileAsksItsRepositoryAtOnce();
+
+  void aSaveWhichDidNotReachTheDiskAsksNothing();
+
+  void aQuestionAskedWhileARunIsGoingIsNotLost();
+
   void aProgramWhichIsNotFoundIsSaidOnceAndAnswersNothing();
 
   void turningTheQuestionsOffTakesTheStatesAway();
@@ -291,6 +318,113 @@ struct TestGitSupport : QObject {
     }
     return false;
   }  // end of answered()
+
+  //! \return whether the client says of a file what a case expects, within a
+  //! bound of time
+  static bool reached(GitStatusClient &client,
+                      const QString &file,
+                      GitStatusClient::State state,
+                      int bound_in_ms) {
+    for (auto waited = 0; waited != bound_in_ms; waited += 50) {
+      if (client.statusOf(file) == state) {
+        return true;
+      }
+      QTest::qWait(50);
+    }
+    return client.statusOf(file) == state;
+  }  // end of reached()
+
+  /*!
+   * \brief wait until the client holds \a state about \a file and has
+   * nothing on its way about it any more
+   * \param[in] client : the client of the window the buffers are open in
+   * \param[in] file : path the state is asked of
+   * \param[in] state : the state the client is expected to have reached and to keep
+   * \param[in] bound_in_ms : how long the first of the two waits may last
+   *
+   * A case which changes a working tree and then asks the editor to act can not
+   * start from a client which still has a run on its way: a buffer asks about the
+   * repository of its own file as long as nothing was answered about it, and a
+   * question asked while a run is going is kept and spent when that run ends (see
+   * `GitStatusClient::poll`). The answer of such a run reads the tree *after* the
+   * case changed it, so the state the case waits for arrives whatever the code
+   * under test does, and the case asserts nothing. What this spends is every
+   * question the opening of a buffer asked: a kept question is spent within a
+   * fraction of a second of the run it waited for, so an answer which stops
+   * changing for six of them names a client with no question left.
+   */
+  static bool quiescent(GitStatusClient &client,
+                        const QString &file,
+                        GitStatusClient::State state,
+                        int bound_in_ms) {
+    if (!reached(client, file, state, bound_in_ms)) {
+      return false;
+    }
+    for (auto quiet = 0; quiet != 600; quiet += 100) {
+      QTest::qWait(100);
+      if (client.statusOf(file) != state) {
+        return false;
+      }
+    }
+    return true;
+  }  // end of quiescent()
+
+  //! the model of the panel of the window, rooted at the given directory and
+  //! having listed it, null when the panel is not showing that directory
+  QFileSystemModel *panelModelOver(const QString &shown) {
+    auto *const explorer = shell->ed->findChild<FileExplorer *>();
+    if (explorer == nullptr) {
+      return nullptr;
+    }
+    explorer->setRootDirectory(shown);
+    shell->pump(4);
+    auto *const tree = explorer->findChild<QTreeView *>();
+    if (tree == nullptr) {
+      return nullptr;
+    }
+    auto *const model = qobject_cast<QFileSystemModel *>(tree->model());
+    if ((model == nullptr) || (!listed(*model, shown))) {
+      return nullptr;
+    }
+    return model;
+  }  // end of panelModelOver()
+
+  //! \return the bytes of a file, nothing when it is not there
+  static QByteArray readBytes(const QString &path) {
+    auto handle = QFile(path);
+    if (!handle.open(QIODevice::ReadOnly)) {
+      return {};
+    }
+    return handle.readAll();
+  }  // end of readBytes()
+
+  /*!
+   * \brief write raw bytes to a file
+   *
+   * The answers of the stand-in program of a case end with a NUL, which is what
+   * `git status -z` writes, and a text file of the test's own helpers is written
+   * from a `QString`: no character of it is a NUL.
+   */
+  static bool writeBytes(const QString &path, const QByteArray &bytes) {
+    auto handle = QFile(path);
+    if (!handle.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+      return false;
+    }
+    handle.write(bytes);
+    handle.close();
+    return true;
+  }  // end of writeBytes()
+
+  //! \return whether a file came to exist, within a bound of time
+  static bool written(const QString &path, int bound_in_ms) {
+    for (auto waited = 0; waited != bound_in_ms; waited += 50) {
+      if (QFile::exists(path)) {
+        return true;
+      }
+      QTest::qWait(50);
+    }
+    return QFile::exists(path);
+  }  // end of written()
 
   //! \return the buffer of the window visiting the given file, null when none
   tfel::gui::Buffer *bufferVisiting(const QString &file) {
@@ -364,17 +498,23 @@ void TestGitSupport::initTestCase() {
   QVERIFY(QDir().mkpath(directory.filePath("plain")));
   fileOfNoRepository = write(directory.filePath("plain/b.txt"), "a free file\n");
   QVERIFY(!fileOfNoRepository.isEmpty());
+}  // end of TestGitSupport::initTestCase
+
+void TestGitSupport::init() {
   shell = std::make_unique<Shell>(QSize(1000, 700));
   shell->show();
   shell->pump(8);
-}  // end of TestGitSupport::initTestCase
+}  // end of TestGitSupport::init
 
 void TestGitSupport::cleanup() {
   restoreGitSettings();
-  // A case which did not wait for the program it started leaves a run behind:
-  // the answer of that run belongs to a repository the next case knows nothing
-  // of, and the client of the window is the one object both cases ask.
-  shell->pump(4);
+  // The window of the case goes with it, and the client of the states is a child
+  // of that window: a case which did not wait for the program it started leaves
+  // a run behind, and the answer of that run belongs to a repository the next
+  // case knows nothing of. The client ends the runs it was built on, and its
+  // timer ends with it, which is the other half of why the window belongs to a
+  // case rather than to the run (see `init`).
+  shell.reset();
 }  // end of TestGitSupport::cleanup
 
 void TestGitSupport::theRepositoryOfAFileIsTheDirectoryHoldingItsGitEntry() {
@@ -886,6 +1026,271 @@ void TestGitSupport::theExplorerColorsWhatTheStatusClientAnswers() {
   // entry plain and its contents blue would not know what is new about them
   QCOMPARE(colorOf(*model, repository.root + "/drafts"), QColor(0, 0, 255));
 }  // end of TestGitSupport::theExplorerColorsWhatTheStatusClientAnswers
+
+void TestGitSupport::savingAFileAsksItsRepositoryAtOnce() {
+  if (!hasGit()) {
+    QSKIP("git is not to be found on this machine");
+  }
+  auto repository = Repository(directory.path(), "save-asks");
+  repository.write("kept.txt", "what the commit holds\n");
+  repository.commit({QStringLiteral("kept.txt")});
+  const auto file = repository.root + "/kept.txt";
+  open(file);
+  auto &client = GitStatusClient::get(*shell->ed);
+  auto *const buffer = bufferVisiting(file);
+  QVERIFY2(buffer != nullptr, "no buffer visits the file of the case");
+  auto *const model = panelModelOver(repository.root);
+  QVERIFY2(model != nullptr, "the panel never listed the repository");
+  QVERIFY2(quiescent(client, file, GitStatusClient::Unmodified, 3000),
+           "the client never came to hold that the file of the case is "
+           "unmodified, with nothing on its way about it");
+  // What the report is about: a person changes the text, saves, and looks at the
+  // line, which is a question of a second, while the poll of a repository is five
+  // seconds apart. A save is the moment the editor knows the working tree holds
+  // this file differently, so it is the moment the question is asked, and the two
+  // bounds below are what says so: the client had nothing on its way, the state
+  // is reached a second later at the latest, and the timer of the poll rings five
+  // seconds after the case began.
+  buffer->getMainFrame().appendPlainText("and a line the hand added\n");
+  buffer->getMainFrame().save();
+  shell->pump(2);
+  QVERIFY2(reached(client, file, GitStatusClient::Modified, 1000),
+           "the save of the file never reached the repository it stands in");
+  // the line of the buffer, which is where the person looked
+  auto *const indicator = indicatorOf(*buffer);
+  QVERIFY2(indicator != nullptr, "the line of the buffer holds no indicator");
+  QCOMPARE(indicator->text(), QStringLiteral(" (git:modified)"));
+  // and the entry of the panel, the other half of what was reported stale: what
+  // the model answers is what the next paint of the viewport inks
+  QCOMPARE(colorOf(*model, file), QColor(139, 0, 0));
+}  // end of TestGitSupport::savingAFileAsksItsRepositoryAtOnce
+
+void TestGitSupport::writingAFileUnderANewNameAsksItsRepositoryAtOnce() {
+  if (!hasGit()) {
+    QSKIP("git is not to be found on this machine");
+  }
+  auto repository = Repository(directory.path(), "write-asks");
+  repository.write("kept.txt", "what the commit holds\n");
+  repository.commit({QStringLiteral("kept.txt")});
+  const auto file = repository.root + "/kept.txt";
+  open(file);
+  auto &client = GitStatusClient::get(*shell->ed);
+  auto *const buffer = bufferVisiting(file);
+  QVERIFY2(buffer != nullptr, "no buffer visits the file of the case");
+  QVERIFY2(quiescent(client, file, GitStatusClient::Unmodified, 3000),
+           "the client never came to hold that the file of the case is "
+           "unmodified, with nothing on its way about it");
+  // The other way a buffer writes a file: `Ctrl-X Ctrl-W` under a name nobody
+  // has added. The answer the window holds was asked when the file did not
+  // exist, so it names nothing about it and the line says the plain `(git)`;
+  // without a question at the moment of the write, that is what the line goes on
+  // saying for up to five seconds about a file the tree does not hold at all. The
+  // name is a new one on purpose: the client holds an answer about the
+  // repository in which that name stands for nothing, so the buffer of the file
+  // has no unknown state left to ask about and the only question which can be
+  // asked is the one the write asks.
+  const auto written = repository.root + "/draft.txt";
+  buffer->getMainFrame().writeFile(written);
+  shell->pump(2);
+  QVERIFY2(reached(client, written, GitStatusClient::Untracked, 1000),
+           "the new file the buffer wrote was never answered untracked");
+  auto *const indicator = indicatorOf(*buffer);
+  QVERIFY2(indicator != nullptr, "the line of the buffer holds no indicator");
+  QCOMPARE(indicator->text(), QStringLiteral(" (git:untracked)"));
+}  // end of
+   // TestGitSupport::writingAFileUnderANewNameAsksItsRepositoryAtOnce
+
+void TestGitSupport::reloadingAFileAsksItsRepositoryAtOnce() {
+  if (!hasGit()) {
+    QSKIP("git is not to be found on this machine");
+  }
+  auto repository = Repository(directory.path(), "reload-asks");
+  repository.write("kept.txt", "what the commit holds\n");
+  repository.commit({QStringLiteral("kept.txt")});
+  const auto file = repository.root + "/kept.txt";
+  open(file);
+  auto &client = GitStatusClient::get(*shell->ed);
+  auto *const buffer = bufferVisiting(file);
+  QVERIFY2(buffer != nullptr, "no buffer visits the file of the case");
+  QVERIFY2(quiescent(client, file, GitStatusClient::Unmodified, 3000),
+           "the client never came to hold that the file of the case is "
+           "unmodified, with nothing on its way about it");
+  // Another program wrote the file, and the buffer reads it back: the tree holds
+  // the file differently from that moment, and the reload is when the editor is
+  // told so — it is the same reason to ask as writing the file oneself, since
+  // what changed the tree is the very text the editor just read. The state the
+  // client holds is left stale on purpose: it is Unmodified while the tree says
+  // otherwise, so nothing the buffer does on its own account has a question left
+  // to ask and the answer below can come from the reload alone.
+  repository.write("kept.txt",
+                   "what the commit holds\nand what another program wrote\n");
+  QVERIFY(buffer->getMainFrame().reloadFile());
+  shell->pump(2);
+  QVERIFY2(reached(client, file, GitStatusClient::Modified, 1000),
+           "the file reloaded from the disk was never answered modified");
+}  // end of TestGitSupport::reloadingAFileAsksItsRepositoryAtOnce
+
+void TestGitSupport::aSaveWhichDidNotReachTheDiskAsksNothing() {
+  if (!hasGit()) {
+    QSKIP("git is not to be found on this machine");
+  }
+  auto repository = Repository(directory.path(), "save-refused");
+  repository.write("kept.txt", "what the commit holds\n");
+  repository.write("other.txt", "what the commit holds too\n");
+  repository.commit({QStringLiteral("kept.txt"), QStringLiteral("other.txt")});
+  const auto file = repository.root + "/kept.txt";
+  const auto other = repository.root + "/other.txt";
+  open(file);
+  auto &client = GitStatusClient::get(*shell->ed);
+  auto *const buffer = bufferVisiting(file);
+  QVERIFY2(buffer != nullptr, "no buffer visits the file of the case");
+  QVERIFY2(quiescent(client, file, GitStatusClient::Unmodified, 3000),
+           "the client never came to hold that the file of the case is "
+           "unmodified, with nothing on its way about it");
+  // One file of the tree is changed by another program, which the stale answer of
+  // the client knows nothing about. It is what makes the assertion below a question
+  // about the moment of the save and not about the silence of a tree which changed
+  // for nobody: a question asked here answers `other.txt` as modified.
+  repository.write("other.txt", "what the commit holds too\nand more\n");
+  QCOMPARE(client.statusOf(other), GitStatusClient::Unmodified);
+  // The file of the buffer is then replaced by a directory, so that the write
+  // itself is what fails and no permission of the tree is involved: what the
+  // question of a repository is worth is the state of the files on the disk, and a
+  // save which never reached them changed nothing to ask about. The hook therefore
+  // belongs to the branch which wrote, not to the call.
+  QVERIFY2(QFile::remove(file), "the file of the case was not taken away");
+  QVERIFY2(QDir(repository.root).mkdir(QStringLiteral("kept.txt")),
+           "the file of the case was not replaced by a directory");
+  shell->ed->getMessages().clear();
+  buffer->getMainFrame().appendPlainText("a line which stays in the buffer\n");
+  buffer->getMainFrame().save();
+  shell->pump(2);
+  auto refused = false;
+  for (const auto &m : shell->ed->getMessages()) {
+    refused = refused || m.contains(QStringLiteral("failed"));
+  }
+  QVERIFY2(refused, "the save which could not be written did not say so");
+  QVERIFY2(!reached(client, other, GitStatusClient::Modified, 1000),
+           "the save which never reached the disk asked its repository about a "
+           "change it did not make");
+  QCOMPARE(client.statusOf(other), GitStatusClient::Unmodified);
+  QDir(repository.root).rmdir(QStringLiteral("kept.txt"));
+}  // end of TestGitSupport::aSaveWhichDidNotReachTheDiskAsksNothing
+
+void TestGitSupport::aQuestionAskedWhileARunIsGoingIsNotLost() {
+  // No repository of the program is needed here: the tree is answered by a
+  // stand-in, which says whatever the case writes for it, so a `.git` entry of
+  // the step one shape is enough for the file to be of a repository — and the
+  // case therefore runs on a machine which holds no git at all.
+  const auto root = directory.filePath("asked-again");
+  QVERIFY(QDir().mkpath(root + "/.git"));
+  const auto file = write(root + "/kept.txt", "a file of a stand-in tree\n");
+  QVERIFY(!file.isEmpty());
+  // The stand-in program and the files it talks through: the answer it is to
+  // print, the copy of that answer each of its runs makes for itself before it
+  // waits, and the gate which holds a run open until the case lets it go.
+  //
+  // A question asked in the middle of a poll is not a thing a `sleep` and a hope
+  // can pin down. The answer of a run is what its program read at *its* start, so
+  // the only way to make the moment of a question a fact is a run the case itself
+  // holds open, on an answer the case changes while that run is going.
+  //
+  // \note The names of those files are held *relative*: a run is started with the
+  // root of the repository it is asked about as its working directory, and the
+  // program is the same for every repository of the window — the panel of a
+  // visible directory is a watched root too — so absolute names here would let a
+  // run about another tree write the markers of this one, and a marker would say
+  // nothing about the run the case waits for.
+  const auto answers = root + "/answers.bin";
+  const auto held = root + "/held.bin";
+  const auto ready = root + "/ready.mark";
+  const auto gate = root + "/gate";
+  const auto program = root + "/held-git.sh";
+  const auto old_answer = QByteArray(" M kept.txt") + '\0';
+  const auto new_answer = QByteArray("?? kept.txt") + '\0';
+  QFile::remove(held);
+  QFile::remove(ready);
+  QFile::remove(gate);
+  QVERIFY(writeBytes(answers, old_answer));
+  // The names the program works with are relative to its own working directory,
+  // which the client sets to the root the run is asked about. What each run does:
+  // copy the answer it is given, mark that it did, wait at the gate for the case,
+  // then print what it copied and end. Removing the gate is what keeps the *next*
+  // run from answering at once on the file which released this one.
+  QVERIFY2(
+      !write(program,
+             QStringLiteral("#!/bin/sh\n"
+                            "cp 'answers.bin' 'held.bin'\n"
+                            "echo ready > 'ready.mark'\n"
+                            "i=0\n"
+                            "while [ ! -f 'gate' ]; do\n"
+                            "  i=$((i + 1))\n"
+                            "  if [ \"$i\" -gt 30 ]; then\n"
+                            "    exit 3\n"
+                            "  fi\n"
+                            "  sleep 0.1\n"
+                            "done\n"
+                            "rm -f 'gate'\n"
+                            "cat 'held.bin'\n"))
+          .isEmpty(),
+      "the stand-in program was not written");
+  QVERIFY(QFile::setPermissions(program, QFileDevice::ReadOwner |
+                                             QFileDevice::WriteOwner |
+                                             QFileDevice::ExeOwner |
+                                             QFileDevice::ReadUser |
+                                             QFileDevice::ExeUser));
+  auto settings = QSettings();
+  settings.setValue(GitStatusClient::executableSettingAddress(), program);
+  open(file);
+  auto &client = GitStatusClient::get(*shell->ed);
+  // The run the opening of the buffer asked for has read its answer and is
+  // sitting at the gate: the client holds no answer yet, which is what makes the
+  // questions asked below questions in the middle of a poll — an assertion of the
+  // shape of the case, not a hope about a duration.
+  QVERIFY2(written(ready, 3000),
+           "the run the buffer asked for never read what it answers");
+  QVERIFY2(!client.answeredRepositories().contains(root),
+           "the run which was to be held open answered before it was released");
+  QVERIFY2(readBytes(held) == old_answer,
+           "the run which is going did not hold the answer it was given at its "
+           "start");
+  // What the tree holds from now on is a thing only a *new* run can see: the run
+  // which is going holds the bytes it copied before this was written.
+  QVERIFY(writeBytes(answers, new_answer));
+  // Two questions, both landing while that run is going, of which neither can be
+  // answered: its program read the tree before they were made. What is kept is
+  // spent by the end of that run, and a question dropped here is a state left to
+  // the next tick of the timer — the very wait the save of a buffer skips.
+  client.refresh(root);
+  client.refresh(root);
+  // The gate is written twice, once per run, and the marker of the next run is
+  // what the loss of a question takes away. Every wait of the rest of the case is
+  // bounded well inside the five seconds of the timer, so no tick of it can stand
+  // in for a question which was dropped.
+  QFile::remove(ready);
+  QVERIFY2(!write(gate, QStringLiteral("release\n")).isEmpty(),
+           "the gate of the first run was not written");
+  // The answer of the run which was held open arrives first, and it says the
+  // state which is no more: the tree was changed while that run was going, which
+  // is the whole reason the question above had to be kept.
+  QVERIFY2(answered(client, root),
+           "the run held open at the gate never answered about the tree");
+  QCOMPARE(client.statusOf(file), GitStatusClient::Modified);
+  // And the kept question is spent by the end of that same run: its program reads
+  // the answer the case wrote after the first run started, which is what the
+  // marker of that second run is evidence of.
+  QVERIFY2(written(ready, 2500),
+           "the question asked while a run was going was lost: no second run "
+           "was made when the run which was going ended");
+  QVERIFY2(readBytes(held) == new_answer,
+           "the run the kept question asked for did not read the answer it was "
+           "given");
+  QVERIFY2(!write(gate, QStringLiteral("release\n")).isEmpty(),
+           "the gate of the second run was not written");
+  QVERIFY2(reached(client, file, GitStatusClient::Untracked, 2500),
+           "the answer of the kept question never reached the client");
+  restoreGitSettings();
+}  // end of TestGitSupport::aQuestionAskedWhileARunIsGoingIsNotLost
 
 void TestGitSupport::aProgramWhichIsNotFoundIsSaidOnceAndAnswersNothing() {
   auto repository = Repository(directory.path(), "missing");

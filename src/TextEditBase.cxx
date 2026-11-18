@@ -29,6 +29,8 @@
 #include "TFEL/GUI/MajorModeFactory.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/Buffer.hxx"
+#include "TFEL/GUI/GitStatusClient.hxx"
+#include "TFEL/GUI/GitSupport.hxx"
 #include "TFEL/GUI/RectangleMode.hxx"
 #include "TFEL/GUI/TextEditSearch.hxx"
 #include "TFEL/GUI/TextEditQueryReplace.hxx"
@@ -39,6 +41,34 @@
 #include "TFEL/GUI/TextEditBase.hxx"
 
 namespace tfel::gui {
+
+  namespace {
+
+    /*!
+     * \brief ask the repository a file the editor has just written, or just
+     * read back, what it thinks of that file
+     *
+     * The moment the editor puts a text on a file is the one moment it knows
+     * for certain that the working tree around that file changed, and it is the
+     * moment a person looks at the line of the buffer to see what the change
+     * made. Waiting for the next tick of the poll of the client is then waiting
+     * for up to five seconds, which is what makes a save look like a save which
+     * was not noticed: the question is asked here, at the moment of the write.
+     *
+     * A file of no repository is asked about by nobody, and the empty root is
+     * left alone on purpose: `refresh` of no root at all is the question about
+     * every watched repository of the window.
+     */
+    void askRepositoryAboutAFileTheEditorTouched(EditorWidget &e,
+                                                 const QString &file) {
+      const auto root = GitSupport::repositoryRootOf(file);
+      if (root.isEmpty()) {
+        return;
+      }
+      GitStatusClient::get(e).refresh(root);
+    }  // end of askRepositoryAboutAFileTheEditorTouched()
+
+  }  // end of anonymous namespace
 
   TextEditBase::TextEditBase(EditorWidget& g, Buffer& b)
       : QWidget(&g), editor(g), buffer(b) {
@@ -713,6 +743,12 @@ namespace tfel::gui {
       // banner has nothing left to say about it
       this->noteFileStateOnDisk();
       this->buffer.hideFileModifiedBanner();
+      // the working tree holds this file differently than it did a moment ago,
+      // and the state of the file is what the line of the buffer and the colors
+      // of the panel draw: asked now, at the write, and not at the next tick of
+      // the poll, which is up to five seconds off and is read as a save which
+      // went unnoticed
+      askRepositoryAboutAFileTheEditorTouched(this->editor, this->fileName);
       this->editor.displayInformativeMessage(
           QObject::tr("wrote file '%1'").arg(af));
     } else {
@@ -786,6 +822,12 @@ namespace tfel::gui {
     this->gotoLine(line);
     this->noteFileStateOnDisk();
     this->buffer.hideFileModifiedBanner();
+    // the person reloaded a file because something else wrote it: the state of
+    // that file in its repository is what changed at the same moment, and the
+    // reload is the moment the editor is told so. Asking here is what keeps the
+    // line of the buffer and the colors of the panel from saying what a `git
+    // checkout` which the editor just read about left behind
+    askRepositoryAboutAFileTheEditorTouched(this->editor, this->fileName);
     this->editor.displayInformativeMessage(
         QObject::tr("reloaded file '%1'").arg(af));
     return true;

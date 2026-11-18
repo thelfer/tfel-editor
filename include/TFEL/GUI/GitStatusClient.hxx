@@ -11,6 +11,7 @@
 
 #include <QtCore/QHash>
 #include <QtCore/QObject>
+#include <QtCore/QSet>
 #include <QtCore/QString>
 #include <QtCore/QStringList>
 #include <QtCore/QTimer>
@@ -34,11 +35,15 @@ namespace tfel::gui {
    *
    * \note The answer is polled, not watched: every five seconds, each
    * repository which is watched gets a `git status --porcelain -z` of its whole
-   * working tree. A watch of the contents would say nothing of the state — the
-   * same untouched file is modified or clean according to what the index and
-   * the last commit hold of it — and would answer a question about one file
-   * when the question is about the whole tree, which is what one run of the
-   * program already costs.
+   * working tree, and the same question is asked of the repository of a file
+   * the moment the editor writes that file or reads it back — which is what
+   * makes the state of a saved file reach the line and the panel at once,
+   * instead of at the next tick of the timer, a wait of up to five seconds
+   * which a person who has just saved and looked has no patience for. A watch
+   * of the contents would say nothing of the state — the same untouched file is
+   * modified or clean according to what the index and the last commit hold of
+   * it — and would answer a question about one file when the question is about
+   * the whole tree, which is what one run of the program already costs.
    *
    * \note What is watched are the repositories of the files the buffers visit
    * and the repository of the directory the explorer panel shows. Nothing else
@@ -46,9 +51,14 @@ namespace tfel::gui {
    * which is killed stops its repository being polled with no bookkeeping of
    * the killed buffer, since the set is recomputed at every poll.
    *
-   * \note A repository which is already being asked is never asked again: the
-   * poll of a tree is skipped while its run is on its way, so a slow repository
-   * or a `git` which hangs costs one process, not a new one every five seconds.
+   * \note A repository which is already being asked is never asked twice at
+   * once: the poll of a tree is skipped while its run is on its way, so a slow
+   * repository or a `git` which hangs costs one process, not a new one every
+   * five seconds. A question skipped that way is not lost, however: the client
+   * remembers that the tree was asked about and asks it again when the run
+   * which was on its way ends. That is what keeps the state of a file the
+   * editor has just written from being the state the file had before the write,
+   * which is what the run which was already going answers.
    *
    * \note The run is made with `GIT_OPTIONAL_LOCKS=0`, which is what keeps the
    * poll from refreshing the index of the repository: a background question has
@@ -133,12 +143,21 @@ namespace tfel::gui {
      * \param[in] root : root of the repository to ask, empty for all of them
      *
      * This is what makes the state of a file reach the screen while a person is
-     * working rather than five seconds later: a buffer whose repository has never
-     * been asked asks for its first answer when its line is drawn.
+     * working rather than five seconds later: a buffer whose repository has
+     * never been asked asks for its first answer when its line is drawn, and
+     * the repository of a file the editor has just written or read back is
+     * asked by `TextEditBase::save` and `TextEditBase::reloadFile` at the
+     * moment of the write.
      *
-     * \note Asking is not waiting: the answer comes with the signal, and a
-     * repository whose run is on its way swallows the request, so the call which
-     * asks twice costs nothing.
+     * \note Asking is not waiting: the answer comes with the signal. A
+     * repository whose run is on its way swallows the request only for
+     * the moment, and is asked again when that run ends, so a call which lands in
+     * the middle of a poll costs nothing and loses nothing either.
+     *
+     * \note An empty \a root asks every watched repository, which is what a
+     * caller who has a file in hand must not do: whoever asks about one file
+     * asks about \c GitSupport::repositoryRootOf(file) and asks nothing when
+     * that answers the empty string.
      */
     void refresh(const QString &root = QString());
 
@@ -269,6 +288,19 @@ namespace tfel::gui {
     QHash<QString, Answer> answers;
     //! the run of every repository which is on its way, by root
     QHash<QString, QObject *> runs;
+    /*!
+     * \brief the repositories somebody asked about while their run was going
+     *
+     * A question about a tree whose run is on its way is swallowed — no second
+     * process for one tree — but it is not \e answered by that run, whose
+     * program read the tree before the question was asked. What asked is
+     * recorded here and spent when the run ends, which is what keeps the answer
+     * of a repository from being the state of a file as it stood before the
+     * editor wrote it, the case `TextEditBase::save` reaches: a save which
+     * lands while the poll of the tree is on its way is a save whose state
+     * would otherwise wait for the next tick, five seconds off.
+     */
+    QSet<QString> pending_questions;
     /*!
      * \brief whether the loss of the program has been reported
      *
