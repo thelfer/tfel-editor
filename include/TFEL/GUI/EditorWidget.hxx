@@ -99,6 +99,16 @@ namespace tfel::gui {
     virtual QStringList getBuffersNames() const;
 
     /*!
+     * \brief The buffers of this window, in the order the tab bar names them.
+     *
+     * Whoever asks what the buffers of a window are doing—watching the files
+     * they visit, choosing a suffix to tell them apart—asks this, rather than
+     * walk the children of the stack which holds them, which answers them in an
+     * order of its own and can name a buffer the editor has just dropped.
+     */
+    std::vector<Buffer *> getBuffers() const;
+
+    /*!
      * \return the icons of the buffers, in the same order as
      * getBuffersNames, a null icon for the buffers with no icon
      */

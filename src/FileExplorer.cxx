@@ -8,20 +8,114 @@
 
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
+#include <QtCore/QPointer>
 #include <QtCore/QSettings>
+#include <QtGui/QBrush>
+#include <QtGui/QColor>
 #include <QtGui/QIcon>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QVBoxLayout>
 #include "TFEL/GUI/EditorWidget.hxx"
 #include "TFEL/GUI/FileExplorer.hxx"
+#include "TFEL/GUI/GitStatusClient.hxx"
+#include "TFEL/GUI/GitSupport.hxx"
 
 namespace tfel::gui {
+
+  namespace {
+
+    /*!
+     * \brief the colour of an entry which no commit and no index of a repository
+     * holds
+     *
+     * The blue of a new file, which is the colour the file managers and the
+     * version control plugins of this vintage give it.
+     */
+    QColor untracked_color() { return QColor(0, 0, 255); }
+
+    /*!
+     * \brief the colour of an entry a working tree holds differently from the
+     * commit its branch names
+     *
+     * Dark red rather than the red of an error: the two stand beside each other
+     * in a buffer of a C++ file which is both modified and full of what clangd
+     * complains of, and an entry which reads as an error where the text reads as
+     * a warning of the compiler is a panel which has stopped informing anybody.
+     */
+    QColor modified_color() { return QColor(139, 0, 0); }
+
+    /*!
+     * \brief the model of the file system of the panel, coloured by what git
+     *        thinks of the entries it shows
+     *
+     * A model of the file system which is asked something the file system does
+     * not hold — is this file one the repository has never seen? — answers that
+     * question at the one place the answer is drawn: the state of a file is the
+     * git client's, and the tree only asks what a colour is.
+     */
+    struct GitColoredFileSystemModel : QFileSystemModel {
+      /*!
+       * \brief constructor
+       * \param[in] e : editor whose git client answers what an entry is
+       * \param[in] p : parent object, the panel the model belongs to
+       */
+      GitColoredFileSystemModel(EditorWidget &e, QObject *const p)
+          : QFileSystemModel(p),
+            client(&GitStatusClient::get(e)) {}
+
+      //! \brief the repository the entries of the panel are asked of
+      void setRepositoryRoot(const QString &r) { this->repository_root = r; }
+
+      /*!
+       * \return what an index says for the given role
+       * \param[in] index : index of an entry of the tree
+       * \param[in] role : role the view asks for
+       *
+       * Only the colour of the text is ever answered differently, and only for
+       * the two states the question distinguishes: an entry which is of no
+       * repository, which the answer of a repository holds nothing about, and an
+       * entry whose state was never asked, wear the colour the desktop gives
+       * them, which is the honest drawing of "nothing is known".
+       */
+      QVariant data(const QModelIndex &index, const int role) const override {
+        if ((role != Qt::ForegroundRole) || (!index.isValid()) ||
+            (this->repository_root.isEmpty())) {
+          return QFileSystemModel::data(index, role);
+        }
+        auto *const c = this->client.data();
+        if (c == nullptr) {
+          return QFileSystemModel::data(index, role);
+        }
+        const auto file = this->filePath(index);
+        if (file.isEmpty()) {
+          return QFileSystemModel::data(index, role);
+        }
+        switch (c->statusIn(this->repository_root, file)) {
+          case GitStatusClient::Untracked:
+            return QBrush(untracked_color());
+          case GitStatusClient::Modified:
+            return QBrush(modified_color());
+          case GitStatusClient::Unknown:
+          case GitStatusClient::Unmodified:
+            break;
+        }
+        return QFileSystemModel::data(index, role);
+      }  // end of data
+
+     private:
+      //! the client the state of an entry is asked of
+      QPointer<GitStatusClient> client;
+      //! the repository the entries are asked of, empty when they are of none
+      QString repository_root;
+    };  // end of struct GitColoredFileSystemModel
+
+  }  // end of anonymous namespace
 
   FileExplorer::FileExplorer(EditorWidget &e, QWidget *const p)
       : QWidget(p),
         editor(e),
-        model(new QFileSystemModel(this)),
+        model(new GitColoredFileSystemModel(e, this)),
         tree(new QTreeView(this)),
         path(new QLabel(this)),
         up(new QToolButton(this)),
@@ -82,6 +176,15 @@ namespace tfel::gui {
     vl->addWidget(header);
     vl->addWidget(this->tree, 1);
     this->setRootDirectory(QDir::current().absolutePath());
+    // The colours of the entries are not data the file system holds: they follow
+    // the answer of the client, so the answer is what says when the tree has to
+    // be drawn again. The tree caches nothing of the colour of a row, so asking
+    // its viewport to repaint is the whole of the redraw; the state of the root
+    // the entries are asked of is taken at the same moment, because the answer
+    // naming a root is the answer the rows of this panel are about.
+    QObject::connect(&GitStatusClient::get(e),
+                     &GitStatusClient::repositoryStatusesChanged, this,
+                     &FileExplorer::refreshStatusColors);
     // the tree wears the font of the text edits, as the widgets which read
     // that setting themselves do, and follows it afterwards through
     // changeFont, which is what EditorWidget::changeFont hands the new font to
@@ -115,7 +218,23 @@ namespace tfel::gui {
     this->model->setRootPath(d);
     this->tree->setRootIndex(this->model->index(d));
     this->updateHeader();
+    // the entries of the new directory are of another repository, or of none, so
+    // the root the colours are asked of changes with the directory shown
+    this->refreshStatusColors();
   }  // end of FileExplorer::setRootDirectory
+
+  void FileExplorer::refreshStatusColors() {
+    auto *const m = dynamic_cast<GitColoredFileSystemModel *>(this->model);
+    if (m == nullptr) {
+      return;
+    }
+    m->setRepositoryRoot(GitSupport::repositoryRootOf(this->model->rootPath()));
+    // The tree holds no colour of its own: a row is drawn from what the model
+    // answers at the moment it is drawn, so asking the viewport to be redrawn is
+    // the whole of the redraw — and it is what the model itself can not do, since
+    // it knows nothing of the view which shows it.
+    this->tree->viewport()->update();
+  }  // end of FileExplorer::refreshStatusColors
 
   void FileExplorer::changeFont(const QFont &f) {
     this->tree->setFont(f);

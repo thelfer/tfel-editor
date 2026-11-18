@@ -941,6 +941,18 @@ namespace tfel::gui {
     return n;
   }  // end of EditorWidget::getBuffersNames
 
+  std::vector<Buffer *> EditorWidget::getBuffers() const {
+    std::vector<Buffer *> bs;
+    bs.reserve(this->buffers->count());
+    for (int i = 0; i != this->buffers->count(); ++i) {
+      auto *b = qobject_cast<Buffer *>(this->buffers->widget(i));
+      if (b != nullptr) {
+        bs.push_back(b);
+      }
+    }
+    return bs;
+  }  // end of EditorWidget::getBuffers
+
   std::vector<QIcon> EditorWidget::getBuffersIcons() const {
     std::vector<QIcon> icons;
     for (int i = 0; i != this->buffers->count(); ++i) {

@@ -489,6 +489,145 @@ Organization/<binary>.conf`: the `explorer/panel-shown=true` an earlier probe
 left there is what made the first screenshots show the explorer panel, so remove
 that file for a clean shot.
 
+### The states of the files, and who is asked for them (`GitStatusClient`)
+
+The second step is the state of the file, drawn in the same label and in the
+panel. `GitStatusClient` (`src/GitStatusClient.cxx`, exported, `Q_OBJECT`) is **one
+client per `EditorWidget`** (`get()` builds it as a child, `objectName`
+`git-status`), which runs
+
+~~~~{.bash}
+git status --porcelain -z --untracked-files=normal
+~~~~
+
+in the root of each repository the window looks at, **every five seconds**, with
+`GIT_OPTIONAL_LOCKS=0` in the environment. The watched roots are recomputed from
+scratch on every tick — the repositories of the files the buffers visit
+(`EditorWidget::getBuffers()`, which the client needs and `Buffer::fileName` is
+not enough for) plus that of the directory a **visible** panel is rooted at — and
+answers are cached per root, dropped when a tick finds the root unwatched. What
+keeps this cheap: one run answers a whole repository, so its buffers and its panel
+entries share one answer; `runs` holds at most one process per root, so a slow or
+hanging tree costs one process and not one per tick; and nothing is emitted when
+the entries are the ones the previous answer held.
+
+Numbers and shapes of the answer, all measured with `git` 2.34.1 (the whole of
+them read off a live `git status -z` of a constructed tree, not off the manual):
+
+- records are `XY<space><path>`, separated by **NUL**, and a renamed or copied
+  path is followed by **one extra NUL field** naming where it came from. That
+  field has no status in front of it: `record_of` answers false for anything whose
+  third character is no space, which skips it and the empty tail field alike;
+- **`-z` is mandatory**: without it, `core.quotepath=true` (the default) answers
+  `nom_é.txt` as `"nom_\303\251.txt"`, a name no file of the tree has, and a name
+  with a space is quoted too;
+- `--untracked-files=normal` is asked **explicitly** so a
+  `status.showUntrackedFiles=no` in somebody's configuration does not silence the
+  new files; with `normal`, a tree of new files is answered as **its top
+  directory** with a trailing `/` and no file of it, which is why `stateOf` checks
+  the asked path as a directory (`relative + '/'`) and then every directory above
+  it — that is also what colors an untracked directory in the panel;
+- `GIT_OPTIONAL_LOCKS=0` says the run needs no lock and no optional refresh of the
+  index — measured on a tree of 8 280 files: the answer is byte-identical with and
+  without it, and neither run moves the modification time or the size of
+  `.git/index`. What the variable is worth is that a question asked of somebody
+  else's working tree every five seconds writes nothing of that tree's bookkeeping;
+- **cost, measured on the same tree**: 0.01 s, three runs clean and three with one
+  file edited and one added. A poll of a repository is not a thing to worry about,
+  and one run answers the whole of it.
+- a tree whose `.git` entry holds no repository — the `.git` of a half finished
+  `git init`, or the `mkpath(repo/.git)` of the step-1 fixtures — answers
+  **nothing on stdout and exits 128**. Such a run is **no answer**: the cached
+  answer of that root is dropped, the signal fires, and the indicator falls back
+  to `(git)`. The empty output read as an answer would draw every file of that
+  tree as held unchanged, which is a claim about a program that refused to answer.
+  This is why the step-1 indicator cases keep asserting `(git)`: their repository
+  is that fake directory, and the client refuses what it says.
+
+The rule of the states is one line each: `??` is **Untracked**; any other record
+(`M `, `MM`, `A `, `D `, `R `, `T `, the `UU`/`AA` of a conflict) is **Modified**,
+because all of them say the path is not what the commit the branch names holds;
+silence inside an answer is **Unmodified**; no answer, no root, or no program is
+**Unknown**, drawn exactly like unmodified. Ignored files are answered as nothing
+at all — the one thing `git` says about them, so no gray is invented for them.
+
+The two settings, both read **at every question** (`QSettings` is cheap and a
+change in the dialog must show on the next poll), both declared by the `git` theme
+with the section `External tools`:
+
+- `git/launch-by-default` (default true). Off, `poll()` starts nothing **and takes
+  the cached answers away**, emitting for each root whose answer it drops: a state
+  left on the screen after the switch which forbids asking about it is a state with
+  nobody to answer for it, and would stay until something else happened to redraw
+  the line. Off, the whole feature is the step-1 behavior.
+- `git/executable` (default `git`), found with `QStandardPaths::findExecutable`,
+  which also makes a bare name follow an `PATH` changed after the window opened.
+  Nothing found is reported **once** per client (`reportMissingProgram`), from
+  `poll()` and from the `errorOccurred` handler alike.
+
+The colors of the panel are a `QFileSystemModel` **subclass** in the anonymous
+namespace of `src/FileExplorer.cxx` (`GitColoredFileSystemModel`) overriding
+`data()` for `Qt::ForegroundRole`: untracked `QColor(0,0,255)`, modified
+`QColor(139,0,0)`, Unknown and Unmodified falling through to whatever the desktop
+answers. Repainting is `tree->viewport()->update()` from a private slot reached
+only through `repositoryStatusesChanged` and `setRootDirectory` — a color which
+only appeared on the next scroll would look like a bug in the model. It is
+**inked**, verified with a `QWidget::grab()` on `DISPLAY=:99`: 3 pixels of exact
+blue and 18 of exact dark red over the panel of a repository with one new and one
+edited file, against **0 and 0** over a clean repository (exact matches are few
+because antialiasing blends the glyphs — the control, not the count, is the
+evidence).
+
+`SettingsGroup` gained `section`, and `StandardSettingsGroupProxy` an argument for
+it **before the registering bool**; `appendGroup` keeps the first non-empty
+section, as it keeps the name and the mode of a theme. The gathering into blocks
+is in `ConfigurationDialog`, not in the registry: a theme answers the title of the
+block it stands in by its `section` when it names one and by its `mode` when it
+does not — `Editor` for what names neither, `Major modes` for a theme a mode
+exports — and the blocks come in the order of their **first appearance**, which is
+what puts `External tools` between the other two: the theme of `git` is declared by
+the core library and is the first to ask for a block of its own. `castem` and
+`clangd` stay under `Major modes` because they name the mode they came with, and
+their theme is named after the program. Adding a block makes every order-sensitive
+comparison of `TestSettings` wrong: `theThemesOfTheMajorModes…` compares **sorted**
+lists and `readList` is a depth-first walk, and it is that case which now asserts
+the three titles and the block each theme stands in (`block_of`, which answers what
+the indent of an item and the titles above it say to each other).
+
+Traps, all paid for:
+
+- `struct QTimer;` written inside `namespace tfel::gui` **breaks the `.cxx`**: the
+  class is then looked for as `tfel::gui::QTimer`. Include `<QtCore/QTimer>`.
+  Likewise `getMainFrame().getFileName()` needs `TFEL/GUI/PlainTextEdit.hxx`, and
+  `QFileSystemModel` is a **`QtGui`** header.
+- **`index(const QString& path)` belongs to `QFileSystemModel`, not to
+  `QAbstractItemModel`**: `tree->model()->index(path)` does not compile, so a probe
+  or a test which resolves names to rows casts with `qobject_cast<QFileSystemModel*>`.
+- `QHash::remove` inside a walk over the same hash invalidates the iterator:
+  collect the keys to drop, remove them after. Asserting the behavior of the forget
+  (two answers, one killed buffer, the other answer must survive) is worth writing
+  **even though the mutant of it does not fail here** — removing from a `QHash`
+  while walking it is UB that happened to run three times cleanly, so that case is
+  a fence and not a detector.
+- The step-1 fixture (`mkpath(repo/.git)`) cannot be reused for the states: it is
+  the refused case. The state cases build their trees with the program —
+  `Repository` of the test runs `init -q`, `config user.email/user.name`, `add`,
+  `commit` — and a `git/…` typo in a fixture line is invisible: the command fails
+  quietly and the answer says `??`, so a case asserting `Modified` fails for a
+  reason three calls away.
+- Cases which write `git/executable` or `git/launch-by-default` must put them back
+  in `cleanup`: both are read by every window of the process, including the ones a
+  later case builds.
+- Waiting for an answer is `QTest::qWait` in a bounded loop over
+  `answeredRepositories().contains(root)`: the bytes of the pipe arrive through a
+  socket notifier that plain `processEvents()` never expires (the rule the Cast3M
+  and explorer sections carry).
+- Doc images: `/tmp/opencode/gitstep2/shot.cxx` on `DISPLAY=:99` over the
+  repository of `/tmp/opencode/gitdocs/repo`. **A hidden page of the stack of
+  information lines grabs at the 100×30 of an unshown widget** — only the line of
+  the buffer on the screen has a geometry, so a shot of each state makes each
+  buffer current first (`changeBuffer(i)`, pump, grab).
+
 ## Tests / CI
 
 Tests exist (issue #123, Qt Test based) but are **not built by default**: they

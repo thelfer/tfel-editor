@@ -49,6 +49,7 @@ qt_sources(TFEL_EDITOR_SOURCES
   LspNavigationSession
   LanguageToolClient
   GrammarCheckSession
+  GitStatusClient
   DirectoryMajorMode)
 
 if(WebEngine_FOUND AND WebEngineWidgets_FOUND)

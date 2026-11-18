@@ -30,6 +30,25 @@ opened — a double click on its name, or on the arrow beside it — and an entr
 created, renamed or removed on disk reaches the tree by itself, without asking.
 Files whose name begins with a dot are not among the entries.
 
+# What the colors of the entries say
+
+When the directory the panel shows stands in the working tree of a
+[`git`](https://git-scm.com) repository, the entries are colored by what the
+repository says of them:
+
+| The entry is | Because |
+|---|---|
+| blue | neither a commit nor the index holds it: a new file, or a directory holding nothing but new files |
+| dark red | the repository holds it differently — edited text, staged addition or deletion, rename, conflict |
+| the color of the desktop | everything else: an entry the repository holds unchanged, an entry of no repository, a file which `.gitignore` keeps out of the questions, and every entry of a repository the editor was [told to ask nothing about](configuration.html#git) |
+
+The colors come from the same answer as the `(git)`, `(git:untracked)` and
+`(git:modified)` of the line of the buffer, which asks the whole repository at
+once. See [the `git` support page](git-support.html). An entry which belongs to
+no repository is left alone, and so is a directory which merely holds changed
+files: what the program says of a directory it has never heard of is nothing,
+and an invented color would say more than the program does.
+
 # Opening a file
 
 Double clicking on a file opens it in a buffer, exactly as `Ctrl-X Ctrl-F`

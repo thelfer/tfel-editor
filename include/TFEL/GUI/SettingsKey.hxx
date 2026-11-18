@@ -219,6 +219,23 @@ namespace tfel::gui {
     //! name of the theme, the name of the declaring mode when it is empty
     QString name;
     /*!
+     * \brief name of the section of the list the theme is gathered under, empty
+     * for the section its kind has by default
+     *
+     * The list of the configuration dialog is split into blocks under a title,
+     * and which block a theme belongs to is decided by \c mode: the themes of the
+     * editor, then the themes of the major modes. That is not the whole of what a
+     * theme is about. The programs the editor runs beside itself -- `git`,
+     * `clangd`, `castem` -- are no part of the editor and no language it reads
+     * either, and they are several themes, not one; the section is how such a
+     * block is named, and `External tools` is the section they stand under.
+     *
+     * \note A name given here wins over the default of the kind, and it is what
+     * the dialog uses to gather the theme: an unknown name makes a block of its
+     * own, under the title it names, after the blocks the editor has.
+     */
+    QString section;
+    /*!
      * \brief name of the major mode which exported the theme, empty for a theme
      * of the editor itself
      *

@@ -20,6 +20,7 @@
 #include "TFEL/GUI/Debug.hxx"
 #include "TFEL/GUI/Utilities.hxx"
 #include "TFEL/GUI/EditorWidget.hxx"
+#include "TFEL/GUI/GitStatusClient.hxx"
 #include "TFEL/GUI/GitSupport.hxx"
 #include "TFEL/GUI/PlainTextEdit.hxx"
 #include "TFEL/GUI/MajorMode.hxx"
@@ -30,6 +31,36 @@
 #include "TFEL/GUI/Buffer.hxx"
 
 namespace tfel::gui {
+
+  namespace {
+
+    /*!
+     * \brief the three texts of the git indicator
+     *
+     * The leading space is the gap to the name of the buffer the indicator
+     * qualifies: the information line lays its labels with no spacing at all,
+     * which is why the name of the major mode carries one too. The state which
+     * was never asked is drawn as the state of a tracked and unchanged file,
+     * which is what the file is until an answer says otherwise: an indicator
+     * which drew a question mark, or which went away while a repository was being
+     * asked, would make the line of the buffer flicker every five seconds.
+     */
+    //! a working file of a repository which says nothing about it
+    QString git_indicator_repository_text() {
+      return QStringLiteral(" (git)");
+    }
+
+    //! a file which no commit and no index of its repository holds
+    QString git_indicator_untracked_text() {
+      return QStringLiteral(" (git:untracked)");
+    }
+
+    //! a file its repository holds differently from the commit of its branch
+    QString git_indicator_modified_text() {
+      return QStringLiteral(" (git:modified)");
+    }
+
+  }  // end of anonymous namespace
 
   /*!
    * \brief structure in charge of displaying SecondaryTask widgets
@@ -276,6 +307,15 @@ namespace tfel::gui {
     // the two moments the answer is worth asking for
     QObject::connect(this->e, &PlainTextEdit::fileNameChanged, this,
                      &Buffer::updateGitInformation);
+    // The state of the file is polled, so the answer is not there when the
+    // question is asked: the client is what says when an answer has arrived, and
+    // every buffer of the window listens to it. The question is cheap to ask
+    // again — one walk up a few directories and a lookup in the cached answer of
+    // the repository — so the signal of a repository which is not this buffer's
+    // costs the line a redraw which says the same thing.
+    QObject::connect(&GitStatusClient::get(this->editor),
+                     &GitStatusClient::repositoryStatusesChanged, this,
+                     &Buffer::updateGitInformation);
     QObject::connect(this->stw, &SecondaryTaskTabWidget::tabCloseRequested,
                      this, &Buffer::closeSecondaryTask);
     QObject::connect(this->stw, &SecondaryTaskTabWidget::currentChanged, this,
@@ -440,19 +480,40 @@ namespace tfel::gui {
     // a keystroke. A buffer which visits no file — a `*scratch*` buffer, the
     // output of a process — names no path a repository could hold, and the empty
     // name is answered like the name of a file of no repository: with nothing.
-    if (GitSupport::repositoryRootOf(this->e->getFileName()).isEmpty()) {
+    const auto file_name = this->e->getFileName();
+    const auto root = GitSupport::repositoryRootOf(file_name);
+    if (root.isEmpty()) {
       this->gi->clear();
       this->gi->hide();
       return;
     }
-    // `(git)`, and neither the name of the repository nor the state of the file:
-    // what the first step of the git support says is that the visited file is a
-    // working file of a repository, and nothing more.
-    //
-    // The leading space is the gap to the name the indicator qualifies: the line
-    // lays its labels with no spacing at all, which is why the name of the major
-    // mode carries one too
-    this->gi->setText(" (git)");
+    // Which repository the file is of is answered by looking for its `.git` entry
+    // and needs no program; what the file *is* to that repository is what `git
+    // status` says, and is asked of the client of the window, which runs the
+    // program once per watched repository every five seconds — never here, where
+    // a key may be on its way to a text edit.
+    auto &client = GitStatusClient::get(this->editor);
+    const auto state = client.statusOf(file_name);
+    if (state == GitStatusClient::Unknown) {
+      // Nothing was ever asked about this repository, which is the state of a
+      // buffer one has just opened: the first answer is worth asking for at once
+      // rather than at the next tick of the timer. Asking costs nothing twice: a
+      // repository whose answer is already held is not asked again by this path,
+      // and a run which is on its way swallows the request.
+      client.refresh(root);
+    }
+    switch (state) {
+      case GitStatusClient::Untracked:
+        this->gi->setText(git_indicator_untracked_text());
+        break;
+      case GitStatusClient::Modified:
+        this->gi->setText(git_indicator_modified_text());
+        break;
+      case GitStatusClient::Unknown:
+      case GitStatusClient::Unmodified:
+        this->gi->setText(git_indicator_repository_text());
+        break;
+    }
     this->gi->show();
   }  // end of updateGitInformation
 

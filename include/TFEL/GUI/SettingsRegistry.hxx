@@ -46,6 +46,11 @@ namespace tfel::gui {
      * empty when it stands on its own. What a program is asked with, or which
      * program it is, is a corner of the choice of using that program, and a
      * theme of the dialog has to say so
+     * \param[in] section_of : name of the section of the list the theme is
+     * gathered under, empty for the section its kind has by default. A theme
+     * named after a program the editor runs beside itself has neither the block
+     * of the editor nor that of the languages to stand in, and says which one it
+     * asks for
      * \param[in] b : if true, register this declaration in the settings
      * registry. The constructor of a declaration which is itself a registration
      * copy must pass false not to register itself again
@@ -54,6 +59,7 @@ namespace tfel::gui {
                                const QString &what,
                                const QVector<SettingsKey> &entries,
                                const QString &sub_theme_of = QString(),
+                               const QString &section_of = QString(),
                                const bool = true);
     //! \return the name of the theme
     QString getName() const;

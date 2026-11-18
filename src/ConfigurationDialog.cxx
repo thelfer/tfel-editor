@@ -349,17 +349,34 @@ namespace tfel::gui {
     // editor, always there, and those the major modes export, which come and go
     // with the plugins loaded and are about a program the mode drives, not
     // about the editor. Mixing them in one list makes `clangd` a peer of
-    // `General`, which it is not, so the list keeps them in two blocks with a
-    // title over each of them.
+    // `General`, which it is not, so the list keeps them in blocks with a title
+    // over each of them.
+    //
+    // Which block a theme stands in is what its `mode` answers, and its
+    // `section` when it names one. A theme named after a program the editor runs
+    // beside itself -- `git`, `clangd`, `castem` -- is no more a part of the
+    // editor than it is a language the editor reads, and several such themes have
+    // to be gathered somewhere which is neither of the two default blocks.
+    // The blocks are gathered in the order of their first appearance, which is
+    // why the tools come between the editor and the modes: the theme of `git` is
+    // declared by the core library, so it is the first theme to ask for a block of
+    // its own.
+    const auto editor_block = QObject::tr("Editor");
+    const auto modes_block = QObject::tr("Major modes");
     const auto groups = SettingsRegistry::getSettingsRegistry().getGroups();
-    auto mode_groups = QVector<SettingsGroup>{};
-    auto editor_groups = QVector<SettingsGroup>{};
+    auto titles = QVector<QString>{};
+    auto blocks = QVector<QVector<SettingsGroup>>{};
     for (const auto &g : groups) {
-      if (g.mode.isEmpty()) {
-        editor_groups.append(g);
-      } else {
-        mode_groups.append(g);
+      const auto title = (!g.section.isEmpty())
+                             ? g.section
+                             : (g.mode.isEmpty() ? editor_block : modes_block);
+      auto i = titles.indexOf(title);
+      if (i < 0) {
+        i = titles.size();
+        titles.append(title);
+        blocks.append(QVector<SettingsGroup>{});
       }
+      blocks[i].append(g);
     }
     // A title is not a theme: it names no page, holds nothing to edit, and is
     // given the row of nothing (-1) so that choosing it changes nothing.
@@ -483,13 +500,14 @@ namespace tfel::gui {
       }
       pages->addWidget(scroll);
     };  // end of add_group
-    add_heading(QObject::tr("Editor"));
-    for (const auto &g : editor_groups) {
-      add_group(g);
-    }
-    if (!mode_groups.isEmpty()) {
-      add_heading(QObject::tr("Major modes"));
-      for (const auto &g : mode_groups) {
+    // A block which holds no theme is no block: with no plugin loaded the list
+    // holds the themes of the editor, and no title over an empty space
+    for (qsizetype b = 0; b != titles.size(); ++b) {
+      if (blocks[b].isEmpty()) {
+        continue;
+      }
+      add_heading(titles[b]);
+      for (const auto &g : blocks[b]) {
         add_group(g);
       }
     }

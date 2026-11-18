@@ -17,6 +17,7 @@ namespace tfel::gui {
       const QString &what,
       const QVector<SettingsKey> &entries,
       const QString &sub_theme_of,
+      const QString &section_of,
       const bool b)
       : name(group),
         description(what),
@@ -28,6 +29,10 @@ namespace tfel::gui {
       g.description = description;
       g.keys = entries;
       g.parent = sub_theme_of;
+      // The section is the one thing a theme says about the list it is shown in
+      // which its name does not: a theme named after a program the editor runs
+      // beside itself belongs to no block of its own kind
+      g.section = section_of;
       SettingsRegistry::getSettingsRegistry().addSettingsGroup(g);
     }
   }  // end of StandardSettingsGroupProxy::StandardSettingsGroupProxy
@@ -139,6 +144,12 @@ namespace tfel::gui {
       // is what its first declaration said
       if (h.parent.isEmpty()) {
         h.parent = filled.parent;
+      }
+      // and the block of the list it asks for, which is the same promise: two
+      // declarations of one theme, one of them naming a block and the other
+      // naming none, agree on the block the first one named
+      if (h.section.isEmpty()) {
+        h.section = filled.section;
       }
       return;
     }

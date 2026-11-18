@@ -11,15 +11,17 @@ The dialog is the `Configuration` entry of the `Options` menu, and the
 command `configure-tfel-editor` (`Alt+X`) opens the same window.
 
 The themes the configuration is made of are listed on the left, the
-entries of the chosen theme on the right. The list keeps two things
-apart which have nothing in common: the themes of the editor, under the
-title `Editor`, and the themes a major mode exports, under the title
-`Major modes`. The first are always there; the second come with the
-modes which are installed and are about a program a mode drives, not
-about the editor. A title is not a theme: it can not be chosen and shows
-nothing. The page of a theme of a mode says whose it is above the entries
-it holds, since `clangd`, `castem`, `latex`, `pylsp` and `python` are names
-of programs and say nothing of the mode which launches them.
+entries of the chosen theme on the right. The list keeps three things
+apart: the themes of the editor, under the title `Editor`, the themes of
+the programs the editor runs beside itself, under the title `External
+tools`, and the themes a major mode exports, under the title `Major
+modes`. The first are always there; the two others come with what is
+installed — a mode, or a program the editor is told to run — and are about
+that program, not about the editor. A title is not a theme: it can not be
+chosen and shows nothing. The page of a theme of a mode says whose it is
+above the entries it holds, since `clangd`, `castem`, `latex`, `pylsp` and
+`python` are names of programs and say nothing of the mode which launches
+them.
 
 A theme which is a corner of another one is a submenu of it: the entries
 of a proofreader — which program it is, which language it reads — are
@@ -65,7 +67,8 @@ which reads it.
 
 The dialog shows what one *chooses*: the look of the editor, the key
 bindings it uses, the language of the underlines, the program the `Cast3M`
-mode launches, what the `C`/`C++` mode asks its language server. It does not
+mode launches, what the `C`/`C++` mode asks its language server, which
+program says what the files of a working tree are. It does not
 show what the editor *remembers* by itself:
 
 - the histories of the prompts, which are the answers the minibuffer
@@ -180,6 +183,24 @@ started; `clangd/start-by-default` decides whether a file of a project
 which has a `compile_commands.json` starts a session which reads it, and
 is read again on every file opened. The `Color identifiers` entry of the
 `C/C++` menu writes the same address as `clangd/semantic-tokens`.
+
+## git
+
+| Entry                     | Widgets                    | Takes effect              |
+|---------------------------|----------------------------|---------------------------|
+| `git/executable`          | a one line edit            | the next question         |
+| `git/launch-by-default`   | a check box                | the next question         |
+
+What the editor asks what the files of a working tree are, and whether it
+asks it at all. The theme stands under the title `External tools`, with
+the other programs the editor runs beside itself. See [the `git` support
+page](git-support.html) for what the answers draw: the name of the program
+is read where a question is started, so a name which is no program on the
+paths takes the states away — both the `(git:untracked)` and
+`(git:modified)` of the mode line and the colors of the file explorer
+panel — and says so once; the check box is read on every question, reaches
+the next poll with no restart, and takes the answers already on the screen
+with it.
 
 ## latex
 

@@ -53,6 +53,14 @@ namespace tfel::gui {
    * reads as an empty directory rather than as a model which looked at
    * nothing. That is why `setRootDirectory` is the one place where the
    * path of the model and the root index of the view are both set.
+   *
+   * \note the entries are coloured by what git thinks of them: an entry which no
+   * commit and no index of a repository holds stands in blue, an entry a working
+   * tree holds differently from the commit its branch names in dark red, and
+   * everything else wears the colour the desktop gives it. That is the same
+   * answer which puts `(git:untracked)` or `(git:modified)` beside the name of a
+   * buffer, drawn about a whole directory at once rather than about the one file
+   * a buffer visits.
    */
   struct TFEL_GUI_VISIBILITY_EXPORT FileExplorer : public QWidget {
     Q_OBJECT
@@ -126,9 +134,30 @@ namespace tfel::gui {
     //! \brief show in the header the directory the panel is rooted at
     void updateHeader();
 
+    /*!
+     * \brief draw the entries again, with what git thinks of them
+     *
+     * The state of a file is not data the file system holds: it arrives with the
+     * answer of the client, and the root the entries are asked of is the
+     * repository of the directory the panel shows, which is nothing when the
+     * panel shows a directory of no repository — in which case every entry wears
+     * the colour the desktop gives it.
+     *
+     * \note called by `setRootDirectory`, and by the client's
+     * `repositoryStatusesChanged`, which is what carries an answer to the screen.
+     */
+    void refreshStatusColors();
+
     //! the editor the double clicked files are opened in
     EditorWidget &editor;
-    //! the model of the file system, rooted at the directory shown
+    /*!
+     * \brief the model of the file system, rooted at the directory shown
+     *
+     * A `GitColoredFileSystemModel`, the subclass of the model of the file system
+     * which colours an entry by what the git client of the window says it is, and
+     * held here under the type it is used as: the panel asks paths, indexes and
+     * the root path of it, which are all of the base.
+     */
     QFileSystemModel *model;
     //! the tree showing the entries of that directory
     QTreeView *tree;

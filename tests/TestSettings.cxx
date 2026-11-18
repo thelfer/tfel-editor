@@ -218,7 +218,18 @@ void TestSettings::theRegistryDeclaresTheEntriesOfTheEditor() {
   // an entry the editor reads has a label and a sentence of its own
   auto addresses = QStringList() << "font/textedit"
                                  << "shortcut style"
-                                 << "secondary tasks orientation";
+                                 << "secondary tasks orientation"
+                                 // the program which says what the files of a
+                                 // working tree are is chosen, because the editor
+                                 // runs it every five seconds for every
+                                 // repository on the screen and a person's git may
+                                 // not be the one on this PATH
+                                 << "git/executable"
+                                 // and whether the editor runs it at all is
+                                 // chosen too: the states of the files of a tree
+                                 // are the first thing a person turns off when a
+                                 // program runs behind their back
+                                 << "git/launch-by-default";
 #ifdef TFEL_GUI_HUNSPELL_SUPPORT
   addresses << "hunspell default dictionary";
 #endif /* TFEL_GUI_HUNSPELL_SUPPORT */
@@ -489,8 +500,21 @@ void TestSettings::theDialogShowsWhatIsDeclared() {
   shell.show();
   pump(8);
   auto dialog = ConfigurationDialog(*shell.ed);
-  // every entry the registry declares has a field, and nothing else has one
-  QCOMPARE(dialog.keys(), declaredAddresses());
+  // Every entry the registry declares has a field, and nothing else has one.
+  // The fields are walked in the order the pages are built, which is the order of
+  // the blocks the themes are gathered in, and that order is not the order of the
+  // declarations: a theme which asks for a block of the list of its own — the
+  // theme of `git` asks for `External tools` — is met later among the fields than
+  // its address is among the declarations. What is compared is hence which
+  // addresses have a field, never the order the fields were added in
+  auto fields = dialog.keys();
+  auto with_a_field = declaredAddresses();
+  fields.sort();
+  with_a_field.sort();
+  QVERIFY2(fields == with_a_field,
+           qPrintable("the dialog has fields for [" + fields.join(", ") +
+                      "] and the registry declares [" + with_a_field.join(", ") +
+                      "]"));
   QVERIFY(dialog.hasSetting("font/textedit"));
   QVERIFY(dialog.hasSetting("clangd/semantic-tokens"));
   QVERIFY2(!dialog.hasSetting("no/such/address"),
@@ -514,7 +538,20 @@ void TestSettings::theDialogShowsWhatIsDeclared() {
       names << item->text(0);
     }
   }
-  QCOMPARE(names, r.getGroupsNames());
+  // Which themes are shown is what this case is about; which block of the list
+  // each of them stands in is what the block of the theme decides, and is the
+  // subject of `theThemesOfTheMajorModesAreSeparatedFromThoseOfTheEditor`. A
+  // theme which asks for a block of its own is hence met later in the list than
+  // it is in the registry, and the two lists are the same set, not the same
+  // order — and the order of the declarations themselves is the order the
+  // libraries of the editor were loaded in, which no case can name beforehand
+  names.sort();
+  auto expected = r.getGroupsNames();
+  expected.sort();
+  QVERIFY2(names == expected,
+           qPrintable("the list of the dialog holds [" + names.join(", ") +
+                      "] and the registry declares [" + expected.join(", ") +
+                      "]"));
   QCOMPARE(pages->count(), names.size());
   // picking a theme shows the page of that theme: the item of a theme names the
   // page of the stack it was given, and the items in between name none
@@ -573,43 +610,68 @@ void TestSettings::theThemesOfTheMajorModesAreSeparatedFromThoseOfTheEditor() {
   QVERIFY2(exported != 0,
            "no major mode exports an entry, the separation has nothing to "
            "separate");
-  // the titles are the items which can not be chosen, and a title shows no page
-  auto editor_title = -1;
-  auto modes_title = -1;
-  for (auto row = 0; row != shown.size(); ++row) {
-    auto* const item = shown[row];
-    if (item->flags().testFlag(Qt::ItemIsSelectable)) {
-      continue;
+  // which block a theme is asked to stand in: the block its `section` names, or,
+  // for a theme which names none, the block its kind has by default
+  auto block_of = [&r](const QString& name) -> QString {
+    for (const auto& g : r.getGroups()) {
+      if (g.name == name) {
+        if (!g.section.isEmpty()) {
+          return g.section;
+        }
+        return g.mode.isEmpty() ? QStringLiteral("Editor")
+                                : QStringLiteral("Major modes");
+      }
     }
-    QVERIFY2(item->data(0, Qt::UserRole).toInt() < 0,
-             qPrintable("the item '" + item->text(0) +
-                        "' is a title and shows a page"));
-    if (editor_title < 0) {
-      editor_title = row;
-    } else {
-      modes_title = row;
+    return QStringLiteral("<no theme of that name>");
+  };
+  // The titles are the items which can not be chosen, and a title shows no page.
+  // There are three blocks to be titled: the themes of the editor, the programs
+  // the editor runs beside itself, and the themes the major modes export. A title
+  // over a block which holds no theme is not shown, which is why the last of them
+  // is here only when a plugin was loaded which exports an entry.
+  auto titles = QStringList{};
+  for (const auto& item : shown) {
+    if (!item->flags().testFlag(Qt::ItemIsSelectable)) {
+      QVERIFY2(item->data(0, Qt::UserRole).toInt() < 0,
+               qPrintable("the item '" + item->text(0) +
+                          "' is a title and shows a page"));
+      titles << item->text(0);
     }
   }
-  QVERIFY2(editor_title >= 0, "the themes of the editor carry no title");
-  QVERIFY2(modes_title > editor_title,
-           "the themes the major modes export carry no title");
-  // each block is on its own side of its title
-  for (auto row = 0; row != shown.size(); ++row) {
-    auto* const item = shown[row];
+  QVERIFY2(titles.contains(QStringLiteral("Editor")),
+           qPrintable("the themes of the editor carry no title. Titles: " +
+                      titles.join(", ")));
+  QVERIFY2(titles.contains(QStringLiteral("External tools")),
+           qPrintable("the programs the editor runs carry no title. Titles: " +
+                      titles.join(", ")));
+  if (exported != 0) {
+    QVERIFY2(titles.contains(QStringLiteral("Major modes")),
+             qPrintable("the themes the major modes export carry no title. "
+                        "Titles: " +
+                        titles.join(", ")));
+  }
+  // The theme of `git` is the first theme to ask for a block of its own, and it
+  // asks because it is neither of the two kinds the list splits on by itself: the
+  // program which says what the files of a working tree are is no more a part of
+  // the editor than it is a language the editor reads. The block it asked for
+  // stands between the two defaults, since the theme is declared by the core
+  // library and is the first declaration to name a section
+  QCOMPARE(block_of(QStringLiteral("git")), QStringLiteral("External tools"));
+  QCOMPARE(titles, (QStringList() << QStringLiteral("Editor")
+                                  << QStringLiteral("External tools")
+                                  << QStringLiteral("Major modes")));
+  // each theme stands under the title of its own block, which is the title it
+  // was met last after in the order of the screen
+  auto under = QString();
+  for (const auto& item : shown) {
     if (!item->flags().testFlag(Qt::ItemIsSelectable)) {
+      under = item->text(0);
       continue;
     }
-    const auto message = "the theme '" + item->text(0) + "' of the mode '" +
-                         mode_of(item->text(0)) + "' is shown at row " +
-                         QString::number(row) + ", titles at " +
-                         QString::number(editor_title) + " and " +
-                         QString::number(modes_title);
-    if (mode_of(item->text(0)).isEmpty()) {
-      QVERIFY2((row > editor_title) && (row < modes_title),
-               qPrintable(message));
-    } else {
-      QVERIFY2(row > modes_title, qPrintable(message));
-    }
+    const auto block = block_of(item->text(0));
+    QVERIFY2(under == block,
+             qPrintable("the theme '" + item->text(0) + "' stands under '" +
+                        under + "' and its block is '" + block + "'"));
   }
   // a sub-theme is a child of the item of its parent, and of nothing else: what
   // a proofreader is asked with belongs under the choice of that proofreader,
@@ -664,7 +726,17 @@ void TestSettings::theThemesOfTheMajorModesAreSeparatedFromThoseOfTheEditor() {
   themes->setCurrentItem(a_theme);
   const auto before = pages->currentIndex();
   QVERIFY(before >= 0);
-  themes->setCurrentItem(shown[modes_title]);
+  // a title names no page: choosing one leaves the page of the theme before it
+  auto *const a_title = [&shown]() {
+    for (auto* const item : shown) {
+      if (!item->flags().testFlag(Qt::ItemIsSelectable)) {
+        return item;
+      }
+    }
+    return static_cast<QTreeWidgetItem *>(nullptr);
+  }();
+  QVERIFY(a_title != nullptr);
+  themes->setCurrentItem(a_title);
   QCOMPARE(pages->currentIndex(), before);
   // the page of a theme a mode exported says whose it is, and only those pages
   // do

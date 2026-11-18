@@ -59,9 +59,14 @@ the amazing abilities of the [`Qt` library](https://www.qt.io/).
   file explorer page](file-explorer.html) for details.
 - Knowing that the file a buffer visits stands in the working tree of a
   [`git`](https://git-scm.com) repository and saying so in the line of that
-  buffer, where a short `(git)` stands beside the name of the file. The answer
-  is read off the directories above the file, so no `git` is started, nothing is
-  waited for, and there is nothing to configure. See [the `git` support
+  buffer, beside the name of the file: a short `(git)` for a working file of one,
+  `(git:untracked)` for a file no commit holds and `(git:modified)` for a file the
+  repository holds differently. The first of those is read off the directories
+  above the file, so nothing is started and nothing is waited for; the two states
+  come from asking `git` every five seconds about the repositories the window
+  looks at, which the same answer uses to color the entries of the [file explorer
+  panel](file-explorer.html). Which program to ask, and whether to ask it at all,
+  is chosen in the configuration. See [the `git` support
   page](git-support.html) for details.
 - etc.
 
