@@ -16,6 +16,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QTimer>
 #include <QtCore/QVector>
+#include <QtGui/QColor>
 
 #include "TFEL/GUI/Config.hxx"
 
@@ -175,6 +176,31 @@ namespace tfel::gui {
      * program is run at all, `git/launch-by-default`
      */
     static QString launchByDefaultSettingAddress();
+
+    /*!
+     * \return the colour the two states of a file are drawn with
+     * \param[in] s : what \c statusOf or \c statusIn answered
+     *
+     * The colours of the states are answered here and not by the surfaces which
+     * draw them because they are one decision with the states: the information
+     * line of a buffer, the entries of the file explorer panel and the lines of a
+     * directory listing all ask the same question of this client, and a *modified*
+     * file which wore one ink in the panel and another in a listing would be read
+     * as two different facts about the same file.
+     *
+     * \note The blue of a new file is the colour the file managers and the version
+     * control plugins of this vintage give it. The dark red of a modified file is
+     * not the red of an error: the two stand beside each other in a buffer of a
+     * C++ file which is both modified and full of what clangd complains of, and an
+     * entry which reads as an error where the text reads as a warning of the
+     * compiler is a surface which has stopped informing anybody.
+     *
+     * \note \c Unknown and \c Unmodified are answered with an \e invalid colour,
+     * which is how whoever draws learns that the state says nothing and the ink of
+     * the desktop must be kept. An ink of "unchanged" would be an invention: the
+     * absence of a report from the program about a file is not a report.
+     */
+    static QColor colorOf(State s);
 
     /*!
      * \return the names of the repositories this client holds an answer about

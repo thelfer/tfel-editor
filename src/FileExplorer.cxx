@@ -26,26 +26,6 @@ namespace tfel::gui {
   namespace {
 
     /*!
-     * \brief the colour of an entry which no commit and no index of a repository
-     * holds
-     *
-     * The blue of a new file, which is the colour the file managers and the
-     * version control plugins of this vintage give it.
-     */
-    QColor untracked_color() { return QColor(0, 0, 255); }
-
-    /*!
-     * \brief the colour of an entry a working tree holds differently from the
-     * commit its branch names
-     *
-     * Dark red rather than the red of an error: the two stand beside each other
-     * in a buffer of a C++ file which is both modified and full of what clangd
-     * complains of, and an entry which reads as an error where the text reads as
-     * a warning of the compiler is a panel which has stopped informing anybody.
-     */
-    QColor modified_color() { return QColor(139, 0, 0); }
-
-    /*!
      * \brief the model of the file system of the panel, coloured by what git
      *        thinks of the entries it shows
      *
@@ -53,6 +33,11 @@ namespace tfel::gui {
      * not hold — is this file one the repository has never seen? — answers that
      * question at the one place the answer is drawn: the state of a file is the
      * git client's, and the tree only asks what a colour is.
+     *
+     * \note The colours themselves are answered by `GitStatusClient::colorOf`,
+     * the one place which says what a state looks like: the entries of this panel
+     * and the names of a directory listing are the same question about the same
+     * file and can not be allowed to wear two different inks.
      */
     struct GitColoredFileSystemModel : QFileSystemModel {
       /*!
@@ -91,14 +76,10 @@ namespace tfel::gui {
         if (file.isEmpty()) {
           return QFileSystemModel::data(index, role);
         }
-        switch (c->statusIn(this->repository_root, file)) {
-          case GitStatusClient::Untracked:
-            return QBrush(untracked_color());
-          case GitStatusClient::Modified:
-            return QBrush(modified_color());
-          case GitStatusClient::Unknown:
-          case GitStatusClient::Unmodified:
-            break;
+        const auto color = GitStatusClient::colorOf(
+            c->statusIn(this->repository_root, file));
+        if (color.isValid()) {
+          return QBrush(color);
         }
         return QFileSystemModel::data(index, role);
       }  // end of data

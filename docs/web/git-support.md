@@ -25,9 +25,10 @@ repository holds — is a second word, and it does need the program:
 holds unchanged, `matrix.c`, whose text has been edited, and `newton.c`, which no
 commit holds](img/git-indicator-states.png "The three states of the line: `(git)` for a file the repository holds as it is, `(git:modified)` for a file it holds differently, `(git:untracked)` for a file nobody has added to it")
 
-The same answer colors the [file explorer panel](file-explorer.html): the
-entries of the directory it shows are drawn with what the repository says of
-them.
+The same answer colors the [file explorer panel](file-explorer.html) and the names
+of a [directory listing](directory-mode.html): the entries of the directory the
+panel shows, and the lines of the listing a buffer of a directory draws, are inked
+with what the repository says of them.
 
 ![The window of the edited file: the panel of the repository on the left, with
 `matrix.c` dark red and `newton.c` blue, and the line of the buffer under the
@@ -57,10 +58,10 @@ of them visit files of the same name, would otherwise move a `(git)` into a name
 nobody typed, and the same file would give a buffer two names, one before
 `git init` and one after.
 
-# The colors of the panel
+# The colors of the panel and of a listing
 
-The entries of the [file explorer panel](file-explorer.html) wear the same
-answer:
+The entries of the [file explorer panel](file-explorer.html) and the names of a
+[directory listing](directory-mode.html) wear the same answer:
 
 | The entry is | Because |
 |---|---|
@@ -68,14 +69,42 @@ answer:
 | dark red | the repository holds the file differently — edited text, staged addition or deletion, rename, conflict |
 | the color of the desktop | everything else: an entry the repository holds unchanged, an entry of no repository, an ignored file, and every entry of a repository the editor was told to ask nothing about |
 
+![One working tree, seen from the two surfaces which ask about it. The panel on
+the left is rooted at the root of the tree: `modified.txt` dark red,
+`loose_new.txt` blue, `tracked.txt` and the directory `src` left the ink of the
+desktop. The listing on the right is a buffer of the subdirectory `src`:
+`brand_new.txt`, `runnable.sh` and the directory `newdir` blue,
+`inner_changed.txt` dark red, `committed_runnable.sh` dark green, `notes` — a
+directory the commit holds — and the parent entry dark blue, `ignored.o` and
+`inner_clean.txt` the ink of a plain file. The line of the buffer names the mode
+and says `(git)`](
+img/git-directory-colors.png "The two surfaces take their colors from one
+function of the client which holds the answer, so a file can not wear one ink in
+the panel and another in a listing. In the listing, the blue of `runnable.sh`
+stands over the dark green of an executable and that of `newdir` over the dark
+blue of a directory: what the repository says of a name is drawn over what the
+name *is*, which is why a directory is dark blue and not blue there")
+
+The two inks are answered by the client which holds the answer, and not by the
+surfaces, precisely so that a file cannot wear one color in the panel and another
+in a listing. Where the two surfaces differ is what they draw *under* those two
+inks: the panel leaves every directory and every plain file the color of the
+desktop, because it draws what the desktop itself draws and has no face of its own
+to give one; a listing is a text the editor draws line by line, and it gives a
+directory dark blue and an executable file dark green — the two faces a file
+manager has had since they were invented. Which is why the blue of a *new* file is
+blue and not, as it was in the listing before the states existed, the blue of a
+directory: a name cannot say two things at once, and the state of a name is the
+thing the color was added to say.
+
 What is said of a directory is said by the program, and only there: a tree of
 new files is answered as **its top directory**, so that entry is blue as the
 files inside it are, and a file of such a directory is answered untracked too,
 because the directory which holds it is. A directory which holds an edited file
 is answered nothing — `git status` names the file and not the directory it
-stands in — and the panel leaves it the color of the desktop, since a red
-invented for it would say the directory itself differs, which is a thing the
-program never says. Ignored files are left the color of the desktop on purpose:
+stands in — and both surfaces leave it the color they leave an unchanged entry,
+since a red invented for it would say the directory itself differs, which is a
+thing the program never says. Ignored files are left alone on purpose:
 `git status` names no file which is not its business, which is the whole of what
 makes ignoring a file different from deleting it, and a gray invented for the
 case would say what the program does not say.

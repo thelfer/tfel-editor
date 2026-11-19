@@ -285,6 +285,27 @@ namespace tfel::gui {
     return stateOf(i.value(), root, file);
   }  // end of GitStatusClient::statusIn
 
+  QColor GitStatusClient::colorOf(State s) {
+    switch (s) {
+      case Untracked:
+        // The blue of a new file, which is the colour the file managers and the
+        // version control plugins of this vintage give it
+        return QColor(0, 0, 255);
+      case Modified:
+        // Dark red rather than the red of an error: the two stand beside each
+        // other in a buffer of a C++ file which is both modified and full of what
+        // clangd complains of, and an entry which reads as an error where the text
+        // reads as a warning of the compiler is a surface which has stopped
+        // informing anybody
+        return QColor(139, 0, 0);
+      case Unknown:
+      case Unmodified:
+        break;
+    }
+    // Nothing to say about the entry: whoever draws keeps the ink of the desktop
+    return QColor();
+  }  // end of GitStatusClient::colorOf
+
   QStringList GitStatusClient::watchedRepositories() const {
     auto roots = QSet<QString>();
     for (auto *const b : this->editor.getBuffers()) {

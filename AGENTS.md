@@ -1977,11 +1977,9 @@ line of a session — everything after it worked before.
 
 Two adjacent defects of exactly this kind are deliberately left alone, as they are
 outside the mode this issue is about and each needs its own fix: the shell command
-of `GnuplotMajorMode.cxx:80` sends the `BlockUnderCursor` selection, and the file
-name `DirectoryMajorMode.cxx:99` opens is taken from a token which keeps its
-leading separator (`dir.cxx`: the first token of `U+2029 + "base.o"` is
-`U+2029 + "base.o"`, so the entry of a line which is not the first of the buffer
-would ask for a name no file has).
+of `GnuplotMajorMode.cxx:80` sends the `BlockUnderCursor` selection, and the same
+shape in `LicosMajorMode.cxx:64`. (`DirectoryMajorMode` held the third one and is
+fixed, see the section on the directory mode.)
 
 ### The configuration dialog keeps the themes of the modes apart (issue #127)
 
@@ -3088,6 +3086,248 @@ Two shapes of the row are load-bearing:
   `informationLineStandsUnderTheBuffersAndNamesThem` asserts the row's height
   equals the tallest label's `sizeHint` (±2 px), which a dropped
   `setContentsMargins` fires on both platforms.
+
+### The directory mode opens what the line it is pressed on names
+
+`DirectoryMajorMode` (`src/DirectoryMajorMode.cxx`) turns a buffer of a directory
+into a listing — one line per entry, the name, the owner and the modification
+date, space-padded — and `Enter` on a line opens that entry: a file in a new
+buffer (`editor.openFile`), a directory in place of the one shown
+(`updateDirectoryDescription(path)`, which keeps the same buffer). The report was
+that the key opened nothing any more, and there were **two** independent reasons
+for it, both found by hand and each pinned by its own cases of
+`tests/TestDirectoryMode.cxx` (the newest executable of `tests/`):
+
+- **the name asked of the file system carried a character no file has.** The key
+  read the line through `QTextCursor::BlockUnderCursor` and split it with
+  `QRegularExpression("\\s+")`. That selection carries the separator which
+  *precedes* the block on any block but the first, `QRegularExpression` is PCRE
+  whose `\s` is the ASCII class, and U+2029 is not ASCII whitespace: the first
+  token was `<U+2029>name`, so `QFileInfo::isFile` and `isDirectory` were both
+  false and the key returned having done nothing. `QRegExp`, which this split
+  with until the Qt 6 port, runs the JavaScript engine, whose `\s` *does* know
+  U+2029 — which is why the key worked before the port and why the port broke it
+  silently. Because the listing's first line is always `..` (`.` is filtered out
+  of `updateDirectoryDescription`), **no** file and **no** sub-directory was
+  reachable: line 0 went to the parent and every other line went nowhere.
+  What `UseUnicodePropertiesOption` would have fixed the same way, and what was
+  chosen instead is the remedy already applied to the Cast3M mode: read the line
+  as `textCursor().block().text()`, which is the text of the line and nothing
+  else. `/tmp/opencode/dirfix/split.cxx` shows both readings side by side.
+- **the cursor of a freshly shown listing stood on its empty last line.** The
+  listing is built by `insertText`s made *at the place the cursor of the text
+  edit holds* — so those insertions push that cursor along — and the rewrite
+  never said where the cursor should end up: after the mode had run, the cursor
+  named the empty block the closing newline opens, where `Enter` names nothing.
+  A window opened on a directory and a hand which pressed `Enter` without moving
+  were therefore met by silence, which is how the report reads even before the
+  separator is taken into account. `updateDirectoryDescription()` now reads the
+  line the cursor stands on **before** the rewrite and puts it back after
+  (clamped to the last line, since a directory which lost an entry gives a
+  shorter listing), and `updateDirectoryDescription(const QString&)` stands the
+  cursor on line 0 before it, so a directory which is *entered* is looked at from
+  its first entry. `QTextCursor::blockNumber()` is not used anywhere in this: it
+  asks the layout, which is only brought up to date when the text is painted
+  (the trap the rectangle commands carry).
+
+The modes which *write* to a process from a `BlockUnderCursor` selection — the
+shell command of `GnuplotMajorMode.cxx:80` and the completion of
+`LicosMajorMode.cxx:64` — keep their separator bug: a leading U+2029 becomes `?`
+in `toLatin1()` (Cast3M's own shape) or noise in front of a name. Each needs its
+own fix and its own issue.
+
+Traps, all paid for:
+
+- **`double gamma(double)` in this libc makes `gamma` an ambiguous name**: a
+  range-`for` over `{alpha, beta, gamma}` of file-name constants fails to compile
+  as `reference to 'gamma' is ambiguous` between the anonymous-namespace
+  `const char *const` and `math.h`. The name of a fixture constant is not free.
+- `updateDirectoryDescription` is a **private slot** of an exported class, reached
+  from the `QFileSystemWatcher`, so a test of the refresh writes a file into the
+  watched directory and waits for the listing to name it: the answer of the
+  watcher arrives through the event loop (`QTest::qWait` in a bounded loop, the
+  rule the file explorer and every pipe carry), and the assertion is on the line
+  the cursor stands on **after** that wait, not on a duration.
+- `QFileInfo::absoluteFilePath()` — the name a buffer visits — takes `..` out
+  **lexically** and resolves no symbolic link, so `Enter` on the parent entry of
+  a listing under a `QTemporaryDir` is asserted against `absolutePath()` of the
+  directory which was left, not against `canonicalFilePath()`: a `/tmp` which is
+  a symlink on some machine would make the two disagree.
+- The whole text is cut on U+2029 **and** on `'\n'` before it is read as lines
+  (the rule the rest of the suite follows), and the listing has an empty last
+  line because it ends with a newline — which is precisely the line the second
+  defect parked the cursor on.
+- Two mutants, two distinct failures: the selection-and-ASCII-`\s` reading fails
+  the five cases about the key (`enterOpensTheFileTheLineNames`,
+  `enterOpensAFileBelowTheFirstLineOfTheListing`,
+  `enterAnswersForTheLineAndNotForTheWordUnderTheCursor`,
+  `everyEntryOfTheListingIsReachable`, `enterEntersTheDirectoryTheLineNames`)
+  while both cursor cases stay green; dropping the cursor placement fails only
+  `aFreshListingStandsOnItsFirstEntry` and
+  `aRefreshKeepsTheLineTheCursorStandsOn`. A suite which failed on both mutants
+  at once would be asserting the shape of the fix rather than the fix.
+- The live display was worth the run for the gesture, and it is an A/B of two
+  builds of the same tree: `/tmp/opencode/dirfix/gui.sh <label>` launches
+  `<build>/src/tfel-editor <directory>` on `DISPLAY=:99` (Xvfb + metacity), presses
+  a click, `Down`, `Down`, `Return` through `/tmp/opencode/dirfix/keys.py` (the
+  ctypes XTEST rules of the note above) and shoots the same window before and
+  after. With the original file the listing stays on the screen with the band of
+  the current line on `notes.txt`; with the fixed one the text of `notes.txt` is
+  what the buffer shows. Four traps of doing it:
+  - **`0xFFFD` is no keysym**: `XTestFakeKeyEvent` answers `BadValue` for the
+    keycode 0 that mapping gives, so the arrow key is `XK_Down` (0xFF54), read
+    back with `XKeysymToKeycode`;
+  - **`_NET_WM_PID` is not a way to find the window of a process**: Qt maps a
+    10x10 helper window which carries that property and whose name is
+    `tfel-editor`, while the *client* — the one `import` can read — carries none.
+    What singles it out is the class in the window tree
+    (`"tfel-editor": ("tfel-editor" "tfel-editor")`) and a count asserting that
+    exactly one such window exists, because `pkill` of the previous run's editor
+    and `head -1` of a tree of leftovers is how one build answers for another;
+  - `import` of the client works, `import` of the helper answers `Resource
+    temporarily unavailable`, and `xwininfo` of this build prints no `Parent
+    window id` line to fall back on;
+  - the click of the probe must land on a **line of text**: a click below the
+    text puts the cursor on the empty last line, which is the shape the second
+    defect left every listing in, and the gesture then measures the wrong thing.
+
+### The states of the entries stand in the colors of a listing
+
+The names of a listing wear the same two inks the file explorer panel gives them —
+`(0,0,255)` for an entry no commit holds, `(139,0,0)` for one a working tree holds
+differently — and nothing else is invented. Three decisions are load-bearing:
+
+- **`GitStatusClient::colorOf(State)` is the one place those colors are answered**
+  (`Untracked` and `Modified`; `Unknown` and `Unmodified` answer an **invalid**
+  `QColor`, which every surface reads as *draw nothing*). `FileExplorer.cxx` calls
+  it and its own `untracked_color`/`modified_color` helpers are gone; the listing
+  calls the same function. Two surfaces which answer the same question of the same
+  client must not answer its colors separately.
+- **A directory of a listing is `Qt::darkBlue`, not the `Qt::blue` it was**: pure
+  blue is the ink of an untracked entry, and a name cannot say two things at once.
+  That face is the only user-visible change of the work; `Qt::darkGreen` for an
+  executable is untouched, and **the state wins over the kind** where both apply —
+  an executable nobody has added is blue, as the panel draws it.
+- **The inks are a keyed extra-selection contribution, `directory-git`, never a
+  face of `DirectorySyntaxHighlighter`.** Two independent reasons, both verified: a
+  widget-level `ExtraSelection` foreground *overrides* a highlighter foreground
+  (`/tmp/opencode/dirgit/precedence.cxx`), so the states could not be drawn over
+  the faces of the directories and executables from inside `highlightBlock`; and
+  the contribution is what a test can read (`TextEditBase::extraSelections()`),
+  where the faces of a highlighter are invisible (the rule of *Auditing a mode
+  without a test suite*). `updateGitColors` walks the blocks, takes the first word
+  of each — the listing lays its columns with spaces — and asks `stateOfEntry`; the
+  `..` entry answers `Unknown` by hand, since it names a directory the listing does
+  not show and often one out of the repository it shows.
+
+The wiring: `repository_root` is computed **once per directory** in
+`updateDirectoryDescription(const QString&)` (`GitSupport::repositoryRootOf`, no
+subprocess), which is also what tells the signal `repositoryStatusesChanged` —
+connected in the constructor, filtered on that root — which of the client's trees
+this buffer is about; entering a directory calls `refresh(root)` because a listing
+which just appeared is a moment a person is looking at; and every rewrite of the
+listing redraws, because the rewrite moved the lines the states are drawn on.
+Asking is never waiting: drawing reads what the client of the window holds.
+
+`DirectoryMajorMode` gained members and a slot, which is an **ABI break** of the
+exported class: the whole tree is rebuilt, never `--target TFELEditor` (the rule
+the note on `SettingsGroup` carries).
+
+The crash this cost is a trap for every mode which draws a contribution:
+
+- **A destructor of a mode may not ask anything of its own `TextEditBase`.** A mode
+  is a child `QObject` of the text edit, and `QObjectPrivate::deleteChildren` is
+  reached from `QWidget::~QWidget` — that is, *after* `~TextEditBase` ran and took
+  `extraSelectionsByKey` with it. The first draft cleared the key unconditionally
+  through `this->textEdit`, and that walked a destroyed `QMap`:
+  `std::_Rb_tree_increment` at the top of the trace, in `~DirectoryMajorMode`,
+  called from `deleteChildren` of a dying `PlainTextEdit`. Guarding on the text edit
+  itself buys nothing — the object is still there, only its members are gone. The
+  guard is `QPointer<QAbstractScrollArea> area`, taken in the constructor from
+  `t.widget()`: the Qt widget of the listing is a child made **before** the mode, so
+  `deleteChildren` reaches it first and the pointer is null when the mode is
+  dropped — which is exactly the guard `GrammarCheckSession` holds for the same
+  reason, under the same name. `MajorModeBase::textEdit` is a *reference*, so it
+  answers no null and is no guard at all.
+- **A crash of that shape is reported twice and misleadingly.** `test-directory-mode`
+  printed `Totals: 17 passed` and *then* died — the fault is in the teardown, after
+  the report — so ctest named it a segfault of a suite whose own output says it
+  passed; and the neighbour `test-shared-compilation-output` aborted with
+  `QFATAL : TestSharedCompilationOutput::aDirectorySharesNothing() Received signal
+  11` while that case passes on its own. Both failures named a directory buffer,
+  which is what pointed at the mode and not at the tests.
+
+Test traps, all paid for:
+
+- the fixture of a state is a **real repository**: `Repository` of the test runs
+  `init -q`, `config user.email`/`user.name`, `add`, `commit`. The step-1 and
+  step-2 fixture of `mkpath(repo/.git)` is the refused case — its `git status`
+  answers nothing and exits 128 — so a case asserting `Untracked` written over it
+  fails for a reason three calls away;
+- `TextEditBase::widget()` answers the **inner** Qt widget of the text edit, a
+  `QAbstractScrollArea *` — not the `TextEditBase` itself, which is the wrapper which
+  holds it. That inner widget is what carries the event filter, what a click goes to
+  and what `grab()` of a listing is taken of: `auto &widget = *e.widget();`;
+- the two faces of the highlighter are invisible to every selection API, so the
+  case about them **counts exact inks in `widget()->grab()`** (`countExactInk` of
+  `(0,0,128)`, `(0,128,0)`, `(0,0,255)`, `(139,0,0)`) and holds the counts against
+  a listing of a directory of **no** repository, which must answer 0 of the two inks
+  of the states and more than 0 of the face of a directory — a control which counts 0
+  of everything says nothing. Antialiasing keeps the exact matches few: 5 pixels of
+  dark blue for a three-character name is a coloured name, not a miss;
+- `QColor(139,0,0)` is X11 `darkred` and is **not** `Qt::darkRed` `(128,0,0)`; and
+  `Qt::blue` is `(0,0,255)`, the same triple as `Untracked`, which is the whole of
+  why the directory face moved;
+- `for (auto b = document->begin(); b.isValid(); b = b.next())`: `QTextBlock` has no
+  `operator++`;
+- the closing note `QProcess: Destroyed while process ("/usr/bin/git") is still
+  running.` is **not** this work: `~GitStatusClient` kills a poll which is on its way
+  and waits 100 ms for the reap, and a `git status` which does not die that fast
+  leaves the note behind when the window goes. The pre-existing `test-git-support`
+  prints two of them on a clean run and `test-directory-mode` one, on both platforms.
+  Nothing in the suite asserts on it;
+- the state cases need the program and `QSKIP` without it (`hasGit`), but
+  `aListingOfNoRepositoryWearsNoState` runs anywhere and is the negative control of
+  the whole set;
+- three mutants name the three halves of the drawing. `setForeground(Qt::blue)` for
+  a directory fires the pixel case (`no name is drawn in dark blue`); replacing
+  `setExtraSelections("directory-git", …)` by the unkeyed `setExtraSelections(…)`
+  fires `moving the cursor took the state of a name away`, because
+  `highlightCurrentLine` rebuilds the union from the keyed map and an unkeyed list
+  is not in it; and a destructor which clears nothing fires
+  `aReplacedModeTakesTheStatesOfTheNamesWithIt`.
+
+Two facts which read like claims and are measurements: `QDir::entryInfoList()` with
+its default arguments answers `.`, `..`, and **no hidden entry** — which is why the
+code filters `.` by hand, why `..` stands on the first line, and why a page may say
+the listing shows no `.git` entry (`/tmp/opencode/dirgit/entrylist.cxx`). And
+asserting that `..` wears no state is a **fence and not a detector**: with the
+explicit refusal dropped, all seventeen cases stay green, because
+`QDir(root).relativeFilePath(root + "/..")` answers `../`, `.` or the name of the
+parent depending on how deep the listing stands (`/tmp/opencode/dirgit/relative.cxx`),
+the first two of those answers are refused by `GitStatusClient::stateOf` on their
+own, and no shape of the suite's fixtures puts a listing two levels below an entry
+which carries a state. The assertion is worth keeping — it pins the *shape*, that
+the parent entry is not among the inked names — but it is not what makes the
+refusal right, and no fixture can be written which would see it dropped.
+
+`/tmp/opencode/dirgit/docshot.sh` makes `docs/web/img/git-directory-colors.png` on
+`DISPLAY=:99`, and the fixture it builds is a deliberate shape: the buffer visits a
+**sub-directory** of the repository, because the panel roots itself at the directory
+of the file the current buffer visits, which for a directory is its *parent* — the
+root of the tree. Naming a repository to `Ctrl-X Ctrl-F` therefore puts the listing
+of the tree beside a panel showing the directory which holds it, and only a listing
+one level below the root draws the two surfaces of one repository beside each other.
+The script counts the four inks on each side of the panel's edge (blue 11 px panel
+against 31 px listing, dark red 16 against 25), which is the parity claim read off
+the pixels. Two traps of that shot: the mode line of the buffer — where the same
+answer says `(git)` about a directory — stands ~330 px below the last line of a
+listing in an 800x600 window, so a crop of the listing throws the evidence away; and
+`XDG_CONFIG_HOME` must hold `explorer/panel-shown=true` for the panel to be there at
+all, which is also why the shot writes its own config directory. The user-facing
+half is `docs/web/directory-mode.md`, new with this work, with a bullet of its own in
+`docs/web/index.md`; `docs/web/git-support.md` and `docs/web/file-explorer.md` name
+the listing as the second surface of the one answer.
 
 ## Architecture
 

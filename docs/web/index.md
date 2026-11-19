@@ -57,6 +57,11 @@ the amazing abilities of the [`Qt` library](https://www.qt.io/).
   did — both of which keep the whole width of the window — and whose open state
   and width come back to the window you open next. See [the
   file explorer page](file-explorer.html) for details.
+- Browsing a directory in a buffer: naming one to `Ctrl-X Ctrl-F` shows a listing
+  of its entries — name, owner, modification date — whose `Enter` key opens the
+  file or enters the directory that the line it is pressed on names, and whose
+  names wear what the repository they stand in says of them. See [the directory
+  mode page](directory-mode.html) for details.
 - Knowing that the file a buffer visits stands in the working tree of a
   [`git`](https://git-scm.com) repository and saying so in the line of that
   buffer, beside the name of the file: a short `(git)` for a working file of one,

@@ -49,6 +49,12 @@ no repository is left alone, and so is a directory which merely holds changed
 files: what the program says of a directory it has never heard of is nothing,
 and an invented color would say more than the program does.
 
+The same two inks are what [the listing of a directory visited as a
+buffer](directory-mode.html) draws, over the faces that listing gives a directory
+and an executable file; and they are answered by the same function of the client
+which holds the answer, which is what keeps a file from wearing one color in the
+panel and another in a listing.
+
 # Opening a file
 
 Double clicking on a file opens it in a buffer, exactly as `Ctrl-X Ctrl-F`

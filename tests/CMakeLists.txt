@@ -70,6 +70,7 @@ add_tfel_editor_test(test-query-replace TestQueryReplace.cxx)
 add_tfel_editor_test(test-find-replace-dialog TestFindReplaceDialog.cxx)
 add_tfel_editor_test(test-git-support TestGitSupport.cxx)
 add_tfel_editor_test(test-file-explorer TestFileExplorer.cxx)
+add_tfel_editor_test(test-directory-mode TestDirectoryMode.cxx)
 
 # The suggestions of the spell checker are found on the context menu of a mode
 # of a packaged plugin, so the two modes which have one are built and their file
