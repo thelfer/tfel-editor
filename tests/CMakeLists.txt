@@ -71,6 +71,7 @@ add_tfel_editor_test(test-find-replace-dialog TestFindReplaceDialog.cxx)
 add_tfel_editor_test(test-git-support TestGitSupport.cxx)
 add_tfel_editor_test(test-file-explorer TestFileExplorer.cxx)
 add_tfel_editor_test(test-directory-mode TestDirectoryMode.cxx)
+add_tfel_editor_test(test-licos-mode TestLicosMode.cxx)
 
 # The suggestions of the spell checker are found on the context menu of a mode
 # of a packaged plugin, so the two modes which have one are built and their file
@@ -155,6 +156,18 @@ add_dependencies(test-latex-mode TFELEditorLaTeXMode)
 target_compile_definitions(
   test-latex-mode PRIVATE
   TFEL_EDITOR_LATEX_MODE="$<TARGET_FILE:TFELEditorLaTeXMode>")
+
+# The cases of `test-licos-mode` drive the `Licos` mode, whose class is not
+# exported: the mode is loaded as the editor loads it, and everything the cases ask
+# goes through the keys, the click on a name and the buffers the window holds. What
+# following a name is asked to open is decided by the file system, so the fixture is
+# a study of the test's own temporary directory and the two search paths of the
+# language are named for the run by the environment, which the mode reads at every
+# question.
+add_dependencies(test-licos-mode TFELEditorLicosMode)
+target_compile_definitions(
+  test-licos-mode PRIVATE
+  TFEL_EDITOR_LICOS_MODE="$<TARGET_FILE:TFELEditorLicosMode>")
 
 # The last case of `test-shared-compilation-output` asks the two text modes what
 # their category is. Those modes are plugins, and loading them registers them for

@@ -33,6 +33,31 @@ namespace tfel::gui {
     static const QStringList &getLicosExtensionsSuffix();
 
     /*!
+     * \return the regular expression which names a link to a file of the given
+     * extension, with the name of the file in the group named \c name and the
+     * quote it is written with in the group named \c quote
+     *
+     * \note this is the one pattern which decides what a link is: the syntax
+     * highlighter draws the underline of a link with it and
+     * \c getFileNameUnderCursor reads the name under the cursor with it, so
+     * what looks like a link is always what follows a link does
+     *
+     * \note a name may hold directories: a licos file names the files of a
+     * study by the sub-directory which holds them, and \c getLicosFile looks
+     * into those same sub-directories for a name which does not name one
+     *
+     * \note a name is written between single quotes, which is what the wizards
+     * of the mode write, or between double quotes; the two quotes are
+     * alternatives of the same pattern and a name closed by one quote is not
+     * closed by the other
+     *
+     * \note a name whose characters are not letters, digits, `.`, `_`, `+`, `-`
+     * or `/` is not a link: a space in particular is no name, as a pattern
+     * which accepts one would read two names on a line holding two of them
+     */
+    static QRegularExpression linkRegExp(const QString &);
+
+    /*!
      * \brief constructor
      * \param[in] w : editor widget the mode belongs to
      * \param[in] b : buffer the mode is attached to
@@ -348,9 +373,13 @@ namespace tfel::gui {
      * through their `inputs`, `scripts` and `data` sub-directories, then from
      * the directories the variable lists, which are separated by colons
      *
-     * \note the installation tree of licos is the last candidate; it is only
-     * reached when \c getLicosPath returns an empty string, and that call
-     * reports the missing `LICOSHOME` variable in the minibuffer
+     * \note the installation tree of licos is the last candidate: it is
+     * `<LICOSHOME>/share/licos` and it is looked at only when the
+     * `LICOSHOME` variable names a directory, since an empty value names none.
+     * Asking \c getLicosPath for it is what reports the missing variable in the
+     * minibuffer, so it is asked once the files of the study and of the user were
+     * looked for: a name of a file of the study has nothing to be answered with
+     * a complaint about a variable the study does not need
      *
      * \note a file which is not found is reported in the minibuffer
      */
@@ -424,8 +453,15 @@ namespace tfel::gui {
      * \param[in] e  : extension tested
      *
      * \note a file name is a name of a licos file followed by the extension
-     * \c e, between simple quotes; the returned name does not include those
-     * quotes
+     * \c e, between single or double quotes; the returned name does not include
+     * those quotes
+     *
+     * \note the name may hold directories, which are part of the returned name:
+     * a licos file names the data files of a study by the sub-directory which
+     * holds them
+     *
+     * \note the pattern is \c linkRegExp, the one which draws the underline of
+     * the link too
      *
      * \note the whole line is scanned: the cursor must stand inside the quoted
      * name for it to be returned
@@ -449,10 +485,9 @@ namespace tfel::gui {
      *
      * \note a `py` file is looked for in the directories of `PYTHONPATH`, an
      * `mfront` file is handed over to \c openMFrontSource and the other
-     * extensions are looked for by \c getLicosFile
-     *
-     * \note a `ps` file is recognised but nothing is done with it: the code
-     * which opened it in the desktop viewer is commented out
+     * extensions, `ps` included, are looked for by \c getLicosFile and opened in
+     * a buffer of the editor: the tooltip of the underline promises a new buffer
+     * and the mode keeps that promise for every extension it draws as a link
      *
      * \return true if a name of one of those extensions was found, even when
      * the file itself could not be found nor opened
@@ -547,17 +582,19 @@ namespace tfel::gui {
      * buffer
      * \param[in] f : name of the file to open
      *
-     * \note the file is opened when \c f points to it and the search then goes
-     * on: in the `mfront/properties`, `mfront/behaviours` and `mfront/models`
-     * sub-directories of the current directory, then in
-     * `MFRONTMATERIALSHOME`, where every file whose name is \c f is opened
+     * \note the candidates are the directory of the file the buffer visits — with
+     * its `mfront/properties`, `mfront/behaviours` and `mfront/models`
+     * sub-directories — and then `MFRONTMATERIALSHOME`, where every file whose
+     * name is \c f is opened. The current directory of the editor is no
+     * candidate: a name of a licos file names a file of the study, whatever
+     * directory the editor was started in
      *
-     * \note a file found in one of those sub-directories is opened under the
-     * name \c f, not under the path which was tested
+     * \note a candidate is opened under the path which was tested, and the search
+     * stops there: what follows a link asks for one file to open, and going on
+     * after having opened it answers it with a report that it was not found
      *
-     * \note an unreadable file and an absolute path stop the search and are
-     * reported in the minibuffer; so does the end of the search, whether it has
-     * found files in `MFRONTMATERIALSHOME` or nothing at all
+     * \note an unreadable candidate stops the search and is reported in the
+     * minibuffer; so does the end of the search, when nothing was found
      */
     virtual void openMFrontSource(const QString &);
 
