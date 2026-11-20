@@ -3329,6 +3329,174 @@ half is `docs/web/directory-mode.md`, new with this work, with a bullet of its o
 `docs/web/index.md`; `docs/web/git-support.md` and `docs/web/file-explorer.md` name
 the listing as the second surface of the one answer.
 
+### What a link of a `Licos` buffer is, and where the file it names is looked for (issue: links to `txt` files not working)
+
+`Return` or a left click on an underlined name in a `.ple` study often opened
+nothing, and the tooltip of that underline (`open in new buffer`) is what makes
+the failure a broken promise rather than a missing feature. Four defects were
+stacked under the one symptom, all of them in `packages/licos`, each pinned by
+its own cases of `tests/TestLicosMode.cxx`:
+
+- **the pattern which names a link had no directory separator.** The extractor
+  built it from `fileNameRegExp()` — `[\w0-9._+-]+` — so the regex never crossed
+  a `/`: a study line `Curve 'inputs/inpath.txt'` is drawn as a link and answered
+  nothing at all, which is the report verbatim. That helper lost its `/` in the Qt
+  6 port (`179333c`), and `TestUtilities.cxx` pins the helper as it now is, so the
+  **mode stopped borrowing** the one regex a dozen surfaces use for *file names*
+  and owns the one regex which decides *this* language's links:
+  `LicosMajorMode::linkRegExp(ext)`, which `LicosSyntaxHighlighter::importExprs`
+  and `getFileNameUnderCursor` both read. That sharing is the invariant — a name
+  drawn as a link is a name a click opens, and the two lists drifting apart is
+  what the report looks like.
+- **the name is quoted two ways.** A name opened by `'` is closed by `'`: the
+  back reference `\k<quote>` is what forbids `'abc.txt"`, and the groups are
+  named (`quote`, `name`) so no capture numbering three characters away decides
+  which text is the name. The pattern is `InvertedGreediness | UseUnicodeProperties`
+  — the second makes an accented name a link, the first is what makes a line
+  holding two quoted names answer the name the cursor stands on.
+- **`getLicosFile` had its installation tree backwards**: `if (lpath.isEmpty())`
+  guarded the lookup, so the tree was searched only when `LICOSHOME` named
+  nothing, and conversely a study file standing right beside the `.ple` was
+  answered `no LICOSHOME environment defined` because `getLicosPath()`, which is
+  the report of that message, was called before the local candidates were looked
+  at. The rewrite is one `check_in(dir)` lambda over four places, in this order:
+  the directory of the buffer's file, `QDir::currentPath()`, each entry of
+  `LICOS_USER_FILES`, and `<LICOSHOME>/share/licos` **last**; each of those four is
+  tried bare and under `inputs/`, `scripts/` and `data/`, and `getLicosPath()` is
+  asked only once the first three answered nothing. The order matters twice over:
+  a user file is what the person is working on, and a file whose name proves the
+  study needs no environment is none to answer a variable for.
+- **`LICOS_USER_FILES` was read as the wrong variable.** The loop over the
+  entries tested `*p + "/" + f` where `f` is `dir + "/" + file`, and `f` had the
+  directory baked in at the declaration; `file` is the plain name. So a subdirectory
+  of the user tree could be found only as `inputs/<dir>/<name>` — and `inputs` was
+  the one sub-directory the mode's own wizards write names with. `scripts/` and
+  `data/` were therefore never found, whichever spelling the loop takes; the
+  reading that uses `f` names the sub-directory once.
+
+The `.ps` and `.mfront` branches were the other two ways a link lied. The
+`ps` branch matched, **returned true**, and had its whole body commented out:
+the click was swallowed and nothing answered. A `ps` file of a study is a file
+of the study, so it now goes the way of the other extensions and opens in a
+buffer — the promise the underline's tooltip makes; a branch which hands a name
+to a desktop viewer and says nothing when no viewer answers is a branch the mode
+can not keep silently. `openMFrontSource` resolved a relative name against the
+process working directory rather than the file the buffer visits, and fell
+through to `file '%1' not found` **after** having opened the file, so the search
+now takes the study's directory (plus `mfront/properties`, `mfront/behaviours`,
+`mfront/models`) with `MFRONTMATERIALSHOME` last and `return`s on the first
+candidate that opened. `rlib` links are deliberately untouched: `libraryNameUnderCursor`
+is referenced only by commented-out code, so there is no consumer to fix a regex for.
+
+What the mode does **not** do, and a reader could easily expect: the jump is the
+**one quoted name on the line the cursor stands on**, not the run of characters
+under the cursor, and there is no completion of a partial path — `Curve 'inputs/`
+is no link (no extension, no closing quote). It searches, it does not list: no
+key shows what a directory holds, and **the four places are looked at as
+directories, never as patterns** — `LICOS_USER_FILES` is the plain
+colon-separated list the licos run scripts document, so `:$HOME/licos*` names a
+literal directory, not a glob, which is what makes the installation tree (`$LICOSHOME/share/licos`)
+and a sibling checkout (`~/licos-devel`) of the same tutorial work without the second
+one ever being searched. `Ctrl-C Ctrl-F` is the mode's own `LicosInsertBlock`
+question, not *find file*, and nothing in the mode reads `compile_commands.json`
+— the `C/C++` mode reads one for a `.c`/`.cc` a study links to. Where a mode has
+nothing to say it says nothing rather than inventing a message: a `Licos` buffer
+offers no spelling suggestions at all (the `Options` submenu answers in prose modes
+only), and `Alt-,` is no key there — `alt-,` does reach the mode's reference
+question, but a study has no `compile_commands.json` and so no clangd session,
+and the minibuffer stays empty. That silence is a fact worth naming, and the
+`references()` path which answers it is unreachable code: `Key_Comma` is claimed
+*after* the extension list, and `Alt-,` on a line quoting `foo.txt` is answered
+by the extension branch before the comma is looked at. The one key which does
+work is **`Ctrl-C Ctrl-L`** — it sends the *text of the line the cursor stands
+on* (or of the region, or of the buffer) to the running `licos` **process**; that
+process is the one `Alt-M` starts, whose `runLicos` writes the file that is
+running to `licos.run`, asks a `LicosStudyOptionsDialog` (its options and the
+dry-run switch come from `optionsToRunLicos`), then hands the command line to
+`ProcessInteractionFrame`, which is the frame that owns the process: `attach` it
+and `start()`. So the line which started it reaches the solver because
+`ProcessInteractionFrame::slotOnNewOutput` **keeps the `UserInput` installed**
+while the process runs, `sendToInteractionBuffer` writes to it, and its guard is
+`!= QProcess::NotRunning`, not `== Running` (the trap the Cast3M section carries).
+
+A reader who reaches for `Ctrl-X Ctrl-F` on a name instead is not seeing a defect:
+they are reading a **completion of a file name to open**, which is a different
+question, and its regex is `fileNameRegExp()` — the path-free regex of
+`TestUtilities.cxx`. Likewise `MaterialPropertySelector`'s file column and the
+`getFileNameRegExp`-typed helpers are name regexes, not link regexes. The
+distinction to keep is which regex *decides a link* (only `linkRegExp`) versus
+which decide *a name typed into a field* or *a path chosen in a dialog*.
+
+Three things this cost, all general:
+
+- **the mode owns its link pattern, and `linkRegExp` is exported on the mode**
+  because it is a static of a class already exported. It is the only pattern
+  which may change the shape of a link; `getLicosExtensionsSuffix()` is already
+  the single source of what extensions are names, and it must stay that way — the
+  highlighter and the extractor were built off it independently, which is how one
+  of them could grow a `/` and the other not.
+- a **helper of `Utilities.cxx` is shared by too many callers to be specialized by
+  one mode's needs** — a mode which needs something else defines it, see also the
+  section on the directory mode for the trap of the *other* regex this mode shares
+  (`BlockUnderCursor`'s leading U+2029, which this mode's `getFileNameUnderCursor`
+  is no victim of because it reads `tc.block().text()`).
+- the whole-document `renameAllOccurencesOf` is deliberately **not** the same
+  question as a link: it reads the word under the cursor, and a selection which
+  starts it (`testRenameStartingByANameOfTheBuffer`) is what the case about it
+  pins; a link is *always* what is quoted, whatever the cursor.
+
+Testing notes specific to this suite:
+
+- the mode's `getName()` is **`Licos`** (the proxy registers it under that name for
+  the `ple` suffix), and `import` is the public slot the test drives as a last
+  resort because `QTest::keyClick` reaches the text edit's filter and not the mode
+  through the wrapper — the *gesture* cases (key and click) are the ones that
+  matter, and if the `keyClick` path changes, fix the cases rather than the mode;
+- the suite is `tests/TestLicosMode.cxx`, the twenty-fourth executable: it
+  loads the plugin the `TFEL_EDITOR_LICOS_MODE` definition names (the mode class
+  is not exported) and asserts the outcome of a press or a click through **the
+  file the current buffer ends up visiting**, plus the reports of a subclassed
+  `EditorWidget::displayInformativeMessage`. Four traps of that:
+  **`qputenv("LICOSHOME", "")` is not unset** — `::getenv` answers a non-null
+  empty string and the lookups go on with a nonsense directory, so a case about
+  the missing variable uses `qunsetenv`; a `Return` which finds no link **writes
+  a newline of its own** through the text edit, so a helper which presses the key
+  restores the text of the buffer afterwards or the lines move under the next
+  case; `QSettings` restores cursor positions, and **a restored cursor lands on
+  the line it was saved on**, which makes a case which moves the cursor answer
+  the next one — the settings are cleaned per case, and the first case asserts
+  that a fresh window stands on line 0; and **one window per case**, since the
+  buffers of a window outlive a case and an already-visited file is *reused*
+  rather than added, which is what a test of "which buffer came up" must not
+  hide.
+- the three cases of `TestSharedCompilationOutput` assert a mode name, and
+  `"Licos"` is not in their lists: a directory frame shared with a C++ buffer
+  would come back as a compilation frame of the mode of that buffer, so the
+  refusal is asserted with the exact three names (`CMake`, `Makefile`,
+  `Directory`), not with "not C++".
+
+The evidence of the fix is one failing case per defect against the reverted
+plugin — name of a sub-directory, double quotes, a non-ASCII name, the user
+tree, the installation tree, the complaint about `LICOSHOME`, the `.ps`, and
+both `.mfront` shapes — and green with the fix, offscreen and on `DISPLAY=:99`
+(Xvfb + metacity), where the click case is worth the live run: the gesture it
+asserts is the one the tooltip invites, not only the press. The offscreen probe
+which walks the shapes of a study (`/tmp/opencode/licolinks/probe`) and
+`/tmp/opencode/licolinks/live/run.sh`, which drives the built editor on a live
+study, are the tools if those cases ever read as wrong.
+
+`docs/web/licos-mode.md` is the user-facing page — the one pattern, the order of
+the search, the two kinds of name it makes a difference between (quoted names
+which are links and names a command asked for), and the variables the mode
+reads. `docs/web/index.md`'s `Licos` bullet is what links to it: the entry of
+the list of modes carries its own link and no second entry of the list of pages
+below it, which is the shape of the `Cast3M` and directory bullets. A new page
+needs pandoc to reach the site, so a link which 404s in a checkout says nothing
+about the page.
+
+`LICOS_USER_FILES` is spelled with its underscore: no other name of the tree
+carries one, and a search of the sources finds it nowhere else.
+
 ## Architecture
 
 - `include/TFEL/GUI/` — public headers of the core library. `.hxx` are

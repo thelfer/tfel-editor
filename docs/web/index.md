@@ -13,7 +13,9 @@ the amazing abilities of the [`Qt` library](https://www.qt.io/).
   files](http://tfel.sourceforge.net/mtest.html).See [the description
   of `MTest` major mode](mtest-major-mode.html) for details.
 - Editing and running `Licos` input files (see
-  <https://www.sciencedirect.com/science/article/pii/S0029549315003842>).
+  <https://www.sciencedirect.com/science/article/pii/S0029549315003842>). See
+  [the description of the `Licos` major mode](licos-mode.html) for what
+  following a link to a file does.
 - Editing and running `Cast3M` input files <http://www-cast3m.cea.fr>
 - Editing `C` and `C++` files, with the diagnostics, the completion, the
   go to definition and the hover provided by a

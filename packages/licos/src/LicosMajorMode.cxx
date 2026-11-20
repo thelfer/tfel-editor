@@ -100,6 +100,24 @@ namespace tfel::gui {
     return e;
   }  // end of LicosMajorMode::buildLicosExtensionsSuffix
 
+  QRegularExpression LicosMajorMode::linkRegExp(const QString &e) {
+    // the characters a name may be made of: those `fileNameRegExp` accepts, plus
+    // the separator of the directories a licos file names its data files with
+    const QString name = "[\\w0-9._+-]+(?:/[\\w0-9._+-]+)*";
+    // The one pattern which decides what a link is: the syntax highlighter draws
+    // the underline with it and the jump reads the name with it, so what looks
+    // like a link is what a click opens. The back reference is what forbids a
+    // name opened by one quote and closed by the other, which a pair of
+    // alternatives would allow; it is why the quote is a group of its own, and
+    // the groups are named so that reading the name does not depend on a
+    // numbering three characters away.
+    QRegularExpression r("(?<quote>['\"])(?<name>" + name + "\\." + e +
+                         ")\\k<quote>");
+    r.setPatternOptions(QRegularExpression::InvertedGreedinessOption |
+                        QRegularExpression::UseUnicodePropertiesOption);
+    return r;
+  }  // end of LicosMajorMode::linkRegExp
+
   bool LicosMajorMode::checkFile(QString &r, const QString &f) {
     QFileInfo fi;
     fi.setFile(f);
@@ -117,73 +135,51 @@ namespace tfel::gui {
   }
 
   QString LicosMajorMode::getLicosFile(const QString &f) {
-    using namespace std;
     if (f.isEmpty()) {
       return "";
     }
-    const char *userFiles = nullptr;
+    // a study lays the files its names hold in three sub-directories of the
+    // directory which holds the name, so each candidate directory is looked at
+    // four times: as itself and through each of those three
+    const auto check_in = [this, &f](const QString &d) -> QString {
+      for (const auto *const s : {"", "inputs/", "scripts/", "data/"}) {
+        QString r;
+        if (this->checkFile(r, d + QDir::separator() + s + f)) {
+          return r;
+        }
+      }
+      return "";
+    };
+    // the name of the file of the buffer and the current directory, in that
+    // order: the file the study is being read from wins over whatever the editor
+    // was started in
+    for (const auto &d : {QFileInfo(this->textEdit.getCompleteFileName())
+                              .dir()
+                              .absolutePath(),
+                          QDir::currentPath()}) {
+      const auto r = check_in(d);
+      if (!r.isEmpty()) {
+        return r;
+      }
+    }
+    if (const char *const userFiles = ::getenv("LICOS_USER_FILES")) {
+      for (const auto &d : QString(userFiles).split(":", Qt::SkipEmptyParts)) {
+        const auto r = check_in(d);
+        if (!r.isEmpty()) {
+          return r;
+        }
+      }
+    }
+    // the installation tree is the last candidate and it is one only for an
+    // installation which the LICOSHOME variable names: the empty value of that
+    // variable names no directory at all, so asking for the path is only worth
+    // it once the files of the study and of the user were looked for — which is
+    // also what keeps a name of a file of the study from being answered with a
+    // complaint about a variable the study does not need
     const QString lpath = this->getLicosPath();
-    QString r;
-    QString d =
-        QFileInfo(this->textEdit.getCompleteFileName()).dir().absolutePath();
-    if (checkFile(r, d + QDir::separator() + f)) {
-      return r;
-    }
-    if (checkFile(r, d + QDir::separator() + "inputs/" + f)) {
-      return r;
-    }
-    if (checkFile(r, d + QDir::separator() + "scripts/" + f)) {
-      return r;
-    }
-    if (checkFile(r, d + QDir::separator() + "data/" + f)) {
-      return r;
-    }
-    if (checkFile(r, f)) {
-      return r;
-    }
-    if (checkFile(r, "inputs/" + f)) {
-      return r;
-    }
-    if (checkFile(r, "scripts/" + f)) {
-      return r;
-    }
-    if (checkFile(r, "data/" + f)) {
-      return r;
-    }
-    userFiles = ::getenv("LICOS_USER_FILES");
-    if (userFiles != nullptr) {
-      QStringList paths = QString(userFiles).split(":", Qt::SkipEmptyParts);
-      QStringList::const_iterator p = paths.begin();
-      QStringList::const_iterator pe = paths.end();
-      while (p != pe) {
-        QString file = *p + "/" + f;
-        if (checkFile(r, file)) {
-          return r;
-        }
-        if (checkFile(r, *p + "/inputs/" + f)) {
-          return r;
-        }
-        if (checkFile(r, *p + "/scripts/" + file)) {
-          return r;
-        }
-        if (checkFile(r, *p + "/data/" + file)) {
-          return r;
-        }
-        ++p;
-      }
-    }
-    if (lpath.isEmpty()) {
-      const QString root = lpath + "/share/licos/";
-      if (checkFile(r, root + f)) {
-        return r;
-      }
-      if (checkFile(r, root + "inputs/" + f)) {
-        return r;
-      }
-      if (checkFile(r, root + "scripts/" + f)) {
-        return r;
-      }
-      if (checkFile(r, root + "data/" + f)) {
+    if (!lpath.isEmpty()) {
+      const auto r = check_in(lpath + "/share/licos");
+      if (!r.isEmpty()) {
         return r;
       }
     }
@@ -679,42 +675,46 @@ namespace tfel::gui {
   }
 
   void LicosMajorMode::openMFrontSource(const QString &f) {
-    QFileInfo fi(f);
-    if (fi.exists()) {
-      if (fi.isReadable()) {
-        this->editor.openFile(f);
-      } else {
-        this->editor.displayInformativeMessage(
-            QObject::tr("file '%1' is not readable").arg(f));
+    // the name of an MFront source is looked for where the study stands, as any
+    // other name of a file of a study is: the directory the editor was started
+    // in knows nothing of the study the hand is reading
+    QStringList candidates;
+    if (QFileInfo(f).isAbsolute()) {
+      candidates << f;
+    } else {
+      const QString d = QFileInfo(this->textEdit.getCompleteFileName())
+                            .dir()
+                            .absolutePath();
+      // a study lays the sources of its materials in three sub-directories, and
+      // the name the cursor stands on may name one of them already
+      candidates << d + QDir::separator() + f
+                 << d + QDir::separator() + "mfront/properties/" + f
+                 << d + QDir::separator() + "mfront/behaviours/" + f
+                 << d + QDir::separator() + "mfront/models/" + f;
+    }
+    for (const QString &c : candidates) {
+      const QFileInfo fi(c);
+      if ((fi.exists()) && (fi.isFile())) {
+        if (!fi.isReadable()) {
+          this->editor.displayInformativeMessage(
+              QObject::tr("file '%1' is not readable").arg(c));
+          return;
+        }
+        // the source was found: opening it is the whole of what the hand asked
+        // for. Going on to look for it elsewhere is what answered a source which
+        // had just been opened with a report that it was not found
+        this->editor.openFile(c);
         return;
       }
     }
-    if (fi.isAbsolute()) {
-      this->editor.displayInformativeMessage(
-          QObject::tr("file '%1' is not found").arg(f));
-      return;
-    }
-    fi.setFile("mfront/properties/" + f);
-    if ((fi.exists()) && (fi.isReadable())) {
-      this->editor.openFile(f);
-      return;
-    }
-    fi.setFile("mfront/behaviours/" + f);
-    if ((fi.exists()) && (fi.isReadable())) {
-      this->editor.openFile(f);
-      return;
-    }
-    fi.setFile("mfront/models/" + f);
-    if ((fi.exists()) && (fi.isReadable())) {
-      this->editor.openFile(f);
-      return;
-    }
-    const QString &mpath = this->getMFrontMaterialsPath();
+    const QString mpath = this->getMFrontMaterialsPath();
     if (!mpath.isEmpty()) {
-      QStringList mfiles = this->findFiles(mpath, f);
-      QStringList::const_iterator p;
-      for (p = mfiles.begin(); p != mfiles.end(); ++p) {
-        this->editor.openFile(*p);
+      const QStringList mfiles = this->findFiles(mpath, f);
+      for (const QString &p : mfiles) {
+        this->editor.openFile(p);
+      }
+      if (!mfiles.isEmpty()) {
+        return;
       }
     }
     this->editor.displayInformativeMessage(
@@ -902,16 +902,15 @@ namespace tfel::gui {
 
   QString LicosMajorMode::getFileNameUnderCursor(const QTextCursor &tc,
                                                  const QString &e) {
-    const QString l = tc.block().text();
-    QRegularExpression i("'(" + fileNameRegExp() + "\\." + e + ")'");
-    i.setPatternOptions(QRegularExpression::InvertedGreedinessOption);
+    const auto l = tc.block().text();
+    const auto p = this->positionInCurrentBlock(tc);
+    const auto i = LicosMajorMode::linkRegExp(e);
     auto m = i.match(l);
     while (m.hasMatch()) {
       const int index = m.capturedStart();
       const int length = m.capturedLength();
-      const int p = this->positionInCurrentBlock(tc);
       if ((p > index) && (p < index + length)) {
-        return m.captured(1);
+        return m.captured("name");
       }
       m = i.match(l, index + length);
     }
@@ -945,9 +944,12 @@ namespace tfel::gui {
           }
         } else if (e == "mfront") {
           this->openMFrontSource(f);
-        } else if (e == "ps") {
-          //	  QDesktopServices::openUrl(QUrl::fromLocalFile(f));
         } else {
+          // a `ps` file is a file of the study as the others are, so it opens in
+          // a buffer of the editor: that is what the tooltip of the underline
+          // promises. Handing it to a viewer of the desktop is what the code
+          // which stood here did, and it answered nothing at all when no viewer
+          // answered, which is a promise the mode can not keep silently.
           const QString file = this->getLicosFile(f);
           if (!file.isEmpty()) {
             this->editor.openFile(file);

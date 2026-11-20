@@ -43,13 +43,12 @@ namespace tfel::gui {
       rule.key = "EndOf" + k;
       highlightingRules.push_back(rule);
     }
-    // override C highligthing rules for links to other files
+    // the links to other files: the one pattern which decides what a link is,
+    // shared with the jump of \c getFileNameUnderCursor, so that a name which is
+    // drawn as a link is a name a click or a Return opens
     const auto exts = LicosMajorMode::getLicosExtensionsSuffix();
     for (const QString &e : exts) {
-      this->importExprs.push_back(
-          QRegularExpression("'([\\w\\./-]+\\." + e + ")'"));
-      this->importExprs.push_back(
-          QRegularExpression("\"([\\w\\./-]+\\." + e + ")\""));
+      this->importExprs.push_back(LicosMajorMode::linkRegExp(e));
     }
   }
 
