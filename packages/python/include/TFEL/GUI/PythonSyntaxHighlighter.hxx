@@ -33,8 +33,7 @@ namespace tfel::gui {
    * \note the object registers itself on the document it is built with and is
    * therefore owned by that document, not by the mode which installed it
    */
-  struct TFEL_GUI_VISIBILITY_EXPORT PythonSyntaxHighlighter
-      : public QSyntaxHighlighter {
+  struct PythonSyntaxHighlighter : public QSyntaxHighlighter {
     /*!
      * \brief constructor
      * \param[in] d : document highlighted by this highlighter

@@ -54,7 +54,10 @@ namespace tfel::gui {
     };
 
     //! \brief one of the values a `CHOICE` entry offers
-    struct Choice {
+    // \note the export macro is repeated on this nested type: MSVC does not
+    // export the nested types of an exported class along with it, as GCC does, so
+    // a mode which builds a list of choices would not link against the library
+    struct TFEL_GUI_VISIBILITY_EXPORT Choice {
       //! \brief constructor
       //! \param[in] v : value stored for this choice
       //! \param[in] l : name the choice is offered under

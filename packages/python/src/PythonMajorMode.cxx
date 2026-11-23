@@ -1478,23 +1478,25 @@ namespace tfel::gui {
       // the line above the target, the blanks only skipped: a comment is the
       // line a comment answers to, and it is the statement the line above
       // belongs to — which may well begin further up — which decides the place
-      auto near = above.size() - 1;
-      while ((near >= 0) && (above.at(near).blank)) {
-        --near;
+      // `near' is an empty macro of <minwindef.h> on Windows, so the index of the
+      // line this one answers to is named `line_above' here
+      auto line_above = above.size() - 1;
+      while ((line_above >= 0) && (above.at(line_above).blank)) {
+        --line_above;
       }
-      if (near < 0) {
+      if (line_above < 0) {
         // the first line of the file, or a file whose lines above hold nothing
         // at all, is written at the margin and stays there (`:no-indent')
         return result;
       }
-      if (above.at(near).comment) {
+      if (above.at(line_above).comment) {
         // a comment is copied by the line under it, as it stands: whoever wrote
         // it placed it there, and the code under it is what has to follow
         // (`:after-comment')
-        result.levels = ladderLevels(above.at(near).indent);
+        result.levels = ladderLevels(above.at(line_above).indent);
         return result;
       }
-      auto statement = near;
+      auto statement = line_above;
       while ((statement > 0) && (!above.at(statement).first_of_statement)) {
         --statement;
       }

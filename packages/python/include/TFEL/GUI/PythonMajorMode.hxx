@@ -61,8 +61,7 @@ namespace tfel::gui {
    * where it changes something and nowhere else, so a buffer which is already
    * formatted does not lose its cursor
    */
-  struct TFEL_GUI_VISIBILITY_EXPORT PythonMajorMode
-      : public CompiledLanguageMajorModeBase {
+  struct PythonMajorMode : public CompiledLanguageMajorModeBase {
     /*!
      * \brief constructor
      * \param[in] w: editor widget the mode belongs to
